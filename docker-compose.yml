@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-booking_db}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_USER: ${POSTGRES_USER:-user}
+    healthcheck:
+      test: ["CMD", "pg_isready", "-d", "${POSTGRES_DB:-booking_db}", "-U", "${POSTGRES_USER:-user}"]
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    volumes:
+      - db_data:/var/lib/postgresql/data:rw
+    ports:
+      - "5432:5432"
+
+  backend:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    volumes:
+      - ./apps/backend:/var/www/backend
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy # Wait for Postgres to be ready
+    environment:
+      # This URL matches the DB service name and credentials above
+      DATABASE_URL: "postgresql://user:password@db:5432/booking_db?serverVersion=16&charset=utf8"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/node/Dockerfile
+    volumes:
+      - .:/app
+      - ./node_modules:/app/node_modules
+    ports:
+      - "4200:4200"
+    depends_on:
+      - backend
+
+volumes:
+  db_data:

@@ -1,0 +1,16 @@
+{
+  "name": "backend",
+  "projectType": "application",
+  "sourceRoot": "apps/backend/src",
+  "targets": {
+    "serve": {
+      "command": "symfony server:start --directory=apps/backend"
+    },
+    "test": {
+      "command": "php apps/backend/bin/phpunit"
+    },
+    "lint": {
+      "command": "apps/backend/vendor/bin/phpstan analyze apps/backend/src"
+    }
+  }
+}
