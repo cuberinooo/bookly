@@ -12,7 +12,7 @@ function logout() {
 </script>
 
 <template>
-  <Toast />
+  <Toast position="bottom-right" />
   <ConfirmDialog />
   <header class="main-header">
     <nav class="nav-container">

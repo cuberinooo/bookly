@@ -1,11 +1,13 @@
 @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@300;400;500;600;700&display=swap');
 
 :root {
-  --primary-color: #0F172A;
-  --accent-color: #0369A1;
-  --bg-color: #F8FAFC;
-  --text-color: #020617;
-  --text-muted: #475569;
+  --primary-color: #1e293b;     // Slate 800
+  --accent-color: #ffc107;      // Amber yellow
+  --bg-color: #f1f5f9;          // Slate 100
+  --card-bg: #ffffff;
+  --text-color: #0f172a;        // Slate 900
+  --text-muted: #64748b;        // Slate 500
+  --border-color: #e2e8f0;      // Slate 200
 }
 
 body {
@@ -27,198 +29,159 @@ h1, h2, h3, h4, h5, h6 {
 // Global PrimeVue Overrides
 .p-button {
     font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 600;
+    font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.05em;
+    border-radius: 4px;
+}
+
+.p-button-primary {
+    background-color: var(--accent-color) !important;
+    border-color: var(--accent-color) !important;
 }
 
 .p-card {
-    border-radius: 4px;
-    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    border-radius: 8px;
+    background: var(--card-bg) !important;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
 }
 
-// Ensure forms look consistent
+// Uniform Form Styling
 .field {
-    margin-bottom: 1.5rem;
+    margin-bottom: 2rem;
     width: 100%;
-    
+
     label {
         display: block;
-        font-weight: 600;
-        margin-bottom: 0.5rem;
-        font-family: 'Barlow Condensed', sans-serif;
+        margin-bottom: 0.75rem;
         text-transform: uppercase;
-        font-size: 0.9rem;
+        font-weight: 700;
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 0.95rem;
         color: var(--primary-color);
     }
 }
 
 .p-inputtext, .p-textarea, .p-inputnumber, .p-datepicker, .p-select {
     width: 100% !important;
+    padding: 0.75rem !important;
+    border-radius: 6px !important;
+    border: 1px solid var(--border-color) !important;
+    font-size: 1rem !important;
+
+    &:focus {
+        border-color: var(--accent-color) !important;
+        box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.1) !important;
+    }
 }
 
-// Container for consistent width
+// Container
 .container {
     max-width: 1400px;
     margin: 0 auto;
-    padding: 0 1.5rem;
+    padding: 2rem 2rem;
 }
 
-// Dark contrast helper
-.text-white { color: white !important; }
-.bg-dark { background-color: var(--primary-color) !important; }
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  label {
+    font-weight: 700;
+    color: var(--accent-color);
+    font-family: 'Barlow Condensed', sans-serif;
+    text-transform: uppercase;
+    font-size: 0.9rem;
+  }
+}
 
-// Weekly Schedule Grid
+// Header
+.main-header {
+    background-color: var(--primary-color) !important;
+    padding: 1.25rem 2rem;
+}
+
+// Calendar styling
 .schedule-container {
     background: white;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    overflow-x: auto;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    overflow: hidden;
 }
 
 .schedule-header {
-    display: grid;
-    grid-template-columns: 80px repeat(7, minmax(120px, 1fr));
-    background: var(--primary-color);
-    color: white;
-    text-align: center;
-    border-bottom: 1px solid #334155;
-    min-width: 920px;
-    
-    .day-label {
-        padding: 1rem;
-        font-family: 'Barlow Condensed', sans-serif;
-        font-weight: 600;
-        text-transform: uppercase;
-        border-left: 1px solid #334155;
-    }
-    .time-corner { border-left: none; }
+  display: grid;
+  grid-template-columns: 80px repeat(7, minmax(120px, 1fr));
+  background: var(--primary-color);
+  color: white;
+  text-align: center;
+  border-bottom: 1px solid #334155;
+  min-width: 920px;
+
+  .day-label {
+    padding: 1rem;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 600;
+    text-transform: uppercase;
+    border-left: 1px solid #334155;
+  }
+  .time-corner { border-left: none; }
 }
 
 .schedule-body {
-    display: grid;
-    grid-template-columns: 80px repeat(7, minmax(120px, 1fr));
-    position: relative;
-    height: 800px; // Optimized height (6am to 10pm = 16 hours)
-    min-width: 920px;
+  display: grid;
+  grid-template-columns: 80px repeat(7, minmax(120px, 1fr));
+  position: relative;
+  height: 800px; // Optimized height (6am to 10pm = 16 hours)
+  min-width: 920px;
 }
 
 .time-axis {
-    display: grid;
-    grid-template-rows: repeat(16, 1fr); // 16 hours
-    border-right: 1px solid #e2e8f0;
-    background: #f8fafc;
-    
-    .time-slot {
-        padding: 0.5rem;
-        font-size: 0.75rem;
-        color: var(--text-muted);
-        text-align: right;
-        border-bottom: 1px solid #f1f5f9;
-        height: 50px; // 800 / 16
-    }
+  display: grid;
+  grid-template-rows: repeat(16, 1fr); // 16 hours
+  border-right: 1px solid #e2e8f0;
+  background: #f8fafc;
+
+  .time-slot {
+    padding: 0.5rem;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-align: right;
+    border-bottom: 1px solid #f1f5f9;
+    height: 50px; // 800 / 16
+  }
 }
 
 .day-column {
-    border-left: 1px solid #f1f5f9;
-    position: relative;
-    background-image: linear-gradient(#f1f5f9 1px, transparent 1px);
-    background-size: 100% 50px;
-    cursor: cell;
-    
-    &:hover {
-        background-color: rgba(3, 105, 161, 0.02);
-    }
+  border-left: 1px solid #f1f5f9;
+  position: relative;
+  background-image: linear-gradient(#f1f5f9 1px, transparent 1px);
+  background-size: 100% 50px;
+  cursor: cell;
+
+  &:hover {
+    background-color: rgba(3, 105, 161, 0.02);
+  }
 }
 
 .course-entry {
     position: absolute;
-    left: 4px;
-    right: 4px;
     background: var(--accent-color);
-    color: white;
-    padding: 0.5rem;
-    border-radius: 4px;
-    font-size: 0.8rem;
-    overflow: hidden;
-    cursor: pointer;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    border-left: 4px solid #0c4a6e;
-    transition: all 0.2s ease;
-    
-    &:hover {
-        background: #075985;
-        z-index: 10;
-        transform: scale(1.02);
-    }
-    
-    .course-time {
-        font-weight: 700;
-        font-family: 'Barlow Condensed', sans-serif;
-        display: block;
-        margin-bottom: 2px;
-    }
-    .course-title {
-        font-weight: 600;
-        text-transform: uppercase;
-        line-height: 1.1;
-    }
-}
+    border-left: 4px solid #c2410c;
+    border-radius: 6px;
 
-// Month View Styles
-.month-container {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    background: white;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-}
-
-.month-day {
-    min-height: 120px;
-    border: 1px solid #f1f5f9;
-    padding: 0.5rem;
-    
-    .day-number {
-        font-family: 'Barlow Condensed', sans-serif;
-        font-weight: 700;
-        margin-bottom: 0.5rem;
-        color: var(--text-muted);
-    }
-    
-    &.today {
-        background: rgba(3, 105, 161, 0.05);
-        .day-number { color: var(--accent-color); }
-    }
-    
-    &.other-month {
-        opacity: 0.3;
-        background: #f8fafc;
-    }
+    &:hover { background: #ea580c; }
 }
 
 .month-course {
-    background: var(--accent-color);
-    color: white;
-    font-size: 0.7rem;
-    padding: 2px 4px;
-    border-radius: 2px;
-    margin-bottom: 2px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    cursor: pointer;
-    text-transform: uppercase;
-    font-weight: 600;
+    background: var(--accent-color) !important;
+    border-left: 2px solid #c2410c;
 }
 
-// Dialog Overrides for better contrast
+// Dialog Consistency
 .p-dialog {
-    .p-dialog-content {
-        color: var(--text-color);
-    }
-}
-
-@media (max-width: 768px) {
-    .calendar-hero h1 { font-size: 2rem !important; }
+    border-radius: 12px !important;
+    .p-dialog-header { padding: 2rem 2rem 1rem 2rem !important; }
+    .p-dialog-content { padding: 0 2rem 2rem 2rem !important; }
 }
