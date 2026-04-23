@@ -2,15 +2,23 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import api from '../services/api';
+import { useToast } from 'primevue/usetoast';
 
 const name = ref('');
 const email = ref('');
 const password = ref('');
 const role = ref('ROLE_MEMBER');
-const error = ref('');
+const loading = ref(false);
 const router = useRouter();
+const toast = useToast();
+
+const roleOptions = [
+    { label: 'Member', value: 'ROLE_MEMBER' },
+    { label: 'Trainer', value: 'ROLE_TRAINER' }
+];
 
 async function register() {
+  loading.value = true;
   try {
     await api.post('/register', {
       name: name.value,
@@ -18,74 +26,60 @@ async function register() {
       password: password.value,
       role: role.value,
     });
+    toast.add({ severity: 'success', summary: 'Success', detail: 'Account created! Please login.', life: 4000 });
     router.push({ name: 'login' });
   } catch (err: any) {
-    error.value = err.response?.data?.error || 'Registration failed';
+    toast.add({ severity: 'error', summary: 'Error', detail: err.response?.data?.error || 'Registration failed', life: 4000 });
+  } finally {
+    loading.value = false;
   }
 }
 </script>
 
 <template>
-  <div class="register-container">
-    <h2>Register</h2>
-    <form @submit.prevent="register">
-      <div class="form-group">
-        <label>Full Name</label>
-        <input v-model="name" type="text" required />
-      </div>
-      <div class="form-group">
-        <label>Email</label>
-        <input v-model="email" type="email" required />
-      </div>
-      <div class="form-group">
-        <label>Password</label>
-        <input v-model="password" type="password" required />
-      </div>
-      <div class="form-group">
-        <label>Role</label>
-        <select v-model="role">
-          <option value="ROLE_MEMBER">Member</option>
-          <option value="ROLE_TRAINER">Trainer</option>
-        </select>
-      </div>
-      <button type="submit">Register</button>
-      <p v-if="error" class="error">{{ error }}</p>
-    </form>
-    <p>Already have an account? <RouterLink to="/login">Login here</RouterLink></p>
+  <div class="auth-container">
+    <Card class="auth-card">
+      <template #title>Create Account</template>
+      <template #content>
+        <form @submit.prevent="register" class="flex flex-column gap-4 mt-4">
+          <div class="flex flex-column gap-2">
+            <label for="name">Full Name</label>
+            <InputText id="name" v-model="name" required placeholder="John Doe" />
+          </div>
+          <div class="flex flex-column gap-2">
+            <label for="email">Email</label>
+            <InputText id="email" v-model="email" type="email" required placeholder="your@email.com" />
+          </div>
+          <div class="flex flex-column gap-2">
+            <label for="password">Password</label>
+            <InputText id="password" v-model="password" type="password" required />
+          </div>
+          <div class="flex flex-column gap-2">
+            <label for="role">Account Type</label>
+            <Select v-model="role" :options="roleOptions" optionLabel="label" optionValue="value" class="w-full" />
+          </div>
+          <Button type="submit" label="Join the Phoenix" :loading="loading" class="mt-2" />
+        </form>
+      </template>
+      <template #footer>
+        <p class="text-center text-sm">Already have an account? <RouterLink to="/login" class="text-accent font-bold">Login here</RouterLink></p>
+      </template>
+    </Card>
   </div>
 </template>
 
 <style scoped lang="scss">
-.register-container {
-  max-width: 400px;
-  margin: 2rem auto;
-  padding: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 8px;
+.auth-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: calc(100vh - 160px);
 }
-.form-group {
-  margin-bottom: 1rem;
-  label {
-    display: block;
-    margin-bottom: 0.5rem;
-  }
-  input, select {
+.auth-card {
     width: 100%;
-    padding: 0.5rem;
-    box-sizing: border-box;
-  }
+    max-width: 400px;
 }
-button {
-  width: 100%;
-  padding: 0.75rem;
-  background-color: #42b983;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-.error {
-  color: red;
-  margin-top: 1rem;
+.text-accent {
+    color: var(--accent-color);
 }
 </style>

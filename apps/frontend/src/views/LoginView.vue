@@ -3,76 +3,68 @@ import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import api from '../services/api';
 import { authStore } from '../store/auth';
+import { useToast } from 'primevue/usetoast';
 
 const email = ref('');
 const password = ref('');
-const error = ref('');
+const loading = ref(false);
 const router = useRouter();
+const toast = useToast();
 
 async function login() {
+  loading.value = true;
   try {
     const response = await api.post('/login_check', {
       email: email.value,
       password: password.value,
     });
     authStore.setToken(response.data.token);
+    toast.add({ severity: 'success', summary: 'Welcome back!', detail: 'Login successful', life: 3000 });
     router.push({ name: 'home' });
   } catch (err: any) {
-    error.value = err.response?.data?.message || 'Login failed';
+    toast.add({ severity: 'error', summary: 'Login Failed', detail: err.response?.data?.message || 'Check your credentials', life: 3000 });
+  } finally {
+    loading.value = false;
   }
 }
 </script>
 
 <template>
-  <div class="login-container">
-    <h2>Login</h2>
-    <form @submit.prevent="login">
-      <div class="form-group">
-        <label>Email</label>
-        <input v-model="email" type="email" required />
-      </div>
-      <div class="form-group">
-        <label>Password</label>
-        <input v-model="password" type="password" required />
-      </div>
-      <button type="submit">Login</button>
-      <p v-if="error" class="error">{{ error }}</p>
-    </form>
-    <p>Don't have an account? <RouterLink to="/register">Register here</RouterLink></p>
+  <div class="auth-container">
+    <Card class="auth-card">
+      <template #title>Login</template>
+      <template #content>
+        <form @submit.prevent="login" class="flex flex-column gap-4 mt-4">
+          <div class="flex flex-column gap-2">
+            <label for="email">Email</label>
+            <InputText id="email" v-model="email" type="email" required placeholder="your@email.com" />
+          </div>
+          <div class="flex flex-column gap-2">
+            <label for="password">Password</label>
+            <InputText id="password" v-model="password" type="password" required />
+          </div>
+          <Button type="submit" label="Sign In" :loading="loading" class="mt-2" />
+        </form>
+      </template>
+      <template #footer>
+        <p class="text-center text-sm">Don't have an account? <RouterLink to="/register" class="text-accent font-bold">Register here</RouterLink></p>
+      </template>
+    </Card>
   </div>
 </template>
 
 <style scoped lang="scss">
-.login-container {
-  max-width: 400px;
-  margin: 2rem auto;
-  padding: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 8px;
+.auth-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: calc(100vh - 160px);
 }
-.form-group {
-  margin-bottom: 1rem;
-  label {
-    display: block;
-    margin-bottom: 0.5rem;
-  }
-  input {
+.auth-card {
     width: 100%;
-    padding: 0.5rem;
-    box-sizing: border-box;
-  }
+    max-width: 400px;
 }
-button {
-  width: 100%;
-  padding: 0.75rem;
-  background-color: #42b983;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-.error {
-  color: red;
-  margin-top: 1rem;
+.text-accent {
+    color: var(--accent-color);
 }
 </style>

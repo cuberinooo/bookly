@@ -15,6 +15,26 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/api/courses/{id}')]
 class BookingController extends AbstractController
 {
+    #[Route('/bookings/{bookingId}', name: 'course_booking_delete', methods: ['DELETE'])]
+    public function deleteBooking(Course $course, int $bookingId, EntityManagerInterface $entityManager, BookingRepository $bookingRepository): JsonResponse
+    {
+        $this->denyAccessUnlessGranted('ROLE_TRAINER');
+        
+        if ($course->getTrainer() !== $this->getUser()) {
+            return new JsonResponse(['error' => 'Access denied'], Response::HTTP_FORBIDDEN);
+        }
+
+        $booking = $bookingRepository->find($bookingId);
+        if (!$booking || $booking->getCourse() !== $course) {
+            return new JsonResponse(['error' => 'Booking not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        $entityManager->remove($booking);
+        $entityManager->flush();
+
+        return new JsonResponse(['status' => 'Booking deleted by trainer']);
+    }
+
     #[Route('/book', name: 'course_book', methods: ['POST'])]
     public function book(Course $course, EntityManagerInterface $entityManager, BookingRepository $bookingRepository): JsonResponse
     {

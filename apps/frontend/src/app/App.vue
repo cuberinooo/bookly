@@ -12,54 +12,88 @@ function logout() {
 </script>
 
 <template>
-  <header>
-    <nav>
-      <RouterLink to="/">Home</RouterLink>
-      <RouterLink v-if="authStore.isLoggedIn()" to="/dashboard">Dashboard</RouterLink>
-      <RouterLink v-if="!authStore.isLoggedIn()" to="/login">Login</RouterLink>
-      <RouterLink v-if="!authStore.isLoggedIn()" to="/register">Register</RouterLink>
-      <a v-if="authStore.isLoggedIn()" href="#" @click.prevent="logout">Logout ({{ authStore.user?.name }})</a>
+  <Toast />
+  <ConfirmDialog />
+  <header class="main-header">
+    <nav class="nav-container">
+      <div class="brand">
+        <RouterLink to="/">PHOENIX ATHLETICS</RouterLink>
+      </div>
+      <div class="nav-links">
+        <RouterLink to="/">Courses</RouterLink>
+        <template v-if="authStore.isLoggedIn()">
+          <RouterLink to="/dashboard">Dashboard</RouterLink>
+          <RouterLink to="/profile">Profile</RouterLink>
+          <Button @click="logout" label="Logout" icon="pi pi-sign-out" class="p-button-text p-button-secondary" />
+        </template>
+        <template v-else>
+          <RouterLink to="/login">Login</RouterLink>
+          <RouterLink to="/register">Register</RouterLink>
+        </template>
+      </div>
     </nav>
   </header>
+
   <div class="container">
     <RouterView />
   </div>
 </template>
 
 <style scoped lang="scss">
-header {
-  line-height: 1.5;
-  width: 100%;
-  background: #333;
+.main-header {
+  background-color: #0F172A;
   color: white;
-  padding: 1rem;
+  padding: 1rem 2rem;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
 
-nav {
+.nav-container {
   display: flex;
-  gap: 1rem;
+  justify-content: space-between;
+  align-items: center;
   max-width: 1200px;
   margin: 0 auto;
 }
 
-nav a {
+.brand a {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 800;
   color: white;
   text-decoration: none;
-  &:hover {
-    text-decoration: underline;
-  }
+  letter-spacing: 0.1em;
 }
 
-.container {
-    max-width: 1200px;
-    margin: 2rem auto;
-    padding: 0 1rem;
+.nav-links {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+
+  a {
+    color: white;
+    text-decoration: none;
+    font-weight: 500;
+    text-transform: uppercase;
+    font-size: 0.9rem;
+    letter-spacing: 0.05em;
+
+    &:hover {
+      color: #0369A1;
+    }
+
+    &.router-link-active {
+        color: #0369A1;
+        border-bottom: 2px solid #0369A1;
+    }
+  }
 }
 </style>
 
 <style lang="scss">
-body {
-    margin: 0;
-    font-family: Arial, sans-serif;
+// Global overrides for PrimeVue in our athletic style
+.p-button {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 600;
+    text-transform: uppercase;
 }
 </style>

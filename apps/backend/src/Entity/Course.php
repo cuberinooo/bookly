@@ -38,6 +38,10 @@ class Course
     #[Groups(['course:read', 'course:write'])]
     private ?\DateTimeInterface $endTime = null;
 
+    #[ORM\Column(nullable: true)]
+    #[Groups(['course:read', 'course:write'])]
+    private ?int $durationMinutes = null;
+
     #[ORM\ManyToOne(inversedBy: 'courses')]
     #[ORM\JoinColumn(nullable: false)]
     #[Groups(['course:read'])]
@@ -116,6 +120,18 @@ class Course
     public function setEndTime(\DateTimeInterface $endTime): static
     {
         $this->endTime = $endTime;
+
+        return $this;
+    }
+
+    public function getDurationMinutes(): ?int
+    {
+        return $this->durationMinutes;
+    }
+
+    public function setDurationMinutes(?int $durationMinutes): static
+    {
+        $this->durationMinutes = $durationMinutes;
 
         return $this;
     }

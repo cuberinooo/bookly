@@ -34,8 +34,17 @@ class CourseController extends AbstractController
         $course->setTitle($data['title']);
         $course->setDescription($data['description'] ?? '');
         $course->setCapacity((int) $data['capacity']);
-        $course->setStartTime(new \DateTime($data['startTime']));
-        $course->setEndTime(new \DateTime($data['endTime']));
+        
+        $startTime = new \DateTime($data['startTime']);
+        $course->setStartTime($startTime);
+        
+        $duration = (int) ($data['durationMinutes'] ?? 60);
+        $course->setDurationMinutes($duration);
+        
+        $endTime = clone $startTime;
+        $endTime->modify("+$duration minutes");
+        $course->setEndTime($endTime);
+        
         $course->setTrainer($this->getUser());
 
         $entityManager->persist($course);
@@ -64,8 +73,18 @@ class CourseController extends AbstractController
         if (isset($data['title'])) $course->setTitle($data['title']);
         if (isset($data['description'])) $course->setDescription($data['description']);
         if (isset($data['capacity'])) $course->setCapacity((int) $data['capacity']);
-        if (isset($data['startTime'])) $course->setStartTime(new \DateTime($data['startTime']));
-        if (isset($data['endTime'])) $course->setEndTime(new \DateTime($data['endTime']));
+        
+        if (isset($data['startTime']) || isset($data['durationMinutes'])) {
+            $startTime = isset($data['startTime']) ? new \DateTime($data['startTime']) : $course->getStartTime();
+            $duration = isset($data['durationMinutes']) ? (int) $data['durationMinutes'] : $course->getDurationMinutes();
+            
+            $course->setStartTime($startTime);
+            $course->setDurationMinutes($duration);
+            
+            $endTime = clone $startTime;
+            $endTime->modify("+$duration minutes");
+            $course->setEndTime($endTime);
+        }
 
         $entityManager->flush();
 
