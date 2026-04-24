@@ -47,26 +47,28 @@ class BookingController extends AbstractController
             return new JsonResponse(['error' => 'You already booked this course'], Response::HTTP_BAD_REQUEST);
         }
 
-        // Check capacity
-        if (count($course->getBookings()) >= $course->getCapacity()) {
-            return new JsonResponse(['error' => 'Course is full'], Response::HTTP_BAD_REQUEST);
-        }
+        // Waitlist logic: if count of confirmed bookings >= capacity, it's a waitlist booking
+        $confirmedBookings = array_filter($course->getBookings()->toArray(), fn($b) => !$b->isWaitlist());
+        $isWaitlist = count($confirmedBookings) >= $course->getCapacity();
 
         $booking = new Booking();
         $booking->setMember($user);
         $booking->setCourse($course);
+        $booking->setWaitlist($isWaitlist);
 
         $entityManager->persist($booking);
 
         // Notify trainer
         $notification = new Notification();
         $notification->setUser($course->getTrainer());
-        $notification->setMessage(sprintf('%s has joined your course "%s"', $user->getName(), $course->getTitle()));
+        $statusMsg = $isWaitlist ? 'joined the waitlist for' : 'has joined';
+        $notification->setMessage(sprintf('%s %s your course "%s"', $user->getName(), $statusMsg, $course->getTitle()));
         $entityManager->persist($notification);
 
         $entityManager->flush();
 
-        return new JsonResponse(['status' => 'Booking confirmed'], Response::HTTP_CREATED);
+        $msg = $isWaitlist ? 'Added to waitlist' : 'Booking confirmed';
+        return new JsonResponse(['status' => $msg], Response::HTTP_CREATED);
     }
 
     #[Route('/book', name: 'course_unbook', methods: ['DELETE'])]

@@ -30,6 +30,10 @@ class Booking
     #[Groups(['booking:read'])]
     private ?Course $course = null;
 
+    #[ORM\Column(options: ['default' => false])]
+    #[Groups(['booking:read', 'course:read'])]
+    private ?bool $isWaitlist = false;
+
     public function __construct()
     {
         $this->createdAt = new \DateTimeImmutable();
@@ -72,6 +76,18 @@ class Booking
     public function setCourse(?Course $course): static
     {
         $this->course = $course;
+
+        return $this;
+    }
+
+    public function isWaitlist(): ?bool
+    {
+        return $this->isWaitlist;
+    }
+
+    public function setWaitlist(bool $isWaitlist): static
+    {
+        $this->isWaitlist = $isWaitlist;
 
         return $this;
     }

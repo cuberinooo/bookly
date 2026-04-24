@@ -2,8 +2,45 @@
 import { RouterLink, RouterView } from 'vue-router';
 import { authStore } from '../store/auth';
 import { useRouter } from 'vue-router';
+import { ref } from 'vue';
 
 const router = useRouter();
+const menu = ref();
+
+const menuItems = ref([
+    {
+        label: 'My Account',
+        items: [
+            { label: 'Profile', icon: 'pi pi-user', command: () => router.push('/profile') },
+            { label: 'Dashboard', icon: 'pi pi-th-large', command: () => router.push('/dashboard') }
+        ]
+    },
+    {
+        label: 'Logout',
+        icon: 'pi pi-sign-out',
+        command: () => logout()
+    }
+]);
+
+// If trainer, we can add a specific event or link for settings
+// However, the user asked for a settings button via dropdown in profile.
+// I'll add it as a specific item that emits or navigates.
+if (authStore.isTrainer()) {
+    menuItems.value[0].items.push({ 
+        label: 'Trainer Settings', 
+        icon: 'pi pi-cog', 
+        command: () => {
+            // Navigate to dashboard and maybe open settings there? 
+            // Or just a separate view? The user said "maybe under profile there should be a settings button via dropdown"
+            // Let's navigate to dashboard and we can trigger the settings tab there.
+            router.push({ path: '/dashboard', query: { tab: 'settings' } });
+        } 
+    });
+}
+
+function toggleMenu(event: any) {
+    menu.value.toggle(event);
+}
 
 function logout() {
   authStore.logout();
@@ -23,8 +60,10 @@ function logout() {
         <RouterLink to="/">Courses</RouterLink>
         <template v-if="authStore.isLoggedIn()">
           <RouterLink to="/dashboard">Dashboard</RouterLink>
-          <RouterLink to="/profile">Profile</RouterLink>
-          <Button @click="logout" label="Logout" icon="pi pi-sign-out" variant="text" class="logout-btn" />
+          <div class="profile-dropdown-wrapper">
+              <Button type="button" @click="toggleMenu" icon="pi pi-user" severity="secondary" rounded class="profile-btn" />
+              <Menu ref="menu" :model="menuItems" :popup="true" />
+          </div>
         </template>
         <template v-else>
           <RouterLink to="/login">Login</RouterLink>
@@ -71,6 +110,24 @@ function logout() {
   display: flex;
   gap: 2rem;
   align-items: center;
+
+  .profile-dropdown-wrapper {
+      display: flex;
+      align-items: center;
+  }
+
+  .profile-btn {
+      background: rgba(255,255,255,0.1) !important;
+      border: 1px solid rgba(255,255,255,0.2) !important;
+      color: white !important;
+      width: 40px;
+      height: 40px;
+      &:hover {
+          background: var(--primary-color) !important;
+          color: #000 !important;
+          border-color: var(--primary-color) !important;
+      }
+  }
 
   a {
     color: #f8fafc;

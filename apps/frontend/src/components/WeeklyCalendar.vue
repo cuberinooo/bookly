@@ -139,8 +139,14 @@ function onSlotClick(day: Date, hour: number) {
                                 </div>
                                 <div class="course-title">{{ course.title }}</div>
                                 <div class="course-spots" v-if="!isCompactView">
-                                    {{ course.capacity - course.bookings.length }} SPOTS LEFT
+                                    <template v-if="course.bookings.filter(b => !b.isWaitlist).length < course.capacity">
+                                        {{ course.capacity - course.bookings.filter(b => !b.isWaitlist).length }} SPOTS LEFT
+                                    </template>
+                                    <template v-else>
+                                        <span class="text-amber-500">FULL / WAITLIST</span>
+                                    </template>
                                 </div>
+
                             </div>
 
                         </div>

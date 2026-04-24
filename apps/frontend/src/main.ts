@@ -22,6 +22,12 @@ import Select from 'primevue/select';
 import Textarea from 'primevue/textarea';
 import InputNumber from 'primevue/inputnumber';
 import ToggleSwitch from 'primevue/toggleswitch';
+import Tabs from 'primevue/tabs';
+import TabList from 'primevue/tablist';
+import Tab from 'primevue/tab';
+import TabPanels from 'primevue/tabpanels';
+import TabPanel from 'primevue/tabpanel';
+import Menu from 'primevue/menu';
 import {Tooltip} from "primevue";
 
 const app = createApp(App);
@@ -55,5 +61,11 @@ app.component('Textarea', Textarea);
 app.directive('tooltip', Tooltip);
 app.component('InputNumber', InputNumber);
 app.component('ToggleSwitch', ToggleSwitch);
+app.component('Tabs', Tabs);
+app.component('TabList', TabList);
+app.component('Tab', Tab);
+app.component('TabPanels', TabPanels);
+app.component('TabPanel', TabPanel);
+app.component('Menu', Menu);
 
 app.mount('#root');

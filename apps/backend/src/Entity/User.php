@@ -28,6 +28,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 255)]
     private ?string $name = null;
 
+    #[ORM\OneToOne(mappedBy: 'trainer', cascade: ['persist', 'remove'])]
+    #[Groups(['user:read', 'course:read'])]
+    private ?TrainerSettings $trainerSettings = null;
+
     /**
      * @var list<string> The user roles
      */
@@ -148,6 +152,32 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function getBookings(): Collection
     {
         return $this->bookings;
+    }
+
+    public function getTrainerSettings(): ?TrainerSettings
+    {
+        return $this->trainerSettings;
+    }
+
+    public function setTrainerSettings(TrainerSettings $trainerSettings): static
+    {
+        // set the owning side of the relation if necessary
+        if ($trainerSettings->getTrainer() !== $this) {
+            $trainerSettings->setTrainer($this);
+        }
+
+        $this->trainerSettings = $trainerSettings;
+
+        return $this;
+    }
+
+    public function getSettings(): TrainerSettings
+    {
+        if (!$this->trainerSettings) {
+            $this->trainerSettings = new TrainerSettings();
+            $this->trainerSettings->setTrainer($this);
+        }
+        return $this->trainerSettings;
     }
 
     /**

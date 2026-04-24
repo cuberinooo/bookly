@@ -30,6 +30,20 @@ class UserController extends AbstractController
             $user->setName($data['name']);
         }
 
+        if (isset($data['showParticipantNames']) || isset($data['showWaitlistNames']) || isset($data['isWaitlistVisible'])) {
+            $settings = $user->getSettings();
+            if (isset($data['showParticipantNames'])) {
+                $settings->setShowParticipantNames((bool) $data['showParticipantNames']);
+            }
+            if (isset($data['showWaitlistNames'])) {
+                $settings->setShowWaitlistNames((bool) $data['showWaitlistNames']);
+            }
+            if (isset($data['isWaitlistVisible'])) {
+                $settings->setWaitlistVisible((bool) $data['isWaitlistVisible']);
+            }
+            $entityManager->persist($settings);
+        }
+
         $entityManager->flush();
 
         return new JsonResponse(['status' => 'Profile updated']);

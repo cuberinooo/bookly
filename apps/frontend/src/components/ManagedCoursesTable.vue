@@ -3,6 +3,7 @@ import { computed, ref } from 'vue';
 import { useConfirm } from 'primevue/useconfirm';
 import { useToast } from 'primevue/usetoast';
 import api from '../services/api';
+import ParticipantsDialog from './ParticipantsDialog.vue';
 
 const props = defineProps<{
     courses: any[];
@@ -124,29 +125,11 @@ async function removeParticipant(bookingId: number) {
             </Column>
         </DataTable>
 
-        <!-- Participants Dialog -->
-        <Dialog v-model:visible="participantsDialog" :header="'Participants: ' + selectedCourse?.title" :modal="true" class="w-full max-w-xl">
-            <DataTable :value="selectedCourse?.bookings" class="mt-4 participants-table">
-                <Column header="Member">
-                    <template #body="slotProps">
-                        <div class="flex flex-col">
-                            <span class="font-bold text-slate-900">{{ slotProps.data.member.name }}</span>
-                            <small class="text-slate-500">{{ slotProps.data.member.email }}</small>
-                        </div>
-                    </template>
-                </Column>
-                <Column header="Joined On">
-                    <template #body="slotProps">
-                        {{ new Date(slotProps.data.createdAt).toLocaleDateString() }}
-                    </template>
-                </Column>
-                <Column header="Actions" class="text-right">
-                    <template #body="slotProps">
-                        <Button icon="pi pi-user-minus" severity="danger" variant="text" @click="removeParticipant(slotProps.data.id)" v-tooltip="'Remove Member'" class="action-btn delete-btn" />
-                    </template>
-                </Column>
-            </DataTable>
-        </Dialog>
+        <ParticipantsDialog 
+            v-model:visible="participantsDialog" 
+            :course="selectedCourse" 
+            @remove-participant="removeParticipant" 
+        />
     </section>
 </template>
 
@@ -193,5 +176,20 @@ async function removeParticipant(bookingId: number) {
     :deep(.p-datatable-thead > tr > th) {
         @apply bg-slate-50 text-slate-600 font-bold text-xs uppercase tracking-widest p-4;
     }
+}
+
+.section-title {
+    @apply flex items-center text-sm font-black uppercase tracking-tighter text-slate-700 mb-4;
+    font-family: 'Barlow Condensed', sans-serif;
+}
+
+.waitlist-badge {
+    @apply px-2 py-1 bg-amber-100 text-amber-700 rounded text-xs font-black;
+    font-family: 'Barlow Condensed', sans-serif;
+}
+
+.empty-squad {
+    @apply py-12 text-center text-slate-400 flex flex-col items-center;
+    p { @apply font-bold uppercase text-sm tracking-tight; font-family: 'Barlow Condensed', sans-serif; }
 }
 </style>

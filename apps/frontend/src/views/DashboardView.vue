@@ -6,9 +6,12 @@ import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
 import CourseForm from '../components/CourseForm.vue';
 import ManagedCoursesTable from '../components/ManagedCoursesTable.vue';
+import ParticipantsDialog from '../components/ParticipantsDialog.vue';
+import { useRoute } from 'vue-router';
 
 const toast = useToast();
 const confirm = useConfirm();
+const route = useRoute();
 const courses = ref<any[]>([]);
 const notifications = ref<any[]>([]);
 const isTrainer = authStore.isTrainer();
@@ -17,17 +20,56 @@ const courseDialog = ref(false);
 const editingCourse = ref<any>(null);
 const submitting = ref(false);
 
+const participantsDialog = ref(false);
+const selectedCourse = ref<any>(null);
+
+const userSettings = ref({
+    showParticipantNames: true,
+    showWaitlistNames: true,
+    isWaitlistVisible: true
+});
+const activeTab = ref(0);
+const savingSettings = ref(false);
+
 async function fetchData() {
     try {
         const response = await api.get('/courses');
         if (isTrainer) {
             courses.value = response.data.filter((c: any) => c.trainer?.id === authStore.user?.id);
             fetchNotifications();
+            fetchUserSettings();
+            if (route.query.tab === 'settings') {
+                activeTab.value = 1;
+            }
         } else {
             courses.value = response.data.filter((c: any) => c.bookings.some((b: any) => b.member?.id === authStore.user?.id));
         }
     } catch (e) {
         toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to fetch dashboard data' });
+    }
+}
+
+async function fetchUserSettings() {
+    try {
+        const response = await api.get('/user/me');
+        const settings = response.data.trainerSettings || {};
+        userSettings.value = {
+            showParticipantNames: settings.showParticipantNames ?? true,
+            showWaitlistNames: settings.showWaitlistNames ?? true,
+            isWaitlistVisible: settings.isWaitlistVisible ?? true
+        };
+    } catch (e) {}
+}
+
+async function updateSettings() {
+    savingSettings.value = true;
+    try {
+        await api.patch('/user/me', userSettings.value);
+        toast.add({ severity: 'success', summary: 'Settings Saved', detail: 'Privacy preferences updated', life: 3000 });
+    } catch (e) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to update settings' });
+    } finally {
+        savingSettings.value = false;
     }
 }
 
@@ -118,7 +160,45 @@ onMounted(fetchData);
 
     <div v-if="isTrainer" class="trainer-layout">
         <div class="main-content">
-            <ManagedCoursesTable :courses="courses" @edit="editCourse" @refresh="fetchData" />
+            <Tabs v-model:value="activeTab">
+                <TabList>
+                    <Tab :value="0">Managed Courses</Tab>
+                    <Tab :value="1">Global Settings</Tab>
+                </TabList>
+                <TabPanels>
+                    <TabPanel :value="0">
+                        <ManagedCoursesTable :courses="courses" @edit="editCourse" @refresh="fetchData" />
+                    </TabPanel>
+                    <TabPanel :value="1">
+                        <div class="settings-card phoenix-card">
+                            <h3 class="settings-title">Privacy & Visibility</h3>
+                            <div class="setting-group flex flex-col gap-8">
+                                <div class="setting-row">
+                                    <div class="setting-info">
+                                        <label class="form-label">Show Confirmed Participant Names</label>
+                                        <p class="text-xs text-slate-500">If disabled, other members will see "Athlete #ID" instead of names.</p>
+                                    </div>
+                                    <ToggleSwitch v-model="userSettings.showParticipantNames" @change="updateSettings" :disabled="savingSettings" />
+                                </div>
+                                <div class="setting-row">
+                                    <div class="setting-info">
+                                        <label class="form-label">Make Waitlist Visible to Members</label>
+                                        <p class="text-xs text-slate-500">Enable if you want members to see how many people are waiting.</p>
+                                    </div>
+                                    <ToggleSwitch v-model="userSettings.isWaitlistVisible" @change="updateSettings" :disabled="savingSettings" />
+                                </div>
+                                <div class="setting-row" v-if="userSettings.isWaitlistVisible">
+                                    <div class="setting-info">
+                                        <label class="form-label">Show Waitlist Names</label>
+                                        <p class="text-xs text-slate-500">If disabled, waitlisted athletes remain anonymous to others.</p>
+                                    </div>
+                                    <ToggleSwitch v-model="userSettings.showWaitlistNames" @change="updateSettings" :disabled="savingSettings" />
+                                </div>
+                            </div>
+                        </div>
+                    </TabPanel>
+                </TabPanels>
+            </Tabs>
         </div>
 
         <aside class="notifications-panel">
@@ -158,7 +238,10 @@ onMounted(fetchData);
                 <Card v-for="course in courses" :key="course.id" class="booking-card">
                     <template #title>
                         <div class="flex text-black justify-content-between align-items-start">
-                            <span>{{ course.title }}</span>
+                            <div class="flex flex-col">
+                                <span>{{ course.title }}</span>
+                                <span v-if="course.bookings.find(b => b.member.email === authStore.user.email)?.isWaitlist" class="waitlist-indicator">WAITLIST QUEUE</span>
+                            </div>
                             <span class="duration-tag ml-2">{{ formatDuration(course.durationMinutes) }}</span>
                         </div>
                     </template>
@@ -181,7 +264,10 @@ onMounted(fetchData);
                         </div>
                     </template>
                     <template #footer>
-                        <Button label="CANCEL BOOKING" severity="danger" variant="text" icon="pi pi-times" class="w-full cancel-btn" @click="unbookCourse(course.id)" />
+                        <div class="flex flex-col gap-2 w-full">
+                            <Button label="SHOW PARTICIPANTS" icon="pi pi-users" variant="outlined" class="w-full show-btn" @click="selectedCourse = course; participantsDialog = true" />
+                            <Button label="CANCEL BOOKING" severity="danger" variant="text" icon="pi pi-times" class="w-full cancel-btn" @click="unbookCourse(course.id)" />
+                        </div>
                     </template>
                 </Card>
             </div>
@@ -197,6 +283,11 @@ onMounted(fetchData);
             @cancel="courseDialog = false"
         />
     </Dialog>
+
+    <ParticipantsDialog 
+        v-model:visible="participantsDialog" 
+        :course="selectedCourse" 
+    />
   </div>
 </template>
 
@@ -267,6 +358,15 @@ onMounted(fetchData);
     letter-spacing: 0.05em;
 }
 
+.waitlist-indicator {
+    font-size: 0.65rem;
+    font-weight: 900;
+    color: #f59e0b;
+    letter-spacing: 0.1em;
+    font-family: 'Barlow Condensed', sans-serif;
+    margin-top: 4px;
+}
+
 .booking-card {
     border-top: 4px solid var(--primary-color) !important;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -327,8 +427,16 @@ onMounted(fetchData);
 .cancel-btn {
     font-weight: 800 !important;
     letter-spacing: 0.1em !important;
-    margin-top: 1rem;
+    margin-top: 0.5rem;
     &:hover { background: #fef2f2 !important; }
+}
+
+.show-btn {
+    border-color: var(--border-color) !important;
+    color: var(--text-header) !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.1em !important;
+    &:hover { background: #f8fafc !important; border-color: var(--text-muted) !important; }
 }
 
 .empty-notifs {
@@ -337,5 +445,46 @@ onMounted(fetchData);
     color: #94a3b8;
     i { font-size: 2.5rem; margin-bottom: 1rem; opacity: 0.5; }
     p { font-family: 'Barlow Condensed', sans-serif; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em; }
+}
+.settings-card {
+    background: white;
+    padding: 2.5rem;
+    border-radius: 16px;
+    border: 1px solid var(--border-color);
+}
+
+.settings-title {
+    @apply text-lg font-black uppercase tracking-tighter text-slate-900 mb-8 pb-4 border-b border-slate-100;
+    font-family: 'Barlow Condensed', sans-serif;
+}
+
+.setting-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 2rem;
+}
+
+.setting-info {
+    label { @apply mb-1; }
+}
+
+:deep(.p-tablist-tab-list) {
+    @apply border-none bg-transparent gap-4 mb-6;
+}
+
+:deep(.p-tab) {
+    @apply bg-slate-100 text-slate-500 font-bold uppercase py-3 px-6 rounded-lg transition-all border-none;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.9rem;
+    letter-spacing: 0.05em;
+
+    &.p-tab-active {
+        @apply bg-slate-900 text-amber-400;
+    }
+}
+
+:deep(.p-tabpanels) {
+    @apply bg-transparent p-0;
 }
 </style>

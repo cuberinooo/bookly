@@ -115,7 +115,7 @@ onMounted(fetchCourses);
                 <h1>Athletic Schedule</h1>
                 <p class="text-muted">Master your discipline. Book your next session.</p>
             </div>
-            
+
             <div class="header-right">
                 <div class="view-toggle">
                     <span :class="{ active: !isCompactView }">STANDARD</span>
@@ -151,8 +151,8 @@ onMounted(fetchCourses);
                 </div>
             </div>
 
-            <div class="description-section">
-                <h3>Workout Brief</h3>
+            <div class="field">
+              <label>Workout Brief</label>
               <Textarea disabled="" :modelValue="selectedCourse.description || 'No description provided for this high-intensity session.'"/>
             </div>
 
@@ -171,14 +171,14 @@ onMounted(fetchCourses);
                 </div>
                 <div class="field">
                     <label>CAPACITY</label>
-                    <InputText disabled="" :modelValue="selectedCourse.capacity - selectedCourse.bookings.length">SPOTS LEFT</InputText>
+                    <InputText disabled="" :modelValue="selectedCourse.bookings.filter(b => !b.isWaitlist).length < selectedCourse.capacity ? (selectedCourse.capacity - selectedCourse.bookings.filter(b => !b.isWaitlist).length) + ' SPOTS LEFT' : 'WAITLIST ACTIVE'"/>
                 </div>
             </div>
 
             <div class="action-footer" v-if="!authStore.isTrainer()">
                 <Button v-if="!selectedCourse.bookings.some((b: any) => b.member?.id === authStore.user?.id)"
-                        label="RESERVE SPOT" severity="primary" class="w-full p-4" @click="bookCourse(selectedCourse.id)"
-                        :disabled="selectedCourse.bookings.length >= selectedCourse.capacity" />
+                        :label="selectedCourse.bookings.filter(b => !b.isWaitlist).length < selectedCourse.capacity ? 'RESERVE SPOT' : 'JOIN WAITLIST'"
+                        severity="primary" class="w-full p-4" @click="bookCourse(selectedCourse.id)" />
                 <Button v-else label="CANCEL RESERVATION" severity="primary" variant="text" class="w-full p-4 cancel-btn" @click="unbookCourse(selectedCourse.id)" />
             </div>
         </div>
@@ -298,12 +298,6 @@ onMounted(fetchCourses);
         text-transform: uppercase;
         font-family: 'Barlow Condensed', sans-serif;
     }
-}
-
-.description-section {
-    margin-bottom: 2.5rem;
-    h3 { font-size: 0.9rem; margin-bottom: 0.75rem; color: var(--text-muted); }
-    p { font-size: 1.1rem; line-height: 1.6; color: var(--text-color); }
 }
 
 .specs-grid {
