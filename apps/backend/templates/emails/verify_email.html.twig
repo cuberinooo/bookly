@@ -1,0 +1,14 @@
+{% extends 'emails/base.html.twig' %}
+
+{% block title %}Verify your email{% endblock %}
+
+{% block body %}
+    <h2>Welcome to Phoenix Booking!</h2>
+    <p>Hello {{ name }},</p>
+    <p>Please click the button below to verify your email address and activate your account.</p>
+    <p style="text-align: center;">
+        <a href="{{ url }}" class="button">Verify Email Address</a>
+    </p>
+    <p>If you did not create an account, no further action is required.</p>
+    <p>See you on the mats!</p>
+{% endblock %}

@@ -32,7 +32,7 @@ async function register() {
       password: password.value,
       role: role.value,
     });
-    toast.add({ severity: 'success', summary: 'Success', detail: 'Account created! Please login.', life: 4000 });
+    toast.add({ severity: 'success', summary: 'Check your email', detail: 'Account created! Please verify your email before logging in.', life: 10000 });
     router.push({ name: 'login' });
   } catch (err: any) {
     toast.add({ severity: 'error', summary: 'Error', detail: err.response?.data?.error || 'Registration failed', life: 4000 });

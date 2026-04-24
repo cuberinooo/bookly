@@ -40,7 +40,10 @@ async function login() {
             <InputText id="email" v-model="email" type="email" required placeholder="your@email.com" />
           </div>
           <div class="field">
-            <label for="password">Password</label>
+            <div class="flex justify-between items-center mb-1">
+              <label for="password" class="mb-0">Password</label>
+              <RouterLink to="/forgot-password" class="text-xs text-accent font-bold uppercase tracking-tight">Forgot password?</RouterLink>
+            </div>
             <InputText id="password" v-model="password" type="password" required />
           </div>
           <Button severity="primary" type="submit" label="Sign In" :loading="loading" class="mt-2" />
