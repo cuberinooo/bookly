@@ -1,13 +1,15 @@
 @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@300;400;500;600;700&display=swap');
 
 :root {
-  --primary-color: #1e293b;     // Slate 800
-  --accent-color: #ffc107;      // Amber yellow
-  --bg-color: #f1f5f9;          // Slate 100
+  --primary-color: #ffc107;      // Amber yellow (Brand Primary)
+  --accent-color: #ffc107;       // Consistent with primary
+  --bg-color: #ffffff;           // Clean white
   --card-bg: #ffffff;
-  --text-color: #0f172a;        // Slate 900
-  --text-muted: #64748b;        // Slate 500
+  --text-color: rgb(71 85 105);  // Slate 600 (Body Text)
+  --text-header: #0f172a;        // Slate 900 (Headers for contrast)
+  --text-muted: #94a3b8;         // Slate 400
   --border-color: #e2e8f0;      // Slate 200
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
 }
 
 body {
@@ -16,14 +18,16 @@ body {
   background-color: var(--bg-color);
   color: var(--text-color);
   -webkit-font-smoothing: antialiased;
+  line-height: 1.6;
 }
 
 h1, h2, h3, h4, h5, h6 {
   font-family: 'Barlow Condensed', sans-serif;
   text-transform: uppercase;
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: 0.05em;
-  color: var(--primary-color);
+  color: var(--text-header);
+  margin-top: 0;
 }
 
 // Global PrimeVue Overrides
@@ -33,46 +37,75 @@ h1, h2, h3, h4, h5, h6 {
     text-transform: uppercase;
     letter-spacing: 0.05em;
     border-radius: 4px;
-}
+    padding: 0.75rem 1.5rem;
+    transition: all 0.2s ease;
+    border: none;
 
-.p-button-primary {
-    background-color: var(--accent-color) !important;
-    border-color: var(--accent-color) !important;
+    &.p-button-primary, &.p-button-info {
+        background-color: var(--primary-color) !important;
+        color: #000 !important; // Dark text on Amber for contrast
+        &:hover {
+            background-color: #eab308 !important;
+            transform: translateY(-1px);
+        }
+    }
+
+    &.p-button-secondary {
+        background-color: transparent !important;
+        border: 2px solid var(--text-header) !important;
+        color: var(--text-header) !important;
+        &:hover {
+            background-color: var(--text-header) !important;
+            color: white !important;
+        }
+    }
 }
 
 .p-card {
-    border-radius: 8px;
+    border-radius: 12px;
     background: var(--card-bg) !important;
     border: 1px solid var(--border-color);
-    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+
+    .p-card-title {
+        font-family: 'Barlow Condensed', sans-serif;
+        text-transform: uppercase;
+        font-weight: 700;
+    }
 }
 
 // Uniform Form Styling
-.field {
-    margin-bottom: 2rem;
+.field, .form-group {
+    margin-bottom: 1.5rem;
     width: 100%;
 
     label {
         display: block;
-        margin-bottom: 0.75rem;
+        margin-bottom: 0.5rem;
         text-transform: uppercase;
-        font-weight: 700;
+        font-weight: 600;
         font-family: 'Barlow Condensed', sans-serif;
-        font-size: 0.95rem;
-        color: var(--primary-color);
+        font-size: 0.85rem;
+        color: #334155; // Slate 700
     }
 }
 
 .p-inputtext, .p-textarea, .p-inputnumber, .p-datepicker, .p-select {
     width: 100% !important;
-    padding: 0.75rem !important;
+    padding: 0.875rem 1rem !important; // Increased vertical padding
     border-radius: 6px !important;
     border: 1px solid var(--border-color) !important;
     font-size: 1rem !important;
+    background: #f8fafc !important;
+    color: var(--text-color) !important;
+    transition: all 0.2s ease !important;
 
     &:focus {
-        border-color: var(--accent-color) !important;
-        box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.1) !important;
+        background: white !important;
+        border-color: var(--primary-color) !important;
+        box-shadow: 0 0 0 2px var(--primary-color) !important;
+        outline: none !important;
     }
 }
 
@@ -80,26 +113,14 @@ h1, h2, h3, h4, h5, h6 {
 .container {
     max-width: 1400px;
     margin: 0 auto;
-    padding: 2rem 2rem;
+    padding: 3rem 2rem;
 }
 
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  label {
-    font-weight: 700;
-    color: var(--accent-color);
-    font-family: 'Barlow Condensed', sans-serif;
-    text-transform: uppercase;
-    font-size: 0.9rem;
-  }
-}
-
-// Header
+// Main Header
 .main-header {
-    background-color: var(--primary-color) !important;
-    padding: 1.25rem 2rem;
+    background-color: #0f172a !important; // Deep slate for header
+    padding: 1rem 2rem;
+    border-bottom: 4px solid var(--primary-color);
 }
 
 // Calendar styling
@@ -107,49 +128,25 @@ h1, h2, h3, h4, h5, h6 {
     background: white;
     border-radius: 12px;
     border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-md);
     overflow: hidden;
 }
 
 .schedule-header {
   display: grid;
   grid-template-columns: 80px repeat(7, minmax(120px, 1fr));
-  background: var(--primary-color);
+  background: #1e293b;
   color: white;
   text-align: center;
   border-bottom: 1px solid #334155;
-  min-width: 920px;
 
   .day-label {
-    padding: 1rem;
+    padding: 1.25rem;
     font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 600;
+    font-weight: 700;
     text-transform: uppercase;
+    letter-spacing: 0.05em;
     border-left: 1px solid #334155;
-  }
-  .time-corner { border-left: none; }
-}
-
-.schedule-body {
-  display: grid;
-  grid-template-columns: 80px repeat(7, minmax(120px, 1fr));
-  position: relative;
-  height: 800px; // Optimized height (6am to 10pm = 16 hours)
-  min-width: 920px;
-}
-
-.time-axis {
-  display: grid;
-  grid-template-rows: repeat(16, 1fr); // 16 hours
-  border-right: 1px solid #e2e8f0;
-  background: #f8fafc;
-
-  .time-slot {
-    padding: 0.5rem;
-    font-size: 0.75rem;
-    color: var(--text-muted);
-    text-align: right;
-    border-bottom: 1px solid #f1f5f9;
-    height: 50px; // 800 / 16
   }
 }
 
@@ -158,30 +155,42 @@ h1, h2, h3, h4, h5, h6 {
   position: relative;
   background-image: linear-gradient(#f1f5f9 1px, transparent 1px);
   background-size: 100% 50px;
-  cursor: cell;
 
   &:hover {
-    background-color: rgba(3, 105, 161, 0.02);
+    background-color: rgba(255, 193, 7, 0.05);
   }
 }
 
 .course-entry {
     position: absolute;
-    background: var(--accent-color);
-    border-left: 4px solid #c2410c;
-    border-radius: 6px;
+    background: var(--primary-color);
+    color: #000;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    text-transform: uppercase;
+    border-left: 4px solid #b45309;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 0.75rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 
-    &:hover { background: #ea580c; }
-}
-
-.month-course {
-    background: var(--accent-color) !important;
-    border-left: 2px solid #c2410c;
+    &:hover {
+        background: #fbbf24;
+        z-index: 10;
+    }
 }
 
 // Dialog Consistency
 .p-dialog {
-    border-radius: 12px !important;
-    .p-dialog-header { padding: 2rem 2rem 1rem 2rem !important; }
+    border: none !important;
+    box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25) !important;
+    .p-dialog-header {
+        padding: 2rem 2rem 1rem 2rem !important;
+        font-family: 'Barlow Condensed', sans-serif;
+        text-transform: uppercase;
+        font-weight: 800;
+    }
     .p-dialog-content { padding: 0 2rem 2rem 2rem !important; }
 }
+
+.text-muted { color: var(--text-muted); }

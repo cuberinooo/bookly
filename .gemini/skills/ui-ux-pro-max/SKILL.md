@@ -40,10 +40,10 @@ When user requests UI/UX work (design, build, create, implement, review, fix, im
 ### Step 1: Analyze User Requirements
 
 Extract key information from user request:
-- **Product type**: SaaS, e-commerce, portfolio, dashboard, landing page, etc.
-- **Style keywords**: minimal, playful, professional, elegant, dark mode, etc.
+- **Product type**: Booking Engine, Member Dashboard, WOD Tracker, Fitness Landing, etc.
+- **Style keywords**: High-Energy (CrossFit), Minimal (Yoga), Clinical (Physio), Dark Performance, or see https://phoenix-athletics.de/, .etc
 - **Industry**: healthcare, fintech, gaming, education, etc.
-- **Stack**: React, Vue, Next.js, or default to `html-tailwind`
+- **Stack**: VueJs (apps/frontend), vite, Symfony (apps/backend), nx for monorepo 
 
 ### Step 2: Generate Design System (REQUIRED)
 
@@ -141,8 +141,6 @@ Available stacks: `html-tailwind`, `react`, `nextjs`, `vue`, `svelte`, `swiftui`
 | Stack | Focus |
 |-------|-------|
 | `html-tailwind` | Tailwind utilities, responsive, a11y (DEFAULT) |
-| `react` | State, hooks, performance, patterns |
-| `nextjs` | SSR, routing, images, API routes |
 | `vue` | Composition API, Pinia, Vue Router |
 | `svelte` | Runes, stores, SvelteKit |
 | `swiftui` | Views, State, Navigation, Animation |

@@ -107,12 +107,16 @@ onMounted(fetchCourses);
 </script>
 
 <template>
-  <main class="home-view p-4">
+  <div class="home-view">
     <div class="container">
-        <header class="flex justify-content-between align-items-center mb-4">
+        <header class="home-header">
             <div>
-                <h1 class="m-0">Athletic Schedule</h1>
-                <p class="text-muted">Book your next workout session</p>
+                <h1>Athletic Schedule</h1>
+                <p class="text-muted">Master your discipline. Book your next session.</p>
+            </div>
+            <div class="header-badge" v-if="authStore.isTrainer()">
+                <span class="pulse"></span>
+                TRAINER MODE ACTIVE
             </div>
         </header>
 
@@ -124,56 +128,53 @@ onMounted(fetchCourses);
     </div>
 
     <!-- Details Dialog -->
-    <Dialog v-model:visible="detailVisible" :header="selectedCourse?.title" :modal="true" class="w-full max-w-md">
-        <div v-if="selectedCourse" class="py-2">
-            <div class="flex align-items-center gap-3 mb-4 p-3 bg-primary-50 border-round">
-                <i class="pi pi-user text-primary text-2xl"></i>
-                <div class="flex flex-column">
-                    <small class="text-muted font-bold uppercase">Coach</small>
-                    <span class="font-bold text-lg">{{ selectedCourse.trainer?.name }}</span>
+    <Dialog v-model:visible="detailVisible" :header="selectedCourse?.title" :modal="true" class="w-full max-w-md athletic-dialog">
+        <div v-if="selectedCourse" class="workout-details">
+            <div class="trainer-info">
+                <div class="avatar-placeholder">
+                    <i class="pi pi-user"></i>
+                </div>
+                <div>
+                    <small>HEAD COACH</small>
+                    <span class="trainer-name">{{ selectedCourse.trainer?.name }}</span>
                 </div>
             </div>
 
-            <p class="mb-4 text-slate-600 line-height-3">{{ selectedCourse.description }}</p>
+            <div class="description-section">
+                <h3>Workout Brief</h3>
+                <p>{{ selectedCourse.description || 'No description provided for this high-intensity session.' }}</p>
+            </div>
 
-            <div class="grid mb-4">
-                <div class="col-6">
-                    <div class="info-card">
-                        <small>DATE</small>
-                        <span>{{ new Date(selectedCourse.startTime).toLocaleDateString() }}</span>
-                    </div>
+            <div class="specs-grid">
+                <div class="spec-item">
+                    <label>DATE</label>
+                    <div class="val">{{ new Date(selectedCourse.startTime).toLocaleDateString([], { month: 'long', day: 'numeric' }) }}</div>
                 </div>
-                <div class="col-6">
-                    <div class="info-card">
-                        <small>TIME</small>
-                        <span>{{ new Date(selectedCourse.startTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) }}</span>
-                    </div>
+                <div class="spec-item">
+                    <label>TIME</label>
+                    <div class="val">{{ new Date(selectedCourse.startTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) }}</div>
                 </div>
-                <div class="col-6">
-                    <div class="info-card">
-                        <small>DURATION</small>
-                        <span>{{ formatDuration(selectedCourse.durationMinutes) }}</span>
-                    </div>
+                <div class="spec-item">
+                    <label>DURATION</label>
+                    <div class="val">{{ formatDuration(selectedCourse.durationMinutes) }}</div>
                 </div>
-                <div class="col-6">
-                    <div class="info-card">
-                        <small>AVAILABILITY</small>
-                        <span>{{ selectedCourse.capacity - selectedCourse.bookings.length }} spots left</span>
-                    </div>
+                <div class="spec-item">
+                    <label>CAPACITY</label>
+                    <div class="val">{{ selectedCourse.capacity - selectedCourse.bookings.length }} SPOTS LEFT</div>
                 </div>
             </div>
 
-            <div v-if="!authStore.isTrainer()">
+            <div class="action-footer" v-if="!authStore.isTrainer()">
                 <Button v-if="!selectedCourse.bookings.some((b: any) => b.member?.id === authStore.user?.id)"
-                        label="Reserve Spot" class="w-full p-3" @click="bookCourse(selectedCourse.id)"
+                        label="RESERVE SPOT" class="w-full p-4" @click="bookCourse(selectedCourse.id)"
                         :disabled="selectedCourse.bookings.length >= selectedCourse.capacity" />
-                <Button v-else label="Cancel Reservation" severity="danger" variant="text" class="w-full p-3" @click="unbookCourse(selectedCourse.id)" />
+                <Button v-else label="CANCEL RESERVATION" severity="danger" variant="text" class="w-full p-4 cancel-btn" @click="unbookCourse(selectedCourse.id)" />
             </div>
         </div>
     </Dialog>
 
     <!-- Create/Edit Dialog -->
-    <Dialog v-model:visible="formVisible" :header="editingCourse?.id ? 'Edit Course' : 'New Course'" :modal="true" class="w-full max-w-lg">
+    <Dialog v-model:visible="formVisible" :header="editingCourse?.id ? 'Modify Workout' : 'Launch New Workout'" :modal="true" class="w-full max-w-lg">
         <CourseForm
             :course="editingCourse"
             :loading="submitting"
@@ -181,27 +182,133 @@ onMounted(fetchCourses);
             @cancel="formVisible = false"
         />
     </Dialog>
-  </main>
+  </div>
 </template>
 
 <style scoped lang="scss">
-.info-card {
-    background: var(--surface-ground);
-    padding: 0.75rem;
-    border-radius: 6px;
+.home-view {
+    padding: 2rem 0;
+}
+
+.home-header {
     display: flex;
-    flex-direction: column;
-    height: 100%;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 3rem;
+    
+    h1 { margin: 0; font-size: 3.5rem; letter-spacing: -0.02em; }
+    p { font-size: 1.1rem; font-weight: 500; }
+}
 
-    small {
-        font-size: 0.7rem;
-        font-weight: 700;
-        color: var(--text-muted);
-        margin-bottom: 0.25rem;
+.header-badge {
+    background: #0f172a;
+    color: var(--primary-color);
+    padding: 0.75rem 1.5rem;
+    border-radius: 50px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    border: 1px solid var(--primary-color);
+    
+    .pulse {
+        width: 8px;
+        height: 8px;
+        background: var(--primary-color);
+        border-radius: 50%;
+        box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.7);
+        animation: pulse 2s infinite;
     }
+}
 
-    span {
-        font-weight: 600;
+@keyframes pulse {
+    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.7); }
+    70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(255, 193, 7, 0); }
+    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 193, 7, 0); }
+}
+
+.trainer-info {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 1.5rem;
+    background: #f8fafc;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    border-left: 6px solid var(--primary-color);
+    
+    .avatar-placeholder {
+        width: 50px;
+        height: 50px;
+        background: #e2e8f0;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #64748b;
+        font-size: 1.5rem;
     }
+    
+    small { 
+        display: block; 
+        font-family: 'Barlow Condensed', sans-serif; 
+        font-weight: 800; 
+        color: var(--text-muted); 
+        letter-spacing: 0.1em; 
+    }
+    
+    .trainer-name { 
+        font-size: 1.25rem; 
+        font-weight: 800; 
+        color: var(--text-header); 
+        text-transform: uppercase;
+        font-family: 'Barlow Condensed', sans-serif;
+    }
+}
+
+.description-section {
+    margin-bottom: 2.5rem;
+    h3 { font-size: 0.9rem; margin-bottom: 0.75rem; color: var(--text-muted); }
+    p { font-size: 1.1rem; line-height: 1.6; color: var(--text-color); }
+}
+
+.specs-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+}
+
+.spec-item {
+    label { 
+        display: block; 
+        font-size: 0.7rem; 
+        font-weight: 800; 
+        color: var(--text-muted); 
+        text-transform: uppercase; 
+        letter-spacing: 0.1em;
+        margin-bottom: 0.5rem;
+    }
+    .val { 
+        font-weight: 700; 
+        color: var(--text-header); 
+        font-size: 1.1rem;
+    }
+}
+
+.action-footer {
+    padding-top: 2rem;
+    border-top: 1px solid var(--border-color);
+    
+    :deep(.p-button) {
+        font-size: 1.1rem !important;
+        letter-spacing: 0.1em !important;
+    }
+}
+
+.cancel-btn {
+    &:hover { background: #fef2f2 !important; color: #ef4444 !important; }
 }
 </style>

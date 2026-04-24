@@ -24,7 +24,7 @@ function logout() {
         <template v-if="authStore.isLoggedIn()">
           <RouterLink to="/dashboard">Dashboard</RouterLink>
           <RouterLink to="/profile">Profile</RouterLink>
-          <Button @click="logout" label="Logout" icon="pi pi-sign-out" class="p-button-text p-button-secondary" />
+          <Button @click="logout" label="Logout" icon="pi pi-sign-out" variant="text" class="logout-btn" />
         </template>
         <template v-else>
           <RouterLink to="/login">Login</RouterLink>
@@ -34,66 +34,73 @@ function logout() {
     </nav>
   </header>
 
-  <div class="container">
+  <main class="container">
     <RouterView />
-  </div>
+  </main>
 </template>
 
 <style scoped lang="scss">
 .main-header {
-  background-color: #0F172A;
-  color: white;
-  padding: 1rem 2rem;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  // background-color: #0F172A; // Now handled by global .main-header in styles.scss
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
 }
 
 .nav-container {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
 }
 
 .brand a {
   font-family: 'Barlow Condensed', sans-serif;
-  font-size: 1.5rem;
-  font-weight: 800;
+  font-size: 1.75rem;
+  font-weight: 900;
   color: white;
   text-decoration: none;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.15em;
+  transition: color 0.2s;
+
+  &:hover {
+    color: var(--primary-color);
+  }
 }
 
 .nav-links {
   display: flex;
-  gap: 1.5rem;
+  gap: 2rem;
   align-items: center;
 
   a {
-    color: white;
+    color: #f8fafc;
     text-decoration: none;
-    font-weight: 500;
+    font-weight: 700;
     text-transform: uppercase;
-    font-size: 0.9rem;
-    letter-spacing: 0.05em;
+    font-size: 0.95rem;
+    font-family: 'Barlow Condensed', sans-serif;
+    letter-spacing: 0.08em;
+    padding: 0.5rem 0;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
 
     &:hover {
-      color: #0369A1;
+      color: var(--primary-color);
     }
 
     &.router-link-active {
-        color: #0369A1;
-        border-bottom: 2px solid #0369A1;
+        color: var(--primary-color);
+        border-bottom-color: var(--primary-color);
     }
   }
-}
-</style>
 
-<style lang="scss">
-// Global overrides for PrimeVue in our athletic style
-.p-button {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 600;
-    text-transform: uppercase;
+  .logout-btn {
+    color: #94a3b8 !important;
+    font-size: 0.85rem;
+    padding: 0.5rem 1rem !important;
+    &:hover {
+        color: #ef4444 !important;
+    }
+  }
 }
 </style>

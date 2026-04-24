@@ -44,47 +44,79 @@ function handleSubmit() {
 </script>
 
 <template>
-    <div class="course-form">
-        <div class="form-group mb-4">
+    <div class="course-form-athletic">
+        <div class="form-group">
             <label for="workoutType">Workout Type</label>
-            <Select id="workoutType" v-model="form.title" :options="workoutTypes" fluid />
+            <Select id="workoutType" v-model="form.title" :options="workoutTypes" fluid class="athletic-input" />
         </div>
 
-        <div v-if="form.title === 'Other'" class="form-group mb-4 animate-fadein">
-            <label for="customTitle">Custom Title</label>
-            <InputText id="customTitle" v-model="form.customTitle" placeholder="Enter course name" fluid />
+        <div v-if="form.title === 'Other'" class="form-group animate-fadein">
+            <label for="customTitle">Custom Course Name</label>
+            <InputText id="customTitle" v-model="form.customTitle" placeholder="e.g. Spartan Strength" fluid class="athletic-input" />
         </div>
 
-        <div class="form-group mb-4">
-            <label for="startTime">Date & Time</label>
-            <DatePicker id="startTime" v-model="form.startTime" showTime hourFormat="24" fluid />
+        <div class="form-group">
+            <label for="startTime">Scheduled Date & Time</label>
+            <DatePicker id="startTime" v-model="form.startTime" showTime hourFormat="24" fluid class="athletic-input" />
         </div>
 
-        <div class="form-group mb-4">
-            <label for="description">Description (Optional)</label>
-            <Textarea id="description" v-model="form.description" rows="3" fluid />
+        <div class="form-group">
+            <label for="description">Workout Description</label>
+            <Textarea id="description" v-model="form.description" rows="4" placeholder="What should athletes expect?" fluid class="athletic-input" />
         </div>
 
-        <div class="form-row mb-4">
+        <div class="form-row">
             <div class="form-group flex-1">
-                <label for="capacity">Capacity</label>
-                <InputNumber id="capacity" v-model="form.capacity" showButtons :min="1" fluid />
+                <label for="capacity">Max Capacity</label>
+                <InputNumber id="capacity" v-model="form.capacity" showButtons :min="1" fluid class="athletic-input" />
             </div>
             <div class="form-group flex-1">
-                <label for="duration">Duration (Min)</label>
-                <InputNumber id="duration" v-model="form.durationMinutes" showButtons :min="15" fluid />
+                <label for="duration">Duration (Minutes)</label>
+                <InputNumber id="duration" v-model="form.durationMinutes" showButtons :min="15" fluid class="athletic-input" />
             </div>
         </div>
 
-        <div class="form-actions flex justify-content-end gap-2 mt-4">
-            <Button label="Cancel" severity="secondary" variant="text" @click="$emit('cancel')" :disabled="loading" />
-            <Button :label="course?.id ? 'Save Changes' : 'Create Course'" severity="primary" :loading="loading" @click="handleSubmit" />
+        <div class="form-actions mt-6">
+            <Button label="Cancel" variant="text" @click="$emit('cancel')" :disabled="loading" class="cancel-btn" />
+            <Button :label="course?.id ? 'Update Workout' : 'Launch Course'" severity="primary" :loading="loading" @click="handleSubmit" class="submit-btn" />
         </div>
     </div>
 </template>
 
-<style lang="scss">
+<style lang="scss" scoped>
+.course-form-athletic {
+    padding: 1rem 0;
+}
 
+.form-row {
+    display: flex;
+    gap: 2rem;
+}
 
+@media (max-width: 600px) {
+    .form-row { flex-direction: column; gap: 0; }
+}
 
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1.5rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.submit-btn {
+    min-width: 200px;
+}
+
+.cancel-btn {
+    color: var(--text-muted) !important;
+    font-weight: 700 !important;
+    &:hover { color: var(--text-header) !important; background: #f1f5f9 !important; }
+}
+
+:deep(.athletic-input) {
+    // Overrides are mostly handled in global styles.scss
+    // but we can add specific tweaks here if needed.
+}
 </style>
