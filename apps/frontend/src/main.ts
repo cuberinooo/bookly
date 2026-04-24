@@ -21,6 +21,7 @@ import Dialog from 'primevue/dialog';
 import Select from 'primevue/select';
 import Textarea from 'primevue/textarea';
 import InputNumber from 'primevue/inputnumber';
+import ToggleSwitch from 'primevue/toggleswitch';
 import {Tooltip} from "primevue";
 
 const app = createApp(App);
@@ -53,5 +54,6 @@ app.component('Select', Select);
 app.component('Textarea', Textarea);
 app.directive('tooltip', Tooltip);
 app.component('InputNumber', InputNumber);
+app.component('ToggleSwitch', ToggleSwitch);
 
 app.mount('#root');

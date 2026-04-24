@@ -19,7 +19,7 @@ class BookingController extends AbstractController
     public function deleteBooking(Course $course, int $bookingId, EntityManagerInterface $entityManager, BookingRepository $bookingRepository): JsonResponse
     {
         $this->denyAccessUnlessGranted('ROLE_TRAINER');
-        
+
         if ($course->getTrainer() !== $this->getUser()) {
             return new JsonResponse(['error' => 'Access denied'], Response::HTTP_FORBIDDEN);
         }
@@ -69,7 +69,7 @@ class BookingController extends AbstractController
         return new JsonResponse(['status' => 'Booking confirmed'], Response::HTTP_CREATED);
     }
 
-    #[Route('/booking', name: 'course_unbook', methods: ['DELETE'])]
+    #[Route('/book', name: 'course_unbook', methods: ['DELETE'])]
     public function unbook(Course $course, EntityManagerInterface $entityManager, BookingRepository $bookingRepository): JsonResponse
     {
         $this->denyAccessUnlessGranted('ROLE_MEMBER');

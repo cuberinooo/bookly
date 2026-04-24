@@ -1,16 +1,19 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, ref } from 'vue';
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
     courses: any[];
-}>();
+    isCompactView?: boolean;
+}>(), {
+    isCompactView: false
+});
 
 const emit = defineEmits(['course-click', 'cell-click']);
 
 const baseDate = ref(new Date());
 
 const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-const hours = Array.from({ length: 24 }, (_, i) => i);
+const hours = Array.from({ length: 16 }, (_, i) => i + 6); // 6:00 to 22:00
 
 const currentWeek = computed(() => {
     const start = new Date(baseDate.value);
@@ -43,21 +46,25 @@ function resetToToday() {
 }
 
 function getCoursesForDay(day: Date) {
-    return props.courses.filter(c => {
-        const cDate = new Date(c.startTime);
-        return cDate.toDateString() === day.toDateString();
-    });
+    return props.courses
+        .filter(c => {
+            const cDate = new Date(c.startTime);
+            return cDate.toDateString() === day.toDateString();
+        })
+        .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
 }
 
-function getCourseStyle(course: any) {
-    const date = new Date(course.startTime);
-    const startHour = date.getHours() + date.getMinutes() / 60;
-    const duration = course.durationMinutes || 60;
-    const slotHeight = 60; // 1 hour = 60px
-    return {
-        top: `${startHour * slotHeight}px`,
-        height: `${(duration / 60) * slotHeight}px`
-    };
+function getGridRow(startTime: string, durationMinutes: number) {
+    const date = new Date(startTime);
+    const hour = date.getHours();
+    const minutes = date.getMinutes();
+    
+    // Start row (1-based, starting from 6:00)
+    // Each hour is 2 rows (30 min each) to allow some granularity
+    const startRow = (hour - 6) * 2 + (minutes >= 30 ? 2 : 1);
+    const rowSpan = Math.ceil(durationMinutes / 30);
+    
+    return `${startRow} / span ${rowSpan}`;
 }
 
 function isToday(date: Date) {
@@ -65,11 +72,7 @@ function isToday(date: Date) {
     return date.toDateString() === today.toDateString();
 }
 
-function onCellClick(day: Date, event: MouseEvent) {
-    const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
-    const offsetY = event.clientY - rect.top;
-    const hour = Math.floor(offsetY / 60);
-
+function onSlotClick(day: Date, hour: number) {
     const clickDate = new Date(day);
     clickDate.setHours(hour, 0, 0, 0);
     emit('cell-click', clickDate);
@@ -77,52 +80,69 @@ function onCellClick(day: Date, event: MouseEvent) {
 </script>
 
 <template>
-    <div class="athletic-calendar-container shadow-md">
+    <div class="athletic-calendar" :class="{ 'compact-mode': isCompactView }">
         <div class="calendar-toolbar">
-            <div class="date-range">
+            <div class="date-info">
                 <h2>{{ currentWeekLabel }}</h2>
             </div>
-            <div class="nav-controls">
-                <Button icon="pi pi-chevron-left" @click="navigate(-1)" variant="text" />
-                <Button label="TODAY" @click="resetToToday()" variant="outlined" size="small" class="today-btn" />
-                <Button icon="pi pi-chevron-right" @click="navigate(1)" variant="text" />
+            <div class="view-controls">
+                <div class="nav-group">
+                    <Button icon="pi pi-chevron-left" @click="navigate(-1)" variant="text" />
+                    <Button label="TODAY" @click="resetToToday()" variant="outlined" size="small" class="today-btn" />
+                    <Button icon="pi pi-chevron-right" @click="navigate(1)" variant="text" />
+                </div>
             </div>
         </div>
 
-        <div class="calendar-view">
-            <div class="grid-header">
-                <div class="time-corner"></div>
-                <div v-for="(date, idx) in currentWeek" :key="idx"
-                     :class="['day-column-header', { 'is-today': isToday(date) }]">
-                    <span class="day-abbr">{{ days[idx].substring(0, 3) }}</span>
-                    <span class="day-num">{{ date.getDate() }}</span>
+        <div class="calendar-container">
+            <!-- Header Grid -->
+            <div class="calendar-header-grid">
+                <div class="time-corner" v-if="!isCompactView"></div>
+                <div class="days-header-wrapper" :class="{ 'grid-cols-7': true }">
+                    <div v-for="(date, idx) in currentWeek" :key="idx"
+                         :class="['day-header', { 'is-today': isToday(date) }]">
+                        <span class="day-name">{{ days[idx] }}</span>
+                        <span class="day-date">{{ date.getDate() }}</span>
+                    </div>
                 </div>
             </div>
 
-            <div class="scroll-area">
-                <div class="grid-body">
-                    <div class="time-axis">
-                        <div v-for="hour in hours" :key="hour" class="time-label">
+            <!-- Body Scroll Area -->
+            <div class="calendar-body-scroll">
+                <div class="calendar-body-grid">
+                    <!-- Time Axis -->
+                    <div class="time-axis" v-if="!isCompactView">
+                        <div v-for="hour in hours" :key="hour" class="time-slot-label">
                             {{ hour.toString().padStart(2, '0') }}:00
                         </div>
                     </div>
 
-                    <div v-for="(date, dayIdx) in currentWeek" :key="dayIdx"
-                         class="day-track" @click="onCellClick(date, $event)">
-                        <!-- Grid lines -->
-                        <div v-for="hour in hours" :key="hour" class="hour-slot"></div>
+                    <!-- Days Grid -->
+                    <div class="days-body-wrapper" :class="{ 'grid-cols-7': true }">
+                        <div v-for="(date, dayIdx) in currentWeek" :key="dayIdx" class="day-column">
+                            
+                            <!-- Standard View: Time Grid -->
+                            <template v-if="!isCompactView">
+                                <div v-for="hour in hours" :key="hour" class="hour-slot-row" @click="onSlotClick(date, hour)">
+                                    <div class="half-hour-slot"></div>
+                                    <div class="half-hour-slot"></div>
+                                </div>
+                            </template>
 
-                        <!-- Courses -->
-                        <div v-for="course in getCoursesForDay(date)" :key="course.id"
-                             class="course-block" :style="getCourseStyle(course)"
-                             @click.stop="$emit('course-click', course)">
-                            <div class="course-meta">
-                                {{ new Date(course.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }}
+                            <!-- Courses (Both views use grid positioning if not compact, or flex if compact) -->
+                            <div v-for="course in getCoursesForDay(date)" :key="course.id"
+                                 class="course-card"
+                                 :style="!isCompactView ? { gridRow: getGridRow(course.startTime, course.durationMinutes) } : {}"
+                                 @click.stop="$emit('course-click', course)">
+                                <div class="course-time">
+                                    {{ new Date(course.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }}
+                                </div>
+                                <div class="course-title">{{ course.title }}</div>
+                                <div class="course-spots" v-if="!isCompactView">
+                                    {{ course.capacity - course.bookings.length }} SPOTS LEFT
+                                </div>
                             </div>
-                            <div class="course-title">{{ course.title }}</div>
-                            <div class="course-spots">
-                                {{ course.capacity - course.bookings.length }} LEFT
-                            </div>
+
                         </div>
                     </div>
                 </div>
@@ -132,180 +152,295 @@ function onCellClick(day: Date, event: MouseEvent) {
 </template>
 
 <style scoped lang="scss">
-.athletic-calendar-container {
+$brand-amber: #ffc107;
+$brand-slate-dark: #0f172a;
+$brand-slate-medium: #1e293b;
+$border-color: #e2e8f0;
+
+.athletic-calendar {
     background: white;
-    border-radius: 16px;
-    border: 1px solid var(--border-color);
+    border: 1px solid $border-color;
+    border-radius: 12px;
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    height: 900px;
+    height: 800px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+
+    &.compact-mode {
+        height: auto;
+        min-height: 400px;
+    }
 }
 
 .calendar-toolbar {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1.5rem 2rem;
-    background: #0f172a;
+    padding: 1.25rem 2rem;
+    background: $brand-slate-dark;
     color: white;
-    
-    h2 { 
-        margin: 0; 
-        font-family: 'Barlow Condensed', sans-serif; 
-        font-weight: 800; 
-        color: var(--primary-color);
-        letter-spacing: 0.05em;
+
+    h2 {
+        margin: 0;
+        color: $brand-amber;
+        font-family: 'Barlow Condensed', sans-serif;
+        font-weight: 800;
+        font-size: 1.5rem;
     }
 }
 
-.nav-controls {
+.nav-group {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    
+
     :deep(.p-button.p-button-text) {
         color: white !important;
-        &:hover { color: var(--primary-color) !important; background: rgba(255,255,255,0.1) !important; }
+        &:hover { color: $brand-amber !important; background: rgba(255,255,255,0.1) !important; }
     }
 }
 
 .today-btn {
-    border-color: rgba(255,255,255,0.3) !important;
+    border-color: rgba(255,255,255,0.2) !important;
     color: white !important;
-    font-weight: 800 !important;
     font-family: 'Barlow Condensed', sans-serif !important;
-    &:hover { border-color: var(--primary-color) !important; color: var(--primary-color) !important; }
+    font-weight: 700 !important;
+    &:hover { border-color: $brand-amber !important; color: $brand-amber !important; }
 }
 
-.calendar-view {
+.calendar-container {
     display: flex;
     flex-direction: column;
     flex: 1;
     overflow: hidden;
 }
 
-.grid-header {
-    display: grid;
-    grid-template-columns: 70px repeat(7, 1fr);
-    background: #1e293b;
+.calendar-header-grid {
+    display: flex;
+    background: $brand-slate-medium;
     border-bottom: 2px solid #334155;
-    
-    .time-corner { border-right: 1px solid #334155; }
+    position: sticky;
+    top: 0;
+    z-index: 20;
+
+    .time-corner {
+        width: 80px;
+        flex-shrink: 0;
+        border-right: 1px solid #334155;
+    }
 }
 
-.day-column-header {
-    padding: 1rem 0;
+.days-header-wrapper {
+    flex: 1;
+    display: grid;
+    // grid-cols-7 is handled by the class
+}
+
+.grid-cols-7 {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+}
+
+.day-header {
+    padding: 1rem 0.5rem;
     text-align: center;
     display: flex;
     flex-direction: column;
     border-left: 1px solid #334155;
-    color: #94a3b8;
     
-    .day-abbr { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 0.1em; }
-    .day-num { font-family: 'Barlow', sans-serif; font-weight: 800; font-size: 1.4rem; color: white; }
+    .day-name {
+        font-family: 'Barlow Condensed', sans-serif;
+        font-weight: 800;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        letter-spacing: 0.05em;
+        color: #94a3b8;
+    }
     
+    .day-date {
+        font-family: 'Barlow', sans-serif;
+        font-weight: 800;
+        font-size: 1.25rem;
+        color: white;
+    }
+
     &.is-today {
-        background: rgba(255, 193, 7, 0.1);
-        .day-num { color: var(--primary-color); }
-        .day-abbr { color: var(--primary-color); }
+        background: rgba($brand-amber, 0.1);
+        .day-name, .day-date { color: $brand-amber; }
     }
 }
 
-.scroll-area {
+.calendar-body-scroll {
     flex: 1;
     overflow-y: auto;
-    overflow-x: auto;
     background: #f8fafc;
 }
 
-.grid-body {
-    display: grid;
-    grid-template-columns: 70px repeat(7, 1fr);
-    min-width: 900px;
+.calendar-body-grid {
+    display: flex;
     position: relative;
+    min-height: 100%;
 }
 
 .time-axis {
+    width: 80px;
+    flex-shrink: 0;
     background: #f1f5f9;
-    border-right: 1px solid var(--border-color);
+    border-right: 1px solid $border-color;
 }
 
-.time-label {
-    height: 60px;
-    padding: 0.5rem;
-    font-size: 0.7rem;
+.time-slot-label {
+    height: 80px; // Each hour is 80px
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding-top: 0.5rem;
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 700;
-    text-align: right;
-    color: #94a3b8;
+    font-size: 0.75rem;
+    color: #64748b;
 }
 
-.day-track {
-    position: relative;
+.days-body-wrapper {
+    flex: 1;
+    // grid-cols-7 is handled by the class
+}
+
+.day-column {
+    display: grid;
+    grid-template-rows: repeat(32, 40px); // 16 hours * 2 slots = 32 slots of 40px each
     border-left: 1px solid #e2e8f0;
-    height: 1440px; // 24h * 60px
-    cursor: cell;
-    
-    &:hover { background: rgba(255, 193, 7, 0.02); }
+    position: relative;
+
+    &:first-child { border-left: none; }
 }
 
-.hour-slot {
-    height: 60px;
-    border-bottom: 1px solid #f1f5f9;
-}
-
-.course-block {
-    position: absolute;
-    left: 4px;
-    right: 4px;
-    background: var(--primary-color);
-    color: #000;
-    border-radius: 6px;
-    padding: 8px;
-    overflow: hidden;
-    cursor: pointer;
+.compact-mode .day-column {
     display: flex;
     flex-direction: column;
-    gap: 2px;
-    border-left: 4px solid #b45309;
-    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
-    z-index: 1;
-    transition: all 0.2s;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    grid-template-rows: none;
+    min-height: 100px;
+}
 
-    &:hover {
-        transform: scale(1.02);
-        z-index: 10;
-        box-shadow: 0 10px 15px -3px rgba(0,0,0,0.2);
-        background: #fbbf24;
+.hour-slot-row {
+    grid-column: 1;
+    display: contents;
+    cursor: cell;
+    
+    .half-hour-slot {
+        height: 40px;
+        border-bottom: 1px solid #f1f5f9;
+        
+        &:last-child { border-bottom: 1px solid #e2e8f0; }
+
+        &:hover { background: rgba($brand-amber, 0.05); }
     }
 }
 
-.course-meta {
-    font-size: 0.65rem;
-    font-weight: 800;
-    font-family: 'Barlow Condensed', sans-serif;
-    opacity: 0.7;
+.course-card {
+    grid-column: 1;
+    margin: 2px;
+    background: white;
+    border: 1px solid $border-color;
+    border-left: 4px solid $brand-amber;
+    border-radius: 6px;
+    padding: 0.5rem;
+    z-index: 10;
+    cursor: pointer;
+    transition: all 0.2s;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+
+    &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        border-color: $brand-amber;
+    }
+
+    .course-time {
+        font-family: 'Barlow Condensed', sans-serif;
+        font-weight: 800;
+        font-size: 0.7rem;
+        color: #64748b;
+    }
+
+    .course-title {
+        font-family: 'Barlow Condensed', sans-serif;
+        font-weight: 800;
+        text-transform: uppercase;
+        font-size: 0.9rem;
+        line-height: 1.2;
+        color: $brand-slate-dark;
+        margin: 2px 0;
+    }
+
+    .course-spots {
+        font-family: 'Barlow Condensed', sans-serif;
+        font-weight: 800;
+        font-size: 0.65rem;
+        color: $brand-amber;
+        margin-top: auto;
+    }
 }
 
-.course-title {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 800;
-    font-size: 0.95rem;
-    line-height: 1.1;
-    text-transform: uppercase;
+.compact-mode .course-card {
+    grid-row: auto !important;
+    margin: 0;
 }
 
-.course-spots {
-    margin-top: auto;
-    font-size: 0.6rem;
-    font-weight: 900;
-    letter-spacing: 0.05em;
+/* Responsive Styles */
+@media (max-width: 1024px) {
+    .calendar-body-scroll {
+        overflow-x: auto;
+    }
+    .calendar-body-grid, .calendar-header-grid {
+        min-width: 800px;
+    }
 }
 
-/* Custom scrollbar */
-.scroll-area::-webkit-scrollbar { width: 10px; }
-.scroll-area::-webkit-scrollbar-track { background: #f1f5f9; }
-.scroll-area::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 5px; border: 2px solid #f1f5f9; }
-.scroll-area::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+@media (max-width: 768px) {
+    .athletic-calendar { height: auto; }
+    
+    .calendar-header-grid, .calendar-body-grid {
+        display: block; // Stack days vertically or use a better mobile view
+        min-width: 0;
+    }
+    
+    .days-header-wrapper, .days-body-wrapper {
+        display: block;
+    }
+    
+    .day-header {
+        border-left: none;
+        border-bottom: 1px solid #334155;
+        padding: 0.75rem;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .day-column {
+        border-left: none;
+        border-bottom: 2px solid $border-color;
+        padding: 0.5rem;
+        display: flex;
+        flex-direction: column;
+        grid-template-rows: none;
+        height: auto;
+    }
+
+    .time-corner, .time-axis, .hour-slot-row {
+        display: none !important;
+    }
+
+    .course-card {
+        grid-row: auto !important;
+        margin-bottom: 0.5rem;
+    }
+}
 </style>

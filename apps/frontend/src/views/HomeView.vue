@@ -15,6 +15,7 @@ const selectedCourse = ref<any>(null);
 const detailVisible = ref(false);
 const formVisible = ref(false);
 const editingCourse = ref<any>(null);
+const isCompactView = ref(false);
 
 async function fetchCourses() {
   loading.value = true;
@@ -110,18 +111,28 @@ onMounted(fetchCourses);
   <div class="home-view">
     <div class="container">
         <header class="home-header">
-            <div>
+            <div class="header-left">
                 <h1>Athletic Schedule</h1>
                 <p class="text-muted">Master your discipline. Book your next session.</p>
             </div>
-            <div class="header-badge" v-if="authStore.isTrainer()">
-                <span class="pulse"></span>
-                TRAINER MODE ACTIVE
+            
+            <div class="header-right">
+                <div class="view-toggle">
+                    <span :class="{ active: !isCompactView }">STANDARD</span>
+                    <ToggleSwitch v-model="isCompactView" />
+                    <span :class="{ active: isCompactView }">COMPACT</span>
+                </div>
+
+                <div class="header-badge" v-if="authStore.isTrainer()">
+                    <span class="pulse"></span>
+                    TRAINER MODE ACTIVE
+                </div>
             </div>
         </header>
 
         <WeeklyCalendar
             :courses="courses"
+            :is-compact-view="isCompactView"
             @course-click="handleCourseClick"
             @cell-click="handleCellClick"
         />
@@ -193,11 +204,32 @@ onMounted(fetchCourses);
 .home-header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-end;
     margin-bottom: 3rem;
 
     h1 { margin: 0; font-size: 3.5rem; letter-spacing: -0.02em; }
     p { font-size: 1.1rem; font-weight: 500; }
+}
+
+.header-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 1.5rem;
+}
+
+.view-toggle {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+
+    span.active {
+        color: var(--text-header);
+    }
 }
 
 .header-badge {
