@@ -8,11 +8,14 @@ import { useToast } from 'primevue/usetoast';
 const email = ref('');
 const password = ref('');
 const loading = ref(false);
+const resending = ref(false);
+const showResend = ref(false);
 const router = useRouter();
 const toast = useToast();
 
 async function login() {
   loading.value = true;
+  showResend.value = false;
   try {
     const response = await api.post('/login_check', {
       email: email.value,
@@ -22,10 +25,27 @@ async function login() {
     toast.add({ severity: 'success', summary: 'Welcome back!', detail: 'Login successful', life: 3000 });
     router.push({ name: 'home' });
   } catch (err: any) {
-    toast.add({ severity: 'error', summary: 'Login Failed', detail: err.response?.data?.message || 'Check your credentials', life: 3000 });
+    const message = err.response?.data?.message || 'Check your credentials';
+    if (message.includes('verified')) {
+        showResend.value = true;
+    }
+    toast.add({ severity: 'error', summary: 'Login Failed', detail: message, life: 3000 });
   } finally {
     loading.value = false;
   }
+}
+
+async function resendVerification() {
+    resending.value = true;
+    try {
+        await api.post('/resend-verification', { email: email.value });
+        toast.add({ severity: 'info', summary: 'Email Sent', detail: 'A new verification link has been sent to your email.', life: 5000 });
+        showResend.value = false;
+    } catch (err) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Could not resend email', life: 3000 });
+    } finally {
+        resending.value = false;
+    }
 }
 </script>
 
@@ -47,6 +67,19 @@ async function login() {
             <InputText id="password" v-model="password" type="password" required />
           </div>
           <Button severity="primary" type="submit" label="Sign In" :loading="loading" class="mt-2" />
+          
+          <div v-if="showResend" class="bg-amber-50 border border-amber-200 rounded-lg p-4 mt-2">
+            <p class="text-xs text-amber-800 mb-2 font-medium">Didn't get the email? We can send it again.</p>
+            <Button 
+                label="Resend Verification Link" 
+                size="small" 
+                severity="warn" 
+                variant="text"
+                class="w-full text-xs font-bold" 
+                @click="resendVerification" 
+                :loading="resending" 
+            />
+          </div>
         </form>
       </template>
       <template #footer>

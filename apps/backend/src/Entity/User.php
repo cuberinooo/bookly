@@ -59,6 +59,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $verificationToken = null;
 
+    #[ORM\Column(type: 'datetime', nullable: true)]
+    private ?\DateTimeInterface $verificationTokenExpiresAt = null;
+
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $passwordResetToken = null;
 
@@ -91,6 +94,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setVerificationToken(?string $verificationToken): static
     {
         $this->verificationToken = $verificationToken;
+
+        return $this;
+    }
+
+    public function getVerificationTokenExpiresAt(): ?\DateTimeInterface
+    {
+        return $this->verificationTokenExpiresAt;
+    }
+
+    public function setVerificationTokenExpiresAt(?\DateTimeInterface $verificationTokenExpiresAt): static
+    {
+        $this->verificationTokenExpiresAt = $verificationTokenExpiresAt;
 
         return $this;
     }
