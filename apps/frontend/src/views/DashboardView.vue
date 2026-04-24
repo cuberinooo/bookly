@@ -5,6 +5,7 @@ import { authStore } from '../store/auth';
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
 import CourseForm from '../components/CourseForm.vue';
+import ManagedCoursesTable from '../components/ManagedCoursesTable.vue';
 
 const toast = useToast();
 const confirm = useConfirm();
@@ -13,18 +14,20 @@ const notifications = ref<any[]>([]);
 const isTrainer = authStore.isTrainer();
 
 const courseDialog = ref(false);
-const participantsDialog = ref(false);
-const selectedCourse = ref<any>(null);
 const editingCourse = ref<any>(null);
 const submitting = ref(false);
 
 async function fetchData() {
-    const response = await api.get('/courses');
-    if (isTrainer) {
-        courses.value = response.data.filter((c: any) => c.trainer?.id === authStore.user?.id);
-        fetchNotifications();
-    } else {
-        courses.value = response.data.filter((c: any) => c.bookings.some((b: any) => b.member?.id === authStore.user?.id));
+    try {
+        const response = await api.get('/courses');
+        if (isTrainer) {
+            courses.value = response.data.filter((c: any) => c.trainer?.id === authStore.user?.id);
+            fetchNotifications();
+        } else {
+            courses.value = response.data.filter((c: any) => c.bookings.some((b: any) => b.member?.id === authStore.user?.id));
+        }
+    } catch (e) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to fetch dashboard data' });
     }
 }
 
@@ -47,7 +50,7 @@ function openNewCourse() {
 }
 
 function editCourse(course: any) {
-    editingCourse.value = course;
+    editingCourse.value = { ...course, startTime: new Date(course.startTime) };
     courseDialog.value = true;
 }
 
@@ -70,31 +73,20 @@ async function onSaveCourse(formData: any) {
     }
 }
 
-function confirmDeleteCourse(course: any) {
-    confirm.require({
-        message: `Delete "${course.title}"? This cannot be undone.`,
-        header: 'Dangerous Action',
-        icon: 'pi pi-exclamation-triangle',
-        acceptProps: { severity: 'danger' },
-        accept: async () => {
-            await api.delete(`/courses/${course.id}`);
-            toast.add({ severity: 'warn', summary: 'Deleted', detail: 'Course removed', life: 3000 });
-            fetchData();
-        }
-    });
-}
-
 async function unbookCourse(courseId: number) {
     confirm.require({
         message: 'Cancel this booking?',
         header: 'Confirmation',
         icon: 'pi pi-calendar-times',
+        acceptProps: { severity: 'danger', label: 'Yes, cancel' },
         accept: async () => {
             try {
-                await api.delete(`/courses/${courseId}/booking`);
+                await api.delete(`/courses/${courseId}/book`);
                 toast.add({ severity: 'info', summary: 'Cancelled', detail: 'Booking removed', life: 3000 });
                 fetchData();
-            } catch (e) {}
+            } catch (e) {
+                toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to cancel booking' });
+            }
         }
     });
 }
@@ -121,47 +113,7 @@ onMounted(fetchData);
 
     <div v-if="isTrainer" class="trainer-layout">
         <div class="main-content">
-            <section class="section-card">
-                <h2>Managed Courses</h2>
-                <DataTable :value="courses" responsiveLayout="stack" breakpoint="960px" class="mt-4 custom-table">
-                    <Column field="title" header="Course">
-                        <template #body="slotProps">
-                            <span class="course-title-cell">{{ slotProps.data.title }}</span>
-                        </template>
-                    </Column>
-                    <Column header="Schedule">
-                        <template #body="slotProps">
-                            <div class="flex flex-column">
-                                <span class="font-bold text-sm">{{ new Date(slotProps.data.startTime).toLocaleDateString() }}</span>
-                                <span class="text-muted text-xs">{{ new Date(slotProps.data.startTime).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) }}</span>
-                            </div>
-                        </template>
-                    </Column>
-                    <Column header="Duration">
-                        <template #body="slotProps">
-                            {{ formatDuration(slotProps.data.durationMinutes) }}
-                        </template>
-                    </Column>
-                    <Column header="Slots">
-                        <template #body="slotProps">
-                            <div class="flex align-items-center gap-2">
-                                <span :class="['slot-badge', { full: slotProps.data.bookings.length >= slotProps.data.capacity }]">
-                                    {{ slotProps.data.bookings.length }} / {{ slotProps.data.capacity }}
-                                </span>
-                            </div>
-                        </template>
-                    </Column>
-                    <Column header="Actions" class="text-right">
-                        <template #body="slotProps">
-                            <div class="flex justify-content-end gap-2">
-                                <Button icon="pi pi-users" variant="text" @click="selectedCourse = slotProps.data; participantsDialog = true" v-tooltip="'Participants'" class="action-btn" />
-                                <Button icon="pi pi-pencil" variant="text" @click="editCourse(slotProps.data)" class="action-btn" />
-                                <Button icon="pi pi-trash" variant="text" severity="danger" @click="confirmDeleteCourse(slotProps.data)" class="action-btn delete-btn" />
-                            </div>
-                        </template>
-                    </Column>
-                </DataTable>
-            </section>
+            <ManagedCoursesTable :courses="courses" @edit="editCourse" @refresh="fetchData" />
         </div>
 
         <aside class="notifications-panel">
@@ -188,10 +140,10 @@ onMounted(fetchData);
         <section>
             <div class="pb-4">
                 <h2>My Scheduled Bookings</h2>
-                <Button class="pt-4" severity="primary" label="View Schedule" icon="pi pi-calendar" @click="$router.push('/')" variant="text" />
+                <Button label="View Schedule" icon="pi pi-calendar" @click="$router.push('/')" variant="text" />
             </div>
 
-            <div v-if="courses.length === 0" class="empty-state mt-4">
+            <div v-if="courses.length === 0" class="empty-state">
                 <i class="pi pi-calendar-plus"></i>
                 <p>Ready to train? Your schedule is empty.</p>
                 <Button severity="primary" label="Explore Courses" icon="pi pi-search" @click="$router.push('/')" size="large" class="mt-4" />
@@ -206,7 +158,7 @@ onMounted(fetchData);
                         </div>
                     </template>
                     <template #content>
-                        <div class="flex flex-column gap-4 py-3">
+                        <div class="flex flex-col gap-4 py-3">
                             <div class="info-row">
                                 <i class="pi pi-user"></i>
                                 <div>
@@ -240,30 +192,6 @@ onMounted(fetchData);
             @cancel="courseDialog = false"
         />
     </Dialog>
-
-    <!-- Participants Dialog -->
-    <Dialog v-model:visible="participantsDialog" :header="'Participants: ' + selectedCourse?.title" :modal="true" class="w-full max-w-xl">
-        <DataTable :value="selectedCourse?.bookings" class="mt-4 custom-table">
-            <Column header="Member">
-                <template #body="slotProps">
-                    <div class="flex flex-column">
-                        <span class="font-bold text-header">{{ slotProps.data.member.name }}</span>
-                        <small class="text-muted">{{ slotProps.data.member.email }}</small>
-                    </div>
-                </template>
-            </Column>
-            <Column header="Joined On">
-                <template #body="slotProps">
-                    {{ new Date(slotProps.data.createdAt).toLocaleDateString() }}
-                </template>
-            </Column>
-            <Column header="Actions" class="text-right">
-                <template #body="slotProps">
-                    <Button icon="pi pi-user-minus" severity="danger" variant="text" @click="removeParticipant(slotProps.data.id)" v-tooltip="'Remove Member'" />
-                </template>
-            </Column>
-        </DataTable>
-    </Dialog>
   </div>
 </template>
 
@@ -281,14 +209,6 @@ onMounted(fetchData);
     margin-bottom: 4rem;
     h1 { margin: 0; font-size: 3.5rem; letter-spacing: -0.02em; }
     p { font-size: 1.1rem; font-weight: 500; }
-}
-
-.section-card {
-    background: white;
-    padding: 2.5rem;
-    border-radius: 16px;
-    border: 1px solid var(--border-color);
-    box-shadow: var(--shadow-md);
 }
 
 .trainer-layout {
@@ -329,26 +249,6 @@ onMounted(fetchData);
 .mark-read-btn {
     color: var(--primary-color) !important;
     &:hover { background: #fef3c7 !important; }
-}
-
-.course-title-cell {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 800;
-    font-size: 1.1rem;
-    color: var(--text-header);
-    text-transform: uppercase;
-}
-
-.slot-badge {
-    padding: 0.4rem 1rem;
-    background: #f1f5f9;
-    border-radius: 4px;
-    font-size: 0.85rem;
-    font-weight: 800;
-    font-family: 'Barlow Condensed', sans-serif;
-    color: #475569;
-
-    &.full { background: #fee2e2; color: #ef4444; }
 }
 
 .duration-tag {
@@ -419,15 +319,6 @@ onMounted(fetchData);
     p { font-size: 1.5rem; font-weight: 700; color: #64748b; }
 }
 
-.action-btn {
-    color: #64748b !important;
-    &:hover { color: var(--primary-color) !important; background: #fffbeb !important; }
-}
-
-.delete-btn {
-    &:hover { color: #ef4444 !important; background: #fef2f2 !important; }
-}
-
 .cancel-btn {
     font-weight: 800 !important;
     letter-spacing: 0.1em !important;
@@ -441,22 +332,5 @@ onMounted(fetchData);
     color: #94a3b8;
     i { font-size: 2.5rem; margin-bottom: 1rem; opacity: 0.5; }
     p { font-family: 'Barlow Condensed', sans-serif; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em; }
-}
-
-.custom-table {
-    :deep(.p-datatable-thead > tr > th) {
-        background: #f8fafc;
-        color: #475569;
-        font-family: 'Barlow Condensed', sans-serif;
-        text-transform: uppercase;
-        font-weight: 700;
-        letter-spacing: 0.05em;
-        padding: 1.25rem 1rem;
-    }
-
-    :deep(.p-datatable-tbody > tr) {
-        transition: background 0.2s;
-        &:hover { background: #fdfdfd; }
-    }
 }
 </style>
