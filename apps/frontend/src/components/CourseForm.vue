@@ -77,7 +77,7 @@ function handleSubmit() {
         </div>
 
         <div class="form-actions mt-6">
-            <Button label="Cancel" variant="text" @click="$emit('cancel')" :disabled="loading" class="cancel-btn" />
+            <Button label="Cancel" severity="primary" variant="text" @click="$emit('cancel')" :disabled="loading" class="cancel-btn" />
             <Button :label="course?.id ? 'Update Workout' : 'Launch Course'" severity="primary" :loading="loading" @click="handleSubmit" class="submit-btn" />
         </div>
     </div>
@@ -109,9 +109,7 @@ function handleSubmit() {
     min-width: 200px;
 }
 
-.cancel-btn {
-    color: var(--text-muted) !important;
-    font-weight: 700 !important;
-    &:hover { color: var(--text-header) !important; background: #f1f5f9 !important; }
+:deep(.p-select-label) {
+  color: unset;
 }
 </style>
