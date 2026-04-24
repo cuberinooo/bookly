@@ -15,12 +15,11 @@ const saving = ref(false);
 async function fetchSettings() {
     loading.value = true;
     try {
-        const response = await api.get('/user/me');
-        const s = response.data.trainerSettings || {};
+        const response = await api.get('/settings');
         settings.value = {
-            showParticipantNames: s.showParticipantNames ?? true,
-            showWaitlistNames: s.showWaitlistNames ?? true,
-            isWaitlistVisible: s.isWaitlistVisible ?? true
+            showParticipantNames: response.data.showParticipantNames ?? true,
+            showWaitlistNames: response.data.showWaitlistNames ?? true,
+            isWaitlistVisible: response.data.isWaitlistVisible ?? true
         };
     } catch (e) {
         toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load settings' });
@@ -32,8 +31,8 @@ async function fetchSettings() {
 async function updateSettings() {
     saving.value = true;
     try {
-        await api.patch('/user/me', settings.value);
-        toast.add({ severity: 'success', summary: 'Updated', detail: 'Privacy preferences saved', life: 3000 });
+        await api.patch('/settings', settings.value);
+        toast.add({ severity: 'success', summary: 'Updated', detail: 'Global privacy preferences saved', life: 3000 });
     } catch (e) {
         toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to update settings' });
     } finally {

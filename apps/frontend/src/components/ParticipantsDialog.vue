@@ -37,7 +37,7 @@ function close() {
                                 <span :class="['font-bold', isAnonymized(slotProps.data.member.name) ? 'text-slate-400' : 'text-slate-900']">
                                     {{ slotProps.data.member.name }}
                                 </span>
-                                <small v-if="slotProps.data.member.email" class="text-slate-500">{{ slotProps.data.member.email }}</small>
+                                <small v-if="slotProps.data.member.email">{{ slotProps.data.member.email }}</small>
                             </div>
                         </template>
                     </Column>

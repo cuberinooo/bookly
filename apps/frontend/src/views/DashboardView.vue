@@ -30,6 +30,8 @@ async function fetchData() {
             courses.value = response.data.filter((c: any) => c.trainer?.id === authStore.user?.id);
             fetchNotifications();
         } else {
+          console.log(authStore.user);
+
             courses.value = response.data.filter((c: any) => c.bookings.some((b: any) => b.member?.id === authStore.user?.id));
         }
     } catch (e) {
@@ -210,9 +212,9 @@ onMounted(fetchData);
         />
     </Dialog>
 
-    <ParticipantsDialog 
-        v-model:visible="participantsDialog" 
-        :course="selectedCourse" 
+    <ParticipantsDialog
+        v-model:visible="participantsDialog"
+        :course="selectedCourse"
     />
   </div>
 </template>

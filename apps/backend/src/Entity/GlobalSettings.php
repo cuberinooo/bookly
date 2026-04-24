@@ -2,34 +2,30 @@
 
 namespace App\Entity;
 
-use App\Repository\TrainerSettingsRepository;
+use App\Repository\GlobalSettingsRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Attribute\Groups;
 
-#[ORM\Entity(repositoryClass: TrainerSettingsRepository::class)]
-class TrainerSettings
+#[ORM\Entity(repositoryClass: GlobalSettingsRepository::class)]
+class GlobalSettings
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['user:read', 'course:read'])]
+    #[Groups(['settings:read'])]
     private ?int $id = null;
 
     #[ORM\Column(options: ['default' => true])]
-    #[Groups(['user:read', 'course:read'])]
+    #[Groups(['settings:read', 'settings:write'])]
     private ?bool $showParticipantNames = true;
 
     #[ORM\Column(options: ['default' => true])]
-    #[Groups(['user:read', 'course:read'])]
+    #[Groups(['settings:read', 'settings:write'])]
     private ?bool $showWaitlistNames = true;
 
     #[ORM\Column(options: ['default' => true])]
-    #[Groups(['user:read', 'course:read'])]
+    #[Groups(['settings:read', 'settings:write'])]
     private ?bool $isWaitlistVisible = true;
-
-    #[ORM\OneToOne(inversedBy: 'trainerSettings', cascade: ['persist', 'remove'])]
-    #[ORM\JoinColumn(nullable: false)]
-    private ?User $trainer = null;
 
     public function getId(): ?int
     {
@@ -68,18 +64,6 @@ class TrainerSettings
     public function setWaitlistVisible(bool $isWaitlistVisible): static
     {
         $this->isWaitlistVisible = $isWaitlistVisible;
-
-        return $this;
-    }
-
-    public function getTrainer(): ?User
-    {
-        return $this->trainer;
-    }
-
-    public function setTrainer(User $trainer): static
-    {
-        $this->trainer = $trainer;
 
         return $this;
     }

@@ -3,6 +3,7 @@
 namespace App\Serializer;
 
 use App\Entity\Booking;
+use App\Repository\GlobalSettingsRepository;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
@@ -12,7 +13,8 @@ class BookingNormalizer implements NormalizerInterface
     public function __construct(
         #[Autowire(service: 'serializer.normalizer.object')]
         private NormalizerInterface $normalizer,
-        private Security $security
+        private Security $security,
+        private GlobalSettingsRepository $settingsRepository
     ) {}
 
     public function normalize($object, string $format = null, array $context = []): array
@@ -26,7 +28,7 @@ class BookingNormalizer implements NormalizerInterface
             $trainer = $course->getTrainer();
             $currentUser = $this->security->getUser();
 
-            $settings = $trainer->getSettings();
+            $settings = $this->settingsRepository->get();
             $isTrainer = ($currentUser && $currentUser->getUserIdentifier() === $trainer->getUserIdentifier());
             $isOwnBooking = ($currentUser && $currentUser->getUserIdentifier() === $object->getMember()->getUserIdentifier());
 
