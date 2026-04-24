@@ -58,6 +58,10 @@ async function removeParticipant(bookingId: number) {
         header: 'Confirm Removal',
         icon: 'pi pi-user-minus',
         acceptProps: { severity: 'danger' },
+        rejectProps: {
+          label: 'Cancel',
+          severity: 'primary', // Use base styling
+        },
         accept: async () => {
             try {
                 await api.delete(`/bookings/${bookingId}`);

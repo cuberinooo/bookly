@@ -3,10 +3,12 @@ version: '3.8'
 services:
   db:
     image: postgres:16-alpine
+
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-booking_db}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
       POSTGRES_USER: ${POSTGRES_USER:-user}
+      TZ: Europe/Berlin
     healthcheck:
       test: ["CMD", "pg_isready", "-d", "${POSTGRES_DB:-booking_db}", "-U", "${POSTGRES_USER:-user}"]
       timeout: 5s
@@ -29,6 +31,7 @@ services:
       db:
         condition: service_healthy # Wait for Postgres to be ready
     environment:
+      TZ: Europe/Berlin
       # This URL matches the DB service name and credentials above
       DATABASE_URL: "postgresql://user:password@db:5432/booking_db?serverVersion=16&charset=utf8"
 

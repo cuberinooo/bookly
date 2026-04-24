@@ -3,7 +3,9 @@
 namespace App\Controller;
 
 use App\Entity\Course;
+use App\Exception\ScheduleConflictException;
 use App\Repository\CourseRepository;
+use App\Service\CourseService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -25,26 +27,32 @@ class CourseController extends AbstractController
     }
 
     #[Route('', name: 'course_new', methods: ['POST'])]
-    public function new(Request $request, EntityManagerInterface $entityManager): JsonResponse
+    public function new(Request $request, EntityManagerInterface $entityManager, CourseService $courseService): JsonResponse
     {
         $this->denyAccessUnlessGranted('ROLE_TRAINER');
 
         $data = json_decode($request->getContent(), true);
+        
+        $startTime = new \DateTime($data['startTime']);
+        $duration = (int) ($data['durationMinutes'] ?? 60);
+        $endTime = clone $startTime;
+        $endTime->modify("+$duration minutes");
+
+        try {
+            $courseService->validateSchedule($startTime, $endTime);
+        } catch (ScheduleConflictException $e) {
+            return new JsonResponse(['error' => $e->getFrontendMessage()], Response::HTTP_CONFLICT);
+        } catch (\Exception $e) {
+            return new JsonResponse(['error' => 'An unexpected error occurred.'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
         $course = new Course();
         $course->setTitle($data['title']);
         $course->setDescription($data['description'] ?? '');
         $course->setCapacity((int) $data['capacity']);
-        
-        $startTime = new \DateTime($data['startTime']);
         $course->setStartTime($startTime);
-        
-        $duration = (int) ($data['durationMinutes'] ?? 60);
         $course->setDurationMinutes($duration);
-        
-        $endTime = clone $startTime;
-        $endTime->modify("+$duration minutes");
         $course->setEndTime($endTime);
-        
         $course->setTrainer($this->getUser());
 
         $entityManager->persist($course);
@@ -61,7 +69,7 @@ class CourseController extends AbstractController
     }
 
     #[Route('/{id}', name: 'course_edit', methods: ['PATCH'])]
-    public function edit(Request $request, Course $course, EntityManagerInterface $entityManager): JsonResponse
+    public function edit(Request $request, Course $course, EntityManagerInterface $entityManager, CourseService $courseService): JsonResponse
     {
         $this->denyAccessUnlessGranted('ROLE_TRAINER');
         
@@ -70,21 +78,30 @@ class CourseController extends AbstractController
         }
 
         $data = json_decode($request->getContent(), true);
-        if (isset($data['title'])) $course->setTitle($data['title']);
-        if (isset($data['description'])) $course->setDescription($data['description']);
-        if (isset($data['capacity'])) $course->setCapacity((int) $data['capacity']);
         
         if (isset($data['startTime']) || isset($data['durationMinutes'])) {
             $startTime = isset($data['startTime']) ? new \DateTime($data['startTime']) : $course->getStartTime();
             $duration = isset($data['durationMinutes']) ? (int) $data['durationMinutes'] : $course->getDurationMinutes();
             
-            $course->setStartTime($startTime);
-            $course->setDurationMinutes($duration);
-            
             $endTime = clone $startTime;
             $endTime->modify("+$duration minutes");
+
+            try {
+                $courseService->validateSchedule($startTime, $endTime, $course->getId());
+            } catch (ScheduleConflictException $e) {
+                return new JsonResponse(['error' => $e->getFrontendMessage()], Response::HTTP_CONFLICT);
+            } catch (\Exception $e) {
+                return new JsonResponse(['error' => 'An unexpected error occurred.'], Response::HTTP_INTERNAL_SERVER_ERROR);
+            }
+
+            $course->setStartTime($startTime);
+            $course->setDurationMinutes($duration);
             $course->setEndTime($endTime);
         }
+
+        if (isset($data['title'])) $course->setTitle($data['title']);
+        if (isset($data['description'])) $course->setDescription($data['description']);
+        if (isset($data['capacity'])) $course->setCapacity((int) $data['capacity']);
 
         $entityManager->flush();
 

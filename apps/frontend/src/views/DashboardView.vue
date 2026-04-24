@@ -66,8 +66,9 @@ async function onSaveCourse(formData: any) {
         }
         courseDialog.value = false;
         fetchData();
-    } catch (e) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Operation failed', life: 3000 });
+    } catch (e: any) {
+        const errorDetail = e.response?.data?.error || 'Operation failed';
+        toast.add({ severity: 'error', summary: 'Error', detail: errorDetail, life: 5000 });
     } finally {
         submitting.value = false;
     }
@@ -79,6 +80,10 @@ async function unbookCourse(courseId: number) {
         header: 'Confirmation',
         icon: 'pi pi-calendar-times',
         acceptProps: { severity: 'danger', label: 'Yes, cancel' },
+        rejectProps: {
+          label: 'Cancel',
+          severity: 'primary', // Use base styling
+        },
         accept: async () => {
             try {
                 await api.delete(`/courses/${courseId}/book`);
@@ -152,9 +157,9 @@ onMounted(fetchData);
             <div v-else class="bookings-grid">
                 <Card v-for="course in courses" :key="course.id" class="booking-card">
                     <template #title>
-                        <div class="flex justify-content-between align-items-start">
+                        <div class="flex  justify-content-between align-items-start">
                             <span>{{ course.title }}</span>
-                            <span class="duration-tag">{{ formatDuration(course.durationMinutes) }}</span>
+                            <span class="duration-tag ml-2">{{ formatDuration(course.durationMinutes) }}</span>
                         </div>
                     </template>
                     <template #content>

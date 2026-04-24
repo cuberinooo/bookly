@@ -142,33 +142,33 @@ onMounted(fetchCourses);
 
             <div class="description-section">
                 <h3>Workout Brief</h3>
-                <p>{{ selectedCourse.description || 'No description provided for this high-intensity session.' }}</p>
+              <Textarea disabled="" :modelValue="selectedCourse.description || 'No description provided for this high-intensity session.'"/>
             </div>
 
             <div class="specs-grid">
-                <div class="spec-item">
+                <div class="field">
                     <label>DATE</label>
-                    <div class="val">{{ new Date(selectedCourse.startTime).toLocaleDateString([], { month: 'long', day: 'numeric' }) }}</div>
+                  <InputText disabled="" :modelValue="new Date(selectedCourse.startTime).toLocaleDateString([], { month: 'long', day: 'numeric' })"/>
                 </div>
-                <div class="spec-item">
+                <div class="field">
                     <label>TIME</label>
-                    <div class="val">{{ new Date(selectedCourse.startTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) }}</div>
+                    <InputText disabled="" :modelValue="new Date(selectedCourse.startTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})"/>
                 </div>
-                <div class="spec-item">
+                <div class="field">
                     <label>DURATION</label>
-                    <div class="val">{{ formatDuration(selectedCourse.durationMinutes) }}</div>
+                    <InputText disabled="" :modelValue="formatDuration(selectedCourse.durationMinutes)"/>
                 </div>
-                <div class="spec-item">
+                <div class="field">
                     <label>CAPACITY</label>
-                    <div class="val">{{ selectedCourse.capacity - selectedCourse.bookings.length }} SPOTS LEFT</div>
+                    <InputText disabled="" :modelValue="selectedCourse.capacity - selectedCourse.bookings.length">SPOTS LEFT</InputText>
                 </div>
             </div>
 
             <div class="action-footer" v-if="!authStore.isTrainer()">
                 <Button v-if="!selectedCourse.bookings.some((b: any) => b.member?.id === authStore.user?.id)"
-                        label="RESERVE SPOT" class="w-full p-4" @click="bookCourse(selectedCourse.id)"
+                        label="RESERVE SPOT" severity="primary" class="w-full p-4" @click="bookCourse(selectedCourse.id)"
                         :disabled="selectedCourse.bookings.length >= selectedCourse.capacity" />
-                <Button v-else label="CANCEL RESERVATION" severity="danger" variant="text" class="w-full p-4 cancel-btn" @click="unbookCourse(selectedCourse.id)" />
+                <Button v-else label="CANCEL RESERVATION" severity="primary" variant="text" class="w-full p-4 cancel-btn" @click="unbookCourse(selectedCourse.id)" />
             </div>
         </div>
     </Dialog>
@@ -195,7 +195,7 @@ onMounted(fetchCourses);
     justify-content: space-between;
     align-items: center;
     margin-bottom: 3rem;
-    
+
     h1 { margin: 0; font-size: 3.5rem; letter-spacing: -0.02em; }
     p { font-size: 1.1rem; font-weight: 500; }
 }
@@ -212,7 +212,7 @@ onMounted(fetchCourses);
     align-items: center;
     gap: 0.75rem;
     border: 1px solid var(--primary-color);
-    
+
     .pulse {
         width: 8px;
         height: 8px;
@@ -238,7 +238,7 @@ onMounted(fetchCourses);
     border-radius: 12px;
     margin-bottom: 2rem;
     border-left: 6px solid var(--primary-color);
-    
+
     .avatar-placeholder {
         width: 50px;
         height: 50px;
@@ -250,19 +250,19 @@ onMounted(fetchCourses);
         color: #64748b;
         font-size: 1.5rem;
     }
-    
-    small { 
-        display: block; 
-        font-family: 'Barlow Condensed', sans-serif; 
-        font-weight: 800; 
-        color: var(--text-muted); 
-        letter-spacing: 0.1em; 
+
+    small {
+        display: block;
+        font-family: 'Barlow Condensed', sans-serif;
+        font-weight: 800;
+        color: var(--text-muted);
+        letter-spacing: 0.1em;
     }
-    
-    .trainer-name { 
-        font-size: 1.25rem; 
-        font-weight: 800; 
-        color: var(--text-header); 
+
+    .trainer-name {
+        font-size: 1.25rem;
+        font-weight: 800;
+        color: var(--text-header);
         text-transform: uppercase;
         font-family: 'Barlow Condensed', sans-serif;
     }
@@ -282,18 +282,18 @@ onMounted(fetchCourses);
 }
 
 .spec-item {
-    label { 
-        display: block; 
-        font-size: 0.7rem; 
-        font-weight: 800; 
-        color: var(--text-muted); 
-        text-transform: uppercase; 
+    label {
+        display: block;
+        font-size: 0.7rem;
+        font-weight: 800;
+        color: var(--text-muted);
+        text-transform: uppercase;
         letter-spacing: 0.1em;
         margin-bottom: 0.5rem;
     }
-    .val { 
-        font-weight: 700; 
-        color: var(--text-header); 
+    .val {
+        font-weight: 700;
+        color: var(--text-header);
         font-size: 1.1rem;
     }
 }
@@ -301,7 +301,7 @@ onMounted(fetchCourses);
 .action-footer {
     padding-top: 2rem;
     border-top: 1px solid var(--border-color);
-    
+
     :deep(.p-button) {
         font-size: 1.1rem !important;
         letter-spacing: 0.1em !important;
@@ -311,4 +311,13 @@ onMounted(fetchCourses);
 .cancel-btn {
     &:hover { background: #fef2f2 !important; color: #ef4444 !important; }
 }
+
+::v-deep(.p-inputtext:disabled) {
+  background-color: var(--bg-color) !important;
+}
+
+::v-deep(.p-textarea:disabled) {
+  background-color: var(--bg-color) !important;
+}
+
 </style>
