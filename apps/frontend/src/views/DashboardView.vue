@@ -23,53 +23,17 @@ const submitting = ref(false);
 const participantsDialog = ref(false);
 const selectedCourse = ref<any>(null);
 
-const userSettings = ref({
-    showParticipantNames: true,
-    showWaitlistNames: true,
-    isWaitlistVisible: true
-});
-const activeTab = ref(0);
-const savingSettings = ref(false);
-
 async function fetchData() {
     try {
         const response = await api.get('/courses');
         if (isTrainer) {
             courses.value = response.data.filter((c: any) => c.trainer?.id === authStore.user?.id);
             fetchNotifications();
-            fetchUserSettings();
-            if (route.query.tab === 'settings') {
-                activeTab.value = 1;
-            }
         } else {
             courses.value = response.data.filter((c: any) => c.bookings.some((b: any) => b.member?.id === authStore.user?.id));
         }
     } catch (e) {
         toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to fetch dashboard data' });
-    }
-}
-
-async function fetchUserSettings() {
-    try {
-        const response = await api.get('/user/me');
-        const settings = response.data.trainerSettings || {};
-        userSettings.value = {
-            showParticipantNames: settings.showParticipantNames ?? true,
-            showWaitlistNames: settings.showWaitlistNames ?? true,
-            isWaitlistVisible: settings.isWaitlistVisible ?? true
-        };
-    } catch (e) {}
-}
-
-async function updateSettings() {
-    savingSettings.value = true;
-    try {
-        await api.patch('/user/me', userSettings.value);
-        toast.add({ severity: 'success', summary: 'Settings Saved', detail: 'Privacy preferences updated', life: 3000 });
-    } catch (e) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to update settings' });
-    } finally {
-        savingSettings.value = false;
     }
 }
 
@@ -160,45 +124,7 @@ onMounted(fetchData);
 
     <div v-if="isTrainer" class="trainer-layout">
         <div class="main-content">
-            <Tabs v-model:value="activeTab">
-                <TabList>
-                    <Tab :value="0">Managed Courses</Tab>
-                    <Tab :value="1">Global Settings</Tab>
-                </TabList>
-                <TabPanels>
-                    <TabPanel :value="0">
-                        <ManagedCoursesTable :courses="courses" @edit="editCourse" @refresh="fetchData" />
-                    </TabPanel>
-                    <TabPanel :value="1">
-                        <div class="settings-card phoenix-card">
-                            <h3 class="settings-title">Privacy & Visibility</h3>
-                            <div class="setting-group flex flex-col gap-8">
-                                <div class="setting-row">
-                                    <div class="setting-info">
-                                        <label class="form-label">Show Confirmed Participant Names</label>
-                                        <p class="text-xs text-slate-500">If disabled, other members will see "Athlete #ID" instead of names.</p>
-                                    </div>
-                                    <ToggleSwitch v-model="userSettings.showParticipantNames" @change="updateSettings" :disabled="savingSettings" />
-                                </div>
-                                <div class="setting-row">
-                                    <div class="setting-info">
-                                        <label class="form-label">Make Waitlist Visible to Members</label>
-                                        <p class="text-xs text-slate-500">Enable if you want members to see how many people are waiting.</p>
-                                    </div>
-                                    <ToggleSwitch v-model="userSettings.isWaitlistVisible" @change="updateSettings" :disabled="savingSettings" />
-                                </div>
-                                <div class="setting-row" v-if="userSettings.isWaitlistVisible">
-                                    <div class="setting-info">
-                                        <label class="form-label">Show Waitlist Names</label>
-                                        <p class="text-xs text-slate-500">If disabled, waitlisted athletes remain anonymous to others.</p>
-                                    </div>
-                                    <ToggleSwitch v-model="userSettings.showWaitlistNames" @change="updateSettings" :disabled="savingSettings" />
-                                </div>
-                            </div>
-                        </div>
-                    </TabPanel>
-                </TabPanels>
-            </Tabs>
+            <ManagedCoursesTable :courses="courses" @edit="editCourse" @refresh="fetchData" />
         </div>
 
         <aside class="notifications-panel">
@@ -445,46 +371,5 @@ onMounted(fetchData);
     color: #94a3b8;
     i { font-size: 2.5rem; margin-bottom: 1rem; opacity: 0.5; }
     p { font-family: 'Barlow Condensed', sans-serif; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em; }
-}
-.settings-card {
-    background: white;
-    padding: 2.5rem;
-    border-radius: 16px;
-    border: 1px solid var(--border-color);
-}
-
-.settings-title {
-    @apply text-lg font-black uppercase tracking-tighter text-slate-900 mb-8 pb-4 border-b border-slate-100;
-    font-family: 'Barlow Condensed', sans-serif;
-}
-
-.setting-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 2rem;
-}
-
-.setting-info {
-    label { @apply mb-1; }
-}
-
-:deep(.p-tablist-tab-list) {
-    @apply border-none bg-transparent gap-4 mb-6;
-}
-
-:deep(.p-tab) {
-    @apply bg-slate-100 text-slate-500 font-bold uppercase py-3 px-6 rounded-lg transition-all border-none;
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 0.9rem;
-    letter-spacing: 0.05em;
-
-    &.p-tab-active {
-        @apply bg-slate-900 text-amber-400;
-    }
-}
-
-:deep(.p-tabpanels) {
-    @apply bg-transparent p-0;
 }
 </style>

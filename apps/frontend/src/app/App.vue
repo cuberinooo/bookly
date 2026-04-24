@@ -12,31 +12,17 @@ const menuItems = ref([
         label: 'My Account',
         items: [
             { label: 'Profile', icon: 'pi pi-user', command: () => router.push('/profile') },
-            { label: 'Dashboard', icon: 'pi pi-th-large', command: () => router.push('/dashboard') }
+            { label: 'Dashboard', icon: 'pi pi-th-large', command: () => router.push('/dashboard') },
+            { label: 'Settings', icon: 'pi pi-cog', command: () => router.push('/settings') }
         ]
     },
     {
-        label: 'Logout',
-        icon: 'pi pi-sign-out',
-        command: () => logout()
+        label: 'Account Action',
+        items: [
+            { label: 'Logout', icon: 'pi pi-sign-out', command: () => logout() }
+        ]
     }
 ]);
-
-// If trainer, we can add a specific event or link for settings
-// However, the user asked for a settings button via dropdown in profile.
-// I'll add it as a specific item that emits or navigates.
-if (authStore.isTrainer()) {
-    menuItems.value[0].items.push({ 
-        label: 'Trainer Settings', 
-        icon: 'pi pi-cog', 
-        command: () => {
-            // Navigate to dashboard and maybe open settings there? 
-            // Or just a separate view? The user said "maybe under profile there should be a settings button via dropdown"
-            // Let's navigate to dashboard and we can trigger the settings tab there.
-            router.push({ path: '/dashboard', query: { tab: 'settings' } });
-        } 
-    });
-}
 
 function toggleMenu(event: any) {
     menu.value.toggle(event);

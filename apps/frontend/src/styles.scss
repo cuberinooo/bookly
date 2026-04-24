@@ -88,6 +88,14 @@ p {
     }
 }
 
+.p-toggleswitch.p-toggleswitch-checked .p-toggleswitch-slider {
+  background: var(--primary-color) !important;
+}
+
+.text-green-500 {
+  color: var(--primary-color) !important;
+}
+
 // Uniform Form Styling
 .field, .form-group {
     margin-bottom: 1.5rem;
