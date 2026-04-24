@@ -64,7 +64,5 @@ async function login() {
     width: 100%;
     max-width: 400px;
 }
-.text-accent {
-    color: var(--accent-color);
-}
+
 </style>

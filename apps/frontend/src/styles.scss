@@ -111,6 +111,10 @@ p {
         box-shadow: 0 0 0 2px var(--primary-color) !important;
         outline: none !important;
     }
+
+    &:disabled {
+      background-color: var(--text-muted) !important;
+    }
 }
 
 // Container
@@ -198,3 +202,7 @@ p {
 }
 
 .text-muted { color: var(--text-muted); }
+
+.text-accent {
+  color: var(--accent-color);
+}

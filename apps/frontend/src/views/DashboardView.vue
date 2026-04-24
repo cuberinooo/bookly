@@ -194,7 +194,7 @@ onMounted(fetchData);
             <div v-if="courses.length === 0" class="empty-state mt-4">
                 <i class="pi pi-calendar-plus"></i>
                 <p>Ready to train? Your schedule is empty.</p>
-                <Button label="Explore Courses" icon="pi pi-search" @click="$router.push('/')" size="large" class="mt-4" />
+                <Button severity="primary" label="Explore Courses" icon="pi pi-search" @click="$router.push('/')" size="large" class="mt-4" />
             </div>
 
             <div v-else class="bookings-grid">

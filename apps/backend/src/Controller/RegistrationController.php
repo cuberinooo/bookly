@@ -45,4 +45,13 @@ class RegistrationController extends AbstractController
 
         return new JsonResponse(['status' => 'User created'], Response::HTTP_CREATED);
     }
+
+    #[Route('/api/register/roles', name: 'api_register_roles', methods: ['GET'])]
+    public function getRoles(): JsonResponse
+    {
+        return new JsonResponse([
+            ['label' => 'Member', 'value' => 'ROLE_MEMBER'],
+            ['label' => 'Trainer', 'value' => 'ROLE_TRAINER']
+        ]);
+    }
 }
