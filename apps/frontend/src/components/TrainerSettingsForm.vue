@@ -6,7 +6,6 @@ import { useToast } from 'primevue/usetoast';
 const toast = useToast();
 const settings = ref({
     showParticipantNames: true,
-    showWaitlistNames: true,
     isWaitlistVisible: true
 });
 const loading = ref(true);
@@ -18,7 +17,6 @@ async function fetchSettings() {
         const response = await api.get('/settings');
         settings.value = {
             showParticipantNames: response.data.showParticipantNames ?? true,
-            showWaitlistNames: response.data.showWaitlistNames ?? true,
             isWaitlistVisible: response.data.isWaitlistVisible ?? true
         };
     } catch (e) {
@@ -70,14 +68,6 @@ onMounted(fetchSettings);
                             <p class="text-xs text-slate-500">Enable if you want members to see how many people are waiting.</p>
                         </div>
                         <ToggleSwitch v-model="settings.isWaitlistVisible" @change="updateSettings" :disabled="saving" />
-                    </div>
-                    
-                    <div class="setting-row" v-if="settings.isWaitlistVisible">
-                        <div class="setting-info">
-                            <label class="form-label">Show Waitlist Names</label>
-                            <p class="text-xs text-slate-500">If disabled, waitlisted athletes remain anonymous to others.</p>
-                        </div>
-                        <ToggleSwitch v-model="settings.showWaitlistNames" @change="updateSettings" :disabled="saving" />
                     </div>
                 </div>
             </div>

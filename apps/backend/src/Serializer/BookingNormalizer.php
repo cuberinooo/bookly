@@ -41,11 +41,7 @@ class BookingNormalizer implements NormalizerInterface
 
             $shouldShowName = true;
             if (!$isTrainer && !$isOwnBooking) {
-                if ($object->isWaitlist()) {
-                    $shouldShowName = $settings->isShowWaitlistNames();
-                } else {
-                    $shouldShowName = $settings->isShowParticipantNames();
-                }
+                $shouldShowName = $settings->isShowParticipantNames();
             }
 
             if (!$shouldShowName) {

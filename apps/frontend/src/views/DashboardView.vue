@@ -23,6 +23,13 @@ const submitting = ref(false);
 const participantsDialog = ref(false);
 const selectedCourse = ref<any>(null);
 
+const loading = ref(true);
+
+const settings = ref({
+  showParticipantNames: true,
+  isWaitlistVisible: true
+});
+
 async function fetchData() {
     try {
         const response = await api.get('/courses');
@@ -34,8 +41,16 @@ async function fetchData() {
 
             courses.value = response.data.filter((c: any) => c.bookings.some((b: any) => b.member?.id === authStore.user?.id));
         }
+
+        loading.value = true;
+        const responseSettings = await api.get('/settings');
+        settings.value = {
+          showParticipantNames: responseSettings.data.showParticipantNames ?? true,
+          isWaitlistVisible: responseSettings.data.isWaitlistVisible ?? true
+        };
     } catch (e) {
         toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to fetch dashboard data' });
+        loading.value = false;
     }
 }
 
@@ -193,7 +208,7 @@ onMounted(fetchData);
                     </template>
                     <template #footer>
                         <div class="flex flex-col gap-2 w-full">
-                            <Button label="SHOW PARTICIPANTS" icon="pi pi-users" variant="outlined" class="w-full show-btn" @click="selectedCourse = course; participantsDialog = true" />
+                            <Button v-if="settings.showParticipantNames" label="SHOW PARTICIPANTS" icon="pi pi-users" variant="outlined" class="w-full show-btn" @click="selectedCourse = course; participantsDialog = true" />
                             <Button label="CANCEL BOOKING" severity="danger" variant="text" icon="pi pi-times" class="w-full cancel-btn" @click="unbookCourse(course.id)" />
                         </div>
                     </template>

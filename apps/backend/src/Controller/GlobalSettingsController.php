@@ -36,9 +36,6 @@ class GlobalSettingsController extends AbstractController
         if (isset($data['showParticipantNames'])) {
             $settings->setShowParticipantNames((bool) $data['showParticipantNames']);
         }
-        if (isset($data['showWaitlistNames'])) {
-            $settings->setShowWaitlistNames((bool) $data['showWaitlistNames']);
-        }
         if (isset($data['isWaitlistVisible'])) {
             $settings->setWaitlistVisible((bool) $data['isWaitlistVisible']);
         }

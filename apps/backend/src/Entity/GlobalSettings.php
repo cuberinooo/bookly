@@ -21,10 +21,6 @@ class GlobalSettings
 
     #[ORM\Column(options: ['default' => true])]
     #[Groups(['settings:read', 'settings:write'])]
-    private ?bool $showWaitlistNames = true;
-
-    #[ORM\Column(options: ['default' => true])]
-    #[Groups(['settings:read', 'settings:write'])]
     private ?bool $isWaitlistVisible = true;
 
     public function getId(): ?int
@@ -40,18 +36,6 @@ class GlobalSettings
     public function setShowParticipantNames(bool $showParticipantNames): static
     {
         $this->showParticipantNames = $showParticipantNames;
-
-        return $this;
-    }
-
-    public function isShowWaitlistNames(): ?bool
-    {
-        return $this->showWaitlistNames;
-    }
-
-    public function setShowWaitlistNames(bool $showWaitlistNames): static
-    {
-        $this->showWaitlistNames = $showWaitlistNames;
 
         return $this;
     }
