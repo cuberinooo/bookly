@@ -57,7 +57,7 @@ p {
     &.p-button-secondary {
         background-color: transparent !important;
         border: 2px solid var(--text-header) !important;
-        color: var(--text-header) !important;
+        color: var(--primary-color) !important;
         &:hover {
             background-color: var(--text-header) !important;
             color: white !important;
@@ -81,6 +81,7 @@ p {
     overflow: hidden;
 
     .p-card-title {
+        color: var(--text-header);
         font-family: 'Barlow Condensed', sans-serif;
         text-transform: uppercase;
         font-weight: 700;

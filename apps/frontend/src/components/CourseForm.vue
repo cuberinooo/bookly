@@ -112,4 +112,9 @@ function handleSubmit() {
 :deep(.p-select-label) {
   color: unset;
 }
+
+:deep(.p-button.p-button-secondary) {
+  color: unset !important;
+}
+
 </style>

@@ -157,7 +157,7 @@ onMounted(fetchData);
             <div v-else class="bookings-grid">
                 <Card v-for="course in courses" :key="course.id" class="booking-card">
                     <template #title>
-                        <div class="flex  justify-content-between align-items-start">
+                        <div class="flex text-black justify-content-between align-items-start">
                             <span>{{ course.title }}</span>
                             <span class="duration-tag ml-2">{{ formatDuration(course.durationMinutes) }}</span>
                         </div>
