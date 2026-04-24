@@ -15,7 +15,7 @@ const selectedCourse = ref<any>(null);
 const detailVisible = ref(false);
 const formVisible = ref(false);
 const editingCourse = ref<any>(null);
-const isCompactView = ref(false);
+const isCompactView = ref(true);
 
 async function fetchCourses() {
   loading.value = true;

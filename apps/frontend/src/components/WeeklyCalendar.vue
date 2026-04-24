@@ -5,7 +5,7 @@ const props = withDefaults(defineProps<{
     courses: any[];
     isCompactView?: boolean;
 }>(), {
-    isCompactView: false
+    isCompactView: true
 });
 
 const emit = defineEmits(['course-click', 'cell-click']);
@@ -58,12 +58,12 @@ function getGridRow(startTime: string, durationMinutes: number) {
     const date = new Date(startTime);
     const hour = date.getHours();
     const minutes = date.getMinutes();
-    
+
     // Start row (1-based, starting from 6:00)
     // Each hour is 2 rows (30 min each) to allow some granularity
     const startRow = (hour - 6) * 2 + (minutes >= 30 ? 2 : 1);
     const rowSpan = Math.ceil(durationMinutes / 30);
-    
+
     return `${startRow} / span ${rowSpan}`;
 }
 
@@ -120,7 +120,7 @@ function onSlotClick(day: Date, hour: number) {
                     <!-- Days Grid -->
                     <div class="days-body-wrapper" :class="{ 'grid-cols-7': true }">
                         <div v-for="(date, dayIdx) in currentWeek" :key="dayIdx" class="day-column">
-                            
+
                             <!-- Standard View: Time Grid -->
                             <template v-if="!isCompactView">
                                 <div v-for="hour in hours" :key="hour" class="hour-slot-row" @click="onSlotClick(date, hour)">
@@ -254,7 +254,7 @@ $border-color: #e2e8f0;
     display: flex;
     flex-direction: column;
     border-left: 1px solid #334155;
-    
+
     .day-name {
         font-family: 'Barlow Condensed', sans-serif;
         font-weight: 800;
@@ -263,7 +263,7 @@ $border-color: #e2e8f0;
         letter-spacing: 0.05em;
         color: #94a3b8;
     }
-    
+
     .day-date {
         font-family: 'Barlow', sans-serif;
         font-weight: 800;
@@ -335,11 +335,11 @@ $border-color: #e2e8f0;
     grid-column: 1;
     display: contents;
     cursor: cell;
-    
+
     .half-hour-slot {
         height: 40px;
         border-bottom: 1px solid #f1f5f9;
-        
+
         &:last-child { border-bottom: 1px solid #e2e8f0; }
 
         &:hover { background: rgba($brand-amber, 0.05); }
@@ -411,16 +411,16 @@ $border-color: #e2e8f0;
 
 @media (max-width: 768px) {
     .athletic-calendar { height: auto; }
-    
+
     .calendar-header-grid, .calendar-body-grid {
         display: block; // Stack days vertically or use a better mobile view
         min-width: 0;
     }
-    
+
     .days-header-wrapper, .days-body-wrapper {
         display: block;
     }
-    
+
     .day-header {
         border-left: none;
         border-bottom: 1px solid #334155;
@@ -429,7 +429,7 @@ $border-color: #e2e8f0;
         justify-content: space-between;
         align-items: center;
     }
-    
+
     .day-column {
         border-left: none;
         border-bottom: 2px solid $border-color;
