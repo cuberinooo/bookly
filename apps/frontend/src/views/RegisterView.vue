@@ -41,24 +41,24 @@ async function register() {
     <Card class="auth-card">
       <template #title>Create Account</template>
       <template #content>
-        <form @submit.prevent="register" class="flex flex-column gap-4 mt-4">
-          <div class="flex flex-column gap-2">
+        <form @submit.prevent="register" class="flex flex-col gap-4 mt-4">
+          <div class="field">
             <label for="name">Full Name</label>
             <InputText id="name" v-model="name" required placeholder="John Doe" />
           </div>
-          <div class="flex flex-column gap-2">
+          <div class="field">
             <label for="email">Email</label>
             <InputText id="email" v-model="email" type="email" required placeholder="your@email.com" />
           </div>
-          <div class="flex flex-column gap-2">
+          <div class="field">
             <label for="password">Password</label>
             <InputText id="password" v-model="password" type="password" required />
           </div>
-          <div class="flex flex-column gap-2">
+          <div class="field">
             <label for="role">Account Type</label>
             <Select v-model="role" :options="roleOptions" optionLabel="label" optionValue="value" class="w-full" />
           </div>
-          <Button type="submit" label="Join the Phoenix" :loading="loading" class="mt-2" />
+          <Button type="submit" severity="primary" label="Join the Phoenix" :loading="loading" class="mt-2" />
         </form>
       </template>
       <template #footer>

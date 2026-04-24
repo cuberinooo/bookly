@@ -43,7 +43,7 @@ onMounted(fetchProfile);
         <div class="max-w-2xl mx-auto">
             <Card class="p-4 shadow-1">
                 <template #content>
-                    <div class="flex flex-column gap-6">
+                    <div class="flex flex-col gap-3">
                         <div class="field">
                             <label for="email">Account Email</label>
                             <InputText id="email" :value="authStore.user?.email" disabled class="bg-slate-50 cursor-not-allowed opacity-70" />
@@ -55,7 +55,7 @@ onMounted(fetchProfile);
                             <InputText id="name" v-model="name" placeholder="Enter your full name" />
                         </div>
 
-                        <div class="pt-4 border-t-1 border-slate-100 flex justify-content-end">
+                        <div class="border-t-1 border-slate-100">
                             <Button label="Save All Changes" icon="pi pi-check" @click="updateProfile" :loading="loading" severity="primary" size="large" />
                         </div>
                     </div>

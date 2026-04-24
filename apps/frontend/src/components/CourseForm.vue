@@ -114,9 +114,4 @@ function handleSubmit() {
     font-weight: 700 !important;
     &:hover { color: var(--text-header) !important; background: #f1f5f9 !important; }
 }
-
-:deep(.athletic-input) {
-    // Overrides are mostly handled in global styles.scss
-    // but we can add specific tweaks here if needed.
-}
 </style>

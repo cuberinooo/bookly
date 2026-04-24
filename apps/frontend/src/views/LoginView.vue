@@ -34,16 +34,16 @@ async function login() {
     <Card class="auth-card">
       <template #title>Login</template>
       <template #content>
-        <form @submit.prevent="login" class="flex flex-column gap-4 mt-4">
-          <div class="flex flex-column gap-2">
+        <form @submit.prevent="login" class="flex flex-col gap-4 mt-4">
+          <div class="field">
             <label for="email">Email</label>
             <InputText id="email" v-model="email" type="email" required placeholder="your@email.com" />
           </div>
-          <div class="flex flex-column gap-2">
+          <div class="field">
             <label for="password">Password</label>
             <InputText id="password" v-model="password" type="password" required />
           </div>
-          <Button type="submit" label="Sign In" :loading="loading" class="mt-2" />
+          <Button severity="primary" type="submit" label="Sign In" :loading="loading" class="mt-2" />
         </form>
       </template>
       <template #footer>

@@ -186,9 +186,9 @@ onMounted(fetchData);
 
     <div v-else class="member-layout">
         <section>
-            <div class="flex justify-content-between align-items-end mb-4">
+            <div class="pb-4">
                 <h2>My Scheduled Bookings</h2>
-                <Button label="View Schedule" icon="pi pi-calendar" @click="$router.push('/')" variant="text" />
+                <Button class="pt-4" severity="primary" label="View Schedule" icon="pi pi-calendar" @click="$router.push('/')" variant="text" />
             </div>
 
             <div v-if="courses.length === 0" class="empty-state mt-4">
