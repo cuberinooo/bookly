@@ -4,6 +4,7 @@ import { computed, ref } from 'vue';
 const props = withDefaults(defineProps<{
     courses: any[];
     isCompactView?: boolean;
+    userId?: number;
 }>(), {
     isCompactView: true
 });
@@ -72,6 +73,11 @@ function isToday(date: Date) {
     return date.toDateString() === today.toDateString();
 }
 
+function isBookedByUser(course: any) {
+    if (!props.userId) return false;
+    return course.bookings?.some((b: any) => b.member?.id === props.userId);
+}
+
 function onSlotClick(day: Date, hour: number) {
     const clickDate = new Date(day);
     clickDate.setHours(hour, 0, 0, 0);
@@ -132,8 +138,12 @@ function onSlotClick(day: Date, hour: number) {
                             <!-- Courses (Both views use grid positioning if not compact, or flex if compact) -->
                             <div v-for="course in getCoursesForDay(date)" :key="course.id"
                                  class="course-card"
+                                 :class="{ 'is-booked': isBookedByUser(course) }"
                                  :style="!isCompactView ? { gridRow: getGridRow(course.startTime, course.durationMinutes) } : {}"
                                  @click.stop="$emit('course-click', course)">
+                                <div v-if="isBookedByUser(course)" class="booked-badge">
+                                    <i class="pi pi-check"></i> BOOKED
+                                </div>
                                 <div class="course-time">
                                     {{ new Date(course.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }}
                                 </div>
@@ -366,6 +376,33 @@ $border-color: #e2e8f0;
         transform: translateY(-2px);
         box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         border-color: $brand-amber;
+    }
+
+    &.is-booked {
+        background: #fffbeb;
+        border-color: $brand-amber;
+        border-left-width: 8px;
+        box-shadow: 0 4px 6px -1px rgba($brand-amber, 0.2);
+
+        .course-title {
+            color: #92400e;
+        }
+    }
+
+    .booked-badge {
+        font-family: 'Barlow Condensed', sans-serif;
+        font-weight: 800;
+        font-size: 0.55rem;
+        color: $brand-amber;
+        background: #0f172a;
+        padding: 1px 4px;
+        border-radius: 3px;
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        z-index: 2;
+
+        i { font-size: 0.5rem; }
     }
 
     .course-time {

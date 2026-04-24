@@ -133,6 +133,7 @@ onMounted(fetchCourses);
         <WeeklyCalendar
             :courses="courses"
             :is-compact-view="isCompactView"
+            :user-id="authStore.user?.id"
             @course-click="handleCourseClick"
             @cell-click="handleCellClick"
         />
