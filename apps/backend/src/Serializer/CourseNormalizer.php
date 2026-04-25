@@ -3,6 +3,7 @@
 namespace App\Serializer;
 
 use App\Entity\Course;
+use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 
@@ -10,7 +11,8 @@ class CourseNormalizer implements NormalizerInterface
 {
     public function __construct(
         #[Autowire(service: 'serializer.normalizer.object')]
-        private NormalizerInterface $normalizer
+        private NormalizerInterface $normalizer,
+        private Security $security
     ) {}
 
     public function normalize($object, string $format = null, array $context = []): array
@@ -18,10 +20,19 @@ class CourseNormalizer implements NormalizerInterface
         $context['course_normalizer_already_called'] = true;
         $data = $this->normalizer->normalize($object, $format, $context);
 
-        if ($object instanceof Course && isset($data['bookings'])) {
-            $data['bookings'] = array_values(array_filter($data['bookings'], function($booking) {
-                return !isset($booking['_hidden']);
-            }));
+        if ($object instanceof Course) {
+            // Hide trainer email for non-authenticated users
+            if (!$this->security->getUser()) {
+                if (isset($data['trainer']) && is_array($data['trainer'])) {
+                    unset($data['trainer']['email']);
+                }
+            }
+
+            if (isset($data['bookings'])) {
+                $data['bookings'] = array_values(array_filter($data['bookings'], function($booking) {
+                    return !isset($booking['_hidden']);
+                }));
+            }
         }
 
         return $data;

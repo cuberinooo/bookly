@@ -30,7 +30,7 @@ function toggleMenu(event: any) {
 
 function logout() {
   authStore.logout();
-  router.push({ name: 'home' });
+  router.push({ name: 'login' });
 }
 </script>
 

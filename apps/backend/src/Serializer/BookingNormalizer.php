@@ -47,6 +47,12 @@ class BookingNormalizer implements NormalizerInterface
             if (!$shouldShowName) {
                 if (isset($data['member']) && is_array($data['member'])) {
                     $data['member']['name'] = 'Athlete #' . $object->getMember()->getId();
+                }
+            }
+
+            // Always hide email unless it's the trainer or the member's own booking
+            if (!$isTrainer && !$isOwnBooking) {
+                if (isset($data['member']) && is_array($data['member'])) {
                     unset($data['member']['email']);
                 }
             }
