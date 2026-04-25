@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue';
+import { CourseFrequency } from '@/app/enums/CourseFrequency';
 
 const props = defineProps<{
     course?: any;
@@ -17,7 +18,7 @@ const form = ref({
     capacity: 10,
     startTime: new Date(),
     durationMinutes: 60,
-    recurrence: 'NONE'
+    recurrence: CourseFrequency.ONCE
 });
 
 const recurrenceOptions = computed(() => {
@@ -25,10 +26,10 @@ const recurrenceOptions = computed(() => {
     const dayName = days[form.value.startTime.getDay()];
     
     return [
-        { label: 'Einmalig (Once)', value: 'NONE' },
-        { label: 'Täglich (Daily)', value: 'DAILY' },
-        { label: `Jeden ${dayName} (Weekly)`, value: 'WEEKLY' },
-        { label: 'Montag bis Freitag (Weekdays)', value: 'WEEKDAYS' }
+        { label: 'Einmalig (Once)', value: CourseFrequency.ONCE },
+        { label: 'Täglich (Daily)', value: CourseFrequency.DAILY },
+        { label: `Jeden ${dayName} (Weekly)`, value: CourseFrequency.WEEKLY },
+        { label: 'Montag bis Freitag (Weekdays)', value: CourseFrequency.WEEKDAYS }
     ];
 });
 
@@ -42,7 +43,7 @@ watch(() => props.course, (newVal) => {
             capacity: newVal.capacity,
             startTime: new Date(newVal.startTime),
             durationMinutes: newVal.durationMinutes,
-            recurrence: 'NONE' // Default to none on edit
+            recurrence: CourseFrequency.ONCE // Default to once on edit
         };
     }
 }, { immediate: true });
@@ -83,9 +84,13 @@ function handleSubmit() {
                 optionLabel="label" 
                 optionValue="value" 
                 fluid 
-                class="athletic-input" 
+                class="athletic-input"
+                :disabled="!!course?.id"
             />
-            <small v-if="form.recurrence !== 'NONE'" class="text-primary mt-1 block">
+            <small v-if="course?.id" class="text-slate-400 mt-1 block">
+                <i class="pi pi-lock text-xs"></i> Recurrence cannot be changed after creation.
+            </small>
+            <small v-else-if="form.recurrence !== CourseFrequency.ONCE" class="text-primary mt-1 block">
                 <i class="pi pi-info-circle text-xs"></i> Series will be created for the next 6 months.
             </small>
         </div>

@@ -7,6 +7,7 @@ use App\Exception\ScheduleConflictException;
 use App\Repository\CourseRepository;
 
 use App\Entity\User;
+use App\Enum\CourseFrequency;
 use Doctrine\ORM\EntityManagerInterface;
 
 class CourseService
@@ -27,8 +28,10 @@ class CourseService
         $courses = [];
         $startTime = new \DateTime($data['startTime']);
         $duration = (int) ($data['durationMinutes'] ?? 60);
-        $recurrence = $data['recurrence'] ?? 'NONE';
+        $recurrence = CourseFrequency::tryFrom($data['recurrence'] ?? '') ?? CourseFrequency::ONCE;
         
+        $seriesId = $recurrence !== CourseFrequency::ONCE ? bin2hex(random_bytes(8)) : null;
+
         $limitDate = (clone $startTime)->modify('+6 months');
         $currentDate = clone $startTime;
 
@@ -56,24 +59,26 @@ class CourseService
             $course->setStartTime($courseStartTime);
             $course->setDurationMinutes($duration);
             $course->setEndTime($courseEndTime);
+            $course->setFrequency($recurrence);
+            $course->setSeriesId($seriesId);
             $course->setTrainer($trainer);
 
             $this->entityManager->persist($course);
             $courses[] = $course;
 
-            if ($recurrence === 'NONE') {
+            if ($recurrence === CourseFrequency::ONCE) {
                 break;
             }
 
             next_iteration:
             switch ($recurrence) {
-                case 'DAILY':
+                case CourseFrequency::DAILY:
                     $currentDate->modify('+1 day');
                     break;
-                case 'WEEKLY':
+                case CourseFrequency::WEEKLY:
                     $currentDate->modify('+1 week');
                     break;
-                case 'WEEKDAYS':
+                case CourseFrequency::WEEKDAYS:
                     do {
                         $currentDate->modify('+1 day');
                     } while ($currentDate->format('N') >= 6); // Skip Saturday (6) and Sunday (7)
@@ -85,6 +90,29 @@ class CourseService
 
         $this->entityManager->flush();
         return $courses;
+    }
+
+    /**
+     * Deletes all future courses in a series.
+     */
+    public function deleteCourseSeries(string $seriesId): int
+    {
+        $now = new \DateTime();
+        $courses = $this->courseRepository->createQueryBuilder('c')
+            ->where('c.seriesId = :seriesId')
+            ->andWhere('c.startTime > :now')
+            ->setParameter('seriesId', $seriesId)
+            ->setParameter('now', $now)
+            ->getQuery()
+            ->getResult();
+
+        foreach ($courses as $course) {
+            $this->entityManager->remove($course);
+        }
+
+        $this->entityManager->flush();
+
+        return count($courses);
     }
 
     /**

@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Enum\CourseFrequency;
 use App\Repository\CourseRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -10,6 +11,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Attribute\Groups;
 
 #[ORM\Entity(repositoryClass: CourseRepository::class)]
+#[ORM\HasLifecycleCallbacks]
 class Course
 {
     #[ORM\Id]
@@ -17,6 +19,10 @@ class Course
     #[ORM\Column]
     #[Groups(['course:read'])]
     private ?int $id = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['course:read'])]
+    private ?string $seriesId = null;
 
     #[ORM\Column(length: 255)]
     #[Groups(['course:read', 'course:write'])]
@@ -41,6 +47,10 @@ class Course
     #[ORM\Column(nullable: true)]
     #[Groups(['course:read', 'course:write'])]
     private ?int $durationMinutes = null;
+
+    #[ORM\Column(type: "string", enumType: CourseFrequency::class)]
+    #[Groups(['course:read', 'course:write'])]
+    private CourseFrequency $frequency = CourseFrequency::ONCE;
 
     #[ORM\ManyToOne(inversedBy: 'courses')]
     #[ORM\JoinColumn(nullable: false)]
@@ -136,6 +146,18 @@ class Course
         return $this;
     }
 
+    public function getFrequency(): CourseFrequency
+    {
+        return $this->frequency;
+    }
+
+    public function setFrequency(CourseFrequency $frequency): static
+    {
+        $this->frequency = $frequency;
+
+        return $this;
+    }
+
     public function getTrainer(): ?User
     {
         return $this->trainer;
@@ -146,6 +168,26 @@ class Course
         $this->trainer = $trainer;
 
         return $this;
+    }
+
+    public function getSeriesId(): ?string
+    {
+        return $this->seriesId;
+    }
+
+    public function setSeriesId(?string $seriesId): static
+    {
+        $this->seriesId = $seriesId;
+
+        return $this;
+    }
+
+    #[ORM\PreUpdate]
+    public function validateFrequency(\Doctrine\ORM\Event\PreUpdateEventArgs $event): void
+    {
+        if ($event->hasChangedField('frequency')) {
+            throw new \LogicException('The frequency of a course cannot be changed once created.');
+        }
     }
 
     /**

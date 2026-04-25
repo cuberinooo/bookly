@@ -98,12 +98,20 @@ public function new(Request $request, CourseService $courseService): JsonRespons
     }
 
     #[Route('/{id}', name: 'course_delete', methods: ['DELETE'])]
-    public function delete(Course $course, EntityManagerInterface $entityManager): JsonResponse
+    public function delete(Request $request, Course $course, EntityManagerInterface $entityManager, CourseService $courseService): JsonResponse
     {
         $this->denyAccessUnlessGranted('ROLE_TRAINER');
         
         if ($course->getTrainer() !== $this->getUser()) {
             return new JsonResponse(['error' => 'Access denied'], Response::HTTP_FORBIDDEN);
+        }
+
+        $deleteAll = $request->query->getBoolean('deleteAll', false);
+        $seriesId = $course->getSeriesId();
+
+        if ($deleteAll && $seriesId) {
+            $count = $courseService->deleteCourseSeries($seriesId);
+            return new JsonResponse(['status' => "Series deleted ($count courses removed)"]);
         }
 
         $entityManager->remove($course);

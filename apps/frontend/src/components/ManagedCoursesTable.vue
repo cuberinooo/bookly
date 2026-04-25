@@ -32,22 +32,45 @@ function formatDuration(min: number) {
 }
 
 function confirmDeleteCourse(course: any) {
+    const isSeries = !!course.seriesId;
+    
     confirm.require({
-        message: `Delete "${course.title}"? This cannot be undone.`,
-        header: 'Dangerous Action',
+        message: isSeries 
+            ? `Do you want to delete only this instance or all upcoming workouts in this series?`
+            : `Delete "${course.title}"? This cannot be undone.`,
+        header: isSeries ? 'Series Detected' : 'Dangerous Action',
         icon: 'pi pi-exclamation-triangle',
-        acceptProps: { severity: 'danger' },
-        rejectProps: {
-          label: 'Cancel',
-          severity: 'primary', // Use base styling
+        acceptProps: { 
+            label: isSeries ? 'Delete Series' : 'Delete',
+            severity: 'danger' 
         },
+        rejectProps: {
+          label: isSeries ? 'Delete Only This' : 'Cancel',
+          severity: isSeries ? 'warn' : 'primary',
+        },
+        // In PrimeVue, 'accept' is for the primary action (Delete Series)
+        // and 'reject' is for the secondary action (Delete Only This or Cancel)
+        // However, for single courses we want 'reject' to be Cancel.
+        // Let's use a custom approach or handle 'reject' carefully.
         accept: async () => {
             try {
-                await api.delete(`/courses/${course.id}`);
-                toast.add({ severity: 'warn', summary: 'Deleted', detail: 'Course removed', life: 3000 });
+                const url = isSeries ? `/courses/${course.id}?deleteAll=true` : `/courses/${course.id}`;
+                await api.delete(url);
+                toast.add({ severity: 'warn', summary: 'Deleted', detail: isSeries ? 'Series removed' : 'Course removed', life: 3000 });
                 emit('refresh');
             } catch (e) {
-                toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to delete course' });
+                toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to delete' });
+            }
+        },
+        reject: async () => {
+            if (isSeries) {
+                try {
+                    await api.delete(`/courses/${course.id}`);
+                    toast.add({ severity: 'warn', summary: 'Deleted', detail: 'Single course removed', life: 3000 });
+                    emit('refresh');
+                } catch (e) {
+                    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to delete' });
+                }
             }
         }
     });
