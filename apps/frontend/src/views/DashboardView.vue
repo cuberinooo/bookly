@@ -122,6 +122,49 @@ async function unbookCourse(courseId: number) {
     });
 }
 
+async function onDeleteCourse(course: any) {
+    const isSeries = !!course.seriesId;
+    
+    confirm.require({
+        message: isSeries 
+            ? `Do you want to delete only this instance or all upcoming workouts in this series?`
+            : `Delete "${course.title}"? This cannot be undone.`,
+        header: isSeries ? 'Series Detected' : 'Dangerous Action',
+        icon: 'pi pi-exclamation-triangle',
+        acceptProps: { 
+            label: isSeries ? 'Delete Series' : 'Delete',
+            severity: 'danger' 
+        },
+        rejectProps: {
+          label: isSeries ? 'Delete Only This' : 'Cancel',
+          severity: isSeries ? 'warn' : 'primary',
+        },
+        accept: async () => {
+            try {
+                const url = isSeries ? `/courses/${course.id}?deleteAll=true` : `/courses/${course.id}`;
+                await api.delete(url);
+                toast.add({ severity: 'warn', summary: 'Deleted', detail: isSeries ? 'Series removed' : 'Course removed', life: 3000 });
+                courseDialog.value = false;
+                fetchData();
+            } catch (e) {
+                toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to delete' });
+            }
+        },
+        reject: async () => {
+            if (isSeries) {
+                try {
+                    await api.delete(`/courses/${course.id}`);
+                    toast.add({ severity: 'warn', summary: 'Deleted', detail: 'Single course removed', life: 3000 });
+                    courseDialog.value = false;
+                    fetchData();
+                } catch (e) {
+                    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to delete' });
+                }
+            }
+        }
+    });
+}
+
 function formatDuration(min: number) {
     if (min < 60) return `${min}min`;
     const hours = Math.floor(min / 60);
@@ -227,6 +270,7 @@ onMounted(fetchData);
             :loading="submitting"
             @save="onSaveCourse"
             @cancel="courseDialog = false"
+            @delete="onDeleteCourse"
         />
     </Dialog>
 

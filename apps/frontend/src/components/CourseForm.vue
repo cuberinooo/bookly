@@ -7,7 +7,7 @@ const props = defineProps<{
     loading?: boolean;
 }>();
 
-const emit = defineEmits(['save', 'cancel']);
+const emit = defineEmits(['save', 'cancel', 'delete']);
 
 const workoutTypes = ['Functional Training', 'Run Training', 'Team WOD', 'Other'];
 
@@ -24,7 +24,7 @@ const form = ref({
 const recurrenceOptions = computed(() => {
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const dayName = days[form.value.startTime.getDay()];
-    
+
     return [
         { label: 'Einmalig (Once)', value: CourseFrequency.ONCE },
         { label: 'Täglich (Daily)', value: CourseFrequency.DAILY },
@@ -77,13 +77,13 @@ function handleSubmit() {
 
         <div class="form-group">
             <label for="recurrence">Recurrence</label>
-            <Select 
-                id="recurrence" 
-                v-model="form.recurrence" 
-                :options="recurrenceOptions" 
-                optionLabel="label" 
-                optionValue="value" 
-                fluid 
+            <Select
+                id="recurrence"
+                v-model="form.recurrence"
+                :options="recurrenceOptions"
+                optionLabel="label"
+                optionValue="value"
+                fluid
                 class="athletic-input"
                 :disabled="!!course?.id"
             />
@@ -112,8 +112,9 @@ function handleSubmit() {
         </div>
 
         <div class="form-actions mt-6">
-            <Button label="Cancel" severity="primary" variant="text" @click="$emit('cancel')" :disabled="loading" class="cancel-btn" />
-            <Button :label="course?.id ? 'Update Workout' : 'Launch Course'" severity="primary" :loading="loading" @click="handleSubmit" class="submit-btn" />
+          <Button label="Cancel" severity="primary" variant="text" @click="$emit('cancel')" :disabled="loading" class="cancel-btn" />
+          <Button v-if="course?.id" label="Delete Workout" severity="danger" variant="text" @click="$emit('delete', course)" :disabled="loading" class="delete-btn" />
+          <Button :label="course?.id ? 'Update Workout' : 'Launch Course'" severity="primary" :loading="loading" @click="handleSubmit" class="submit-btn" />
         </div>
     </div>
 </template>
@@ -135,17 +136,19 @@ function handleSubmit() {
 .form-actions {
     display: flex;
     justify-content: flex-end;
+    align-items: center;
     gap: 1.5rem;
     padding-top: 2rem;
     border-top: 1px solid var(--border-color);
 }
 
-.submit-btn {
-    min-width: 200px;
-}
 
 :deep(.p-select-label) {
   color: unset;
+}
+
+:deep(.p-button) {
+  height: stretch !important;
 }
 
 :deep(.p-button.p-button-secondary) {

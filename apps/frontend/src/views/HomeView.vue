@@ -3,10 +3,12 @@ import { ref, onMounted } from 'vue';
 import api from '../services/api';
 import { authStore } from '../store/auth';
 import { useToast } from 'primevue/usetoast';
+import { useConfirm } from 'primevue/useconfirm';
 import WeeklyCalendar from '../components/WeeklyCalendar.vue';
 import CourseForm from '../components/CourseForm.vue';
 
 const toast = useToast();
+const confirm = useConfirm();
 const courses = ref<any[]>([]);
 const loading = ref(false);
 const submitting = ref(false);
@@ -69,6 +71,49 @@ async function onSaveCourse(formData: any) {
     } finally {
         submitting.value = false;
     }
+}
+
+async function onDeleteCourse(course: any) {
+    const isSeries = !!course.seriesId;
+    
+    confirm.require({
+        message: isSeries 
+            ? `Do you want to delete only this instance or all upcoming workouts in this series?`
+            : `Delete "${course.title}"? This cannot be undone.`,
+        header: isSeries ? 'Series Detected' : 'Dangerous Action',
+        icon: 'pi pi-exclamation-triangle',
+        acceptProps: { 
+            label: isSeries ? 'Delete Series' : 'Delete',
+            severity: 'danger' 
+        },
+        rejectProps: {
+          label: isSeries ? 'Delete Only This' : 'Cancel',
+          severity: isSeries ? 'warn' : 'primary',
+        },
+        accept: async () => {
+            try {
+                const url = isSeries ? `/courses/${course.id}?deleteAll=true` : `/courses/${course.id}`;
+                await api.delete(url);
+                toast.add({ severity: 'warn', summary: 'Deleted', detail: isSeries ? 'Series removed' : 'Course removed', life: 3000 });
+                formVisible.value = false;
+                fetchCourses();
+            } catch (e) {
+                toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to delete' });
+            }
+        },
+        reject: async () => {
+            if (isSeries) {
+                try {
+                    await api.delete(`/courses/${course.id}`);
+                    toast.add({ severity: 'warn', summary: 'Deleted', detail: 'Single course removed', life: 3000 });
+                    formVisible.value = false;
+                    fetchCourses();
+                } catch (e) {
+                    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to delete' });
+                }
+            }
+        }
+    });
 }
 
 async function bookCourse(courseId: number) {
@@ -192,6 +237,7 @@ onMounted(fetchCourses);
             :loading="submitting"
             @save="onSaveCourse"
             @cancel="formVisible = false"
+            @delete="onDeleteCourse"
         />
     </Dialog>
   </div>
