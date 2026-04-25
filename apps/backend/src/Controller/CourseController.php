@@ -83,11 +83,6 @@ public function new(Request $request, CourseService $courseService): JsonRespons
     public function edit(Request $request, Course $course, EntityManagerInterface $entityManager, CourseService $courseService, UserRepository $userRepository): JsonResponse
     {
         $this->denyAccessUnlessGranted('ROLE_TRAINER');
-
-        if ($course->getTrainer() !== $this->getUser()) {
-            return new JsonResponse(['error' => 'Access denied'], Response::HTTP_FORBIDDEN);
-        }
-
         $data = json_decode($request->getContent(), true);
 
         $newTrainer = $course->getTrainer();
@@ -100,7 +95,7 @@ public function new(Request $request, CourseService $courseService): JsonRespons
 
         if (isset($data['startTime']) || isset($data['durationMinutes']) || isset($data['trainerId'])) {
             $startTime = isset($data['startTime']) ? new \DateTime($data['startTime']) : $course->getStartTime();
-            $duration = isset($data['durationMinutes']) ? (int) $data['durationMinutes'] : $course->getDurationMinutes();
+            $duration = isset($data['durationMinutes']) ? (int) $data['durationMinutes'] : ($course->getDurationMinutes() ?? 60);
 
             $endTime = clone $startTime;
             $endTime->modify("+$duration minutes");
@@ -143,7 +138,9 @@ public function new(Request $request, CourseService $courseService): JsonRespons
     {
         $this->denyAccessUnlessGranted('ROLE_TRAINER');
 
-        if ($course->getTrainer() !== $this->getUser()) {
+        /** @var \App\Entity\User $currentUser */
+        $currentUser = $this->getUser();
+        if ($course->getTrainer()->getId() !== $currentUser->getId()) {
             return new JsonResponse(['error' => 'Access denied'], Response::HTTP_FORBIDDEN);
         }
 
