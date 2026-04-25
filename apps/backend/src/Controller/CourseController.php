@@ -88,8 +88,16 @@ public function new(Request $request, CourseService $courseService): JsonRespons
         }
 
         $data = json_decode($request->getContent(), true);
+
+        $newTrainer = $course->getTrainer();
+        if (isset($data['trainerId'])) {
+            $newTrainer = $userRepository->find($data['trainerId']);
+            if (!$newTrainer || !in_array('ROLE_TRAINER', $newTrainer->getRoles())) {
+                return new JsonResponse(['error' => 'Invalid trainer'], Response::HTTP_BAD_REQUEST);
+            }
+        }
         
-        if (isset($data['startTime']) || isset($data['durationMinutes'])) {
+        if (isset($data['startTime']) || isset($data['durationMinutes']) || isset($data['trainerId'])) {
             $startTime = isset($data['startTime']) ? new \DateTime($data['startTime']) : $course->getStartTime();
             $duration = isset($data['durationMinutes']) ? (int) $data['durationMinutes'] : $course->getDurationMinutes();
             
@@ -97,7 +105,7 @@ public function new(Request $request, CourseService $courseService): JsonRespons
             $endTime->modify("+$duration minutes");
 
             try {
-                $courseService->validateSchedule($startTime, $endTime, $course->getId());
+                $courseService->validateSchedule($startTime, $endTime, $course->getId(), $newTrainer->getId());
             } catch (ScheduleConflictException $e) {
                 return new JsonResponse(['error' => $e->getFrontendMessage()], Response::HTTP_CONFLICT);
             } catch (\Exception $e) {
@@ -114,17 +122,11 @@ public function new(Request $request, CourseService $courseService): JsonRespons
         if (isset($data['capacity'])) $course->setCapacity((int) $data['capacity']);
 
         if (isset($data['trainerId'])) {
-            $newTrainer = $userRepository->find($data['trainerId']);
-            if (!$newTrainer || !in_array('ROLE_TRAINER', $newTrainer->getRoles())) {
-                return new JsonResponse(['error' => 'Invalid trainer'], Response::HTTP_BAD_REQUEST);
-            }
-
             $transferAll = $request->query->getBoolean('transferAll', false);
             $seriesId = $course->getSeriesId();
 
             if ($transferAll && $seriesId) {
                 $count = $courseService->transferCourseSeries($seriesId, $newTrainer);
-                // The current course is also updated in transferCourseSeries if startTime >= now
             } else {
                 $course->setTrainer($newTrainer);
             }

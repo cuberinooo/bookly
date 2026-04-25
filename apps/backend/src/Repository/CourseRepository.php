@@ -19,7 +19,7 @@ class CourseRepository extends ServiceEntityRepository
     /**
      * @return Course[]
      */
-    public function findOverlappingCourses(\DateTimeInterface $startTime, \DateTimeInterface $endTime, ?int $excludeId = null): array
+    public function findOverlappingCourses(\DateTimeInterface $startTime, \DateTimeInterface $endTime, ?int $excludeId = null, ?int $trainerId = null): array
     {
         $qb = $this->createQueryBuilder('c')
             ->where('c.startTime < :endTime')
@@ -28,6 +28,11 @@ class CourseRepository extends ServiceEntityRepository
         if ($excludeId) {
             $qb->andWhere('c.id != :excludeId')
                 ->setParameter('excludeId', $excludeId);
+        }
+
+        if ($trainerId) {
+            $qb->andWhere('c.trainer = :trainerId')
+                ->setParameter('trainerId', $trainerId);
         }
 
         return $qb->setParameter('startTime', $startTime)

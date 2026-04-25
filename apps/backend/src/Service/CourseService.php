@@ -40,13 +40,13 @@ class CourseService
             $courseEndTime = (clone $courseStartTime)->modify("+$duration minutes");
 
             try {
-                $this->validateSchedule($courseStartTime, $courseEndTime);
+                $this->validateSchedule($courseStartTime, $courseEndTime, null, $trainer->getId());
             } catch (ScheduleConflictException $e) {
                 // If it's a series, we might want to skip conflicts or abort.
                 // For now, let's abort if the first one conflicts, but maybe skip subsequent ones?
                 // The user said "symfony will do the rest", usually implying it should be robust.
                 // Let's collect successful ones.
-                if ($currentDate === $startTime) {
+                if ($currentDate == $startTime) {
                     throw $e;
                 }
                 goto next_iteration;
@@ -143,9 +143,9 @@ class CourseService
      *
      * @throws ScheduleConflictException if an overlap is detected
      */
-    public function validateSchedule(\DateTimeInterface $startTime, \DateTimeInterface $endTime, ?int $excludeId = null): void
+    public function validateSchedule(\DateTimeInterface $startTime, \DateTimeInterface $endTime, ?int $excludeId = null, ?int $trainerId = null): void
     {
-        $overlappingCourses = $this->courseRepository->findOverlappingCourses($startTime, $endTime, $excludeId);
+        $overlappingCourses = $this->courseRepository->findOverlappingCourses($startTime, $endTime, $excludeId, $trainerId);
 
         if (!empty($overlappingCourses)) {
             $conflict = $overlappingCourses[0];
