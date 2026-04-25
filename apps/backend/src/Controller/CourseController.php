@@ -25,41 +25,30 @@ class CourseController extends AbstractController
         
         return new JsonResponse($json, Response::HTTP_OK, [], true);
     }
+#[Route('', name: 'course_new', methods: ['POST'])]
+public function new(Request $request, CourseService $courseService): JsonResponse
+{
+    $this->denyAccessUnlessGranted('ROLE_TRAINER');
 
-    #[Route('', name: 'course_new', methods: ['POST'])]
-    public function new(Request $request, EntityManagerInterface $entityManager, CourseService $courseService): JsonResponse
-    {
-        $this->denyAccessUnlessGranted('ROLE_TRAINER');
+    $data = json_decode($request->getContent(), true);
 
-        $data = json_decode($request->getContent(), true);
-        
-        $startTime = new \DateTime($data['startTime']);
-        $duration = (int) ($data['durationMinutes'] ?? 60);
-        $endTime = clone $startTime;
-        $endTime->modify("+$duration minutes");
-
-        try {
-            $courseService->validateSchedule($startTime, $endTime);
-        } catch (ScheduleConflictException $e) {
-            return new JsonResponse(['error' => $e->getFrontendMessage()], Response::HTTP_CONFLICT);
-        } catch (\Exception $e) {
-            return new JsonResponse(['error' => 'An unexpected error occurred.'], Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
-
-        $course = new Course();
-        $course->setTitle($data['title']);
-        $course->setDescription($data['description'] ?? '');
-        $course->setCapacity((int) $data['capacity']);
-        $course->setStartTime($startTime);
-        $course->setDurationMinutes($duration);
-        $course->setEndTime($endTime);
-        $course->setTrainer($this->getUser());
-
-        $entityManager->persist($course);
-        $entityManager->flush();
-
-        return new JsonResponse(['status' => 'Course created', 'id' => $course->getId()], Response::HTTP_CREATED);
+    try {
+        /** @var \App\Entity\User $user */
+        $user = $this->getUser();
+        $courses = $courseService->createCourseSeries($data, $user);
+    } catch (ScheduleConflictException $e) {
+        return new JsonResponse(['error' => $e->getFrontendMessage()], Response::HTTP_CONFLICT);
+    } catch (\Exception $e) {
+        return new JsonResponse(['error' => 'An unexpected error occurred: ' . $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
     }
+
+    return new JsonResponse([
+        'status' => 'Course(s) created', 
+        'count' => count($courses),
+        'ids' => array_map(fn($c) => $c->getId(), $courses)
+    ], Response::HTTP_CREATED);
+}
+
 
     #[Route('/{id}', name: 'course_show', methods: ['GET'])]
     public function show(Course $course, SerializerInterface $serializer): JsonResponse

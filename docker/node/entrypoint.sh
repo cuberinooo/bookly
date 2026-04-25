@@ -12,4 +12,6 @@ fi
 
 echo "Nx modules found. Starting frontend..."
 # Run the command passed via CMD (e.g., nx serve frontend)
+npx nx reset
+
 exec "$@"

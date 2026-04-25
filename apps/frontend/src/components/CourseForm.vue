@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 
 const props = defineProps<{
     course?: any;
@@ -16,7 +16,20 @@ const form = ref({
     description: '',
     capacity: 10,
     startTime: new Date(),
-    durationMinutes: 60
+    durationMinutes: 60,
+    recurrence: 'NONE'
+});
+
+const recurrenceOptions = computed(() => {
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const dayName = days[form.value.startTime.getDay()];
+    
+    return [
+        { label: 'Einmalig (Once)', value: 'NONE' },
+        { label: 'Täglich (Daily)', value: 'DAILY' },
+        { label: `Jeden ${dayName} (Weekly)`, value: 'WEEKLY' },
+        { label: 'Montag bis Freitag (Weekdays)', value: 'WEEKDAYS' }
+    ];
 });
 
 watch(() => props.course, (newVal) => {
@@ -28,7 +41,8 @@ watch(() => props.course, (newVal) => {
             description: newVal.description || '',
             capacity: newVal.capacity,
             startTime: new Date(newVal.startTime),
-            durationMinutes: newVal.durationMinutes
+            durationMinutes: newVal.durationMinutes,
+            recurrence: 'NONE' // Default to none on edit
         };
     }
 }, { immediate: true });
@@ -58,6 +72,22 @@ function handleSubmit() {
         <div class="form-group">
             <label for="startTime">Scheduled Date & Time</label>
             <DatePicker id="startTime" v-model="form.startTime" showTime hourFormat="24" fluid class="athletic-input" />
+        </div>
+
+        <div class="form-group">
+            <label for="recurrence">Recurrence</label>
+            <Select 
+                id="recurrence" 
+                v-model="form.recurrence" 
+                :options="recurrenceOptions" 
+                optionLabel="label" 
+                optionValue="value" 
+                fluid 
+                class="athletic-input" 
+            />
+            <small v-if="form.recurrence !== 'NONE'" class="text-primary mt-1 block">
+                <i class="pi pi-info-circle text-xs"></i> Series will be created for the next 6 months.
+            </small>
         </div>
 
         <div class="form-group">

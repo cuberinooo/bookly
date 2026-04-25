@@ -19,4 +19,4 @@ COPY docker/php/entrypoint.sh /usr/local/bin/entrypoint
 RUN chmod +x /usr/local/bin/entrypoint
 
 ENTRYPOINT ["entrypoint"]
-CMD ["symfony", "server:start", "--no-tls", "--allow-all-ip"]
+CMD ["symfony", "serve", "--no-tls", "--allow-all-ip"]
