@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import api from '../services/api';
 import { authStore } from '../store/auth';
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
 import WeeklyCalendar from '../components/WeeklyCalendar.vue';
+import MobileCalendar from '../components/MobileCalendar.vue';
 import CourseForm from '../components/CourseForm.vue';
 
 const toast = useToast();
@@ -18,6 +19,12 @@ const detailVisible = ref(false);
 const formVisible = ref(false);
 const editingCourse = ref<any>(null);
 const isCompactView = ref(true);
+
+const isMobile = ref(window.innerWidth <= 768);
+
+function handleResize() {
+    isMobile.value = window.innerWidth <= 768;
+}
 
 async function fetchCourses() {
   loading.value = true;
@@ -72,16 +79,6 @@ async function onSaveCourse(formData: any, transferAll: boolean = false) {
     } finally {
         submitting.value = false;
     }
-}
-
-async function onBook() {
-  formVisible.value = false;
-  fetchCourses();
-}
-
-async function onUnbook() {
-  formVisible.value = false;
-  fetchCourses();
 }
 
 async function onDeleteCourse(course: any) {
@@ -160,11 +157,18 @@ function formatDuration(min: number) {
     return m > 0 ? `${h}h ${m}min` : `${h} hour${h > 1 ? 's' : ''}`;
 }
 
-onMounted(fetchCourses);
+onMounted(() => {
+    fetchCourses();
+    window.addEventListener('resize', handleResize);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('resize', handleResize);
+});
 </script>
 
 <template>
-  <div class="home-view">
+  <div class="home-view" :class="{ 'is-mobile-view': isMobile }">
     <div class="container">
         <header class="home-header">
             <div class="header-left">
@@ -172,7 +176,7 @@ onMounted(fetchCourses);
                 <p class="text-muted">Master your discipline. Book your next session.</p>
             </div>
 
-            <div class="header-right">
+            <div class="header-right" v-if="!isMobile">
                 <div class="view-toggle">
                     <span :class="{ active: !isCompactView }">STANDARD</span>
                     <ToggleSwitch v-model="isCompactView" />
@@ -186,17 +190,26 @@ onMounted(fetchCourses);
             </div>
         </header>
 
-        <WeeklyCalendar
-            :courses="courses"
-            :is-compact-view="isCompactView"
-            :user-id="authStore.user?.id"
-            @course-click="handleCourseClick"
-            @cell-click="handleCellClick"
-        />
+        <div v-if="isMobile">
+            <MobileCalendar
+                :courses="courses"
+                :user-id="authStore.user?.id"
+                @course-click="handleCourseClick"
+            />
+        </div>
+        <div v-else>
+            <WeeklyCalendar
+                :courses="courses"
+                :is-compact-view="isCompactView"
+                :user-id="authStore.user?.id"
+                @course-click="handleCourseClick"
+                @cell-click="handleCellClick"
+            />
+        </div>
     </div>
 
     <!-- Details Dialog -->
-    <Dialog v-model:visible="detailVisible" :header="selectedCourse?.title" :modal="true" class="w-full max-w-md athletic-dialog">
+    <Dialog v-model:visible="detailVisible" :header="selectedCourse?.title" :modal="true" :position="isMobile ? 'bottom' : 'center'" class="w-full max-w-md athletic-dialog" :class="{ 'mobile-full-width': isMobile }">
         <div v-if="selectedCourse" class="workout-details">
             <div class="trainer-info">
                 <div class="avatar-placeholder">
@@ -210,25 +223,25 @@ onMounted(fetchCourses);
 
             <div class="field">
               <label>Workout Brief</label>
-              <Textarea disabled="" :modelValue="selectedCourse.description || 'No description provided for this high-intensity session.'"/>
+              <Textarea disabled="" class="w-full" :modelValue="selectedCourse.description || 'No description provided.'"/>
             </div>
 
             <div class="specs-grid">
                 <div class="field">
                     <label>DATE</label>
-                  <InputText disabled="" :modelValue="new Date(selectedCourse.startTime).toLocaleDateString([], { month: 'long', day: 'numeric' })"/>
+                  <InputText disabled="" class="w-full" :modelValue="new Date(selectedCourse.startTime).toLocaleDateString([], { month: 'long', day: 'numeric' })"/>
                 </div>
                 <div class="field">
                     <label>TIME</label>
-                    <InputText disabled="" :modelValue="new Date(selectedCourse.startTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})"/>
+                    <InputText disabled="" class="w-full" :modelValue="new Date(selectedCourse.startTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})"/>
                 </div>
                 <div class="field">
                     <label>DURATION</label>
-                    <InputText disabled="" :modelValue="formatDuration(selectedCourse.durationMinutes)"/>
+                    <InputText disabled="" class="w-full" :modelValue="formatDuration(selectedCourse.durationMinutes)"/>
                 </div>
                 <div class="field">
                     <label>CAPACITY</label>
-                    <InputText disabled="" :modelValue="selectedCourse.bookings.filter(b => !b.isWaitlist).length < selectedCourse.capacity ? (selectedCourse.capacity - selectedCourse.bookings.filter(b => !b.isWaitlist).length) + ' SPOTS LEFT' : 'WAITLIST ACTIVE'"/>
+                    <InputText disabled="" class="w-full" :modelValue="selectedCourse.bookings.filter(b => !b.isWaitlist).length < selectedCourse.capacity ? (selectedCourse.capacity - selectedCourse.bookings.filter(b => !b.isWaitlist).length) + ' SPOTS LEFT' : 'WAITLIST ACTIVE'"/>
                 </div>
             </div>
 
@@ -242,15 +255,14 @@ onMounted(fetchCourses);
     </Dialog>
 
     <!-- Create/Edit Dialog -->
-    <Dialog v-model:visible="formVisible" :header="editingCourse?.id ? 'Modify Workout' : 'Launch New Workout'" :modal="true" class="w-full max-w-lg">
+    <Dialog v-model:visible="formVisible" :header="editingCourse?.id ? 'Modify Workout' : 'Launch New Workout'" :modal="true" :position="isMobile ? 'bottom' : 'center'" class="w-full max-w-lg" :class="{ 'mobile-full-width': isMobile }">
         <CourseForm
             :course="editingCourse"
             :loading="submitting"
             @save="onSaveCourse"
-            @book="onBook"
-            @unbook="onUnbook"
             @cancel="formVisible = false"
             @delete="onDeleteCourse"
+            @participation-change="fetchCourses"
         />
     </Dialog>
   </div>
@@ -259,6 +271,16 @@ onMounted(fetchCourses);
 <style scoped lang="scss">
 .home-view {
     padding: 2rem 0;
+    
+    &.is-mobile-view {
+        padding: 0;
+        .container { padding: 0; max-width: none; }
+        .home-header {
+            padding: 2rem 1.5rem 1rem;
+            margin-bottom: 1rem;
+            h1 { font-size: 2.25rem; }
+        }
+    }
 }
 
 .home-header {
@@ -367,23 +389,6 @@ onMounted(fetchCourses);
     margin-bottom: 3rem;
 }
 
-.spec-item {
-    label {
-        display: block;
-        font-size: 0.7rem;
-        font-weight: 800;
-        color: var(--text-muted);
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        margin-bottom: 0.5rem;
-    }
-    .val {
-        font-weight: 700;
-        color: var(--text-header);
-        font-size: 1.1rem;
-    }
-}
-
 .action-footer {
     padding-top: 2rem;
     border-top: 1px solid var(--border-color);
@@ -404,6 +409,11 @@ onMounted(fetchCourses);
 
 ::v-deep(.p-textarea:disabled) {
   background-color: var(--bg-color) !important;
+}
+
+.mobile-full-width {
+    :deep(.p-dialog-content) { padding: 1.5rem; }
+    :deep(.p-dialog-header) { padding: 1.5rem; border-top-left-radius: 20px; border-top-right-radius: 20px; }
 }
 
 </style>
