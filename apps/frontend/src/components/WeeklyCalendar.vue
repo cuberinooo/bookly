@@ -146,17 +146,23 @@ function onSlotClick(day: Date, hour: number) {
                                 </div>
                                 <div class="course-time">
                                     {{ new Date(course.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }}
+                                    <span v-if="!isCompactView" class="duration-tag">/ {{ course.durationMinutes }} MIN</span>
                                 </div>
                                 <div class="course-title">{{ course.title }}</div>
-                                <div class="course-spots" v-if="!isCompactView">
-                                    <template v-if="course.bookings.filter(b => !b.isWaitlist).length < course.capacity">
-                                        {{ course.capacity - course.bookings.filter(b => !b.isWaitlist).length }} SPOTS LEFT
-                                    </template>
-                                    <template v-else>
-                                        <span class="text-amber-500">FULL / WAITLIST</span>
-                                    </template>
+                                
+                                <div class="course-meta">
+                                    <div class="coach-line" v-if="!isCompactView">
+                                        <i class="pi pi-user text-[10px]"></i> {{ course.trainer?.name }}
+                                    </div>
+                                    <div class="course-spots">
+                                        <template v-if="course.bookings.filter(b => !b.isWaitlist).length < course.capacity">
+                                            {{ course.bookings.filter(b => !b.isWaitlist).length }} / {{ course.capacity }} <i class="pi pi-users text-[10px]"></i>
+                                        </template>
+                                        <template v-else>
+                                            <span class="text-amber-500">FULL</span>
+                                        </template>
+                                    </div>
                                 </div>
-
                             </div>
 
                         </div>
@@ -410,6 +416,12 @@ $border-color: #e2e8f0;
         font-weight: 800;
         font-size: 0.7rem;
         color: #64748b;
+        display: flex;
+        gap: 0.25rem;
+
+        .duration-tag {
+            color: #94a3b8;
+        }
     }
 
     .course-title {
@@ -417,9 +429,27 @@ $border-color: #e2e8f0;
         font-weight: 800;
         text-transform: uppercase;
         font-size: 0.9rem;
-        line-height: 1.2;
+        line-height: 1.1;
         color: $brand-slate-dark;
         margin: 2px 0;
+    }
+
+    .course-meta {
+        margin-top: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .coach-line {
+        font-family: 'Barlow Condensed', sans-serif;
+        font-weight: 700;
+        font-size: 0.65rem;
+        color: #64748b;
+        text-transform: uppercase;
+        display: flex;
+        align-items: center;
+        gap: 4px;
     }
 
     .course-spots {
@@ -427,7 +457,9 @@ $border-color: #e2e8f0;
         font-weight: 800;
         font-size: 0.65rem;
         color: $brand-amber;
-        margin-top: auto;
+        display: flex;
+        align-items: center;
+        gap: 4px;
     }
 }
 

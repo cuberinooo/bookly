@@ -81,6 +81,16 @@ async function onSaveCourse(formData: any, transferAll: boolean = false) {
     }
 }
 
+async function onBook() {
+  formVisible.value = false;
+  fetchCourses();
+}
+
+async function onUnbook() {
+  formVisible.value = false;
+  fetchCourses();
+}
+
 async function onDeleteCourse(course: any) {
     const isSeries = !!course.seriesId;
 
@@ -260,6 +270,8 @@ onUnmounted(() => {
             :course="editingCourse"
             :loading="submitting"
             @save="onSaveCourse"
+            @book="onBook"
+            @unbook="onUnbook"
             @cancel="formVisible = false"
             @delete="onDeleteCourse"
             @participation-change="fetchCourses"
@@ -271,7 +283,7 @@ onUnmounted(() => {
 <style scoped lang="scss">
 .home-view {
     padding: 2rem 0;
-    
+
     &.is-mobile-view {
         padding: 0;
         .container { padding: 0; max-width: none; }
