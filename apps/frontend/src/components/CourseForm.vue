@@ -2,15 +2,18 @@
 import { ref, watch, computed, onMounted } from 'vue';
 import { CourseFrequency } from '@/app/enums/CourseFrequency';
 import api from '../services/api';
+import {authStore} from "../store/auth";
+import {useToast} from "primevue/usetoast";
 
 const props = defineProps<{
     course?: any;
     loading?: boolean;
 }>();
 
-const emit = defineEmits(['save', 'cancel', 'delete']);
+const emit = defineEmits(['save', 'book', 'unbook', 'cancel', 'delete']);
 
 const trainers = ref<any[]>([]);
+const toast = useToast();
 const workoutTypes = ['Functional Training', 'Run Training', 'Team WOD', 'Other'];
 
 const form = ref({
@@ -37,7 +40,7 @@ onMounted(async () => {
 const recurrenceOptions = computed(() => {
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const dayName = days[form.value.startTime.getDay()];
-    
+
     return [
         { label: 'Einmalig (Once)', value: CourseFrequency.ONCE },
         { label: 'Täglich (Daily)', value: CourseFrequency.DAILY },
@@ -63,6 +66,30 @@ watch(() => props.course, (newVal) => {
     }
 }, { immediate: true });
 
+async function bookCourse(courseId: number) {
+  if (!authStore.isLoggedIn()) {
+    toast.add({ severity: 'info', summary: 'Login Required', detail: 'Please login to book a course', life: 5000 });
+    return;
+  }
+  try {
+    await api.post(`/courses/${courseId}/book`);
+    toast.add({ severity: 'success', summary: 'Confirmed', detail: 'Booking confirmed!', life: 5000 });
+    emit('book');
+  } catch (err: any) {
+    toast.add({ severity: 'error', summary: 'Error', detail: err.response?.data?.error || 'Booking failed', life: 5000 });
+  }
+}
+
+async function unbookCourse(courseId: number) {
+  try {
+    await api.delete(`/courses/${courseId}/book`);
+    toast.add({ severity: 'success', summary: 'Cancelled', detail: 'Booking cancelled', life: 5000 });
+    emit('unbook');
+  } catch (err: any) {
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to cancel booking', life: 5000 });
+  }
+}
+
 function handleSubmit() {
     const finalTitle = form.value.title === 'Other' ? form.value.customTitle : form.value.title;
     const payload = {
@@ -70,7 +97,7 @@ function handleSubmit() {
         title: finalTitle,
         startTime: form.value.startTime.toISOString()
     };
-    
+
     // We emit the transferAll flag separately if it's relevant
     emit('save', payload, form.value.transferAll);
 }
@@ -96,13 +123,13 @@ function handleSubmit() {
         <div class="form-row">
             <div class="form-group flex-1">
                 <label for="recurrence">Recurrence</label>
-                <Select 
-                    id="recurrence" 
-                    v-model="form.recurrence" 
-                    :options="recurrenceOptions" 
-                    optionLabel="label" 
-                    optionValue="value" 
-                    fluid 
+                <Select
+                    id="recurrence"
+                    v-model="form.recurrence"
+                    :options="recurrenceOptions"
+                    optionLabel="label"
+                    optionValue="value"
+                    fluid
                     class="athletic-input"
                     :disabled="!!course?.id"
                 />
@@ -113,14 +140,14 @@ function handleSubmit() {
 
             <div v-if="course?.id" class="form-group flex-1">
                 <label for="trainer">Head Coach (Transfer)</label>
-                <Select 
-                    id="trainer" 
-                    v-model="form.trainerId" 
-                    :options="trainers" 
-                    optionLabel="name" 
-                    optionValue="id" 
+                <Select
+                    id="trainer"
+                    v-model="form.trainerId"
+                    :options="trainers"
+                    optionLabel="name"
+                    optionValue="id"
                     placeholder="Select Trainer"
-                    fluid 
+                    fluid
                     class="athletic-input"
                 />
             </div>
@@ -150,6 +177,13 @@ function handleSubmit() {
                 <InputNumber id="duration" v-model="form.durationMinutes" showButtons :min="15" fluid class="athletic-input" />
             </div>
         </div>
+
+      <div class="form-actions mt-6" v-if="course.trainer.id !== authStore.user?.id">
+        <Button v-if="!course.bookings.some((b: any) => b.member?.id === authStore.user?.id)"
+                :label="course.bookings.filter(b => !b.isWaitlist).length < course.capacity ? 'RESERVE SPOT' : 'JOIN WAITLIST'"
+                severity="primary" class="w-full p-4" @click="bookCourse(course.id)" />
+        <Button v-else label="CANCEL RESERVATION" severity="primary" variant="text" class="w-full p-4 cancel-btn" @click="unbookCourse(course.id)" />
+      </div>
 
         <div class="form-actions mt-6">
             <Button v-if="course?.id" label="Delete" severity="danger" variant="text" @click="$emit('delete', course)" :disabled="loading" class="mr-auto delete-btn" />

@@ -36,7 +36,9 @@ class BookingController extends AbstractController
     #[Route('/book', name: 'course_book', methods: ['POST'])]
     public function book(Course $course, BookingService $bookingService): JsonResponse
     {
-        $this->denyAccessUnlessGranted('ROLE_MEMBER');
+        if (!$this->isGranted('ROLE_MEMBER') && !$this->isGranted('ROLE_TRAINER')) {
+            throw $this->createAccessDeniedException();
+        }
         
         try {
             /** @var \App\Entity\User $user */
@@ -53,7 +55,9 @@ class BookingController extends AbstractController
     #[Route('/book', name: 'course_unbook', methods: ['DELETE'])]
     public function unbook(Course $course, BookingService $bookingService): JsonResponse
     {
-        $this->denyAccessUnlessGranted('ROLE_MEMBER');
+        if (!$this->isGranted('ROLE_MEMBER') && !$this->isGranted('ROLE_TRAINER')) {
+            throw $this->createAccessDeniedException();
+        }
         
         try {
             /** @var \App\Entity\User $user */

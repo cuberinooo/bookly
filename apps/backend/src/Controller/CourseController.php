@@ -6,6 +6,7 @@ use App\Entity\Course;
 use App\Exception\ScheduleConflictException;
 use App\Repository\CourseRepository;
 use App\Repository\UserRepository;
+use App\Service\BookingService;
 use App\Service\CourseService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -80,7 +81,7 @@ public function new(Request $request, CourseService $courseService): JsonRespons
     }
 
     #[Route('/{id}', name: 'course_edit', methods: ['PATCH'])]
-    public function edit(Request $request, Course $course, EntityManagerInterface $entityManager, CourseService $courseService, UserRepository $userRepository): JsonResponse
+    public function edit(Request $request, Course $course, EntityManagerInterface $entityManager, CourseService $courseService, UserRepository $userRepository, BookingService $bookingService): JsonResponse
     {
         $this->denyAccessUnlessGranted('ROLE_TRAINER');
         $data = json_decode($request->getContent(), true);
@@ -95,7 +96,7 @@ public function new(Request $request, CourseService $courseService): JsonRespons
 
         if (isset($data['startTime']) || isset($data['durationMinutes']) || isset($data['trainerId'])) {
             $startTime = isset($data['startTime']) ? new \DateTime($data['startTime']) : $course->getStartTime();
-            $duration = isset($data['durationMinutes']) ? (int) $data['durationMinutes'] : ($course->getDurationMinutes() ?? 60);
+            $duration = (int) (isset($data['durationMinutes']) ? $data['durationMinutes'] : ($course->getDurationMinutes() ?? 60));
 
             $endTime = clone $startTime;
             $endTime->modify("+$duration minutes");
@@ -125,6 +126,7 @@ public function new(Request $request, CourseService $courseService): JsonRespons
                 $count = $courseService->transferCourseSeries($seriesId, $newTrainer);
             } else {
                 $course->setTrainer($newTrainer);
+                $bookingService->removeBookingIfExists($course, $newTrainer);
             }
         }
 

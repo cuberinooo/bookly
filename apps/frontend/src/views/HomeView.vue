@@ -33,7 +33,7 @@ async function fetchCourses() {
 }
 
 function handleCourseClick(course: any) {
-    if (authStore.isTrainer() && course.trainer?.id === authStore.user?.id) {
+    if (authStore.isTrainer()) {
         editingCourse.value = course;
         formVisible.value = true;
     } else {
@@ -74,18 +74,28 @@ async function onSaveCourse(formData: any, transferAll: boolean = false) {
     }
 }
 
+async function onBook() {
+  formVisible.value = false;
+  fetchCourses();
+}
+
+async function onUnbook() {
+  formVisible.value = false;
+  fetchCourses();
+}
+
 async function onDeleteCourse(course: any) {
     const isSeries = !!course.seriesId;
-    
+
     confirm.require({
-        message: isSeries 
+        message: isSeries
             ? `Do you want to delete only this instance or all upcoming workouts in this series?`
             : `Delete "${course.title}"? This cannot be undone.`,
         header: isSeries ? 'Series Detected' : 'Dangerous Action',
         icon: 'pi pi-exclamation-triangle',
-        acceptProps: { 
+        acceptProps: {
             label: isSeries ? 'Delete Series' : 'Delete',
-            severity: 'danger' 
+            severity: 'danger'
         },
         rejectProps: {
           label: isSeries ? 'Delete Only This' : 'Cancel',
@@ -237,6 +247,8 @@ onMounted(fetchCourses);
             :course="editingCourse"
             :loading="submitting"
             @save="onSaveCourse"
+            @book="onBook"
+            @unbook="onUnbook"
             @cancel="formVisible = false"
             @delete="onDeleteCourse"
         />

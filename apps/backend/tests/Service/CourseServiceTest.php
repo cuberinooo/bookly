@@ -7,6 +7,7 @@ use App\Entity\User;
 use App\Enum\CourseFrequency;
 use App\Exception\ScheduleConflictException;
 use App\Repository\CourseRepository;
+use App\Service\BookingService;
 use App\Service\CourseService;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query;
@@ -17,13 +18,15 @@ class CourseServiceTest extends TestCase
 {
     private $courseRepository;
     private $entityManager;
+    private $bookingService;
     private $service;
 
     protected function setUp(): void
     {
         $this->courseRepository = $this->createMock(CourseRepository::class);
         $this->entityManager = $this->createMock(EntityManagerInterface::class);
-        $this->service = new CourseService($this->courseRepository, $this->entityManager);
+        $this->bookingService = $this->createMock(BookingService::class);
+        $this->service = new CourseService($this->courseRepository, $this->entityManager, $this->bookingService);
     }
 
     public function testCreateCourseSeriesThrowsExceptionOnOverlap(): void
@@ -129,6 +132,7 @@ class CourseServiceTest extends TestCase
         $query->method('getResult')->willReturn([$course1, $course2]);
 
         $this->entityManager->expects($this->once())->method('flush');
+        $this->bookingService->expects($this->exactly(2))->method('removeBookingIfExists');
 
         $count = $this->service->transferCourseSeries($seriesId, $newTrainer);
         

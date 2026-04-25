@@ -14,7 +14,8 @@ class CourseService
 {
     public function __construct(
         private CourseRepository $courseRepository,
-        private EntityManagerInterface $entityManager
+        private EntityManagerInterface $entityManager,
+        private BookingService $bookingService
     ) {
     }
 
@@ -131,6 +132,7 @@ class CourseService
 
         foreach ($courses as $course) {
             $course->setTrainer($newTrainer);
+            $this->bookingService->removeBookingIfExists($course, $newTrainer);
         }
 
         $this->entityManager->flush();

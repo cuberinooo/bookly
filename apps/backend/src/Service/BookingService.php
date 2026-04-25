@@ -25,6 +25,11 @@ class BookingService
      */
     public function book(Course $course, User $user): array
     {
+        // Check if the user is the trainer of the course
+        if ($course->getTrainer()->getId() === $user->getId()) {
+            throw new \Exception('As a trainer, you cannot book your own course');
+        }
+
         // Check if already booked
         $existingBooking = $this->bookingRepository->findOneBy(['member' => $user, 'course' => $course]);
         if ($existingBooking) {
@@ -84,5 +89,16 @@ class BookingService
     {
         $this->entityManager->remove($booking);
         $this->entityManager->flush();
+    }
+
+    /**
+     * Removes a booking for a specific user and course if it exists.
+     */
+    public function removeBookingIfExists(Course $course, User $user): void
+    {
+        $booking = $this->bookingRepository->findOneBy(['member' => $user, 'course' => $course]);
+        if ($booking) {
+            $this->entityManager->remove($booking);
+        }
     }
 }
