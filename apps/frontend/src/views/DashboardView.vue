@@ -51,7 +51,7 @@ async function fetchData() {
           isWaitlistVisible: responseSettings.data.isWaitlistVisible ?? true
         };
     } catch (e) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to fetch dashboard data' });
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to fetch dashboard data', life: 5000 });
         loading.value = false;
     }
 }
@@ -85,10 +85,10 @@ async function onSaveCourse(formData: any, transferAll: boolean = false) {
         if (editingCourse.value?.id) {
             const url = transferAll ? `/courses/${editingCourse.value.id}?transferAll=true` : `/courses/${editingCourse.value.id}`;
             await api.patch(url, formData);
-            toast.add({ severity: 'success', summary: 'Updated', detail: 'Course updated', life: 3000 });
+            toast.add({ severity: 'success', summary: 'Updated', detail: 'Course updated', life: 5000 });
         } else {
             await api.post('/courses', formData);
-            toast.add({ severity: 'success', summary: 'Created', detail: 'Course created', life: 3000 });
+            toast.add({ severity: 'success', summary: 'Created', detail: 'Course created', life: 5000 });
         }
         courseDialog.value = false;
         fetchData();
@@ -114,10 +114,10 @@ async function unbookCourse(courseId: number) {
         accept: async () => {
             try {
                 await api.delete(`/courses/${courseId}/book`);
-                toast.add({ severity: 'info', summary: 'Cancelled', detail: 'Booking removed', life: 3000 });
+                toast.add({ severity: 'info', summary: 'Cancelled', detail: 'Booking removed', life: 5000 });
                 fetchData();
             } catch (e) {
-                toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to cancel booking' });
+                toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to cancel booking', life: 5000 });
             }
         }
     });
@@ -144,22 +144,22 @@ async function onDeleteCourse(course: any) {
             try {
                 const url = isSeries ? `/courses/${course.id}?deleteAll=true` : `/courses/${course.id}`;
                 await api.delete(url);
-                toast.add({ severity: 'warn', summary: 'Deleted', detail: isSeries ? 'Series removed' : 'Course removed', life: 3000 });
+                toast.add({ severity: 'warn', summary: 'Deleted', detail: isSeries ? 'Series removed' : 'Course removed', life: 5000 });
                 courseDialog.value = false;
                 fetchData();
             } catch (e) {
-                toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to delete' });
+                toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to delete', life: 5000 });
             }
         },
         reject: async () => {
             if (isSeries) {
                 try {
                     await api.delete(`/courses/${course.id}`);
-                    toast.add({ severity: 'warn', summary: 'Deleted', detail: 'Single course removed', life: 3000 });
+                    toast.add({ severity: 'warn', summary: 'Deleted', detail: 'Single course removed', life: 5000 });
                     courseDialog.value = false;
                     fetchData();
                 } catch (e) {
-                    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to delete' });
+                    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to delete', life: 5000 });
                 }
             }
         }

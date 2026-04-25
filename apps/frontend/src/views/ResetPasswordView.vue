@@ -13,13 +13,13 @@ const loading = ref(false);
 
 async function submit() {
     if (password.value !== confirmPassword.value) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Passwords do not match', life: 3000 });
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Passwords do not match', life: 5000 });
         return;
     }
 
     const token = route.query.token as string;
     if (!token) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Invalid or missing token', life: 3000 });
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Invalid or missing token', life: 5000 });
         return;
     }
 
@@ -32,7 +32,7 @@ async function submit() {
         toast.add({ severity: 'success', summary: 'Success', detail: 'Password updated! Please login with your new password.', life: 5000 });
         router.push({ name: 'login' });
     } catch (err: any) {
-        toast.add({ severity: 'error', summary: 'Error', detail: err.response?.data?.error || 'Failed to reset password', life: 3000 });
+        toast.add({ severity: 'error', summary: 'Error', detail: err.response?.data?.error || 'Failed to reset password', life: 5000 });
     } finally {
         loading.value = false;
     }

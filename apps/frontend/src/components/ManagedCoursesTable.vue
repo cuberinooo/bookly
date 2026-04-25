@@ -43,7 +43,7 @@ async function loadLazyData() {
         courses.value = response.data.data;
         totalRecords.value = response.data.meta.totalItems;
     } catch (e) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to fetch courses' });
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to fetch courses', life: 5000 });
     } finally {
         loading.value = false;
     }
@@ -98,20 +98,20 @@ function confirmDeleteCourse(course: any) {
             try {
                 const url = isSeries ? `/courses/${course.id}?deleteAll=true` : `/courses/${course.id}`;
                 await api.delete(url);
-                toast.add({ severity: 'warn', summary: 'Deleted', detail: isSeries ? 'Series removed' : 'Course removed', life: 3000 });
+                toast.add({ severity: 'warn', summary: 'Deleted', detail: isSeries ? 'Series removed' : 'Course removed', life: 5000 });
                 loadLazyData();
             } catch (e) {
-                toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to delete' });
+                toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to delete', life: 5000 });
             }
         },
         reject: async () => {
             if (isSeries) {
                 try {
                     await api.delete(`/courses/${course.id}`);
-                    toast.add({ severity: 'warn', summary: 'Deleted', detail: 'Single course removed', life: 3000 });
+                    toast.add({ severity: 'warn', summary: 'Deleted', detail: 'Single course removed', life: 5000 });
                     loadLazyData();
                 } catch (e) {
-                    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to delete' });
+                    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to delete', life: 5000 });
                 }
             }
         }
@@ -131,11 +131,11 @@ async function removeParticipant(bookingId: number) {
         accept: async () => {
             try {
                 await api.delete(`/bookings/${bookingId}`);
-                toast.add({ severity: 'success', summary: 'Removed', detail: 'Participant removed', life: 3000 });
+                toast.add({ severity: 'success', summary: 'Removed', detail: 'Participant removed', life: 5000 });
                 loadLazyData();
                 participantsDialog.value = false;
             } catch (e) {
-                toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to remove participant' });
+                toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to remove participant', life: 5000 });
             }
         }
     });

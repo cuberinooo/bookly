@@ -20,7 +20,7 @@ async function fetchProfile() {
             email: response.data.email
         };
     } catch (e) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load profile', life: 3000 });
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load profile', life: 5000 });
     } finally {
         fetching.value = false;
     }
@@ -36,9 +36,9 @@ async function updateProfile() {
             ...authStore.user,
             name: user.value.name
         };
-        toast.add({ severity: 'success', summary: 'Updated', detail: 'Profile saved successfully', life: 3000 });
+        toast.add({ severity: 'success', summary: 'Updated', detail: 'Profile saved successfully', life: 5000 });
     } catch (e) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Update failed', life: 3000 });
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Update failed', life: 5000 });
     } finally {
         loading.value = false;
     }

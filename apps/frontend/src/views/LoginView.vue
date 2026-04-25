@@ -22,14 +22,14 @@ async function login() {
       password: password.value,
     });
     authStore.setToken(response.data.token);
-    toast.add({ severity: 'success', summary: 'Welcome back!', detail: 'Login successful', life: 3000 });
+    toast.add({ severity: 'success', summary: 'Welcome back!', detail: 'Login successful', life: 5000 });
     router.push({ name: 'home' });
   } catch (err: any) {
     const message = err.response?.data?.message || 'Check your credentials';
     if (message.includes('verified')) {
         showResend.value = true;
     }
-    toast.add({ severity: 'error', summary: 'Login Failed', detail: message, life: 3000 });
+    toast.add({ severity: 'error', summary: 'Login Failed', detail: message, life: 5000 });
   } finally {
     loading.value = false;
   }
@@ -42,7 +42,7 @@ async function resendVerification() {
         toast.add({ severity: 'info', summary: 'Email Sent', detail: 'A new verification link has been sent to your email.', life: 5000 });
         showResend.value = false;
     } catch (err) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Could not resend email', life: 3000 });
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Could not resend email', life: 5000 });
     } finally {
         resending.value = false;
     }

@@ -16,7 +16,7 @@ async function submit() {
         await api.post('/forgot-password', { email: email.value });
         submitted.value = true;
     } catch (err: any) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Could not process request', life: 3000 });
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Could not process request', life: 5000 });
     } finally {
         loading.value = false;
     }

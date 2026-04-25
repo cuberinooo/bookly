@@ -20,7 +20,7 @@ async function fetchSettings() {
             isWaitlistVisible: response.data.isWaitlistVisible ?? true
         };
     } catch (e) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load settings' });
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load settings', life: 5000 });
     } finally {
         loading.value = false;
     }
@@ -30,9 +30,9 @@ async function updateSettings() {
     saving.value = true;
     try {
         await api.patch('/settings', settings.value);
-        toast.add({ severity: 'success', summary: 'Updated', detail: 'Global privacy preferences saved', life: 3000 });
+        toast.add({ severity: 'success', summary: 'Updated', detail: 'Global privacy preferences saved', life: 5000 });
     } catch (e) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to update settings' });
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to update settings', life: 5000 });
     } finally {
         saving.value = false;
     }
