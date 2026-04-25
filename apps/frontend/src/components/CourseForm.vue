@@ -2,19 +2,39 @@
 import { ref, watch, computed, onMounted } from 'vue';
 import { CourseFrequency } from '@/app/enums/CourseFrequency';
 import api from '../services/api';
-import {authStore} from "../store/auth";
-import {useToast} from "primevue/usetoast";
+import { authStore } from '../store/auth';
+import { useToast } from 'primevue/usetoast';
 
 const props = defineProps<{
     course?: any;
     loading?: boolean;
 }>();
 
-const emit = defineEmits(['save', 'book', 'unbook', 'cancel', 'delete']);
+const emit = defineEmits(['save', 'cancel', 'delete', 'participation-change']);
 
 const trainers = ref<any[]>([]);
 const toast = useToast();
 const workoutTypes = ['Functional Training', 'Run Training', 'Team WOD', 'Other'];
+
+const bookingLoading = ref(false);
+
+const isPastCourse = computed(() => {
+    if (!props.course?.endTime) return false;
+    return new Date(props.course.endTime) < new Date();
+});
+
+const isUserTrainerOfCourse = computed(() => {
+    return props.course?.trainer?.id === authStore.user?.id;
+});
+
+const isUserParticipant = computed(() => {
+    if (!props.course?.bookings) return false;
+    return props.course.bookings.some((b: any) => b.member?.id === authStore.user?.id);
+});
+
+const canParticipate = computed(() => {
+    return props.course?.id && !isUserTrainerOfCourse.value && !isPastCourse.value;
+});
 
 const form = ref({
     title: '',
@@ -66,28 +86,25 @@ watch(() => props.course, (newVal) => {
     }
 }, { immediate: true });
 
-async function bookCourse(courseId: number) {
-  if (!authStore.isLoggedIn()) {
-    toast.add({ severity: 'info', summary: 'Login Required', detail: 'Please login to book a course', life: 5000 });
-    return;
-  }
-  try {
-    await api.post(`/courses/${courseId}/book`);
-    toast.add({ severity: 'success', summary: 'Confirmed', detail: 'Booking confirmed!', life: 5000 });
-    emit('book');
-  } catch (err: any) {
-    toast.add({ severity: 'error', summary: 'Error', detail: err.response?.data?.error || 'Booking failed', life: 5000 });
-  }
-}
+async function toggleBooking() {
+    if (!props.course?.id) return;
 
-async function unbookCourse(courseId: number) {
-  try {
-    await api.delete(`/courses/${courseId}/book`);
-    toast.add({ severity: 'success', summary: 'Cancelled', detail: 'Booking cancelled', life: 5000 });
-    emit('unbook');
-  } catch (err: any) {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to cancel booking', life: 5000 });
-  }
+    bookingLoading.value = true;
+    try {
+        if (isUserParticipant.value) {
+            await api.delete(`/courses/${props.course.id}/book`);
+            toast.add({ severity: 'success', summary: 'Cancelled', detail: 'Booking cancelled', life: 5000 });
+        } else {
+            await api.post(`/courses/${props.course.id}/book`);
+          toast.add({ severity: 'success', summary: 'Confirmed', detail: 'Booking confirmed!', life: 5000 });
+        }
+        emit('participation-change');
+    } catch (e: any) {
+        const errorDetail = e.response?.data?.error || 'Operation failed';
+      toast.add({ severity: 'error', summary: 'Error', detail: err.response?.data?.error || 'Booking failed', life: 5000 });
+    } finally {
+        bookingLoading.value = false;
+    }
 }
 
 function handleSubmit() {
@@ -153,7 +170,7 @@ function handleSubmit() {
             </div>
         </div>
 
-        <div v-if="course?.id && course.seriesId && form.trainerId !== course.trainer?.id" class="form-group animate-fadein">
+        <div v-if="course?.id && course.seriesId && form.trainerId !== course?.trainer?.id" class="form-group animate-fadein">
             <div class="flex items-center gap-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
                 <Checkbox v-model="form.transferAll" :binary="true" inputId="transferAll" />
                 <label for="transferAll" class="text-sm font-bold text-amber-900 cursor-pointer">
@@ -178,11 +195,11 @@ function handleSubmit() {
             </div>
         </div>
 
-      <div class="form-actions mt-6" v-if="course.trainer.id !== authStore.user?.id">
+      <div class="form-actions mt-6" v-if="!!course.id && course?.trainer?.id !== authStore.user?.id">
         <Button v-if="!course.bookings.some((b: any) => b.member?.id === authStore.user?.id)"
                 :label="course.bookings.filter(b => !b.isWaitlist).length < course.capacity ? 'RESERVE SPOT' : 'JOIN WAITLIST'"
-                severity="primary" class="w-full p-4" @click="bookCourse(course.id)" />
-        <Button v-else label="CANCEL RESERVATION" severity="primary" variant="text" class="w-full p-4 cancel-btn" @click="unbookCourse(course.id)" />
+                severity="primary" class="w-full p-4" @click="toggleBooking()" />
+        <Button v-else label="CANCEL RESERVATION" severity="primary" variant="text" class="w-full p-4 cancel-btn" @click="toggleBooking()" />
       </div>
 
         <div class="form-actions mt-6">
@@ -220,6 +237,57 @@ function handleSubmit() {
     font-weight: 800 !important;
     letter-spacing: 0.1em !important;
     &:hover { background: #fef2f2 !important; }
+}
+
+.participation-section {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: #f8fafc;
+    border-radius: 12px;
+    border: 1px dashed var(--border-color);
+}
+
+.divider-text {
+    display: flex;
+    align-items: center;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    font-weight: 900;
+    color: var(--text-muted);
+    letter-spacing: 0.1em;
+    margin-bottom: 1.5rem;
+
+    &::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: var(--border-color);
+        margin-left: 1rem;
+    }
+}
+
+.participation-box {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.status-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-weight: 600;
+    color: var(--text-header);
+
+    i { font-size: 1.25rem; color: #94a3b8; }
+    &.active i { color: var(--primary-color); }
+}
+
+.participation-btn {
+    font-weight: 800 !important;
+    letter-spacing: 0.05em !important;
+    text-transform: uppercase;
 }
 
 .submit-btn {

@@ -39,8 +39,6 @@ async function fetchData() {
             courseTable.value?.refresh();
             fetchNotifications();
         } else {
-          console.log(authStore.user);
-
             courses.value = response.data.filter((c: any) => c.bookings.some((b: any) => b.member?.id === authStore.user?.id));
         }
 
@@ -125,16 +123,16 @@ async function unbookCourse(courseId: number) {
 
 async function onDeleteCourse(course: any) {
     const isSeries = !!course.seriesId;
-    
+
     confirm.require({
-        message: isSeries 
+        message: isSeries
             ? `Do you want to delete only this instance or all upcoming workouts in this series?`
             : `Delete "${course.title}"? This cannot be undone.`,
         header: isSeries ? 'Series Detected' : 'Dangerous Action',
         icon: 'pi pi-exclamation-triangle',
-        acceptProps: { 
+        acceptProps: {
             label: isSeries ? 'Delete Series' : 'Delete',
-            severity: 'danger' 
+            severity: 'danger'
         },
         rejectProps: {
           label: isSeries ? 'Delete Only This' : 'Cancel',

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, computed } from 'vue';
 import api from '../services/api';
 import { authStore } from '../store/auth';
 import { useToast } from 'primevue/usetoast';
@@ -22,8 +22,18 @@ const isCompactView = ref(true);
 
 const isMobile = ref(window.innerWidth <= 768);
 
+const isPastCourse = computed(() => {
+    if (!selectedCourse.value?.endTime) return false;
+    return new Date(selectedCourse.value.endTime) < new Date();
+});
+
 function handleResize() {
     isMobile.value = window.innerWidth <= 768;
+}
+
+async function onParticipationChange() {
+  fetchCourses();
+  formVisible.value = false;
 }
 
 async function fetchCourses() {
@@ -79,16 +89,6 @@ async function onSaveCourse(formData: any, transferAll: boolean = false) {
     } finally {
         submitting.value = false;
     }
-}
-
-async function onBook() {
-  formVisible.value = false;
-  fetchCourses();
-}
-
-async function onUnbook() {
-  formVisible.value = false;
-  fetchCourses();
 }
 
 async function onDeleteCourse(course: any) {
@@ -255,11 +255,17 @@ onUnmounted(() => {
                 </div>
             </div>
 
-            <div class="action-footer" v-if="!authStore.isTrainer()">
+            <div class="action-footer" v-if="!authStore.isTrainer() && !isPastCourse">
                 <Button v-if="!selectedCourse.bookings.some((b: any) => b.member?.id === authStore.user?.id)"
                         :label="selectedCourse.bookings.filter(b => !b.isWaitlist).length < selectedCourse.capacity ? 'RESERVE SPOT' : 'JOIN WAITLIST'"
                         severity="primary" class="w-full p-4" @click="bookCourse(selectedCourse.id)" />
                 <Button v-else label="CANCEL RESERVATION" severity="primary" variant="text" class="w-full p-4 cancel-btn" @click="unbookCourse(selectedCourse.id)" />
+            </div>
+
+            <div class="action-footer past-course-info" v-if="isPastCourse">
+                <p class="text-center font-bold text-slate-500 uppercase tracking-widest text-xs">
+                    <i class="pi pi-lock"></i> This session has already finished.
+                </p>
             </div>
         </div>
     </Dialog>
@@ -270,11 +276,9 @@ onUnmounted(() => {
             :course="editingCourse"
             :loading="submitting"
             @save="onSaveCourse"
-            @book="onBook"
-            @unbook="onUnbook"
             @cancel="formVisible = false"
             @delete="onDeleteCourse"
-            @participation-change="fetchCourses"
+            @participation-change="onParticipationChange"
         />
     </Dialog>
   </div>
@@ -352,7 +356,7 @@ onUnmounted(() => {
 @keyframes pulse {
     0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.7); }
     70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(255, 193, 7, 0); }
-    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 193, 7, 0); }
+    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.7); }
 }
 
 .trainer-info {

@@ -34,6 +34,7 @@ class BookingServiceTest extends TestCase
         $trainer->method('getId')->willReturn(2);
 
         $course = $this->createMock(Course::class);
+        $course->method('getEndTime')->willReturn(new \DateTime('+1 hour'));
         $course->method('getTrainer')->willReturn($trainer);
         $course->method('getCapacity')->willReturn(10);
         $course->method('getBookings')->willReturn(new ArrayCollection());
@@ -61,6 +62,7 @@ class BookingServiceTest extends TestCase
         $trainer->method('getId')->willReturn(2);
 
         $course = $this->createMock(Course::class);
+        $course->method('getEndTime')->willReturn(new \DateTime('+1 hour'));
         $course->method('getTrainer')->willReturn($trainer);
         $course->method('getCapacity')->willReturn(1);
         $course->method('getTitle')->willReturn('Pilates');
@@ -86,6 +88,7 @@ class BookingServiceTest extends TestCase
         $trainer->method('getId')->willReturn(2);
 
         $course = $this->createMock(Course::class);
+        $course->method('getEndTime')->willReturn(new \DateTime('+1 hour'));
         $course->method('getTrainer')->willReturn($trainer);
 
         $this->bookingRepository->method('findOneBy')->willReturn(new Booking());
@@ -102,6 +105,7 @@ class BookingServiceTest extends TestCase
         $user->method('getId')->willReturn(1);
         
         $course = $this->createMock(Course::class);
+        $course->method('getEndTime')->willReturn(new \DateTime('+1 hour'));
         $course->method('getTrainer')->willReturn($user);
 
         $this->expectException(\Exception::class);
@@ -117,6 +121,7 @@ class BookingServiceTest extends TestCase
         
         $trainer = new User();
         $course = $this->createMock(Course::class);
+        $course->method('getEndTime')->willReturn(new \DateTime('+1 hour'));
         $course->method('getTrainer')->willReturn($trainer);
         $course->method('getTitle')->willReturn('Pilates');
 
@@ -137,6 +142,30 @@ class BookingServiceTest extends TestCase
         $this->entityManager->expects($this->once())->method('flush');
 
         $this->service->deleteBooking($booking);
+    }
+
+    public function testBookPastCourseThrowsException(): void
+    {
+        $user = new User();
+        $course = $this->createMock(Course::class);
+        $course->method('getEndTime')->willReturn(new \DateTime('-1 hour'));
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('You cannot book a course that has already finished');
+
+        $this->service->book($course, $user);
+    }
+
+    public function testUnbookPastCourseThrowsException(): void
+    {
+        $user = new User();
+        $course = $this->createMock(Course::class);
+        $course->method('getEndTime')->willReturn(new \DateTime('-1 hour'));
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('You cannot cancel a booking for a course that has already finished');
+
+        $this->service->unbook($course, $user);
     }
 
     public function testRemoveBookingIfExists(): void

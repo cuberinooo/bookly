@@ -25,6 +25,11 @@ class BookingService
      */
     public function book(Course $course, User $user): array
     {
+        // Check if the course is already done
+        if ($course->getEndTime() < new \DateTime()) {
+            throw new \Exception('You cannot book a course that has already finished');
+        }
+
         // Check if the user is the trainer of the course
         if ($course->getTrainer()->getId() === $user->getId()) {
             throw new \Exception('As a trainer, you cannot book your own course');
@@ -66,6 +71,11 @@ class BookingService
      */
     public function unbook(Course $course, User $user): void
     {
+        // Check if the course is already done
+        if ($course->getEndTime() < new \DateTime()) {
+            throw new \Exception('You cannot cancel a booking for a course that has already finished');
+        }
+
         $booking = $this->bookingRepository->findOneBy(['member' => $user, 'course' => $course]);
         if (!$booking) {
             throw new \Exception('Booking not found');
