@@ -12,6 +12,10 @@ doctrine:
 
         profiling_collect_backtrace: '%kernel.debug%'
     orm:
+        dql:
+            string_functions:
+                # Use this namespace instead:
+                JSONB_CONTAINS: Scienta\DoctrineJsonFunctions\Query\AST\Functions\Postgresql\JsonbContains
         validate_xml_mapping: true
         naming_strategy: doctrine.orm.naming_strategy.underscore
         identity_generation_preferences:

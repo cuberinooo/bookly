@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -33,5 +34,13 @@ class UserController extends AbstractController
         $entityManager->flush();
 
         return new JsonResponse(['status' => 'Profile updated']);
+    }
+
+    #[Route('/trainers', name: 'user_trainers', methods: ['GET'])]
+    public function trainers(UserRepository $userRepository, SerializerInterface $serializer): JsonResponse
+    {
+        $trainers = $userRepository->findByRole('ROLE_TRAINER');
+        $json = $serializer->serialize($trainers, 'json', ['groups' => 'user:read']);
+        return new JsonResponse($json, 200, [], true);
     }
 }

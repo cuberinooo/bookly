@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue';
+import { ref, watch, computed, onMounted } from 'vue';
 import { CourseFrequency } from '@/app/enums/CourseFrequency';
+import api from '../services/api';
 
 const props = defineProps<{
     course?: any;
@@ -9,6 +10,7 @@ const props = defineProps<{
 
 const emit = defineEmits(['save', 'cancel', 'delete']);
 
+const trainers = ref<any[]>([]);
 const workoutTypes = ['Functional Training', 'Run Training', 'Team WOD', 'Other'];
 
 const form = ref({
@@ -18,13 +20,24 @@ const form = ref({
     capacity: 10,
     startTime: new Date(),
     durationMinutes: 60,
-    recurrence: CourseFrequency.ONCE
+    recurrence: CourseFrequency.ONCE,
+    trainerId: null as number | null,
+    transferAll: false
+});
+
+onMounted(async () => {
+    try {
+        const response = await api.get('/user/trainers');
+        trainers.value = response.data;
+    } catch (e) {
+        console.error('Failed to fetch trainers', e);
+    }
 });
 
 const recurrenceOptions = computed(() => {
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const dayName = days[form.value.startTime.getDay()];
-
+    
     return [
         { label: 'Einmalig (Once)', value: CourseFrequency.ONCE },
         { label: 'Täglich (Daily)', value: CourseFrequency.DAILY },
@@ -43,18 +56,23 @@ watch(() => props.course, (newVal) => {
             capacity: newVal.capacity,
             startTime: new Date(newVal.startTime),
             durationMinutes: newVal.durationMinutes,
-            recurrence: CourseFrequency.ONCE // Default to once on edit
+            recurrence: CourseFrequency.ONCE, // Default to once on edit
+            trainerId: newVal.trainer?.id || null,
+            transferAll: false
         };
     }
 }, { immediate: true });
 
 function handleSubmit() {
     const finalTitle = form.value.title === 'Other' ? form.value.customTitle : form.value.title;
-    emit('save', {
+    const payload = {
         ...form.value,
         title: finalTitle,
         startTime: form.value.startTime.toISOString()
-    });
+    };
+    
+    // We emit the transferAll flag separately if it's relevant
+    emit('save', payload, form.value.transferAll);
 }
 </script>
 
@@ -75,24 +93,46 @@ function handleSubmit() {
             <DatePicker id="startTime" v-model="form.startTime" showTime hourFormat="24" fluid class="athletic-input" />
         </div>
 
-        <div class="form-group">
-            <label for="recurrence">Recurrence</label>
-            <Select
-                id="recurrence"
-                v-model="form.recurrence"
-                :options="recurrenceOptions"
-                optionLabel="label"
-                optionValue="value"
-                fluid
-                class="athletic-input"
-                :disabled="!!course?.id"
-            />
-            <small v-if="course?.id" class="text-slate-400 mt-1 block">
-                <i class="pi pi-lock text-xs"></i> Recurrence cannot be changed after creation.
-            </small>
-            <small v-else-if="form.recurrence !== CourseFrequency.ONCE" class="text-primary mt-1 block">
-                <i class="pi pi-info-circle text-xs"></i> Series will be created for the next 6 months.
-            </small>
+        <div class="form-row">
+            <div class="form-group flex-1">
+                <label for="recurrence">Recurrence</label>
+                <Select 
+                    id="recurrence" 
+                    v-model="form.recurrence" 
+                    :options="recurrenceOptions" 
+                    optionLabel="label" 
+                    optionValue="value" 
+                    fluid 
+                    class="athletic-input"
+                    :disabled="!!course?.id"
+                />
+                <small v-if="course?.id" class="text-slate-400 mt-1 block">
+                    <i class="pi pi-lock text-xs"></i> Fixed after creation.
+                </small>
+            </div>
+
+            <div v-if="course?.id" class="form-group flex-1">
+                <label for="trainer">Head Coach (Transfer)</label>
+                <Select 
+                    id="trainer" 
+                    v-model="form.trainerId" 
+                    :options="trainers" 
+                    optionLabel="name" 
+                    optionValue="id" 
+                    placeholder="Select Trainer"
+                    fluid 
+                    class="athletic-input"
+                />
+            </div>
+        </div>
+
+        <div v-if="course?.id && course.seriesId && form.trainerId !== course.trainer?.id" class="form-group animate-fadein">
+            <div class="flex items-center gap-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                <Checkbox v-model="form.transferAll" :binary="true" inputId="transferAll" />
+                <label for="transferAll" class="text-sm font-bold text-amber-900 cursor-pointer">
+                    Transfer all future workouts in this series
+                </label>
+            </div>
         </div>
 
         <div class="form-group">
@@ -112,9 +152,9 @@ function handleSubmit() {
         </div>
 
         <div class="form-actions mt-6">
-          <Button label="Cancel" severity="primary" variant="text" @click="$emit('cancel')" :disabled="loading" class="cancel-btn" />
-          <Button v-if="course?.id" label="Delete Workout" severity="danger" variant="text" @click="$emit('delete', course)" :disabled="loading" class="delete-btn" />
-          <Button :label="course?.id ? 'Update Workout' : 'Launch Course'" severity="primary" :loading="loading" @click="handleSubmit" class="submit-btn" />
+            <Button v-if="course?.id" label="Delete" severity="danger" variant="text" @click="$emit('delete', course)" :disabled="loading" class="mr-auto delete-btn" />
+            <Button label="Cancel" severity="primary" variant="text" @click="$emit('cancel')" :disabled="loading" class="cancel-btn" />
+            <Button :label="course?.id ? 'Update Workout' : 'Launch Course'" severity="primary" :loading="loading" @click="handleSubmit" class="submit-btn" />
         </div>
     </div>
 </template>
@@ -142,13 +182,18 @@ function handleSubmit() {
     border-top: 1px solid var(--border-color);
 }
 
+.delete-btn {
+    font-weight: 800 !important;
+    letter-spacing: 0.1em !important;
+    &:hover { background: #fef2f2 !important; }
+}
+
+.submit-btn {
+    min-width: 200px;
+}
 
 :deep(.p-select-label) {
   color: unset;
-}
-
-:deep(.p-button) {
-  height: stretch !important;
 }
 
 :deep(.p-button.p-button-secondary) {

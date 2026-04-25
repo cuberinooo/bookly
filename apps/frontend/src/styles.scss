@@ -145,7 +145,8 @@ p {
 }
 
 .p-datatable-header-cell {
-  background: var(--text-color) !important;
+  color: var(--primary-color) !important;
+  background: var(--bg-primary-color) !important;
 }
 
 .p-datatable-tbody > tr {
@@ -154,10 +155,15 @@ p {
 
 .p-paginator {
   border-radius: unset !important;
-  background: var(--text-color) !important;
+  background: var(--bg-primary-color) !important;
   border-color: unset !important;
 
+  button {
+    color: var(--primary-color) !important;
+  }
+
   .p-paginator-page-selected {
+    color: var(--bg-primary-color)!important;
     background: var(--primary-color) !important;
   }
 }

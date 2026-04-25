@@ -116,6 +116,29 @@ class CourseService
     }
 
     /**
+     * Transfers all future courses in a series to a new trainer.
+     */
+    public function transferCourseSeries(string $seriesId, User $newTrainer): int
+    {
+        $now = new \DateTime();
+        $courses = $this->courseRepository->createQueryBuilder('c')
+            ->where('c.seriesId = :seriesId')
+            ->andWhere('c.startTime >= :now')
+            ->setParameter('seriesId', $seriesId)
+            ->setParameter('now', $now)
+            ->getQuery()
+            ->getResult();
+
+        foreach ($courses as $course) {
+            $course->setTrainer($newTrainer);
+        }
+
+        $this->entityManager->flush();
+
+        return count($courses);
+    }
+
+    /**
      * Checks if a course schedule overlaps with existing courses.
      *
      * @throws ScheduleConflictException if an overlap is detected

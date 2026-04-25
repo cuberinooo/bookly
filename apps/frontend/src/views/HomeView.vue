@@ -54,11 +54,12 @@ function handleCellClick(date: Date) {
     formVisible.value = true;
 }
 
-async function onSaveCourse(formData: any) {
+async function onSaveCourse(formData: any, transferAll: boolean = false) {
     submitting.value = true;
     try {
         if (editingCourse.value?.id) {
-            await api.patch(`/courses/${editingCourse.value.id}`, formData);
+            const url = transferAll ? `/courses/${editingCourse.value.id}?transferAll=true` : `/courses/${editingCourse.value.id}`;
+            await api.patch(url, formData);
             toast.add({ severity: 'success', summary: 'Updated', detail: 'Course updated successfully' });
         } else {
             await api.post('/courses', formData);

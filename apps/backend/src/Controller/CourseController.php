@@ -79,7 +79,7 @@ public function new(Request $request, CourseService $courseService): JsonRespons
     }
 
     #[Route('/{id}', name: 'course_edit', methods: ['PATCH'])]
-    public function edit(Request $request, Course $course, EntityManagerInterface $entityManager, CourseService $courseService): JsonResponse
+    public function edit(Request $request, Course $course, EntityManagerInterface $entityManager, CourseService $courseService, UserRepository $userRepository): JsonResponse
     {
         $this->denyAccessUnlessGranted('ROLE_TRAINER');
         
@@ -112,6 +112,23 @@ public function new(Request $request, CourseService $courseService): JsonRespons
         if (isset($data['title'])) $course->setTitle($data['title']);
         if (isset($data['description'])) $course->setDescription($data['description']);
         if (isset($data['capacity'])) $course->setCapacity((int) $data['capacity']);
+
+        if (isset($data['trainerId'])) {
+            $newTrainer = $userRepository->find($data['trainerId']);
+            if (!$newTrainer || !in_array('ROLE_TRAINER', $newTrainer->getRoles())) {
+                return new JsonResponse(['error' => 'Invalid trainer'], Response::HTTP_BAD_REQUEST);
+            }
+
+            $transferAll = $request->query->getBoolean('transferAll', false);
+            $seriesId = $course->getSeriesId();
+
+            if ($transferAll && $seriesId) {
+                $count = $courseService->transferCourseSeries($seriesId, $newTrainer);
+                // The current course is also updated in transferCourseSeries if startTime >= now
+            } else {
+                $course->setTrainer($newTrainer);
+            }
+        }
 
         $entityManager->flush();
 

@@ -33,6 +33,27 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         $this->getEntityManager()->flush();
     }
 
+    /**
+     * @return User[]
+     */
+    public function findByRole(string $role): array
+    {
+        $entityManager = $this->getEntityManager();
+
+        // We explicitly cast roles to jsonb and the parameter to jsonb
+        // This bypasses all Doctrine 'unknown type' errors
+        $sql = 'SELECT * FROM "user" WHERE roles::jsonb @> :role::jsonb';
+
+        $rsm = new \Doctrine\ORM\Query\ResultSetMappingBuilder($entityManager);
+        $rsm->addRootEntityFromClassMetadata(\App\Entity\User::class, 'u');
+
+        $query = $entityManager->createNativeQuery($sql, $rsm);
+
+        // We pass the role as a JSON array string: ["ROLE_TRAINER"]
+        $query->setParameter('role', json_encode([$role]));
+
+        return $query->getResult();
+    }
     //    /**
     //     * @return User[] Returns an array of User objects
     //     */
