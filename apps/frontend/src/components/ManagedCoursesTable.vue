@@ -1,28 +1,74 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { useConfirm } from 'primevue/useconfirm';
 import { useToast } from 'primevue/usetoast';
 import api from '../services/api';
 import ParticipantsDialog from './ParticipantsDialog.vue';
 
-const props = defineProps<{
-    courses: any[];
-}>();
-
-const emit = defineEmits(['edit', 'refresh']);
+const emit = defineEmits(['edit']);
 
 const confirm = useConfirm();
 const toast = useToast();
 
+const courses = ref<any[]>([]);
+const totalRecords = ref(0);
+const loading = ref(false);
 const participantsDialog = ref(false);
 const selectedCourse = ref<any>(null);
 
-// Sorting logic: earliest course first
-const sortedCourses = computed(() => {
-    return [...props.courses].sort((a, b) => {
-        return new Date(a.startTime).getTime() - new Date(b.startTime).getTime();
-    });
+const lazyParams = ref({
+    first: 0,
+    rows: 10,
+    page: 1,
+    startDate: null as Date | null,
+    endDate: null as Date | null
 });
+
+async function loadLazyData() {
+    loading.value = true;
+    try {
+        const params: any = {
+            page: lazyParams.value.page,
+            limit: lazyParams.value.rows
+        };
+
+        if (lazyParams.value.startDate) {
+            params.startDate = lazyParams.value.startDate.toISOString();
+        }
+        if (lazyParams.value.endDate) {
+            params.endDate = lazyParams.value.endDate.toISOString();
+        }
+
+        const response = await api.get('/courses', { params });
+        courses.value = response.data.data;
+        totalRecords.value = response.data.meta.totalItems;
+    } catch (e) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to fetch courses' });
+    } finally {
+        loading.value = false;
+    }
+}
+
+function onPage(event: any) {
+    lazyParams.value.first = event.first;
+    lazyParams.value.rows = event.rows;
+    lazyParams.value.page = event.page + 1;
+    loadLazyData();
+}
+
+function onFilter() {
+    lazyParams.value.page = 1;
+    lazyParams.value.first = 0;
+    loadLazyData();
+}
+
+function clearFilters() {
+    lazyParams.value.startDate = null;
+    lazyParams.value.endDate = null;
+    onFilter();
+}
+
+defineExpose({ refresh: loadLazyData });
 
 function formatDuration(min: number) {
     if (min < 60) return `${min}min`;
@@ -48,16 +94,12 @@ function confirmDeleteCourse(course: any) {
           label: isSeries ? 'Delete Only This' : 'Cancel',
           severity: isSeries ? 'warn' : 'primary',
         },
-        // In PrimeVue, 'accept' is for the primary action (Delete Series)
-        // and 'reject' is for the secondary action (Delete Only This or Cancel)
-        // However, for single courses we want 'reject' to be Cancel.
-        // Let's use a custom approach or handle 'reject' carefully.
         accept: async () => {
             try {
                 const url = isSeries ? `/courses/${course.id}?deleteAll=true` : `/courses/${course.id}`;
                 await api.delete(url);
                 toast.add({ severity: 'warn', summary: 'Deleted', detail: isSeries ? 'Series removed' : 'Course removed', life: 3000 });
-                emit('refresh');
+                loadLazyData();
             } catch (e) {
                 toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to delete' });
             }
@@ -67,7 +109,7 @@ function confirmDeleteCourse(course: any) {
                 try {
                     await api.delete(`/courses/${course.id}`);
                     toast.add({ severity: 'warn', summary: 'Deleted', detail: 'Single course removed', life: 3000 });
-                    emit('refresh');
+                    loadLazyData();
                 } catch (e) {
                     toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to delete' });
                 }
@@ -90,10 +132,7 @@ async function removeParticipant(bookingId: number) {
             try {
                 await api.delete(`/bookings/${bookingId}`);
                 toast.add({ severity: 'success', summary: 'Removed', detail: 'Participant removed', life: 3000 });
-                emit('refresh');
-                // We might need to refresh the selectedCourse if the dialog is open
-                // Since selectedCourse is just a ref to an object in the prop,
-                // the parent needs to fetch data and we might need to re-find it.
+                loadLazyData();
                 participantsDialog.value = false;
             } catch (e) {
                 toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to remove participant' });
@@ -101,15 +140,41 @@ async function removeParticipant(bookingId: number) {
         }
     });
 }
+
+onMounted(loadLazyData);
 </script>
 
 <template>
     <section class="managed-courses-section">
-        <div class="section-header">
-            <h2>Managed Courses</h2>
+        <div class="section-header mb-6">
+            <div class="flex justify-between items-center">
+                <h2>Managed Courses</h2>
+                <div class="flex gap-4 items-end">
+                    <div class="flex flex-col gap-1">
+                        <label class="text-xs font-bold uppercase text-slate-500">From</label>
+                        <DatePicker v-model="lazyParams.startDate" @date-select="onFilter" placeholder="Start Date" size="small" />
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <label class="text-xs font-bold uppercase text-slate-500">To</label>
+                        <DatePicker v-model="lazyParams.endDate" @date-select="onFilter" placeholder="End Date" size="small" />
+                    </div>
+                    <Button icon="pi pi-filter-slash" variant="text" @click="clearFilters" v-tooltip="'Clear Filters'" />
+                </div>
+            </div>
         </div>
 
-        <DataTable :value="sortedCourses" responsiveLayout="stack" breakpoint="960px" class="mt-4 managed-table">
+        <DataTable 
+            :value="courses" 
+            lazy 
+            paginator 
+            :rows="10" 
+            :totalRecords="totalRecords" 
+            :loading="loading" 
+            @page="onPage"
+            responsiveLayout="stack" 
+            breakpoint="960px" 
+            class="managed-table"
+        >
             <Column field="title" header="Course">
                 <template #body="slotProps">
                     <span class="course-title-cell">{{ slotProps.data.title }}</span>

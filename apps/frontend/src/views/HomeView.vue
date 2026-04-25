@@ -20,7 +20,7 @@ const isCompactView = ref(true);
 async function fetchCourses() {
   loading.value = true;
   try {
-    const response = await api.get('/courses');
+    const response = await api.get('/courses?all=true');
     courses.value = response.data;
   } catch (err) {
     console.error('Failed to fetch courses', err);

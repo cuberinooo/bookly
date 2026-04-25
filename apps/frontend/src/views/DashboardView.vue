@@ -16,6 +16,7 @@ const courses = ref<any[]>([]);
 const notifications = ref<any[]>([]);
 const isTrainer = authStore.isTrainer();
 
+const courseTable = ref<any>(null);
 const courseDialog = ref(false);
 const editingCourse = ref<any>(null);
 const submitting = ref(false);
@@ -32,9 +33,10 @@ const settings = ref({
 
 async function fetchData() {
     try {
-        const response = await api.get('/courses');
+        const response = await api.get('/courses?all=true');
         if (isTrainer) {
             courses.value = response.data.filter((c: any) => c.trainer?.id === authStore.user?.id);
+            courseTable.value?.refresh();
             fetchNotifications();
         } else {
           console.log(authStore.user);
@@ -89,6 +91,7 @@ async function onSaveCourse(formData: any) {
         }
         courseDialog.value = false;
         fetchData();
+        courseTable.value?.refresh();
     } catch (e: any) {
         const errorDetail = e.response?.data?.error || 'Operation failed';
         toast.add({ severity: 'error', summary: 'Error', detail: errorDetail, life: 5000 });
@@ -141,7 +144,7 @@ onMounted(fetchData);
 
     <div v-if="isTrainer" class="trainer-layout">
         <div class="main-content">
-            <ManagedCoursesTable :courses="courses" @edit="editCourse" @refresh="fetchData" />
+            <ManagedCoursesTable ref="courseTable" @edit="editCourse" />
         </div>
 
         <aside class="notifications-panel">

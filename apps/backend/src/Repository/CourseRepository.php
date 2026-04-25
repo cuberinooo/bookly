@@ -35,4 +35,45 @@ class CourseRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    /**
+     * Finds courses with pagination and date filtering.
+     */
+    public function findPaginated(int $page, int $limit, ?\DateTimeInterface $startDate = null, ?\DateTimeInterface $endDate = null): array
+    {
+        $qb = $this->createQueryBuilder('c');
+
+        if ($startDate) {
+            $qb->andWhere('c.startTime >= :startDate')
+               ->setParameter('startDate', $startDate);
+        }
+
+        if ($endDate) {
+            $qb->andWhere('c.startTime <= :endDate')
+               ->setParameter('endDate', $endDate);
+        }
+
+        $qb->orderBy('c.startTime', 'ASC');
+
+        // Get total count
+        $countQb = clone $qb;
+        $totalItems = (int) $countQb->select('COUNT(c.id)')
+            ->resetDQLPart('orderBy')
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        // Get results
+        $results = $qb->setFirstResult(($page - 1) * $limit)
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+
+        return [
+            'data' => $results,
+            'totalItems' => $totalItems,
+            'page' => $page,
+            'limit' => $limit,
+            'totalPages' => ceil($totalItems / $limit)
+        ];
+    }
 }

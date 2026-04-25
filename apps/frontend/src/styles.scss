@@ -141,92 +141,96 @@ p {
   background: #6E7887FF !important;
 }
 
+.p-paginator {
+  border-radius: unset !important;
+}
+
 // Container
 .container {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 3rem 2rem;
+max-width: 1400px;
+margin: 0 auto;
+padding: 3rem 2rem;
 }
 
 // Main Header
 .main-header {
-    background-color: #0f172a !important; // Deep slate for header
-    padding: 1rem 2rem;
-    border-bottom: 4px solid var(--primary-color);
+background-color: #0f172a !important; // Deep slate for header
+padding: 1rem 2rem;
+border-bottom: 4px solid var(--primary-color);
 }
 
 // Calendar styling
 .schedule-container {
-    background: white;
-    border-radius: 12px;
-    border: 1px solid var(--border-color);
-    box-shadow: var(--shadow-md);
-    overflow: hidden;
+background: white;
+border-radius: 12px;
+border: 1px solid var(--border-color);
+box-shadow: var(--shadow-md);
+overflow: hidden;
 }
 
 .schedule-header {
-  display: grid;
-  grid-template-columns: 80px repeat(7, minmax(120px, 1fr));
-  background: #1e293b;
-  color: white;
-  text-align: center;
-  border-bottom: 1px solid #334155;
+display: grid;
+grid-template-columns: 80px repeat(7, minmax(120px, 1fr));
+background: #1e293b;
+color: white;
+text-align: center;
+border-bottom: 1px solid #334155;
 
-  .day-label {
-    padding: 1.25rem;
-    font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    border-left: 1px solid #334155;
-  }
+.day-label {
+padding: 1.25rem;
+font-family: 'Barlow Condensed', sans-serif;
+font-weight: 700;
+text-transform: uppercase;
+letter-spacing: 0.05em;
+border-left: 1px solid #334155;
+}
 }
 
 .day-column {
-  border-left: 1px solid #f1f5f9;
-  position: relative;
-  background-image: linear-gradient(#f1f5f9 1px, transparent 1px);
-  background-size: 100% 50px;
+border-left: 1px solid #f1f5f9;
+position: relative;
+background-image: linear-gradient(#f1f5f9 1px, transparent 1px);
+background-size: 100% 50px;
 
-  &:hover {
-    background-color: rgba(255, 193, 7, 0.05);
-  }
+&:hover {
+background-color: rgba(255, 193, 7, 0.05);
+}
 }
 
 .course-entry {
-    position: absolute;
-    background: var(--primary-color);
-    color: #000;
-    font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 700;
-    text-transform: uppercase;
-    border-left: 4px solid #b45309;
-    border-radius: 4px;
-    padding: 4px 8px;
-    font-size: 0.75rem;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+position: absolute;
+background: var(--primary-color);
+color: #000;
+font-family: 'Barlow Condensed', sans-serif;
+font-weight: 700;
+text-transform: uppercase;
+border-left: 4px solid #b45309;
+border-radius: 4px;
+padding: 4px 8px;
+font-size: 0.75rem;
+box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 
-    &:hover {
-        background: #fbbf24;
-        z-index: 10;
-    }
+&:hover {
+  background: #fbbf24;
+  z-index: 10;
+}
 }
 
 // Dialog Consistency
 .p-dialog {
-    border: none !important;
-    box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25) !important;
-    .p-dialog-header {
-        padding: 2rem 2rem 1rem 2rem !important;
-        font-family: 'Barlow Condensed', sans-serif;
-        text-transform: uppercase;
-        font-weight: 800;
-    }
-    .p-dialog-content { padding: 0 2rem 2rem 2rem !important; }
+border: none !important;
+box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25) !important;
+.p-dialog-header {
+  padding: 2rem 2rem 1rem 2rem !important;
+  font-family: 'Barlow Condensed', sans-serif;
+  text-transform: uppercase;
+  font-weight: 800;
+}
+.p-dialog-content { padding: 0 2rem 2rem 2rem !important; }
 }
 
 .text-muted { color: var(--text-muted); }
 
 .text-accent {
-  color: var(--accent-color);
+color: var(--accent-color);
 }

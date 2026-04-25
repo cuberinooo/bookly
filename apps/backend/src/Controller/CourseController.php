@@ -18,12 +18,33 @@ use Symfony\Component\Serializer\SerializerInterface;
 class CourseController extends AbstractController
 {
     #[Route('', name: 'course_index', methods: ['GET'])]
-    public function index(CourseRepository $courseRepository, SerializerInterface $serializer): JsonResponse
+    public function index(Request $request, CourseRepository $courseRepository, SerializerInterface $serializer): JsonResponse
     {
-        $courses = $courseRepository->findAll();
-        $json = $serializer->serialize($courses, 'json', ['groups' => 'course:read']);
+        if ($request->query->getBoolean('all', false)) {
+            $courses = $courseRepository->findBy([], ['startTime' => 'ASC']);
+            $json = $serializer->serialize($courses, 'json', ['groups' => 'course:read']);
+            return new JsonResponse(json_decode($json, true), Response::HTTP_OK);
+        }
+
+        $page = $request->query->getInt('page', 1);
+        $limit = $request->query->getInt('limit', 20);
+        $startDateStr = $request->query->get('startDate');
+        $endDateStr = $request->query->get('endDate');
+
+        $startDate = $startDateStr ? new \DateTime($startDateStr) : null;
+        $endDate = $endDateStr ? new \DateTime($endDateStr) : null;
+
+        $paginatedResults = $courseRepository->findPaginated($page, $limit, $startDate, $endDate);
         
-        return new JsonResponse($json, Response::HTTP_OK, [], true);
+        $data = $paginatedResults['data'];
+        unset($paginatedResults['data']);
+
+        $serializedData = $serializer->serialize($data, 'json', ['groups' => 'course:read']);
+        
+        return new JsonResponse([
+            'data' => json_decode($serializedData, true),
+            'meta' => $paginatedResults
+        ], Response::HTTP_OK);
     }
 #[Route('', name: 'course_new', methods: ['POST'])]
 public function new(Request $request, CourseService $courseService): JsonResponse
