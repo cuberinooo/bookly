@@ -28,7 +28,7 @@ import Tab from 'primevue/tab';
 import TabPanels from 'primevue/tabpanels';
 import TabPanel from 'primevue/tabpanel';
 import Menu from 'primevue/menu';
-import {Tooltip} from "primevue";
+import {Checkbox, Tooltip} from "primevue";
 
 const app = createApp(App);
 
@@ -49,6 +49,7 @@ app.use(router);
 
 app.component('Button', Button);
 app.component('InputText', InputText);
+app.component('Checkbox', Checkbox);
 app.component('Card', Card);
 app.component('DatePicker', DatePicker);
 app.component('DataTable', DataTable);
