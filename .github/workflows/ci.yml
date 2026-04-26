@@ -40,8 +40,10 @@ jobs:
         env:
           APP_ENV: test
 
-      - name: Install PHP Dependencies
-        run: docker compose exec -T backend bash -c "COMPOSER_MEMORY_LIMIT=-1 composer install --no-interaction --prefer-dist"
+      - name: Wait for Composer to finish
+        run: |
+          # This loop waits until the vendor folder and the autoload file exist
+          timeout 300s bash -c 'until [ -f apps/backend/vendor/autoload.php ]; do sleep 5; done'
 
       - name: Run Symfony Tests (PHPUnit)
         run: docker compose exec -T backend bin/phpunit
