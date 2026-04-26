@@ -45,5 +45,10 @@ jobs:
           # This loop waits until the vendor folder and the autoload file exist
           timeout 300s bash -c 'until [ -f apps/backend/vendor/autoload.php ]; do sleep 5; done'
 
+      - name: Prepare Test Database
+        run: |
+          docker compose exec -T backend bin/console doctrine:database:create --if-not-exists --env=test
+          docker compose exec -T backend bin/console doctrine:migrations:migrate --no-interaction --env=test
+
       - name: Run Symfony Tests (PHPUnit)
         run: docker compose exec -T backend bin/phpunit
