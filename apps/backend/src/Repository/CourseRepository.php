@@ -42,13 +42,29 @@ class CourseRepository extends ServiceEntityRepository
     }
 
     /**
+     * @return Course[]
+     */
+    public function findAllFutureCourses(): array
+    {
+        return $this->createQueryBuilder('c')
+            ->where('c.endTime >= :now')
+            ->setParameter('now', new \DateTime())
+            ->orderBy('c.startTime', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
      * Finds courses with pagination and date filtering.
      */
-    public function findPaginated(int $page, int $limit, ?\DateTimeInterface $startDate = null, ?\DateTimeInterface $endDate = null): array
+    public function findPaginated(int $page, int $limit, ?\DateTimeInterface $startDate = null, ?\DateTimeInterface $endDate = null, bool $futureOnly = false): array
     {
         $qb = $this->createQueryBuilder('c');
 
-        if ($startDate) {
+        if ($futureOnly && !$startDate) {
+            $qb->andWhere('c.endTime >= :now')
+               ->setParameter('now', new \DateTime());
+        } elseif ($startDate) {
             $qb->andWhere('c.startTime >= :startDate')
                ->setParameter('startDate', $startDate);
         }

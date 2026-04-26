@@ -47,7 +47,7 @@ p {
     transition: all 0.2s ease;
     border: none !important;
 
-    &.p-button-primary, &.p-button-info {
+    &.p-button-primary, &.p-button-info, &.show-btn {
         background-color: var(--primary-color) !important;
         color: #000 !important; // Dark text on Amber for contrast
         &:hover {

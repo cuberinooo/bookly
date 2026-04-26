@@ -33,7 +33,7 @@ const settings = ref({
 
 async function fetchData() {
     try {
-        const response = await api.get('/courses?all=true');
+        const response = await api.get('/courses?all=true&futureOnly=true');
         if (isTrainer) {
             courses.value = response.data.filter((c: any) => c.trainer?.id === authStore.user?.id);
             courseTable.value?.refresh();

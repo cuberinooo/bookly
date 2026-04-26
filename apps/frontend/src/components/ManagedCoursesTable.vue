@@ -29,7 +29,8 @@ async function loadLazyData() {
     try {
         const params: any = {
             page: lazyParams.value.page,
-            limit: lazyParams.value.rows
+            limit: lazyParams.value.rows,
+            futureOnly: true
         };
 
         if (lazyParams.value.startDate) {

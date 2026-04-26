@@ -23,7 +23,11 @@ class CourseController extends AbstractController
     public function index(Request $request, CourseRepository $courseRepository, SerializerInterface $serializer): JsonResponse
     {
         if ($request->query->getBoolean('all', false)) {
-            $courses = $courseRepository->findBy([], ['startTime' => 'ASC']);
+            if ($request->query->getBoolean('futureOnly', false)) {
+                $courses = $courseRepository->findAllFutureCourses();
+            } else {
+                $courses = $courseRepository->findBy([], ['startTime' => 'ASC']);
+            }
             $json = $serializer->serialize($courses, 'json', ['groups' => 'course:read']);
             return new JsonResponse(json_decode($json, true), Response::HTTP_OK);
         }
@@ -35,8 +39,9 @@ class CourseController extends AbstractController
 
         $startDate = $startDateStr ? new \DateTime($startDateStr) : null;
         $endDate = $endDateStr ? new \DateTime($endDateStr) : null;
+        $futureOnly = $request->query->getBoolean('futureOnly', false);
 
-        $paginatedResults = $courseRepository->findPaginated($page, $limit, $startDate, $endDate);
+        $paginatedResults = $courseRepository->findPaginated($page, $limit, $startDate, $endDate, $futureOnly);
 
         $data = $paginatedResults['data'];
         unset($paginatedResults['data']);
