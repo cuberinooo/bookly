@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed } from 'vue';
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue';
 import api from '../services/api';
 import { authStore } from '../store/auth';
 import { useToast } from 'primevue/usetoast';
@@ -22,6 +22,9 @@ const isCompactView = ref(true);
 
 const isMobile = ref(window.innerWidth <= 768);
 
+const isTrainerMode = computed(() => authStore.isTrainer() && authStore.viewMode === 'trainer');
+const isMemberMode = computed(() => !authStore.isLoggedIn() || !authStore.isTrainer() || authStore.viewMode === 'member');
+
 const isPastCourse = computed(() => {
     if (!selectedCourse.value?.endTime) return false;
     return new Date(selectedCourse.value.endTime) < new Date();
@@ -30,6 +33,10 @@ const isPastCourse = computed(() => {
 function handleResize() {
     isMobile.value = window.innerWidth <= 768;
 }
+
+watch(() => authStore.viewMode, () => {
+    fetchCourses();
+});
 
 async function fetchCourses() {
   loading.value = true;
@@ -45,7 +52,7 @@ async function fetchCourses() {
 }
 
 function handleCourseClick(course: any) {
-    if (authStore.isTrainer()) {
+    if (isTrainerMode.value) {
         editingCourse.value = course;
         formVisible.value = true;
     } else {
@@ -55,7 +62,7 @@ function handleCourseClick(course: any) {
 }
 
 function handleCellClick(date: Date) {
-    if (!authStore.isTrainer()) return;
+    if (!isTrainerMode.value) return;
     editingCourse.value = {
         startTime: date,
         title: 'Functional Training',
@@ -250,11 +257,16 @@ onUnmounted(() => {
                 </div>
             </div>
 
-            <div class="action-footer" v-if="!authStore.isTrainer() && !isPastCourse">
-                <Button v-if="!selectedCourse.bookings.some((b: any) => b.member?.id === authStore.user?.id)"
-                        :label="selectedCourse.bookings.filter(b => !b.isWaitlist).length < selectedCourse.capacity ? 'RESERVE SPOT' : 'JOIN WAITLIST'"
-                        severity="primary" class="w-full p-4" @click="bookCourse(selectedCourse.id)" />
-                <Button v-else label="CANCEL RESERVATION" severity="primary" variant="text" class="w-full p-4 cancel-btn" @click="unbookCourse(selectedCourse.id)" />
+            <div class="action-footer" v-if="isMemberMode && !isPastCourse">
+                <template v-if="selectedCourse.trainer?.id !== authStore.user?.id">
+                    <Button v-if="!selectedCourse.bookings.some((b: any) => b.member?.id === authStore.user?.id)"
+                            :label="selectedCourse.bookings.filter(b => !b.isWaitlist).length < selectedCourse.capacity ? 'RESERVE SPOT' : 'JOIN WAITLIST'"
+                            severity="primary" class="w-full p-4" @click="bookCourse(selectedCourse.id)" />
+                    <Button v-else label="CANCEL RESERVATION" severity="primary" variant="text" class="w-full p-4 cancel-btn" @click="unbookCourse(selectedCourse.id)" />
+                </template>
+                <div v-else class="text-center font-bold text-slate-500 uppercase tracking-widest text-xs">
+                    <i class="pi pi-info-circle"></i> You are the coach for this session.
+                </div>
             </div>
 
             <div class="action-footer past-course-info" v-if="isPastCourse">

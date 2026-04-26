@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch, computed } from 'vue';
 import api from '../services/api';
 import { authStore } from '../store/auth';
 import { useToast } from 'primevue/usetoast';
@@ -14,7 +14,7 @@ const confirm = useConfirm();
 const route = useRoute();
 const courses = ref<any[]>([]);
 const notifications = ref<any[]>([]);
-const isTrainer = authStore.isTrainer();
+const isTrainerMode = computed(() => authStore.isTrainer() && authStore.viewMode === 'trainer');
 
 const courseTable = ref<any>(null);
 const courseDialog = ref(false);
@@ -34,7 +34,7 @@ const settings = ref({
 async function fetchData() {
     try {
         const response = await api.get('/courses?all=true&futureOnly=true');
-        if (isTrainer) {
+        if (isTrainerMode.value) {
             courses.value = response.data.filter((c: any) => c.trainer?.id === authStore.user?.id);
             courseTable.value?.refresh();
             fetchNotifications();
@@ -53,6 +53,10 @@ async function fetchData() {
         loading.value = false;
     }
 }
+
+watch(() => authStore.viewMode, () => {
+    fetchData();
+});
 
 async function fetchNotifications() {
     try {
@@ -181,10 +185,10 @@ onMounted(fetchData);
             <h1>Dashboard</h1>
             <p class="text-muted">Manage your athletic journey</p>
         </div>
-        <Button v-if="isTrainer" label="New Course" icon="pi pi-plus" @click="openNewCourse" severity="primary" size="large" />
+        <Button v-if="isTrainerMode" label="New Course" icon="pi pi-plus" @click="openNewCourse" severity="primary" size="large" />
     </div>
 
-    <div v-if="isTrainer" class="trainer-layout">
+    <div v-if="isTrainerMode" class="trainer-layout">
         <div class="main-content">
             <ManagedCoursesTable ref="courseTable" @edit="editCourse" />
         </div>

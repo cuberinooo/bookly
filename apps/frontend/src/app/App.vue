@@ -43,6 +43,13 @@ function logout() {
         <RouterLink to="/">PHOENIX ATHLETICS</RouterLink>
       </div>
       <div class="nav-links">
+        <template v-if="authStore.isTrainer()">
+          <div class="mode-switcher" v-tooltip.bottom="authStore.viewMode === 'trainer' ? 'Switch to Member View' : 'Switch to Trainer View'">
+            <span :class="{ active: authStore.viewMode === 'trainer' }">TRAINER</span>
+            <ToggleSwitch :modelValue="authStore.viewMode === 'member'" @update:modelValue="authStore.toggleViewMode()" />
+            <span :class="{ active: authStore.viewMode === 'member' }">MEMBER</span>
+          </div>
+        </template>
         <RouterLink to="/">Courses</RouterLink>
         <template v-if="authStore.isLoggedIn()">
           <RouterLink to="/dashboard">Dashboard</RouterLink>
@@ -96,6 +103,51 @@ function logout() {
   display: flex;
   gap: 2rem;
   align-items: center;
+
+  .mode-switcher {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.4rem 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 50px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    margin-right: 1rem;
+
+    span {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 800;
+      color: rgba(255, 255, 255, 0.4);
+      letter-spacing: 0.05em;
+      transition: all 0.2s;
+
+      &.active {
+        color: var(--primary-color);
+      }
+    }
+
+    :deep(.p-inputswitch) {
+      width: 2.5rem;
+      height: 1.25rem;
+
+      .p-inputswitch-slider {
+        background: rgba(255, 255, 255, 0.2);
+        &:before {
+          width: 0.85rem;
+          height: 0.85rem;
+          margin-top: -0.425rem;
+        }
+      }
+
+      &.p-inputswitch-checked .p-inputswitch-slider {
+        background: var(--primary-color);
+        &:before {
+          background: #000;
+        }
+      }
+    }
+  }
 
   .profile-dropdown-wrapper {
       display: flex;

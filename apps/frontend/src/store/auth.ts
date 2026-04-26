@@ -10,6 +10,7 @@ interface User {
 export const authStore = reactive({
   user: null as User | null,
   token: localStorage.getItem('token'),
+  viewMode: (localStorage.getItem('viewMode') || 'trainer') as 'trainer' | 'member',
 
   setToken(token: string) {
     this.token = token;
@@ -21,6 +22,11 @@ export const authStore = reactive({
     this.token = null;
     this.user = null;
     localStorage.removeItem('token');
+  },
+
+  toggleViewMode() {
+    this.viewMode = this.viewMode === 'trainer' ? 'member' : 'trainer';
+    localStorage.setItem('viewMode', this.viewMode);
   },
 
   parseUser() {
