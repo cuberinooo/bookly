@@ -197,7 +197,7 @@ onUnmounted(() => {
 
                 <div class="header-badge" v-if="authStore.isTrainer()">
                     <span class="pulse"></span>
-                    TRAINER MODE ACTIVE
+                    {{ authStore.viewMode === 'trainer' ? 'TRAINER MODE ACTIVE' : 'MEMBER MODE ACTIVE' }}
                 </div>
             </div>
         </header>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import api from '../services/api';
 import { useToast } from 'primevue/usetoast';
@@ -7,12 +7,29 @@ import { useToast } from 'primevue/usetoast';
 const name = ref('');
 const email = ref('');
 const password = ref('');
-const role = ref();
+const confirmPassword = ref('');
+const role = ref('ROLE_MEMBER');
 const loading = ref(false);
 const router = useRouter();
 const toast = useToast();
 
 const roleOptions = ref([]);
+
+const passwordValidation = computed(() => {
+    return {
+        minLength: password.value.length >= 8,
+        uppercase: /[A-Z]/.test(password.value),
+        lowercase: /[a-z]/.test(password.value),
+        number: /[0-9]/.test(password.value),
+        special: /[^A-Za-z0-9]/.test(password.value),
+        match: password.value === confirmPassword.value && password.value !== ''
+    };
+});
+
+const isFormValid = computed(() => {
+    const v = passwordValidation.value;
+    return name.value && email.value && v.minLength && v.uppercase && v.lowercase && v.number && v.special && v.match;
+});
 
 async function fetchRoles() {
     try {
@@ -24,6 +41,15 @@ async function fetchRoles() {
 }
 
 async function register() {
+  if (!isFormValid.value) {
+      if (password.value !== confirmPassword.value) {
+          toast.add({ severity: 'error', summary: 'Error', detail: 'Passwords do not match', life: 5000 });
+      } else {
+          toast.add({ severity: 'error', summary: 'Error', detail: 'Please meet all password requirements', life: 5000 });
+      }
+      return;
+  }
+
   loading.value = true;
   try {
     await api.post('/register', {
@@ -76,18 +102,46 @@ onMounted(fetchRoles);
 
         <div class="flex flex-col">
           <label for="password" class="form-label-base">Password</label>
-          <InputText
+          <Password
             id="password"
             v-model="password"
+            toggleMask
+            required
+            placeholder="••••••••"
+            class="w-full"
+            inputClass="w-full"
+          >
+            <template #footer>
+                <Divider />
+                <p class="mt-2 font-bold text-xs uppercase tracking-wider">Requirements</p>
+                <ul class="pl-2 ml-2 mt-2 list-disc flex flex-col gap-1 text-xs">
+                    <li :class="passwordValidation.minLength ? 'text-green-600' : 'text-slate-400'">At least 8 characters</li>
+                    <li :class="passwordValidation.uppercase ? 'text-green-600' : 'text-slate-400'">At least one uppercase</li>
+                    <li :class="passwordValidation.lowercase ? 'text-green-600' : 'text-slate-400'">At least one lowercase</li>
+                    <li :class="passwordValidation.number ? 'text-green-600' : 'text-slate-400'">At least one number</li>
+                    <li :class="passwordValidation.special ? 'text-green-600' : 'text-slate-400'">At least one special character</li>
+                </ul>
+            </template>
+          </Password>
+        </div>
+
+        <div class="flex flex-col">
+          <label for="confirmPassword" class="form-label-base">Confirm Password</label>
+          <InputText
+            id="confirmPassword"
+            v-model="confirmPassword"
             type="password"
             required
             placeholder="••••••••"
+            :class="{ 'p-invalid': confirmPassword && !passwordValidation.match }"
           />
+          <small v-if="confirmPassword && !passwordValidation.match" class="text-red-500 mt-1 font-bold">Passwords do not match</small>
         </div>
 
         <div class="flex flex-col">
           <label for="role" class="form-label-base">Account Type</label>
           <Select
+            id="role"
             v-model="role"
             :options="roleOptions"
             optionLabel="label"
@@ -101,6 +155,7 @@ onMounted(fetchRoles);
           severity="primary"
           label="Create Account"
           :loading="loading"
+          :disabled="!isFormValid"
           class="btn-primary w-full py-4 text-lg"
         />
       </form>

@@ -14,7 +14,8 @@ class RegistrationService
     public function __construct(
         private EntityManagerInterface $entityManager,
         private UserPasswordHasherInterface $passwordHasher,
-        private MailerInterface $mailer
+        private MailerInterface $mailer,
+        private PasswordValidator $passwordValidator
     ) {
     }
 
@@ -25,11 +26,14 @@ class RegistrationService
             throw new \Exception('Email already registered');
         }
 
+        $password = $data['password'] ?? '';
+        $this->passwordValidator->validate($password);
+
         $user = new User();
         $user->setEmail($data['email']);
         $user->setName($data['name']);
 
-        $hashedPassword = $this->passwordHasher->hashPassword($user, $data['password']);
+        $hashedPassword = $this->passwordHasher->hashPassword($user, $password);
         $user->setPassword($hashedPassword);
 
         $role = $data['role'] ?? 'ROLE_MEMBER';

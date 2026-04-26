@@ -5,6 +5,7 @@ namespace App\Tests\Service;
 use App\Entity\User;
 use App\Repository\UserRepository;
 use App\Service\RegistrationService;
+use App\Service\PasswordValidator;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Mailer\MailerInterface;
@@ -15,6 +16,7 @@ class RegistrationServiceTest extends TestCase
     private $entityManager;
     private $passwordHasher;
     private $mailer;
+    private $passwordValidator;
     private $service;
     private $userRepository;
 
@@ -24,17 +26,23 @@ class RegistrationServiceTest extends TestCase
         $this->passwordHasher = $this->createMock(UserPasswordHasherInterface::class);
         $this->mailer = $this->createMock(MailerInterface::class);
         $this->userRepository = $this->createMock(UserRepository::class);
+        $this->passwordValidator = new PasswordValidator();
 
         $this->entityManager->method('getRepository')->with(User::class)->willReturn($this->userRepository);
 
-        $this->service = new RegistrationService($this->entityManager, $this->passwordHasher, $this->mailer);
+        $this->service = new RegistrationService(
+            $this->entityManager, 
+            $this->passwordHasher, 
+            $this->mailer, 
+            $this->passwordValidator
+        );
     }
 
     public function testRegisterSuccess(): void
     {
         $data = [
             'email' => 'test@example.com',
-            'password' => 'password123',
+            'password' => 'StrongPass123!',
             'name' => 'Test User',
             'role' => 'ROLE_MEMBER'
         ];
@@ -58,7 +66,11 @@ class RegistrationServiceTest extends TestCase
 
     public function testRegisterDuplicateEmailThrowsException(): void
     {
-        $data = ['email' => 'test@example.com'];
+        $data = [
+            'email' => 'test@example.com',
+            'password' => 'StrongPass123!',
+            'name' => 'Test User'
+        ];
         $this->userRepository->method('findOneBy')->willReturn(new User());
 
         $this->expectException(\Exception::class);

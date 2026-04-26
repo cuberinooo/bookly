@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\User;
+use App\Service\PasswordValidator;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -61,7 +62,8 @@ class ResetPasswordController extends AbstractController
     public function resetPassword(
         Request $request,
         UserPasswordHasherInterface $passwordHasher,
-        EntityManagerInterface $entityManager
+        EntityManagerInterface $entityManager,
+        PasswordValidator $passwordValidator
     ): JsonResponse {
         $data = json_decode($request->getContent(), true);
         $token = $data['token'] ?? null;
@@ -69,6 +71,12 @@ class ResetPasswordController extends AbstractController
 
         if (!$token || !$password) {
             return new JsonResponse(['error' => 'Missing fields'], Response::HTTP_BAD_REQUEST);
+        }
+
+        try {
+            $passwordValidator->validate($password);
+        } catch (\Exception $e) {
+            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
         }
 
         $user = $entityManager->getRepository(User::class)->findOneBy(['passwordResetToken' => $token]);

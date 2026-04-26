@@ -28,7 +28,7 @@ import Tab from 'primevue/tab';
 import TabPanels from 'primevue/tabpanels';
 import TabPanel from 'primevue/tabpanel';
 import Menu from 'primevue/menu';
-import {Checkbox, InputSwitch, Tooltip} from "primevue";
+import {Checkbox, Divider, InputSwitch, Password, Tooltip} from "primevue";
 
 const app = createApp(App);
 
@@ -59,6 +59,8 @@ app.component('ConfirmDialog', ConfirmDialog);
 app.component('Dialog', Dialog);
 app.component('Select', Select);
 app.component('Textarea', Textarea);
+app.component('Divider', Divider);
+app.component('Password', Password);
 app.directive('tooltip', Tooltip);
 app.component('InputNumber', InputNumber);
 app.component('ToggleSwitch', ToggleSwitch);
