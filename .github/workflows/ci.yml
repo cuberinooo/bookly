@@ -41,7 +41,7 @@ jobs:
           APP_ENV: test
 
       - name: Install PHP Dependencies
-        run: docker compose exec -T backend composer install --no-interaction --prefer-dist
+        run: docker compose exec -T backend bash -c "COMPOSER_MEMORY_LIMIT=-1 composer install --no-interaction --prefer-dist"
 
       - name: Run Symfony Tests (PHPUnit)
         run: docker compose exec -T backend bin/phpunit
