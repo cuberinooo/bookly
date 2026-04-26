@@ -36,6 +36,17 @@ p {
   color: var(--text-color);
 }
 
+td {
+
+  div {
+    color: white;
+  }
+
+  span {
+    color: white;
+  }
+}
+
 // Global PrimeVue Overrides
 .p-button {
     font-family: 'Barlow Condensed', sans-serif;
@@ -166,6 +177,18 @@ p {
     color: var(--bg-primary-color)!important;
     background: var(--primary-color) !important;
   }
+}
+
+.p-tag-info {
+  background-color: var(--primary-color) !important;
+}
+
+.p-tag-warn {
+  background-color: var(--danger-color) !important;
+}
+
+.p-tab-active {
+
 }
 
 // Container

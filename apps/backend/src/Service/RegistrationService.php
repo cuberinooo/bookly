@@ -19,7 +19,7 @@ class RegistrationService
     ) {
     }
 
-    public function register(array $data): User
+    public function register(array $data, bool $isAdminCreation = false): User
     {
         $existingUser = $this->entityManager->getRepository(User::class)->findOneBy(['email' => $data['email']]);
         if ($existingUser) {
@@ -37,18 +37,25 @@ class RegistrationService
         $user->setPassword($hashedPassword);
 
         $role = $data['role'] ?? 'ROLE_MEMBER';
-        if (!in_array($role, ['ROLE_MEMBER', 'ROLE_TRAINER'])) {
+        if (!in_array($role, ['ROLE_MEMBER', 'ROLE_TRAINER', 'ROLE_ADMIN'])) {
             $role = 'ROLE_MEMBER';
         }
         $user->setRoles([$role]);
-        $user->setIsVerified(false);
+        
+        if ($isAdminCreation) {
+            $user->setIsVerified(true);
+            $user->setMustChangePassword(true);
+        } else {
+            $user->setIsVerified(false);
+            $user->setMustChangePassword(false);
+        }
 
         $this->generateVerificationToken($user);
 
         $this->entityManager->persist($user);
         $this->entityManager->flush();
 
-        $this->sendVerificationEmail($user);
+        $this->sendVerificationEmail($user, $isAdminCreation, $password);
 
         return $user;
     }
@@ -91,19 +98,25 @@ class RegistrationService
         $user->setVerificationTokenExpiresAt(new \DateTime('+24 hours'));
     }
 
-    private function sendVerificationEmail(User $user): void
+    private function sendVerificationEmail(User $user, bool $isAdminCreation = false, ?string $temporaryPassword = null): void
     {
         $frontendUrl = $_ENV['FRONTEND_URL'] ?? 'http://localhost:4200';
         $verificationUrl = $frontendUrl . '/verify-email?token=' . $user->getVerificationToken();
 
+        $subject = $isAdminCreation 
+            ? 'Welcome to Phoenix Athletics - Your Account is Ready' 
+            : 'Verify your Phoenix Booking account';
+
         $email = (new TemplatedEmail())
             ->from($_ENV['NO_REPLAY_MAIL'] ?? 'noreply@example.com')
             ->to($user->getEmail())
-            ->subject('Verify your Phoenix Booking account')
+            ->subject($subject)
             ->htmlTemplate('emails/verify_email.html.twig')
             ->context([
                 'name' => $user->getName(),
                 'url' => $verificationUrl,
+                'isAdminCreation' => $isAdminCreation,
+                'temporaryPassword' => $temporaryPassword,
             ]);
 
         $this->mailer->send($email);

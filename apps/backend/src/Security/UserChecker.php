@@ -20,6 +20,10 @@ class UserChecker implements UserCheckerInterface
             // This message will be returned to the frontend
             throw new CustomUserMessageAccountStatusException('Your email address is not verified.');
         }
+
+        if (!$user->isActive()) {
+            throw new CustomUserMessageAccountStatusException('Your account has been deactivated. Please contact an administrator.');
+        }
     }
 
     public function checkPostAuth(UserInterface $user, ?TokenInterface $token = null): void

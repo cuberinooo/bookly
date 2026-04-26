@@ -241,12 +241,6 @@ onMounted(loadLazyData);
     }
 }
 
-td {
-  span {
-    color: white;
-  }
-}
-
 .course-title-cell {
     @apply font-bold text-lg text-slate-900 uppercase;
     font-family: 'Barlow Condensed', sans-serif;

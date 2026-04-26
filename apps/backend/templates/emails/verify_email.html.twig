@@ -3,12 +3,25 @@
 {% block title %}Verify your email{% endblock %}
 
 {% block body %}
-    <h2>Welcome to Phoenix Booking!</h2>
+    <h2>Welcome to Phoenix Athletics!</h2>
     <p>Hello {{ name }},</p>
-    <p>Please click the button below to verify your email address and activate your account.</p>
+    
+    {% if isAdminCreation %}
+        <p>An administrator has created an account for you in our booking system.</p>
+        <p>Your temporary password is: <strong>{{ temporaryPassword }}</strong></p>
+        <p>For security reasons, you will be required to change this password upon your first login.</p>
+        <p>Please click the button below to verify your account and get started.</p>
+    {% else %}
+        <p>Please click the button below to verify your email address and activate your account.</p>
+    {% endif %}
+
     <p style="text-align: center;">
-        <a href="{{ url }}" class="button">Verify Email Address</a>
+        <a href="{{ url }}" class="button">Verify Account</a>
     </p>
-    <p>If you did not create an account, no further action is required.</p>
+    
+    {% if not isAdminCreation %}
+        <p>If you did not create an account, no further action is required.</p>
+    {% endif %}
+    
     <p>See you on the mats!</p>
 {% endblock %}

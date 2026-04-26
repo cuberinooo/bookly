@@ -18,6 +18,8 @@ class JWTCreatedListener
         $payload = $event->getData();
         $payload['id'] = $user->getId();
         $payload['name'] = $user->getName();
+        $payload['isActive'] = $user->isActive();
+        $payload['mustChangePassword'] = $user->isMustChangePassword();
 
         $event->setData($payload);
     }

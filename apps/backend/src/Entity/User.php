@@ -32,6 +32,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     /**
      * @var list<string> The user roles
      */
+    #[Groups(['course:read', 'booking:read', 'user:read'])]
     #[ORM\Column]
     private array $roles = [];
 
@@ -44,17 +45,26 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     /**
      * @var Collection<int, Course>
      */
-    #[ORM\OneToMany(targetEntity: Course::class, mappedBy: 'trainer')]
+    #[ORM\OneToMany(targetEntity: Course::class, mappedBy: 'trainer', cascade: ['remove'])]
     private Collection $courses;
 
     /**
      * @var Collection<int, Booking>
      */
-    #[ORM\OneToMany(targetEntity: Booking::class, mappedBy: 'member')]
+    #[ORM\OneToMany(targetEntity: Booking::class, mappedBy: 'member', cascade: ['remove'])]
     private Collection $bookings;
 
     #[ORM\Column(options: ['default' => false])]
+    #[Groups(['user:read'])]
     private ?bool $isVerified = false;
+
+    #[ORM\Column(options: ['default' => true])]
+    #[Groups(['user:read'])]
+    private ?bool $isActive = true;
+
+    #[ORM\Column(options: ['default' => false])]
+    #[Groups(['user:read'])]
+    private ?bool $mustChangePassword = false;
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $verificationToken = null;
@@ -82,6 +92,30 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setIsVerified(bool $isVerified): static
     {
         $this->isVerified = $isVerified;
+
+        return $this;
+    }
+
+    public function isActive(): ?bool
+    {
+        return $this->isActive;
+    }
+
+    public function setIsActive(bool $isActive): static
+    {
+        $this->isActive = $isActive;
+
+        return $this;
+    }
+
+    public function isMustChangePassword(): ?bool
+    {
+        return $this->mustChangePassword;
+    }
+
+    public function setMustChangePassword(bool $mustChangePassword): static
+    {
+        $this->mustChangePassword = $mustChangePassword;
 
         return $this;
     }

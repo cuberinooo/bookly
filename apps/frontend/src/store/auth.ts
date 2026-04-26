@@ -5,6 +5,8 @@ interface User {
   email: string;
   name: string;
   roles: string[];
+  isActive?: boolean;
+  mustChangePassword?: boolean;
 }
 
 export const authStore = reactive({
@@ -37,7 +39,9 @@ export const authStore = reactive({
         id: payload.id,
         email: payload.username || payload.email,
         name: payload.name || '',
-        roles: payload.roles || []
+        roles: payload.roles || [],
+        isActive: payload.isActive,
+        mustChangePassword: payload.mustChangePassword
       };
     } catch (e) {
       this.logout();
@@ -50,6 +54,10 @@ export const authStore = reactive({
 
   isTrainer() {
     return this.user?.roles.includes('ROLE_TRAINER');
+  },
+
+  isAdmin() {
+    return this.user?.roles.includes('ROLE_ADMIN');
   }
 });
 
