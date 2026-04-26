@@ -188,7 +188,11 @@ td {
 }
 
 .p-tab-active {
+  color: var(--primary-color) !important;
+}
 
+.p-tablist-active-bar {
+  background-color: var(--primary-color) !important;
 }
 
 // Container

@@ -9,11 +9,12 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\RateLimiter\RateLimiterFactory;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 class RegistrationController extends AbstractController
 {
     #[Route('/api/register', name: 'api_register', methods: ['POST'])]
-    public function register(Request $request, RegistrationService $registrationService, RateLimiterFactory $registrationLimiter): JsonResponse {
+    public function register(Request $request, RegistrationService $registrationService, #[Autowire(service: 'limiter.registration')] RateLimiterFactory $registrationLimiter): JsonResponse {
         $limiter = $registrationLimiter->create($request->getClientIp());
         if (false === $limiter->consume(1)->isAccepted()) {
             return new JsonResponse(['error' => 'Too many registration attempts. Please try again later.'], Response::HTTP_TOO_MANY_REQUESTS);

@@ -232,7 +232,7 @@ onMounted(fetchData);
                         <div class="flex text-black justify-content-between align-items-start">
                             <div class="flex flex-col">
                                 <span>{{ course.title }}</span>
-                                <span v-if="course.bookings.find(b => b.member.email === authStore.user.email)?.isWaitlist" class="waitlist-indicator">WAITLIST QUEUE</span>
+                                <span v-if="course.bookings.find(b => b.member.email === authStore.user?.email)?.isWaitlist" class="waitlist-indicator">WAITLIST QUEUE</span>
                             </div>
                             <span class="duration-tag ml-2">{{ formatDuration(course.durationMinutes) }}</span>
                         </div>

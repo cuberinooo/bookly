@@ -15,6 +15,7 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\RateLimiter\RateLimiterFactory;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Uid\Uuid;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 class ResetPasswordController extends AbstractController
 {
@@ -23,7 +24,7 @@ class ResetPasswordController extends AbstractController
         Request $request,
         EntityManagerInterface $entityManager,
         MailerInterface $mailer,
-        RateLimiterFactory $forgotPasswordLimiter
+        #[Autowire(service: 'limiter.forgot_password')] RateLimiterFactory $forgotPasswordLimiter
     ): JsonResponse {
         $limiter = $forgotPasswordLimiter->create($request->getClientIp());
         if (false === $limiter->consume(1)->isAccepted()) {
@@ -50,7 +51,7 @@ class ResetPasswordController extends AbstractController
             $resetUrl = $frontendUrl . '/reset-password?token=' . $token;
 
             $emailMessage = new TemplatedEmail()
-                ->from($_ENV['NO_REPLAY_MAIL'])
+                ->from($_ENV['NO_REPLAY_MAIL'] ?? 'noreply@example.com')
                 ->to($user->getEmail())
                 ->subject('Reset your Phoenix Booking password')
                 ->htmlTemplate('emails/reset_password.html.twig')
