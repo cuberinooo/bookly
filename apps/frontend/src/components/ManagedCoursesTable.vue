@@ -80,16 +80,16 @@ function formatDuration(min: number) {
 
 function confirmDeleteCourse(course: any) {
     const isSeries = !!course.seriesId;
-    
+
     confirm.require({
-        message: isSeries 
+        message: isSeries
             ? `Do you want to delete only this instance or all upcoming workouts in this series?`
             : `Delete "${course.title}"? This cannot be undone.`,
         header: isSeries ? 'Series Detected' : 'Dangerous Action',
         icon: 'pi pi-exclamation-triangle',
-        acceptProps: { 
+        acceptProps: {
             label: isSeries ? 'Delete Series' : 'Delete',
-            severity: 'danger' 
+            severity: 'danger'
         },
         rejectProps: {
           label: isSeries ? 'Delete Only This' : 'Cancel',
@@ -164,16 +164,16 @@ onMounted(loadLazyData);
             </div>
         </div>
 
-        <DataTable 
-            :value="courses" 
-            lazy 
-            paginator 
-            :rows="10" 
-            :totalRecords="totalRecords" 
-            :loading="loading" 
+        <DataTable
+            :value="courses"
+            lazy
+            paginator
+            :rows="10"
+            :totalRecords="totalRecords"
+            :loading="loading"
             @page="onPage"
-            responsiveLayout="stack" 
-            breakpoint="960px" 
+            responsiveLayout="stack"
+            breakpoint="960px"
             class="managed-table"
         >
             <Column field="title" header="Course">
@@ -191,7 +191,9 @@ onMounted(loadLazyData);
             </Column>
             <Column header="Duration">
                 <template #body="slotProps">
+                  <span>
                     {{ formatDuration(slotProps.data.durationMinutes) }}
+                  </span>
                 </template>
             </Column>
             <Column header="Slots">
@@ -214,10 +216,10 @@ onMounted(loadLazyData);
             </Column>
         </DataTable>
 
-        <ParticipantsDialog 
-            v-model:visible="participantsDialog" 
-            :course="selectedCourse" 
-            @remove-participant="removeParticipant" 
+        <ParticipantsDialog
+            v-model:visible="participantsDialog"
+            :course="selectedCourse"
+            @remove-participant="removeParticipant"
         />
     </section>
 </template>
@@ -237,6 +239,12 @@ onMounted(loadLazyData);
         @apply transition-colors duration-200;
         &:hover { @apply bg-slate-50/50; }
     }
+}
+
+td {
+  span {
+    color: white;
+  }
 }
 
 .course-title-cell {
