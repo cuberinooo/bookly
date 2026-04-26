@@ -45,10 +45,8 @@ jobs:
           # This loop waits until the vendor folder and the autoload file exist
           timeout 300s bash -c 'until [ -f apps/backend/vendor/autoload.php ]; do sleep 5; done'
 
-      - name: Wait for DB and Generate Keys
+      - name: Generate Keys
         run: |
-          # Wait for DB
-          docker compose exec -T backend bash -c 'until bin/console doctrine:query:sql "SELECT 1" > /dev/null 2>&1; do echo "Waiting for DB..."; sleep 2; done'
           # Generate JWT keys for authentication tests
           docker compose exec -T backend mkdir -p config/jwt
           docker compose exec -T backend bin/console lexik:jwt:generate-keypair --env=test --overwrite --no-interaction
