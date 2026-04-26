@@ -74,13 +74,23 @@ onMounted(fetchRoles);
   <div class="min-h-[80vh] flex items-center justify-center bg-white px-4 py-12">
     <div class="phoenix-card w-full max-w-md">
       <div class="text-center mb-10">
-        <h1 class="text-3xl font-extrabold tracking-tight">Join the Phoenix</h1>
-        <p class="text-slate-600 mt-2 font-medium">Start your athletic transformation</p>
+        <h1 class="text-3xl font-extrabold tracking-tight">
+          Join the Phoenix
+        </h1>
+        <p class="text-slate-600 mt-2 font-medium">
+          Start your athletic transformation
+        </p>
       </div>
 
-      <form @submit.prevent="register" class="flex flex-col gap-6">
+      <form
+        class="flex flex-col gap-6"
+        @submit.prevent="register"
+      >
         <div class="flex flex-col">
-          <label for="name" class="form-label-base">Full Name</label>
+          <label
+            for="name"
+            class="form-label-base"
+          >Full Name</label>
           <InputText
             id="name"
             v-model="name"
@@ -90,7 +100,10 @@ onMounted(fetchRoles);
         </div>
 
         <div class="flex flex-col">
-          <label for="email" class="form-label-base">Email Address</label>
+          <label
+            for="email"
+            class="form-label-base"
+          >Email Address</label>
           <InputText
             id="email"
             v-model="email"
@@ -101,32 +114,50 @@ onMounted(fetchRoles);
         </div>
 
         <div class="flex flex-col">
-          <label for="password" class="form-label-base">Password</label>
+          <label
+            for="password"
+            class="form-label-base"
+          >Password</label>
           <Password
             id="password"
             v-model="password"
-            toggleMask
+            toggle-mask
             required
             placeholder="••••••••"
             class="w-full"
-            inputClass="w-full"
+            input-class="w-full"
           >
             <template #footer>
-                <Divider />
-                <p class="mt-2 font-bold text-xs uppercase tracking-wider">Requirements</p>
-                <ul class="pl-2 ml-2 mt-2 list-disc flex flex-col gap-1 text-xs">
-                    <li :class="passwordValidation.minLength ? 'text-green-600' : 'text-slate-400'">At least 8 characters</li>
-                    <li :class="passwordValidation.uppercase ? 'text-green-600' : 'text-slate-400'">At least one uppercase</li>
-                    <li :class="passwordValidation.lowercase ? 'text-green-600' : 'text-slate-400'">At least one lowercase</li>
-                    <li :class="passwordValidation.number ? 'text-green-600' : 'text-slate-400'">At least one number</li>
-                    <li :class="passwordValidation.special ? 'text-green-600' : 'text-slate-400'">At least one special character</li>
-                </ul>
+              <Divider />
+              <p class="mt-2 font-bold text-xs uppercase tracking-wider">
+                Requirements
+              </p>
+              <ul class="pl-2 ml-2 mt-2 list-disc flex flex-col gap-1 text-xs">
+                <li :class="passwordValidation.minLength ? 'text-green-600' : 'text-slate-400'">
+                  At least 8 characters
+                </li>
+                <li :class="passwordValidation.uppercase ? 'text-green-600' : 'text-slate-400'">
+                  At least one uppercase
+                </li>
+                <li :class="passwordValidation.lowercase ? 'text-green-600' : 'text-slate-400'">
+                  At least one lowercase
+                </li>
+                <li :class="passwordValidation.number ? 'text-green-600' : 'text-slate-400'">
+                  At least one number
+                </li>
+                <li :class="passwordValidation.special ? 'text-green-600' : 'text-slate-400'">
+                  At least one special character
+                </li>
+              </ul>
             </template>
           </Password>
         </div>
 
         <div class="flex flex-col">
-          <label for="confirmPassword" class="form-label-base">Confirm Password</label>
+          <label
+            for="confirmPassword"
+            class="form-label-base"
+          >Confirm Password</label>
           <InputText
             id="confirmPassword"
             v-model="confirmPassword"
@@ -135,17 +166,23 @@ onMounted(fetchRoles);
             placeholder="••••••••"
             :class="{ 'p-invalid': confirmPassword && !passwordValidation.match }"
           />
-          <small v-if="confirmPassword && !passwordValidation.match" class="text-red-500 mt-1 font-bold">Passwords do not match</small>
+          <small
+            v-if="confirmPassword && !passwordValidation.match"
+            class="text-red-500 mt-1 font-bold"
+          >Passwords do not match</small>
         </div>
 
         <div class="flex flex-col">
-          <label for="role" class="form-label-base">Account Type</label>
+          <label
+            for="role"
+            class="form-label-base"
+          >Account Type</label>
           <Select
             id="role"
             v-model="role"
             :options="roleOptions"
-            optionLabel="label"
-            optionValue="value"
+            option-label="label"
+            option-value="value"
             class="w-full"
           />
         </div>
@@ -163,7 +200,12 @@ onMounted(fetchRoles);
       <div class="mt-8 pt-6 border-t border-slate-50 text-center">
         <p class="font-medium text-slate-600">
           Already an athlete?
-          <RouterLink to="/login" class="text-accent hover:brightness-90 font-bold underline-offset-4 hover:underline transition-all">Login here</RouterLink>
+          <RouterLink
+            to="/login"
+            class="text-accent hover:brightness-90 font-bold underline-offset-4 hover:underline transition-all"
+          >
+            Login here
+          </RouterLink>
         </p>
       </div>
     </div>

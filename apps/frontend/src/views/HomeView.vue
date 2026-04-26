@@ -180,112 +180,180 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="home-view" :class="{ 'is-mobile-view': isMobile }">
+  <div
+    class="home-view"
+    :class="{ 'is-mobile-view': isMobile }"
+  >
     <div class="container">
-        <header class="home-header">
-            <div class="header-left">
-                <h1>Athletic Schedule</h1>
-                <p class="text-muted">Master your discipline. Book your next session.</p>
-            </div>
-
-            <div class="header-right">
-                <div class="view-toggle" v-if="!isMobile">
-                    <span :class="{ active: !isCompactView }">STANDARD</span>
-                    <ToggleSwitch v-model="isCompactView" />
-                    <span :class="{ active: isCompactView }">COMPACT</span>
-                </div>
-
-                <div class="header-badge" v-if="authStore.isTrainer()">
-                    <span class="pulse"></span>
-                    {{ authStore.viewMode === 'trainer' ? 'TRAINER MODE ACTIVE' : 'MEMBER MODE ACTIVE' }}
-                </div>
-            </div>
-        </header>
-
-        <div v-if="isMobile">
-            <MobileCalendar
-                :courses="courses"
-                :user-id="authStore.user?.id"
-                @course-click="handleCourseClick"
-            />
+      <header class="home-header">
+        <div class="header-left">
+          <h1>Athletic Schedule</h1>
+          <p class="text-muted">
+            Master your discipline. Book your next session.
+          </p>
         </div>
-        <div v-else>
-            <WeeklyCalendar
-                :courses="courses"
-                :is-compact-view="isCompactView"
-                :user-id="authStore.user?.id"
-                @course-click="handleCourseClick"
-                @cell-click="handleCellClick"
-            />
+
+        <div class="header-right">
+          <div
+            v-if="!isMobile"
+            class="view-toggle"
+          >
+            <span :class="{ active: !isCompactView }">STANDARD</span>
+            <ToggleSwitch v-model="isCompactView" />
+            <span :class="{ active: isCompactView }">COMPACT</span>
+          </div>
+
+          <div
+            v-if="authStore.isTrainer()"
+            class="header-badge"
+          >
+            <span class="pulse" />
+            {{ authStore.viewMode === 'trainer' ? 'TRAINER MODE ACTIVE' : 'MEMBER MODE ACTIVE' }}
+          </div>
         </div>
+      </header>
+
+      <div v-if="isMobile">
+        <MobileCalendar
+          :courses="courses"
+          :user-id="authStore.user?.id"
+          @course-click="handleCourseClick"
+        />
+      </div>
+      <div v-else>
+        <WeeklyCalendar
+          :courses="courses"
+          :is-compact-view="isCompactView"
+          :user-id="authStore.user?.id"
+          @course-click="handleCourseClick"
+          @cell-click="handleCellClick"
+        />
+      </div>
     </div>
 
     <!-- Details Dialog -->
-    <Dialog v-model:visible="detailVisible" :header="selectedCourse?.title" :modal="true" :position="isMobile ? 'bottom' : 'center'" class="w-full max-w-md athletic-dialog" :class="{ 'mobile-full-width': isMobile }">
-        <div v-if="selectedCourse" class="workout-details">
-            <div class="trainer-info">
-                <div class="avatar-placeholder">
-                    <i class="pi pi-user"></i>
-                </div>
-                <div>
-                    <small>HEAD COACH</small>
-                    <span class="trainer-name">{{ selectedCourse.trainer?.name }}</span>
-                </div>
-            </div>
-
-            <div class="field">
-              <label>Workout Brief</label>
-              <Textarea disabled="" class="w-full" :modelValue="selectedCourse.description || 'No description provided.'"/>
-            </div>
-
-            <div class="specs-grid">
-                <div class="field">
-                    <label>DATE</label>
-                  <InputText disabled="" class="w-full" :modelValue="new Date(selectedCourse.startTime).toLocaleDateString([], { month: 'long', day: 'numeric' })"/>
-                </div>
-                <div class="field">
-                    <label>TIME</label>
-                    <InputText disabled="" class="w-full" :modelValue="new Date(selectedCourse.startTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})"/>
-                </div>
-                <div class="field">
-                    <label>DURATION</label>
-                    <InputText disabled="" class="w-full" :modelValue="formatDuration(selectedCourse.durationMinutes)"/>
-                </div>
-                <div class="field">
-                    <label>CAPACITY</label>
-                    <InputText disabled="" class="w-full" :modelValue="selectedCourse.bookings.filter(b => !b.isWaitlist).length < selectedCourse.capacity ? (selectedCourse.capacity - selectedCourse.bookings.filter(b => !b.isWaitlist).length) + ' SPOTS LEFT' : 'WAITLIST ACTIVE'"/>
-                </div>
-            </div>
-
-            <div class="action-footer" v-if="isMemberMode && !isPastCourse">
-                <template v-if="selectedCourse.trainer?.id !== authStore.user?.id">
-                    <Button v-if="!selectedCourse.bookings.some((b: any) => b.member?.id === authStore.user?.id)"
-                            :label="selectedCourse.bookings.filter(b => !b.isWaitlist).length < selectedCourse.capacity ? 'RESERVE SPOT' : 'JOIN WAITLIST'"
-                            severity="primary" class="w-full p-4" @click="bookCourse(selectedCourse.id)" />
-                    <Button v-else label="CANCEL RESERVATION" severity="primary" variant="text" class="w-full p-4 cancel-btn" @click="unbookCourse(selectedCourse.id)" />
-                </template>
-                <div v-else class="text-center font-bold text-slate-500 uppercase tracking-widest text-xs">
-                    <i class="pi pi-info-circle"></i> You are the coach for this session.
-                </div>
-            </div>
-
-            <div class="action-footer past-course-info" v-if="isPastCourse">
-                <p class="text-center font-bold text-slate-500 uppercase tracking-widest text-xs">
-                    <i class="pi pi-lock"></i> This session has already finished.
-                </p>
-            </div>
+    <Dialog
+      v-model:visible="detailVisible"
+      :header="selectedCourse?.title"
+      :modal="true"
+      :position="isMobile ? 'bottom' : 'center'"
+      class="w-full max-w-md athletic-dialog"
+      :class="{ 'mobile-full-width': isMobile }"
+    >
+      <div
+        v-if="selectedCourse"
+        class="workout-details"
+      >
+        <div class="trainer-info">
+          <div class="avatar-placeholder">
+            <i class="pi pi-user" />
+          </div>
+          <div>
+            <small>HEAD COACH</small>
+            <span class="trainer-name">{{ selectedCourse.trainer?.name }}</span>
+          </div>
         </div>
+
+        <div class="field">
+          <label>Workout Brief</label>
+          <Textarea
+            disabled=""
+            class="w-full"
+            :model-value="selectedCourse.description || 'No description provided.'"
+          />
+        </div>
+
+        <div class="specs-grid">
+          <div class="field">
+            <label>DATE</label>
+            <InputText
+              disabled=""
+              class="w-full"
+              :model-value="new Date(selectedCourse.startTime).toLocaleDateString([], { month: 'long', day: 'numeric' })"
+            />
+          </div>
+          <div class="field">
+            <label>TIME</label>
+            <InputText
+              disabled=""
+              class="w-full"
+              :model-value="new Date(selectedCourse.startTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})"
+            />
+          </div>
+          <div class="field">
+            <label>DURATION</label>
+            <InputText
+              disabled=""
+              class="w-full"
+              :model-value="formatDuration(selectedCourse.durationMinutes)"
+            />
+          </div>
+          <div class="field">
+            <label>CAPACITY</label>
+            <InputText
+              disabled=""
+              class="w-full"
+              :model-value="selectedCourse.bookings.filter(b => !b.isWaitlist).length < selectedCourse.capacity ? (selectedCourse.capacity - selectedCourse.bookings.filter(b => !b.isWaitlist).length) + ' SPOTS LEFT' : 'WAITLIST ACTIVE'"
+            />
+          </div>
+        </div>
+
+        <div
+          v-if="isMemberMode && !isPastCourse"
+          class="action-footer"
+        >
+          <template v-if="selectedCourse.trainer?.id !== authStore.user?.id">
+            <Button
+              v-if="!selectedCourse.bookings.some((b: any) => b.member?.id === authStore.user?.id)"
+              :label="selectedCourse.bookings.filter(b => !b.isWaitlist).length < selectedCourse.capacity ? 'RESERVE SPOT' : 'JOIN WAITLIST'"
+              severity="primary"
+              class="w-full p-4"
+              @click="bookCourse(selectedCourse.id)"
+            />
+            <Button
+              v-else
+              label="CANCEL RESERVATION"
+              severity="primary"
+              variant="text"
+              class="w-full p-4 cancel-btn"
+              @click="unbookCourse(selectedCourse.id)"
+            />
+          </template>
+          <div
+            v-else
+            class="text-center font-bold text-slate-500 uppercase tracking-widest text-xs"
+          >
+            <i class="pi pi-info-circle" /> You are the coach for this session.
+          </div>
+        </div>
+
+        <div
+          v-if="isPastCourse"
+          class="action-footer past-course-info"
+        >
+          <p class="text-center font-bold text-slate-500 uppercase tracking-widest text-xs">
+            <i class="pi pi-lock" /> This session has already finished.
+          </p>
+        </div>
+      </div>
     </Dialog>
 
     <!-- Create/Edit Dialog -->
-    <Dialog v-model:visible="formVisible" :header="editingCourse?.id ? 'Modify Workout' : 'Launch New Workout'" :modal="true" :position="isMobile ? 'bottom' : 'center'" class="w-full max-w-lg" :class="{ 'mobile-full-width': isMobile }">
-        <CourseForm
-            :course="editingCourse"
-            :loading="submitting"
-            @save="onSaveCourse"
-            @cancel="formVisible = false"
-            @delete="onDeleteCourse"
-        />
+    <Dialog
+      v-model:visible="formVisible"
+      :header="editingCourse?.id ? 'Modify Workout' : 'Launch New Workout'"
+      :modal="true"
+      :position="isMobile ? 'bottom' : 'center'"
+      class="w-full max-w-lg"
+      :class="{ 'mobile-full-width': isMobile }"
+    >
+      <CourseForm
+        :course="editingCourse"
+        :loading="submitting"
+        @save="onSaveCourse"
+        @cancel="formVisible = false"
+        @delete="onDeleteCourse"
+      />
     </Dialog>
   </div>
 </template>

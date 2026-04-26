@@ -26,61 +26,110 @@ function close() {
 </script>
 
 <template>
-    <Dialog :visible="visible" @update:visible="close" :header="'Squad List: ' + course?.title" :modal="true" class="w-full max-w-xl squad-dialog">
-        <div class="dialog-content-wrapper p-4">
-            <div v-if="confirmedParticipants.length > 0" class="participant-section">
-                <h3 class="section-title"><i class="pi pi-check-circle text-green-500 mr-2"></i>Confirmed Athletes</h3>
-                <DataTable :value="confirmedParticipants" class="participants-table">
-                    <Column header="Athlete">
-                        <template #body="slotProps">
-                            <div class="flex flex-col">
-                                <span :class="['font-bold', isAnonymized(slotProps.data.member.name) ? 'text-slate-400' : 'text-slate-900']">
-                                    {{ slotProps.data.member.name }}
-                                </span>
-                                <small v-if="slotProps.data.member.email">{{ slotProps.data.member.email }}</small>
-                            </div>
-                        </template>
-                    </Column>
-                    <Column header="Actions" class="text-right" v-if="$attrs['onRemoveParticipant']">
-                        <template #body="slotProps">
-                            <Button icon="pi pi-user-minus" severity="danger" variant="text" @click="$emit('remove-participant', slotProps.data.id)" v-tooltip="'Remove Member'" class="action-btn delete-btn" />
-                        </template>
-                    </Column>
-                </DataTable>
-            </div>
+  <Dialog
+    :visible="visible"
+    :header="'Squad List: ' + course?.title"
+    :modal="true"
+    class="w-full max-w-xl squad-dialog"
+    @update:visible="close"
+  >
+    <div class="dialog-content-wrapper p-4">
+      <div
+        v-if="confirmedParticipants.length > 0"
+        class="participant-section"
+      >
+        <h3 class="section-title">
+          <i class="pi pi-check-circle text-green-500 mr-2" />Confirmed Athletes
+        </h3>
+        <DataTable
+          :value="confirmedParticipants"
+          class="participants-table"
+        >
+          <Column header="Athlete">
+            <template #body="slotProps">
+              <div class="flex flex-col">
+                <span :class="['font-bold', isAnonymized(slotProps.data.member.name) ? 'text-slate-400' : 'text-slate-900']">
+                  {{ slotProps.data.member.name }}
+                </span>
+                <small v-if="slotProps.data.member.email">{{ slotProps.data.member.email }}</small>
+              </div>
+            </template>
+          </Column>
+          <Column
+            v-if="$attrs['onRemoveParticipant']"
+            header="Actions"
+            class="text-right"
+          >
+            <template #body="slotProps">
+              <Button
+                v-tooltip="'Remove Member'"
+                icon="pi pi-user-minus"
+                severity="danger"
+                variant="text"
+                class="action-btn delete-btn"
+                @click="$emit('remove-participant', slotProps.data.id)"
+              />
+            </template>
+          </Column>
+        </DataTable>
+      </div>
 
-            <div v-if="waitlistParticipants.length > 0" class="participant-section mt-8">
-                <h3 class="section-title"><i class="pi pi-clock text-amber-500 mr-2"></i>Waitlist (Chronological)</h3>
-                <DataTable :value="waitlistParticipants" class="participants-table waitlist">
-                    <Column header="Athlete">
-                        <template #body="slotProps">
-                            <div class="flex flex-col">
-                                <span :class="['font-bold', isAnonymized(slotProps.data.member.name) ? 'text-slate-400' : 'text-slate-900']">
-                                    {{ slotProps.data.member.name }}
-                                </span>
-                                <small v-if="slotProps.data.member.email" class="text-slate-500">{{ slotProps.data.member.email }}</small>
-                            </div>
-                        </template>
-                    </Column>
-                    <Column header="Queue Pos">
-                        <template #body="slotProps">
-                            <span class="waitlist-badge">#{{ waitlistParticipants.indexOf(slotProps.data) + 1 }}</span>
-                        </template>
-                    </Column>
-                    <Column header="Actions" class="text-right" v-if="$attrs['onRemoveParticipant']">
-                        <template #body="slotProps">
-                            <Button icon="pi pi-user-minus" severity="danger" variant="text" @click="$emit('remove-participant', slotProps.data.id)" v-tooltip="'Remove Member'" class="action-btn delete-btn" />
-                        </template>
-                    </Column>
-                </DataTable>
-            </div>
+      <div
+        v-if="waitlistParticipants.length > 0"
+        class="participant-section mt-8"
+      >
+        <h3 class="section-title">
+          <i class="pi pi-clock text-amber-500 mr-2" />Waitlist (Chronological)
+        </h3>
+        <DataTable
+          :value="waitlistParticipants"
+          class="participants-table waitlist"
+        >
+          <Column header="Athlete">
+            <template #body="slotProps">
+              <div class="flex flex-col">
+                <span :class="['font-bold', isAnonymized(slotProps.data.member.name) ? 'text-slate-400' : 'text-slate-900']">
+                  {{ slotProps.data.member.name }}
+                </span>
+                <small
+                  v-if="slotProps.data.member.email"
+                >{{ slotProps.data.member.email }}</small>
+              </div>
+            </template>
+          </Column>
+          <Column header="Queue Pos">
+            <template #body="slotProps">
+              <span class="waitlist-badge">#{{ waitlistParticipants.indexOf(slotProps.data) + 1 }}</span>
+            </template>
+          </Column>
+          <Column
+            v-if="$attrs['onRemoveParticipant']"
+            header="Actions"
+            class="text-right"
+          >
+            <template #body="slotProps">
+              <Button
+                v-tooltip="'Remove Member'"
+                icon="pi pi-user-minus"
+                severity="danger"
+                variant="text"
+                class="action-btn delete-btn"
+                @click="$emit('remove-participant', slotProps.data.id)"
+              />
+            </template>
+          </Column>
+        </DataTable>
+      </div>
 
-            <div v-if="confirmedParticipants.length === 0 && waitlistParticipants.length === 0" class="empty-squad">
-                <i class="pi pi-users text-4xl mb-4 opacity-20"></i>
-                <p>No athletes have joined this squad yet.</p>
-            </div>
-        </div>
-    </Dialog>
+      <div
+        v-if="confirmedParticipants.length === 0 && waitlistParticipants.length === 0"
+        class="empty-squad"
+      >
+        <i class="pi pi-users text-4xl mb-4 opacity-20" />
+        <p>No athletes have joined this squad yet.</p>
+      </div>
+    </div>
+  </Dialog>
 </template>
 
 <style lang="scss" scoped>

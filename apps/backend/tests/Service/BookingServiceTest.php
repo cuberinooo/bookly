@@ -10,18 +10,21 @@ use App\Service\BookingService;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Mailer\MailerInterface;
 
 class BookingServiceTest extends TestCase
 {
     private $entityManager;
     private $bookingRepository;
+    private $mailer;
     private $service;
 
     protected function setUp(): void
     {
         $this->entityManager = $this->createMock(EntityManagerInterface::class);
         $this->bookingRepository = $this->createMock(BookingRepository::class);
-        $this->service = new BookingService($this->entityManager, $this->bookingRepository);
+        $this->mailer = $this->createMock(MailerInterface::class);
+        $this->service = new BookingService($this->entityManager, $this->bookingRepository, $this->mailer);
     }
 
     public function testBookConfirmed(): void
@@ -29,18 +32,18 @@ class BookingServiceTest extends TestCase
         $user = $this->createMock(User::class);
         $user->method('getId')->willReturn(1);
         $user->method('getName')->willReturn('John Doe');
-        
+
         $trainer = $this->createMock(User::class);
         $trainer->method('getId')->willReturn(2);
 
-        $course = $this->createMock(Course::class);
-        $course->method('getEndTime')->willReturn(new \DateTime('+1 hour'));
-        $course->method('getTrainer')->willReturn($trainer);
-        $course->method('getCapacity')->willReturn(10);
-        $course->method('getBookings')->willReturn(new ArrayCollection());
-        $course->method('getTitle')->willReturn('Yoga');
+        $course = new Course();
+        $course->setEndTime(new \DateTime('+1 hour'));
+        $course->setTrainer($trainer);
+        $course->setCapacity(10);
+        $course->setTitle('Yoga');
 
         $this->bookingRepository->method('findOneBy')->willReturn(null);
+        $this->bookingRepository->method('count')->willReturn(0);
 
         $this->entityManager->expects($this->exactly(2))->method('persist');
         $this->entityManager->expects($this->once())->method('flush');
@@ -61,22 +64,61 @@ class BookingServiceTest extends TestCase
         $trainer = $this->createMock(User::class);
         $trainer->method('getId')->willReturn(2);
 
-        $course = $this->createMock(Course::class);
-        $course->method('getEndTime')->willReturn(new \DateTime('+1 hour'));
-        $course->method('getTrainer')->willReturn($trainer);
-        $course->method('getCapacity')->willReturn(1);
-        $course->method('getTitle')->willReturn('Pilates');
+        $course = new Course();
+        $course->setEndTime(new \DateTime('+1 hour'));
+        $course->setTrainer($trainer);
+        $course->setCapacity(1);
+        $course->setTitle('Pilates');
 
         $existingBooking = new Booking();
         $existingBooking->setWaitlist(false);
-        $course->method('getBookings')->willReturn(new ArrayCollection([$existingBooking]));
 
         $this->bookingRepository->method('findOneBy')->willReturn(null);
+        $this->bookingRepository->method('count')->willReturn(1);
 
         [$booking, $isWaitlist] = $this->service->book($course, $user);
 
         $this->assertTrue($isWaitlist);
         $this->assertTrue($booking->isWaitlist());
+    }
+
+    public function testWaitlistPromotion(): void
+    {
+        $user = new User();
+        $user->setName('Jane Doe');
+        
+        $trainer = new User();
+        $course = new Course();
+        $course->setEndTime(new \DateTime('+1 hour'));
+        $course->setTrainer($trainer);
+        $course->setTitle('Pilates');
+        $course->setCapacity(1);
+        $course->setStartTime(new \DateTime('+1 day'));
+
+        $booking = new Booking();
+        $booking->setWaitlist(false);
+        $booking->setCourse($course);
+        $this->bookingRepository->method('findOneBy')->willReturn($booking);
+
+        // Mock promotion logic
+        $waitlistedUser = new User();
+        $waitlistedUser->setName('Waiting User');
+        $waitlistedUser->setEmail('waiting@example.com');
+        
+        $waitlistedBooking = new Booking();
+        $waitlistedBooking->setMember($waitlistedUser);
+        $waitlistedBooking->setCourse($course);
+        $waitlistedBooking->setWaitlist(true);
+
+        $this->bookingRepository->method('count')->willReturn(0);
+        $this->bookingRepository->method('findNextInWaitlist')->willReturnOnConsecutiveCalls($waitlistedBooking, null);
+
+        $this->mailer->expects($this->once())->method('send');
+        $this->entityManager->expects($this->atLeastOnce())->method('flush');
+
+        $this->service->unbook($course, $user);
+
+        $this->assertFalse($waitlistedBooking->isWaitlist());
     }
 
     public function testBookAlreadyBookedThrowsException(): void

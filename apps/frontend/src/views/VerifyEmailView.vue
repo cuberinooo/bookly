@@ -35,17 +35,33 @@ onMounted(verify);
 <template>
   <div class="auth-container">
     <Card class="auth-card text-center">
-      <template #title>Account Verification</template>
+      <template #title>
+        Account Verification
+      </template>
       <template #content>
-        <div v-if="verifying" class="flex flex-col items-center gap-4 py-8">
-            <i class="pi pi-spin pi-spinner text-4xl text-amber-500"></i>
-            <p>Verifying your email address...</p>
+        <div
+          v-if="verifying"
+          class="flex flex-col items-center gap-4 py-8"
+        >
+          <i class="pi pi-spin pi-spinner text-4xl text-amber-500" />
+          <p>Verifying your email address...</p>
         </div>
-        <div v-else-if="error" class="flex flex-col items-center gap-4 py-8">
-            <i class="pi pi-times-circle text-4xl text-red-500"></i>
-            <p class="text-red-600 font-bold">Verification failed.</p>
-            <p class="text-sm">The link may be invalid or expired.</p>
-            <Button label="Back to Login" text @click="router.push('/login')" />
+        <div
+          v-else-if="error"
+          class="flex flex-col items-center gap-4 py-8"
+        >
+          <i class="pi pi-times-circle text-4xl text-red-500" />
+          <p class="text-red-600 font-bold">
+            Verification failed.
+          </p>
+          <p class="text-sm">
+            The link may be invalid or expired.
+          </p>
+          <Button
+            label="Back to Login"
+            text
+            @click="router.push('/login')"
+          />
         </div>
       </template>
     </Card>

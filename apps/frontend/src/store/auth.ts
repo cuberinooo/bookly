@@ -43,7 +43,7 @@ export const authStore = reactive({
         isActive: payload.isActive,
         mustChangePassword: payload.mustChangePassword
       };
-    } catch (e) {
+    } catch {
       this.logout();
     }
   },

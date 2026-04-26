@@ -65,60 +65,99 @@ function formatDayName(date: Date) {
 </script>
 
 <template>
-    <div class="mobile-calendar animate-fadein">
-        <div class="mobile-nav">
-            <div class="nav-header">
-                <h2>{{ currentWeekLabel }}</h2>
-            </div>
-            <div class="nav-actions">
-                <Button icon="pi pi-chevron-left" @click="navigate(-1)" variant="text" rounded />
-                <Button label="TODAY" @click="resetToToday()" variant="outlined" size="small" class="today-btn" />
-                <Button icon="pi pi-chevron-right" @click="navigate(1)" variant="text" rounded />
-            </div>
-        </div>
-
-        <div class="mobile-days-list">
-            <div v-for="date in currentWeek" :key="date.toISOString()" class="day-group" :class="{ 'is-today': isToday(date) }">
-                <div class="day-header-sticky">
-                    <span class="day-name">{{ formatDayName(date) }}</span>
-                    <span class="day-date">{{ date.toLocaleDateString([], { day: 'numeric', month: 'short' }) }}</span>
-                </div>
-
-                <div class="courses-stack">
-                    <div v-if="getCoursesForDay(date).length === 0" class="empty-day">
-                        No sessions scheduled
-                    </div>
-                    <div v-for="course in getCoursesForDay(date)" :key="course.id" 
-                         class="mobile-course-card"
-                         :class="{ 'is-booked': isBookedByUser(course) }"
-                         @click="$emit('course-click', course)">
-                        
-                        <div class="card-left">
-                            <div class="course-time">
-                                {{ new Date(course.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }}
-                            </div>
-                            <div class="course-duration">{{ course.durationMinutes }} MIN</div>
-                        </div>
-
-                        <div class="card-main">
-                            <div class="course-title">{{ course.title }}</div>
-                            <div class="course-coach">Coach: {{ course.trainer?.name }}</div>
-                        </div>
-
-                        <div class="card-right">
-                            <div v-if="isBookedByUser(course)" class="booked-indicator">
-                                <i class="pi pi-check-circle"></i>
-                            </div>
-                            <div v-else class="spots-pill" :class="{ 'is-full': course.bookings.filter(b => !b.isWaitlist).length >= course.capacity }">
-                                {{ course.capacity - course.bookings.filter(b => !b.isWaitlist).length }} 
-                                <i class="pi pi-users"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+  <div class="mobile-calendar animate-fadein">
+    <div class="mobile-nav">
+      <div class="nav-header">
+        <h2>{{ currentWeekLabel }}</h2>
+      </div>
+      <div class="nav-actions">
+        <Button
+          icon="pi pi-chevron-left"
+          variant="text"
+          rounded
+          @click="navigate(-1)"
+        />
+        <Button
+          label="TODAY"
+          variant="outlined"
+          size="small"
+          class="today-btn"
+          @click="resetToToday()"
+        />
+        <Button
+          icon="pi pi-chevron-right"
+          variant="text"
+          rounded
+          @click="navigate(1)"
+        />
+      </div>
     </div>
+
+    <div class="mobile-days-list">
+      <div
+        v-for="date in currentWeek"
+        :key="date.toISOString()"
+        class="day-group"
+        :class="{ 'is-today': isToday(date) }"
+      >
+        <div class="day-header-sticky">
+          <span class="day-name">{{ formatDayName(date) }}</span>
+          <span class="day-date">{{ date.toLocaleDateString([], { day: 'numeric', month: 'short' }) }}</span>
+        </div>
+
+        <div class="courses-stack">
+          <div
+            v-if="getCoursesForDay(date).length === 0"
+            class="empty-day"
+          >
+            No sessions scheduled
+          </div>
+          <div
+            v-for="course in getCoursesForDay(date)"
+            :key="course.id" 
+            class="mobile-course-card"
+            :class="{ 'is-booked': isBookedByUser(course) }"
+            @click="$emit('course-click', course)"
+          >
+            <div class="card-left">
+              <div class="course-time">
+                {{ new Date(course.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }}
+              </div>
+              <div class="course-duration">
+                {{ course.durationMinutes }} MIN
+              </div>
+            </div>
+
+            <div class="card-main">
+              <div class="course-title">
+                {{ course.title }}
+              </div>
+              <div class="course-coach">
+                Coach: {{ course.trainer?.name }}
+              </div>
+            </div>
+
+            <div class="card-right">
+              <div
+                v-if="isBookedByUser(course)"
+                class="booked-indicator"
+              >
+                <i class="pi pi-check-circle" />
+              </div>
+              <div
+                v-else
+                class="spots-pill"
+                :class="{ 'is-full': course.bookings.filter(b => !b.isWaitlist).length >= course.capacity }"
+              >
+                {{ course.capacity - course.bookings.filter(b => !b.isWaitlist).length }} 
+                <i class="pi pi-users" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <style scoped lang="scss">

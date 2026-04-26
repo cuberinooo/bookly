@@ -6,7 +6,8 @@ const props = withDefaults(defineProps<{
     isCompactView?: boolean;
     userId?: number;
 }>(), {
-    isCompactView: true
+    isCompactView: true,
+    userId: undefined
 });
 
 const emit = defineEmits(['course-click', 'cell-click']);
@@ -86,91 +87,148 @@ function onSlotClick(day: Date, hour: number) {
 </script>
 
 <template>
-    <div class="athletic-calendar" :class="{ 'compact-mode': isCompactView }">
-        <div class="calendar-toolbar">
-            <div class="date-info">
-                <h2>{{ currentWeekLabel }}</h2>
-            </div>
-            <div class="view-controls">
-                <div class="nav-group">
-                    <Button icon="pi pi-chevron-left" @click="navigate(-1)" variant="text" />
-                    <Button label="TODAY" @click="resetToToday()" variant="outlined" size="small" class="today-btn" />
-                    <Button icon="pi pi-chevron-right" @click="navigate(1)" variant="text" />
-                </div>
-            </div>
+  <div
+    class="athletic-calendar"
+    :class="{ 'compact-mode': isCompactView }"
+  >
+    <div class="calendar-toolbar">
+      <div class="date-info">
+        <h2>{{ currentWeekLabel }}</h2>
+      </div>
+      <div class="view-controls">
+        <div class="nav-group">
+          <Button
+            icon="pi pi-chevron-left"
+            variant="text"
+            @click="navigate(-1)"
+          />
+          <Button
+            label="TODAY"
+            variant="outlined"
+            size="small"
+            class="today-btn"
+            @click="resetToToday()"
+          />
+          <Button
+            icon="pi pi-chevron-right"
+            variant="text"
+            @click="navigate(1)"
+          />
         </div>
-
-        <div class="calendar-container">
-            <!-- Header Grid -->
-            <div class="calendar-header-grid">
-                <div class="time-corner" v-if="!isCompactView"></div>
-                <div class="days-header-wrapper" :class="{ 'grid-cols-7': true }">
-                    <div v-for="(date, idx) in currentWeek" :key="idx"
-                         :class="['day-header', { 'is-today': isToday(date) }]">
-                        <span class="day-name">{{ days[idx] }}</span>
-                        <span class="day-date">{{ date.getDate() }}</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Body Scroll Area -->
-            <div class="calendar-body-scroll">
-                <div class="calendar-body-grid">
-                    <!-- Time Axis -->
-                    <div class="time-axis" v-if="!isCompactView">
-                        <div v-for="hour in hours" :key="hour" class="time-slot-label">
-                            {{ hour.toString().padStart(2, '0') }}:00
-                        </div>
-                    </div>
-
-                    <!-- Days Grid -->
-                    <div class="days-body-wrapper" :class="{ 'grid-cols-7': true }">
-                        <div v-for="(date, dayIdx) in currentWeek" :key="dayIdx" class="day-column">
-
-                            <!-- Standard View: Time Grid -->
-                            <template v-if="!isCompactView">
-                                <div v-for="hour in hours" :key="hour" class="hour-slot-row" @click="onSlotClick(date, hour)">
-                                    <div class="half-hour-slot"></div>
-                                    <div class="half-hour-slot"></div>
-                                </div>
-                            </template>
-
-                            <!-- Courses (Both views use grid positioning if not compact, or flex if compact) -->
-                            <div v-for="course in getCoursesForDay(date)" :key="course.id"
-                                 class="course-card"
-                                 :class="{ 'is-booked': isBookedByUser(course) }"
-                                 :style="!isCompactView ? { gridRow: getGridRow(course.startTime, course.durationMinutes) } : {}"
-                                 @click.stop="$emit('course-click', course)">
-                                <div v-if="isBookedByUser(course)" class="booked-badge">
-                                    <i class="pi pi-check"></i> BOOKED
-                                </div>
-                                <div class="course-time">
-                                    {{ new Date(course.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }}
-                                    <span v-if="!isCompactView" class="duration-tag">/ {{ course.durationMinutes }} MIN</span>
-                                </div>
-                                <div class="course-title">{{ course.title }}</div>
-                                
-                                <div class="course-meta">
-                                    <div class="coach-line" v-if="!isCompactView">
-                                        <i class="pi pi-user text-[10px]"></i> {{ course.trainer?.name }}
-                                    </div>
-                                    <div class="course-spots">
-                                        <template v-if="course.bookings.filter(b => !b.isWaitlist).length < course.capacity">
-                                            {{ course.bookings.filter(b => !b.isWaitlist).length }} / {{ course.capacity }} <i class="pi pi-users text-[10px]"></i>
-                                        </template>
-                                        <template v-else>
-                                            <span class="text-amber-500">FULL</span>
-                                        </template>
-                                    </div>
-                                </div>
-                            </div>
-
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+      </div>
     </div>
+
+    <div class="calendar-container">
+      <!-- Header Grid -->
+      <div class="calendar-header-grid">
+        <div
+          v-if="!isCompactView"
+          class="time-corner"
+        />
+        <div
+          class="days-header-wrapper"
+          :class="{ 'grid-cols-7': true }"
+        >
+          <div
+            v-for="(date, idx) in currentWeek"
+            :key="idx"
+            :class="['day-header', { 'is-today': isToday(date) }]"
+          >
+            <span class="day-name">{{ days[idx] }}</span>
+            <span class="day-date">{{ date.getDate() }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Body Scroll Area -->
+      <div class="calendar-body-scroll">
+        <div class="calendar-body-grid">
+          <!-- Time Axis -->
+          <div
+            v-if="!isCompactView"
+            class="time-axis"
+          >
+            <div
+              v-for="hour in hours"
+              :key="hour"
+              class="time-slot-label"
+            >
+              {{ hour.toString().padStart(2, '0') }}:00
+            </div>
+          </div>
+
+          <!-- Days Grid -->
+          <div
+            class="days-body-wrapper"
+            :class="{ 'grid-cols-7': true }"
+          >
+            <div
+              v-for="(date, dayIdx) in currentWeek"
+              :key="dayIdx"
+              class="day-column"
+            >
+              <!-- Standard View: Time Grid -->
+              <template v-if="!isCompactView">
+                <div
+                  v-for="hour in hours"
+                  :key="hour"
+                  class="hour-slot-row"
+                  @click="onSlotClick(date, hour)"
+                >
+                  <div class="half-hour-slot" />
+                  <div class="half-hour-slot" />
+                </div>
+              </template>
+
+              <!-- Courses (Both views use grid positioning if not compact, or flex if compact) -->
+              <div
+                v-for="course in getCoursesForDay(date)"
+                :key="course.id"
+                class="course-card"
+                :class="{ 'is-booked': isBookedByUser(course) }"
+                :style="!isCompactView ? { gridRow: getGridRow(course.startTime, course.durationMinutes) } : {}"
+                @click.stop="$emit('course-click', course)"
+              >
+                <div
+                  v-if="isBookedByUser(course)"
+                  class="booked-badge"
+                >
+                  <i class="pi pi-check" /> BOOKED
+                </div>
+                <div class="course-time">
+                  {{ new Date(course.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }}
+                  <span
+                    v-if="!isCompactView"
+                    class="duration-tag"
+                  >/ {{ course.durationMinutes }} MIN</span>
+                </div>
+                <div class="course-title">
+                  {{ course.title }}
+                </div>
+
+                <div class="course-meta">
+                  <div
+                    v-if="!isCompactView"
+                    class="coach-line"
+                  >
+                    <i class="pi pi-user text-[10px]" /> {{ course.trainer?.name }}
+                  </div>
+                  <div class="course-spots">
+                    <template v-if="course.bookings.filter(b => !b.isWaitlist).length < course.capacity">
+                      {{ course.bookings.filter(b => !b.isWaitlist).length }} / {{ course.capacity }} <i class="pi pi-users text-[10px]" />
+                    </template>
+                    <template v-else>
+                      <span class="text-amber-500">FULL</span>
+                    </template>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <style scoped lang="scss">

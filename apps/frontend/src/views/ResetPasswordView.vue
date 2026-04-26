@@ -62,44 +62,70 @@ async function submit() {
 <template>
   <div class="auth-container">
     <Card class="auth-card">
-      <template #title>Set New Password</template>
+      <template #title>
+        Set New Password
+      </template>
       <template #content>
-        <form @submit.prevent="submit" class="flex flex-col gap-6 mt-4">
+        <form
+          class="flex flex-col gap-6 mt-4"
+          @submit.prevent="submit"
+        >
           <div class="flex flex-col">
-            <label for="password" class="font-bold text-sm mb-2">New Password</label>
+            <label
+              for="password"
+              class="font-bold text-sm mb-2"
+            >New Password</label>
             <Password
-                id="password"
-                v-model="password"
-                toggleMask
-                required
-                placeholder="••••••••"
-                class="w-full"
-                inputClass="w-full"
+              id="password"
+              v-model="password"
+              toggle-mask
+              required
+              placeholder="••••••••"
+              class="w-full"
+              input-class="w-full"
             >
-                <template #footer>
-                    <Divider />
-                    <p class="mt-2 font-bold text-xs uppercase tracking-wider">Requirements</p>
-                    <ul class="pl-2 ml-2 mt-2 list-disc flex flex-col gap-1 text-xs">
-                        <li :class="passwordValidation.minLength ? 'text-green-600' : 'text-slate-400'">At least 8 characters</li>
-                        <li :class="passwordValidation.uppercase ? 'text-green-600' : 'text-slate-400'">At least one uppercase</li>
-                        <li :class="passwordValidation.lowercase ? 'text-green-600' : 'text-slate-400'">At least one lowercase</li>
-                        <li :class="passwordValidation.number ? 'text-green-600' : 'text-slate-400'">At least one number</li>
-                        <li :class="passwordValidation.special ? 'text-green-600' : 'text-slate-400'">At least one special character</li>
-                    </ul>
-                </template>
+              <template #footer>
+                <Divider />
+                <p class="mt-2 font-bold text-xs uppercase tracking-wider">
+                  Requirements
+                </p>
+                <ul class="pl-2 ml-2 mt-2 list-disc flex flex-col gap-1 text-xs">
+                  <li :class="passwordValidation.minLength ? 'text-green-600' : 'text-slate-400'">
+                    At least 8 characters
+                  </li>
+                  <li :class="passwordValidation.uppercase ? 'text-green-600' : 'text-slate-400'">
+                    At least one uppercase
+                  </li>
+                  <li :class="passwordValidation.lowercase ? 'text-green-600' : 'text-slate-400'">
+                    At least one lowercase
+                  </li>
+                  <li :class="passwordValidation.number ? 'text-green-600' : 'text-slate-400'">
+                    At least one number
+                  </li>
+                  <li :class="passwordValidation.special ? 'text-green-600' : 'text-slate-400'">
+                    At least one special character
+                  </li>
+                </ul>
+              </template>
             </Password>
           </div>
           <div class="flex flex-col">
-            <label for="confirmPassword" class="font-bold text-sm mb-2">Confirm Password</label>
+            <label
+              for="confirmPassword"
+              class="font-bold text-sm mb-2"
+            >Confirm Password</label>
             <InputText 
-                id="confirmPassword" 
-                v-model="confirmPassword" 
-                type="password" 
-                required 
-                placeholder="••••••••"
-                :class="{ 'p-invalid': confirmPassword && !passwordValidation.match }"
+              id="confirmPassword" 
+              v-model="confirmPassword" 
+              type="password" 
+              required 
+              placeholder="••••••••"
+              :class="{ 'p-invalid': confirmPassword && !passwordValidation.match }"
             />
-            <small v-if="confirmPassword && !passwordValidation.match" class="text-red-500 mt-1 font-bold">Passwords do not match</small>
+            <small
+              v-if="confirmPassword && !passwordValidation.match"
+              class="text-red-500 mt-1 font-bold"
+            >Passwords do not match</small>
           </div>
           <Button 
             severity="primary" 

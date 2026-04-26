@@ -98,75 +98,151 @@ onMounted(fetchUsers);
 </script>
 
 <template>
-    <div class="user-management mt-6">
-        <div class="flex justify-between items-center mb-6">
-            <h2 class="text-2xl font-bold uppercase tracking-tight font-barlow">User Directory</h2>
-            <Button label="Create User" icon="pi pi-user-plus" @click="openNewUser" severity="primary" />
-        </div>
-
-        <DataTable :value="users" :loading="loading" class="athletic-table" responsiveLayout="stack">
-            <Column field="name" header="ATHLETE NAME" sortable>
-                <template #body="{ data }">
-                    <div class="font-bold text-slate-900">{{ data.name }}</div>
-                    <div class="text-xs text-slate-500">{{ data.email }}</div>
-                </template>
-            </Column>
-            <Column header="ROLE">
-                <template #body="{ data }">
-                    <Tag :value="data.roles.includes('ROLE_TRAINER') ? 'TRAINER' : 'MEMBER'"
-                         :severity="data.roles.includes('ROLE_TRAINER') ? 'warn' : 'info'" />
-                </template>
-            </Column>
-            <Column header="STATUS">
-                <template #body="{ data }">
-                    <div class="flex items-center gap-2">
-                        <ToggleSwitch :modelValue="data.isActive" @update:modelValue="toggleActive(data)" />
-                    </div>
-                </template>
-            </Column>
-            <Column header="VERIFIED">
-                <template #body="{ data }">
-                    <i class="pi" :class="data.isVerified ? 'pi-check-circle text-green-500' : 'pi-times-circle text-slate-300'"></i>
-                </template>
-            </Column>
-            <Column header="ACTIONS" class="w-32">
-                <template #body="{ data }">
-                    <div class="flex gap-2">
-                        <Button icon="pi pi-pencil" variant="text" rounded @click="editUser(data)" />
-                        <Button icon="pi pi-trash" variant="text" severity="danger" rounded @click="deleteUser(data)" />
-                    </div>
-                </template>
-            </Column>
-        </DataTable>
-
-        <Dialog v-model:visible="userDialog" :header="editingUser.id ? 'Edit Athlete' : 'Onboard New Athlete'" :modal="true" class="w-full max-w-md">
-            <div class="flex flex-col gap-6 py-4">
-                <div class="flex flex-col gap-2">
-                    <label class="text-sm uppercase tracking-wider">Full Name</label>
-                    <InputText v-model="editingUser.name" placeholder="Name" />
-                </div>
-                <div class="flex flex-col gap-2">
-                    <label class="text-sm uppercase tracking-wider">Email Address</label>
-                    <InputText v-model="editingUser.email" :disabled="!!editingUser.id" placeholder="email@example.com" />
-                </div>
-                <div class="flex flex-col gap-2">
-                    <label class="text-sm uppercase tracking-wider">Role</label>
-                    <Select v-model="editingUser.role" :options="roleOptions" optionLabel="label" optionValue="value" class="w-full" />
-                </div>
-                <div v-if="!editingUser.id" class="flex flex-col gap-2">
-                    <label class="text-sm uppercase tracking-wider">Temporary Password</label>
-                    <InputText v-model="editingUser.password" placeholder="Temporary password" />
-                    <small class="italic">User will be forced to change this on first login.</small>
-                </div>
-            </div>
-            <template #footer>
-                <div class="flex justify-end gap-2">
-                    <Button label="Cancel" severity="secondary" variant="text" @click="userDialog = false" />
-                    <Button label="Save User" severity="primary" :loading="submitting" @click="saveUser" />
-                </div>
-            </template>
-        </Dialog>
+  <div class="user-management mt-6">
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-2xl font-bold uppercase tracking-tight font-barlow">
+        User Directory
+      </h2>
+      <Button
+        label="Create User"
+        icon="pi pi-user-plus"
+        severity="primary"
+        @click="openNewUser"
+      />
     </div>
+
+    <DataTable
+      :value="users"
+      :loading="loading"
+      class="athletic-table"
+      responsive-layout="stack"
+    >
+      <Column
+        field="name"
+        header="ATHLETE NAME"
+        sortable
+      >
+        <template #body="{ data }">
+          <div class="font-bold text-slate-900">
+            {{ data.name }}
+          </div>
+          <div class="text-xs text-slate-500">
+            {{ data.email }}
+          </div>
+        </template>
+      </Column>
+      <Column header="ROLE">
+        <template #body="{ data }">
+          <Tag
+            :value="data.roles.includes('ROLE_TRAINER') ? 'TRAINER' : 'MEMBER'"
+            :severity="data.roles.includes('ROLE_TRAINER') ? 'warn' : 'info'"
+          />
+        </template>
+      </Column>
+      <Column header="STATUS">
+        <template #body="{ data }">
+          <div class="flex items-center gap-2">
+            <ToggleSwitch
+              :model-value="data.isActive"
+              @update:model-value="toggleActive(data)"
+            />
+          </div>
+        </template>
+      </Column>
+      <Column header="VERIFIED">
+        <template #body="{ data }">
+          <i
+            class="pi"
+            :class="data.isVerified ? 'pi-check-circle text-green-500' : 'pi-times-circle text-slate-300'"
+          />
+        </template>
+      </Column>
+      <Column
+        header="ACTIONS"
+        class="w-32"
+      >
+        <template #body="{ data }">
+          <div class="flex gap-2">
+            <Button
+              icon="pi pi-pencil"
+              variant="text"
+              rounded
+              @click="editUser(data)"
+            />
+            <Button
+              icon="pi pi-trash"
+              variant="text"
+              severity="danger"
+              rounded
+              @click="deleteUser(data)"
+            />
+          </div>
+        </template>
+      </Column>
+    </DataTable>
+
+    <Dialog
+      v-model:visible="userDialog"
+      :header="editingUser.id ? 'Edit Athlete' : 'Onboard New Athlete'"
+      :modal="true"
+      class="w-full max-w-md"
+    >
+      <div class="flex flex-col gap-6 py-4">
+        <div class="flex flex-col gap-2">
+          <label class="text-sm uppercase tracking-wider">Full Name</label>
+          <InputText
+            v-model="editingUser.name"
+            placeholder="Name"
+          />
+        </div>
+        <div class="flex flex-col gap-2">
+          <label class="text-sm uppercase tracking-wider">Email Address</label>
+          <InputText
+            v-model="editingUser.email"
+            :disabled="!!editingUser.id"
+            placeholder="email@example.com"
+          />
+        </div>
+        <div class="flex flex-col gap-2">
+          <label class="text-sm uppercase tracking-wider">Role</label>
+          <Select
+            v-model="editingUser.role"
+            :options="roleOptions"
+            option-label="label"
+            option-value="value"
+            class="w-full"
+          />
+        </div>
+        <div
+          v-if="!editingUser.id"
+          class="flex flex-col gap-2"
+        >
+          <label class="text-sm uppercase tracking-wider">Temporary Password</label>
+          <InputText
+            v-model="editingUser.password"
+            placeholder="Temporary password"
+          />
+          <small class="italic">User will be forced to change this on first login.</small>
+        </div>
+      </div>
+      <template #footer>
+        <div class="flex justify-end gap-2">
+          <Button
+            label="Cancel"
+            severity="secondary"
+            variant="text"
+            @click="userDialog = false"
+          />
+          <Button
+            label="Save User"
+            severity="primary"
+            :loading="submitting"
+            @click="saveUser"
+          />
+        </div>
+      </template>
+    </Dialog>
+  </div>
 </template>
 
 <style scoped>

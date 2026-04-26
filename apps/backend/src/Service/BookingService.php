@@ -8,12 +8,15 @@ use App\Entity\Notification;
 use App\Entity\User;
 use App\Repository\BookingRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bridge\Twig\Mime\TemplatedEmail;
+use Symfony\Component\Mailer\MailerInterface;
 
 class BookingService
 {
     public function __construct(
         private EntityManagerInterface $entityManager,
-        private BookingRepository $bookingRepository
+        private BookingRepository $bookingRepository,
+        private MailerInterface $mailer
     ) {
     }
 
@@ -42,8 +45,8 @@ class BookingService
         }
 
         // Waitlist logic: if count of confirmed bookings >= capacity, it's a waitlist booking
-        $confirmedBookings = array_filter($course->getBookings()->toArray(), fn($b) => !$b->isWaitlist());
-        $isWaitlist = count($confirmedBookings) >= $course->getCapacity();
+        $confirmedBookingsCount = $this->bookingRepository->count(['course' => $course, 'isWaitlist' => false]);
+        $isWaitlist = $confirmedBookingsCount >= $course->getCapacity();
 
         $booking = new Booking();
         $booking->setMember($user);
@@ -81,6 +84,7 @@ class BookingService
             throw new \Exception('Booking not found');
         }
 
+        $wasWaitlist = $booking->isWaitlist();
         $this->entityManager->remove($booking);
 
         // Notify trainer
@@ -90,6 +94,11 @@ class BookingService
         $this->entityManager->persist($notification);
 
         $this->entityManager->flush();
+
+        // If a non-waitlist booking was removed, try to promote someone from waitlist
+        if (!$wasWaitlist) {
+            $this->processWaitlist($course);
+        }
     }
 
     /**
@@ -97,8 +106,15 @@ class BookingService
      */
     public function deleteBooking(Booking $booking): void
     {
+        $course = $booking->getCourse();
+        $wasWaitlist = $booking->isWaitlist();
+
         $this->entityManager->remove($booking);
         $this->entityManager->flush();
+
+        if (!$wasWaitlist && $course) {
+            $this->processWaitlist($course);
+        }
     }
 
     /**
@@ -108,7 +124,52 @@ class BookingService
     {
         $booking = $this->bookingRepository->findOneBy(['member' => $user, 'course' => $course]);
         if ($booking) {
+            $wasWaitlist = $booking->isWaitlist();
             $this->entityManager->remove($booking);
+            $this->entityManager->flush();
+
+            if (!$wasWaitlist) {
+                $this->processWaitlist($course);
+            }
         }
+    }
+
+    private function processWaitlist(Course $course): void
+    {
+        // Check if there is space now
+        $confirmedBookingsCount = $this->bookingRepository->count(['course' => $course, 'isWaitlist' => false]);
+
+        if ($confirmedBookingsCount < $course->getCapacity()) {
+            $nextInWaitlist = $this->bookingRepository->findNextInWaitlist($course);
+
+            if ($nextInWaitlist) {
+                $nextInWaitlist->setWaitlist(false);
+                $this->entityManager->flush();
+
+                $this->sendWaitlistPromotedEmail($nextInWaitlist);
+
+                // Recursively check if there's more space (e.g. if capacity was increased)
+                $this->processWaitlist($course);
+            }
+        }
+    }
+
+    private function sendWaitlistPromotedEmail(Booking $booking): void
+    {
+        $user = $booking->getMember();
+        $course = $booking->getCourse();
+
+        $email = (new TemplatedEmail())
+            ->from($_ENV['NO_REPLY_MAIL'] ?? 'noreply@example.com')
+            ->to($user->getEmail())
+            ->subject('Spot Available: ' . $course->getTitle())
+            ->htmlTemplate('emails/waitlist_promoted.html.twig')
+            ->context([
+                'name' => $user->getName(),
+                'courseTitle' => $course->getTitle(),
+                'startTime' => $course->getStartTime(),
+            ]);
+
+        $this->mailer->send($email);
     }
 }

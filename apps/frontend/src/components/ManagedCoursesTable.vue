@@ -146,82 +146,120 @@ onMounted(loadLazyData);
 </script>
 
 <template>
-    <section class="managed-courses-section">
-        <div class="section-header mb-6">
-            <div class="flex justify-between items-center">
-                <h2>Managed Courses</h2>
-                <div class="flex gap-4 items-end">
-                    <div class="flex flex-col gap-1">
-                        <label class="text-xs font-bold uppercase text-slate-500">From</label>
-                        <DatePicker v-model="lazyParams.startDate" @date-select="onFilter" placeholder="Start Date" size="small" />
-                    </div>
-                    <div class="flex flex-col gap-1">
-                        <label class="text-xs font-bold uppercase text-slate-500">To</label>
-                        <DatePicker v-model="lazyParams.endDate" @date-select="onFilter" placeholder="End Date" size="small" />
-                    </div>
-                    <Button icon="pi pi-filter-slash" variant="text" @click="clearFilters" v-tooltip="'Clear Filters'" />
-                </div>
-            </div>
+  <section class="managed-courses-section">
+    <div class="section-header mb-6">
+      <div class="flex justify-between items-center">
+        <h2>Managed Courses</h2>
+        <div class="flex gap-4 items-end">
+          <div class="flex flex-col gap-1">
+            <label class="text-xs font-bold uppercase text-slate-500">From</label>
+            <DatePicker
+              v-model="lazyParams.startDate"
+              placeholder="Start Date"
+              size="small"
+              @date-select="onFilter"
+            />
+          </div>
+          <div class="flex flex-col gap-1">
+            <label class="text-xs font-bold uppercase text-slate-500">To</label>
+            <DatePicker
+              v-model="lazyParams.endDate"
+              placeholder="End Date"
+              size="small"
+              @date-select="onFilter"
+            />
+          </div>
+          <Button
+            v-tooltip="'Clear Filters'"
+            icon="pi pi-filter-slash"
+            variant="text"
+            @click="clearFilters"
+          />
         </div>
+      </div>
+    </div>
 
-        <DataTable
-            :value="courses"
-            lazy
-            paginator
-            :rows="10"
-            :totalRecords="totalRecords"
-            :loading="loading"
-            @page="onPage"
-            responsiveLayout="stack"
-            breakpoint="960px"
-            class="managed-table"
-        >
-            <Column field="title" header="Course">
-                <template #body="slotProps">
-                    <span class="course-title-cell">{{ slotProps.data.title }}</span>
-                </template>
-            </Column>
-            <Column header="Schedule">
-                <template #body="slotProps">
-                    <div class="flex flex-col">
-                        <span class="font-bold text-sm">{{ new Date(slotProps.data.startTime).toLocaleDateString() }}</span>
-                        <span class="text-xs">{{ new Date(slotProps.data.startTime).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) }}</span>
-                    </div>
-                </template>
-            </Column>
-            <Column header="Duration">
-                <template #body="slotProps">
-                  <span>
-                    {{ formatDuration(slotProps.data.durationMinutes) }}
-                  </span>
-                </template>
-            </Column>
-            <Column header="Slots">
-                <template #body="slotProps">
-                    <div class="flex items-center gap-2">
-                        <span :class="['slot-badge', { 'is-full': slotProps.data.bookings.length >= slotProps.data.capacity }]">
-                            {{ slotProps.data.bookings.length }} / {{ slotProps.data.capacity }}
-                        </span>
-                    </div>
-                </template>
-            </Column>
-            <Column header="Actions" class="text-right">
-                <template #body="slotProps">
-                    <div class="flex justify-end gap-2">
-                        <Button icon="pi pi-users" variant="text" @click="selectedCourse = slotProps.data; participantsDialog = true" v-tooltip="'Participants'" class="action-btn" />
-                        <Button icon="pi pi-pencil" variant="text" @click="$emit('edit', slotProps.data)" class="action-btn" />
-                        <Button icon="pi pi-trash" variant="text" severity="danger" @click="confirmDeleteCourse(slotProps.data)" class="action-btn delete-btn" />
-                    </div>
-                </template>
-            </Column>
-        </DataTable>
+    <DataTable
+      :value="courses"
+      lazy
+      paginator
+      :rows="10"
+      :total-records="totalRecords"
+      :loading="loading"
+      responsive-layout="stack"
+      breakpoint="960px"
+      class="managed-table"
+      @page="onPage"
+    >
+      <Column
+        field="title"
+        header="Course"
+      >
+        <template #body="slotProps">
+          <span class="course-title-cell">{{ slotProps.data.title }}</span>
+        </template>
+      </Column>
+      <Column header="Schedule">
+        <template #body="slotProps">
+          <div class="flex flex-col">
+            <span class="font-bold text-sm">{{ new Date(slotProps.data.startTime).toLocaleDateString() }}</span>
+            <span class="text-xs">{{ new Date(slotProps.data.startTime).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) }}</span>
+          </div>
+        </template>
+      </Column>
+      <Column header="Duration">
+        <template #body="slotProps">
+          <span>
+            {{ formatDuration(slotProps.data.durationMinutes) }}
+          </span>
+        </template>
+      </Column>
+      <Column header="Slots">
+        <template #body="slotProps">
+          <div class="flex items-center gap-2">
+            <span :class="['slot-badge', { 'is-full': slotProps.data.bookings.length >= slotProps.data.capacity }]">
+              {{ slotProps.data.bookings.length }} / {{ slotProps.data.capacity }}
+            </span>
+          </div>
+        </template>
+      </Column>
+      <Column
+        header="Actions"
+        class="text-right"
+      >
+        <template #body="slotProps">
+          <div class="flex justify-end gap-2">
+            <Button
+              v-tooltip="'Participants'"
+              icon="pi pi-users"
+              variant="text"
+              class="action-btn"
+              @click="selectedCourse = slotProps.data; participantsDialog = true"
+            />
+            <Button
+              icon="pi pi-pencil"
+              variant="text"
+              class="action-btn"
+              @click="$emit('edit', slotProps.data)"
+            />
+            <Button
+              icon="pi pi-trash"
+              variant="text"
+              severity="danger"
+              class="action-btn delete-btn"
+              @click="confirmDeleteCourse(slotProps.data)"
+            />
+          </div>
+        </template>
+      </Column>
+    </DataTable>
 
-        <ParticipantsDialog
-            v-model:visible="participantsDialog"
-            :course="selectedCourse"
-            @remove-participant="removeParticipant"
-        />
-    </section>
+    <ParticipantsDialog
+      v-model:visible="participantsDialog"
+      :course="selectedCourse"
+      @remove-participant="removeParticipant"
+    />
+  </section>
 </template>
 
 <style lang="scss" scoped>

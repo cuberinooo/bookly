@@ -52,38 +52,80 @@ async function resendVerification() {
 <template>
   <div class="auth-container">
     <Card class="auth-card">
-      <template #title>Login</template>
+      <template #title>
+        Login
+      </template>
       <template #content>
-        <form @submit.prevent="login" class="flex flex-col gap-4 mt-4">
+        <form
+          class="flex flex-col gap-4 mt-4"
+          @submit.prevent="login"
+        >
           <div class="field">
             <label for="email">Email</label>
-            <InputText id="email" v-model="email" type="email" required placeholder="your@email.com" />
+            <InputText
+              id="email"
+              v-model="email"
+              type="email"
+              required
+              placeholder="your@email.com"
+            />
           </div>
           <div class="field">
             <div class="flex justify-between items-center mb-1">
-              <label for="password" class="mb-0">Password</label>
-              <RouterLink to="/forgot-password" class="text-xs text-accent font-bold uppercase tracking-tight">Forgot password?</RouterLink>
+              <label
+                for="password"
+                class="mb-0"
+              >Password</label>
+              <RouterLink
+                to="/forgot-password"
+                class="text-xs text-accent font-bold uppercase tracking-tight"
+              >
+                Forgot password?
+              </RouterLink>
             </div>
-            <InputText id="password" v-model="password" type="password" required />
+            <InputText
+              id="password"
+              v-model="password"
+              type="password"
+              required
+            />
           </div>
-          <Button severity="primary" type="submit" label="Sign In" :loading="loading" class="mt-2" />
+          <Button
+            severity="primary"
+            type="submit"
+            label="Sign In"
+            :loading="loading"
+            class="mt-2"
+          />
           
-          <div v-if="showResend" class="bg-amber-50 border border-amber-200 rounded-lg p-4 mt-2">
-            <p class="text-xs text-amber-800 mb-2 font-medium">Didn't get the email? We can send it again.</p>
+          <div
+            v-if="showResend"
+            class="bg-amber-50 border border-amber-200 rounded-lg p-4 mt-2"
+          >
+            <p class="text-xs text-amber-800 mb-2 font-medium">
+              Didn't get the email? We can send it again.
+            </p>
             <Button 
-                label="Resend Verification Link" 
-                size="small" 
-                severity="warn" 
-                variant="text"
-                class="w-full text-xs font-bold" 
-                @click="resendVerification" 
-                :loading="resending" 
+              label="Resend Verification Link" 
+              size="small" 
+              severity="warn" 
+              variant="text"
+              class="w-full text-xs font-bold" 
+              :loading="resending" 
+              @click="resendVerification" 
             />
           </div>
         </form>
       </template>
       <template #footer>
-        <p class="text-center text-sm">Don't have an account? <RouterLink to="/register" class="text-accent font-bold">Register here</RouterLink></p>
+        <p class="text-center text-sm">
+          Don't have an account? <RouterLink
+            to="/register"
+            class="text-accent font-bold"
+          >
+            Register here
+          </RouterLink>
+        </p>
       </template>
     </Card>
   </div>

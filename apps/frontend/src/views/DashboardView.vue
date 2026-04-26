@@ -181,112 +181,188 @@ onMounted(fetchData);
 <template>
   <div class="dashboard-container">
     <div class="header-with-action">
-        <div>
-            <h1>Dashboard</h1>
-            <p class="text-muted">Manage your athletic journey</p>
-        </div>
-        <Button v-if="isTrainerMode" label="New Course" icon="pi pi-plus" @click="openNewCourse" severity="primary" size="large" />
+      <div>
+        <h1>Dashboard</h1>
+        <p class="text-muted">
+          Manage your athletic journey
+        </p>
+      </div>
+      <Button
+        v-if="isTrainerMode"
+        label="New Course"
+        icon="pi pi-plus"
+        severity="primary"
+        size="large"
+        @click="openNewCourse"
+      />
     </div>
 
-    <div v-if="isTrainerMode" class="trainer-layout">
-        <div class="main-content">
-            <ManagedCoursesTable ref="courseTable" @edit="editCourse" />
-        </div>
+    <div
+      v-if="isTrainerMode"
+      class="trainer-layout"
+    >
+      <div class="main-content">
+        <ManagedCoursesTable
+          ref="courseTable"
+          @edit="editCourse"
+        />
+      </div>
 
-        <aside class="notifications-panel">
-            <div class="panel-header">
-                <h2>Live Feed</h2>
+      <aside class="notifications-panel">
+        <div class="panel-header">
+          <h2>Live Feed</h2>
+        </div>
+        <div class="notif-list">
+          <div
+            v-for="notif in notifications"
+            :key="notif.id"
+            :class="['notif-item', { unread: !notif.isRead }]"
+          >
+            <p>{{ notif.message }}</p>
+            <div class="flex justify-content-between align-items-center mt-3">
+              <small>{{ new Date(notif.createdAt).toLocaleTimeString() }}</small>
+              <Button
+                v-if="!notif.isRead"
+                icon="pi pi-check"
+                variant="text"
+                size="small"
+                class="mark-read-btn"
+                @click="api.patch(`/notifications/${notif.id}/read`).then(fetchNotifications)"
+              />
             </div>
-            <div class="notif-list">
-                <div v-for="notif in notifications" :key="notif.id" :class="['notif-item', { unread: !notif.isRead }]">
-                    <p>{{ notif.message }}</p>
-                    <div class="flex justify-content-between align-items-center mt-3">
-                        <small>{{ new Date(notif.createdAt).toLocaleTimeString() }}</small>
-                        <Button v-if="!notif.isRead" icon="pi pi-check" variant="text" size="small" @click="api.patch(`/notifications/${notif.id}/read`).then(fetchNotifications)" class="mark-read-btn" />
-                    </div>
-                </div>
-                <div v-if="notifications.length === 0" class="empty-notifs">
-                    <i class="pi pi-bell-slash"></i>
-                    <p>No new alerts</p>
-                </div>
-            </div>
-        </aside>
+          </div>
+          <div
+            v-if="notifications.length === 0"
+            class="empty-notifs"
+          >
+            <i class="pi pi-bell-slash" />
+            <p>No new alerts</p>
+          </div>
+        </div>
+      </aside>
     </div>
 
-    <div v-else class="member-layout">
-        <section>
-            <div class="pb-4">
-                <h2>My Scheduled Bookings</h2>
-                <Button label="View Schedule" icon="pi pi-calendar" @click="$router.push('/')" variant="text" />
-            </div>
+    <div
+      v-else
+      class="member-layout"
+    >
+      <section>
+        <div class="pb-4">
+          <h2>My Scheduled Bookings</h2>
+          <Button
+            label="View Schedule"
+            icon="pi pi-calendar"
+            variant="text"
+            @click="$router.push('/')"
+          />
+        </div>
 
-            <div v-if="courses.length === 0" class="empty-state">
-                <i class="pi pi-calendar-plus"></i>
-                <p>Ready to train? Your schedule is empty.</p>
-                <Button severity="primary" label="Explore Courses" icon="pi pi-search" @click="$router.push('/')" size="large" class="mt-4" />
-            </div>
+        <div
+          v-if="courses.length === 0"
+          class="empty-state"
+        >
+          <i class="pi pi-calendar-plus" />
+          <p>Ready to train? Your schedule is empty.</p>
+          <Button
+            severity="primary"
+            label="Explore Courses"
+            icon="pi pi-search"
+            size="large"
+            class="mt-4"
+            @click="$router.push('/')"
+          />
+        </div>
 
-            <div v-else class="bookings-grid">
-                <Card v-for="course in courses" :key="course.id" class="booking-card">
-                    <template #title>
-                        <div class="flex text-black justify-content-between align-items-start">
-                            <div class="flex flex-col">
-                                <span>{{ course.title }}</span>
-                                <span v-if="course.bookings.find(b => b.member.email === authStore.user?.email)?.isWaitlist" class="waitlist-indicator">WAITLIST QUEUE</span>
-                            </div>
-                            <span class="duration-tag ml-2">{{ formatDuration(course.durationMinutes) }}</span>
-                        </div>
-                    </template>
-                    <template #content>
-                        <div class="flex flex-col gap-4 py-3">
-                            <div class="info-row">
-                                <i class="pi pi-user"></i>
-                                <div>
-                                    <label>TRAINER</label>
-                                    <span>{{ course.trainer.name }}</span>
-                                </div>
-                            </div>
-                            <div class="info-row">
-                                <i class="pi pi-clock"></i>
-                                <div>
-                                    <label>TIME & DATE</label>
-                                    <span>{{ new Date(course.startTime).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) }}</span>
-                                </div>
-                            </div>
-                            <div class="info-row">
-                                <i class="pi pi-users"></i>
-                                <div>
-                                    <label>AVAILABLE SLOTS</label>
-                                    <span>{{ course.bookings.filter(b => !b.isWaitlist).length }} / {{ course.capacity }}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </template>
-                    <template #footer>
-                        <div class="flex flex-col gap-2 w-full">
-                            <Button v-if="settings.showParticipantNames" label="SHOW PARTICIPANTS" icon="pi pi-users" variant="outlined" class="w-full show-btn" @click="selectedCourse = course; participantsDialog = true" />
-                            <Button label="CANCEL BOOKING" severity="danger" variant="text" icon="pi pi-times" class="w-full cancel-btn" @click="unbookCourse(course.id)" />
-                        </div>
-                    </template>
-                </Card>
-            </div>
-        </section>
+        <div
+          v-else
+          class="bookings-grid"
+        >
+          <Card
+            v-for="course in courses"
+            :key="course.id"
+            class="booking-card"
+          >
+            <template #title>
+              <div class="flex text-black justify-content-between align-items-start">
+                <div class="flex flex-col">
+                  <span>{{ course.title }}</span>
+                  <span
+                    v-if="course.bookings.find(b => b.member.email === authStore.user?.email)?.isWaitlist"
+                    class="waitlist-indicator"
+                  >WAITLIST QUEUE</span>
+                </div>
+                <span class="duration-tag ml-2">{{ formatDuration(course.durationMinutes) }}</span>
+              </div>
+            </template>
+            <template #content>
+              <div class="flex flex-col gap-4 py-3">
+                <div class="info-row">
+                  <i class="pi pi-user" />
+                  <div>
+                    <label>TRAINER</label>
+                    <span>{{ course.trainer.name }}</span>
+                  </div>
+                </div>
+                <div class="info-row">
+                  <i class="pi pi-clock" />
+                  <div>
+                    <label>TIME & DATE</label>
+                    <span>{{ new Date(course.startTime).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) }}</span>
+                  </div>
+                </div>
+                <div class="info-row">
+                  <i class="pi pi-users" />
+                  <div>
+                    <label>AVAILABLE SLOTS</label>
+                    <span>{{ course.bookings.filter(b => !b.isWaitlist).length }} / {{ course.capacity }}</span>
+                  </div>
+                </div>
+              </div>
+            </template>
+            <template #footer>
+              <div class="flex flex-col gap-2 w-full">
+                <Button
+                  v-if="settings.showParticipantNames"
+                  label="SHOW PARTICIPANTS"
+                  icon="pi pi-users"
+                  variant="outlined"
+                  class="w-full show-btn"
+                  @click="selectedCourse = course; participantsDialog = true"
+                />
+                <Button
+                  label="CANCEL BOOKING"
+                  severity="danger"
+                  variant="text"
+                  icon="pi pi-times"
+                  class="w-full cancel-btn"
+                  @click="unbookCourse(course.id)"
+                />
+              </div>
+            </template>
+          </Card>
+        </div>
+      </section>
     </div>
 
     <!-- Course Form Dialog -->
-    <Dialog v-model:visible="courseDialog" :header="editingCourse?.id ? 'Modify Course' : 'Create New Course'" :modal="true" class="w-full max-w-lg">
-        <CourseForm
-            :course="editingCourse"
-            :loading="submitting"
-            @save="onSaveCourse"
-            @cancel="courseDialog = false"
-            @delete="onDeleteCourse"
-        />
+    <Dialog
+      v-model:visible="courseDialog"
+      :header="editingCourse?.id ? 'Modify Course' : 'Create New Course'"
+      :modal="true"
+      class="w-full max-w-lg"
+    >
+      <CourseForm
+        :course="editingCourse"
+        :loading="submitting"
+        @save="onSaveCourse"
+        @cancel="courseDialog = false"
+        @delete="onDeleteCourse"
+      />
     </Dialog>
 
     <ParticipantsDialog
-        v-model:visible="participantsDialog"
-        :course="selectedCourse"
+      v-model:visible="participantsDialog"
+      :course="selectedCourse"
     />
   </div>
 </template>

@@ -78,28 +78,58 @@ function logout() {
   <header class="main-header">
     <nav class="nav-container">
       <div class="brand">
-        <RouterLink to="/">PHOENIX ATHLETICS</RouterLink>
+        <RouterLink to="/">
+          PHOENIX ATHLETICS
+        </RouterLink>
       </div>
       <div class="nav-links">
         <template v-if="authStore.isTrainer()">
-          <div class="mode-switcher" v-tooltip.bottom="authStore.viewMode === 'trainer' ? 'Switch to Member View' : 'Switch to Trainer View'">
+          <div
+            v-tooltip.bottom="authStore.viewMode === 'trainer' ? 'Switch to Member View' : 'Switch to Trainer View'"
+            class="mode-switcher"
+          >
             <span :class="{ active: authStore.viewMode === 'trainer' }">TRAINER</span>
-            <ToggleSwitch :modelValue="authStore.viewMode === 'member'" @update:modelValue="authStore.toggleViewMode()" />
+            <ToggleSwitch
+              :model-value="authStore.viewMode === 'member'"
+              @update:model-value="authStore.toggleViewMode()"
+            />
             <span :class="{ active: authStore.viewMode === 'member' }">MEMBER</span>
           </div>
         </template>
-        <RouterLink to="/">Courses</RouterLink>
+        <RouterLink to="/">
+          Courses
+        </RouterLink>
         <template v-if="authStore.isLoggedIn()">
-          <RouterLink to="/dashboard">Dashboard</RouterLink>
+          <RouterLink to="/dashboard">
+            Dashboard
+          </RouterLink>
           <div class="profile-dropdown-wrapper">
-              <span class="user-name" v-if="authStore.user">{{ authStore.user.name }}</span>
-              <Button type="button" @click="toggleMenu" icon="pi pi-user" severity="secondary" rounded class="profile-btn" />
-              <Menu ref="menu" :model="menuItems" :popup="true" />
+            <span
+              v-if="authStore.user"
+              class="user-name"
+            >{{ authStore.user.name }}</span>
+            <Button
+              type="button"
+              icon="pi pi-user"
+              severity="secondary"
+              rounded
+              class="profile-btn"
+              @click="toggleMenu"
+            />
+            <Menu
+              ref="menu"
+              :model="menuItems"
+              :popup="true"
+            />
           </div>
         </template>
         <template v-else>
-          <RouterLink to="/login">Login</RouterLink>
-          <RouterLink to="/register">Register</RouterLink>
+          <RouterLink to="/login">
+            Login
+          </RouterLink>
+          <RouterLink to="/register">
+            Register
+          </RouterLink>
         </template>
       </div>
     </nav>
@@ -109,38 +139,80 @@ function logout() {
     <RouterView />
   </main>
 
-  <Dialog v-if="authStore.user" v-model:visible="authStore.user.mustChangePassword" header="Action Required: Update Password" :modal="true" :closable="false" class="w-full max-w-md">
+  <Dialog
+    v-if="authStore.user"
+    v-model:visible="authStore.user.mustChangePassword"
+    header="Action Required: Update Password"
+    :modal="true"
+    :closable="false"
+    class="w-full max-w-md"
+  >
     <div class="flex flex-col gap-6 py-4">
-        <div class="p-4 bg-amber-50 border-l-4 border-amber-500 text-amber-900 text-sm mb-2">
-            <p class="font-bold mb-1">Security Update Required</p>
-            <p>Your account was created with a temporary password. Please set a new secure password to continue.</p>
-        </div>
+      <div class="p-4 bg-amber-50 border-l-4 border-amber-500 text-amber-900 text-sm mb-2">
+        <p class="font-bold mb-1">
+          Security Update Required
+        </p>
+        <p>Your account was created with a temporary password. Please set a new secure password to continue.</p>
+      </div>
 
-        <div class="flex flex-col gap-2">
-            <label class="font-bold text-sm uppercase tracking-wider text-slate-500">New Password</label>
-            <Password v-model="newPassword" toggleMask placeholder="••••••••" class="w-full" inputClass="w-full">
-                <template #footer>
-                    <Divider />
-                    <p class="mt-2 font-bold text-xs uppercase tracking-wider">Requirements</p>
-                    <ul class="pl-2 ml-2 mt-2 list-disc flex flex-col gap-1 text-xs">
-                        <li :class="passwordValidation.minLength ? 'text-green-600' : 'text-slate-400'">At least 8 characters</li>
-                        <li :class="passwordValidation.uppercase ? 'text-green-600' : 'text-slate-400'">At least one uppercase</li>
-                        <li :class="passwordValidation.lowercase ? 'text-green-600' : 'text-slate-400'">At least one lowercase</li>
-                        <li :class="passwordValidation.number ? 'text-green-600' : 'text-slate-400'">At least one number</li>
-                        <li :class="passwordValidation.special ? 'text-green-600' : 'text-slate-400'">At least one special character</li>
-                    </ul>
-                </template>
-            </Password>
-        </div>
+      <div class="flex flex-col gap-2">
+        <label class="font-bold text-sm uppercase tracking-wider text-slate-500">New Password</label>
+        <Password
+          v-model="newPassword"
+          toggle-mask
+          placeholder="••••••••"
+          class="w-full"
+          input-class="w-full"
+        >
+          <template #footer>
+            <Divider />
+            <p class="mt-2 font-bold text-xs uppercase tracking-wider">
+              Requirements
+            </p>
+            <ul class="pl-2 ml-2 mt-2 list-disc flex flex-col gap-1 text-xs">
+              <li :class="passwordValidation.minLength ? 'text-green-600' : 'text-slate-400'">
+                At least 8 characters
+              </li>
+              <li :class="passwordValidation.uppercase ? 'text-green-600' : 'text-slate-400'">
+                At least one uppercase
+              </li>
+              <li :class="passwordValidation.lowercase ? 'text-green-600' : 'text-slate-400'">
+                At least one lowercase
+              </li>
+              <li :class="passwordValidation.number ? 'text-green-600' : 'text-slate-400'">
+                At least one number
+              </li>
+              <li :class="passwordValidation.special ? 'text-green-600' : 'text-slate-400'">
+                At least one special character
+              </li>
+            </ul>
+          </template>
+        </Password>
+      </div>
 
-        <div class="flex flex-col gap-2">
-            <label class="font-bold text-sm uppercase tracking-wider text-slate-500">Confirm New Password</label>
-            <InputText type="password" v-model="confirmNewPassword" placeholder="••••••••" :class="{ 'p-invalid': confirmNewPassword && !passwordValidation.match }" />
-            <small v-if="confirmNewPassword && !passwordValidation.match" class="text-red-500 font-bold">Passwords do not match</small>
-        </div>
+      <div class="flex flex-col gap-2">
+        <label class="font-bold text-sm uppercase tracking-wider text-slate-500">Confirm New Password</label>
+        <InputText
+          v-model="confirmNewPassword"
+          type="password"
+          placeholder="••••••••"
+          :class="{ 'p-invalid': confirmNewPassword && !passwordValidation.match }"
+        />
+        <small
+          v-if="confirmNewPassword && !passwordValidation.match"
+          class="text-red-500 font-bold"
+        >Passwords do not match</small>
+      </div>
     </div>
     <template #footer>
-        <Button label="Update Password & Continue" severity="primary" class="w-full py-3" :loading="changingPassword" :disabled="!isPasswordFormValid" @click="updatePassword" />
+      <Button
+        label="Update Password & Continue"
+        severity="primary"
+        class="w-full py-3"
+        :loading="changingPassword"
+        :disabled="!isPasswordFormValid"
+        @click="updatePassword"
+      />
     </template>
   </Dialog>
 </template>
