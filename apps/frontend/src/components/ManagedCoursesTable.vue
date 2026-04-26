@@ -5,6 +5,8 @@ import { useToast } from 'primevue/usetoast';
 import api from '../services/api';
 import ParticipantsDialog from './ParticipantsDialog.vue';
 
+import { formatDate, formatTime } from '../services/date-utils';
+
 const emit = defineEmits(['edit']);
 
 const confirm = useConfirm();
@@ -157,6 +159,7 @@ onMounted(loadLazyData);
               v-model="lazyParams.startDate"
               placeholder="Start Date"
               size="small"
+              date-format="dd.mm.yy"
               @date-select="onFilter"
             />
           </div>
@@ -166,6 +169,7 @@ onMounted(loadLazyData);
               v-model="lazyParams.endDate"
               placeholder="End Date"
               size="small"
+              date-format="dd.mm.yy"
               @date-select="onFilter"
             />
           </div>
@@ -202,8 +206,8 @@ onMounted(loadLazyData);
       <Column header="Schedule">
         <template #body="slotProps">
           <div class="flex flex-col">
-            <span class="font-bold text-sm">{{ new Date(slotProps.data.startTime).toLocaleDateString() }}</span>
-            <span class="text-xs">{{ new Date(slotProps.data.startTime).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) }}</span>
+            <span class="font-bold text-sm">{{ formatDate(slotProps.data.startTime) }}</span>
+            <span class="text-xs">{{ formatTime(slotProps.data.startTime) }}</span>
           </div>
         </template>
       </Column>

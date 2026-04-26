@@ -40,6 +40,17 @@ app.use(PrimeVue, {
             darkModeSelector: 'system',
             cssLayer: false
         }
+    },
+    locale: {
+        dayNames: ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"],
+        dayNamesShort: ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"],
+        dayNamesMin: ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"],
+        monthNames: ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"],
+        monthNamesShort: ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"],
+        today: 'Heute',
+        clear: 'Löschen',
+        dateFormat: 'dd.mm.yy', // PrimeVue DatePicker format (yy is 4-digit year in PrimeVue)
+        firstDayOfWeek: 1
     }
 });
 

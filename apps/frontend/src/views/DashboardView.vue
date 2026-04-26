@@ -9,6 +9,8 @@ import ManagedCoursesTable from '../components/ManagedCoursesTable.vue';
 import ParticipantsDialog from '../components/ParticipantsDialog.vue';
 import { useRoute } from 'vue-router';
 
+import { formatDateTime } from '../services/date-utils';
+
 const toast = useToast();
 const confirm = useConfirm();
 const route = useRoute();
@@ -307,7 +309,7 @@ onMounted(fetchData);
                   <i class="pi pi-clock" />
                   <div>
                     <label>TIME & DATE</label>
-                    <span>{{ new Date(course.startTime).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) }}</span>
+                    <span>{{ formatDateTime(course.startTime) }}</span>
                   </div>
                 </div>
                 <div class="info-row">

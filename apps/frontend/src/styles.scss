@@ -135,6 +135,15 @@ td {
     }
 }
 
+.p-tabpanels {
+  background-color: var(--bg-color) !important;
+}
+
+.p-tablist-tab-list {
+  border-color: var(--bg-color) !important;
+  background-color: var(--bg-color) !important;
+}
+
 .p-inputtext, .p-textarea, .p-inputnumber, .p-datepicker, .p-select {
     width: 100% !important;
     border-radius: 6px !important;

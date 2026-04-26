@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed, watch } from 'vue';
+import { formatDate, formatTime } from '../services/date-utils';
 import api from '../services/api';
 import { authStore } from '../store/auth';
 import { useToast } from 'primevue/usetoast';
@@ -269,7 +270,7 @@ onUnmounted(() => {
             <InputText
               disabled=""
               class="w-full"
-              :model-value="new Date(selectedCourse.startTime).toLocaleDateString([], { month: 'long', day: 'numeric' })"
+              :model-value="formatDate(selectedCourse.startTime)"
             />
           </div>
           <div class="field">
@@ -277,7 +278,7 @@ onUnmounted(() => {
             <InputText
               disabled=""
               class="w-full"
-              :model-value="new Date(selectedCourse.startTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})"
+              :model-value="formatTime(selectedCourse.startTime)"
             />
           </div>
           <div class="field">

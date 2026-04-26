@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
+import { formatDate, formatTime } from '../services/date-utils';
 
 const props = withDefaults(defineProps<{
     courses: any[];
@@ -34,7 +35,7 @@ const currentWeek = computed(() => {
 const currentWeekLabel = computed(() => {
     const start = currentWeek.value[0];
     const end = currentWeek.value[6];
-    return `${start.toLocaleDateString([], { day: 'numeric', month: 'short' })} - ${end.toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' })}`;
+    return `${start.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })} - ${end.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })}`;
 });
 
 function navigate(direction: number) {
@@ -196,7 +197,7 @@ function onSlotClick(day: Date, hour: number) {
                   <i class="pi pi-check" /> BOOKED
                 </div>
                 <div class="course-time">
-                  {{ new Date(course.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }}
+                  {{ formatTime(course.startTime) }}
                   <span
                     v-if="!isCompactView"
                     class="duration-tag"

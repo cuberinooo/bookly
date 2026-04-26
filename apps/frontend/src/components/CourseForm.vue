@@ -112,6 +112,7 @@ function handleSubmit() {
         v-model="form.startTime"
         show-time
         hour-format="24"
+        date-format="dd.mm.yy"
         fluid
         class="athletic-input"
       />
