@@ -142,21 +142,21 @@ onMounted(fetchUsers);
         <Dialog v-model:visible="userDialog" :header="editingUser.id ? 'Edit Athlete' : 'Onboard New Athlete'" :modal="true" class="w-full max-w-md">
             <div class="flex flex-col gap-6 py-4">
                 <div class="flex flex-col gap-2">
-                    <label class="font-bold text-sm uppercase tracking-wider text-slate-500">Full Name</label>
+                    <label class="text-sm uppercase tracking-wider">Full Name</label>
                     <InputText v-model="editingUser.name" placeholder="Name" />
                 </div>
                 <div class="flex flex-col gap-2">
-                    <label class="font-bold text-sm uppercase tracking-wider text-slate-500">Email Address</label>
+                    <label class="text-sm uppercase tracking-wider">Email Address</label>
                     <InputText v-model="editingUser.email" :disabled="!!editingUser.id" placeholder="email@example.com" />
                 </div>
                 <div class="flex flex-col gap-2">
-                    <label class="font-bold text-sm uppercase tracking-wider text-slate-500">Role</label>
+                    <label class="text-sm uppercase tracking-wider">Role</label>
                     <Select v-model="editingUser.role" :options="roleOptions" optionLabel="label" optionValue="value" class="w-full" />
                 </div>
                 <div v-if="!editingUser.id" class="flex flex-col gap-2">
-                    <label class="font-bold text-sm uppercase tracking-wider text-slate-500">Temporary Password</label>
+                    <label class="text-sm uppercase tracking-wider">Temporary Password</label>
                     <InputText v-model="editingUser.password" placeholder="Temporary password" />
-                    <small class="text-slate-500 italic">User will be forced to change this on first login.</small>
+                    <small class="italic">User will be forced to change this on first login.</small>
                 </div>
             </div>
             <template #footer>

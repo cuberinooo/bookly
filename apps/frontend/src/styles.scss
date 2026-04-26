@@ -16,7 +16,7 @@
 
 body {
   margin: 0;
-  font-family: 'Barlow', sans-serif;
+  font-family: "Barlow Condensed", sans-serif;
   background-color: var(--bg-color);
   color: var(--text-color);
   -webkit-font-smoothing: antialiased;
@@ -98,6 +98,7 @@ td {
 
 .p-card {
     border-radius: 12px;
+    color: var(--text-color) !important;
     background: var(--card-bg) !important;
     border: 1px solid var(--border-color);
     box-shadow: var(--shadow-md);
@@ -153,6 +154,11 @@ td {
     &:disabled {
       background-color: var(--text-muted) !important;
     }
+
+}
+
+.p-select-label {
+  color: unset !important;
 }
 
 .p-datatable-header-cell {
