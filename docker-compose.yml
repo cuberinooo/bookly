@@ -26,12 +26,15 @@ services:
     volumes:
       - ./apps/backend:/var/www/backend
     ports:
-      - "8000:8000"
+      - "8000:80" # Map host 8000 to container 80 (FrankenPHP default)
+      - "443:443"
+      - "443:443/udp"
     depends_on:
       db:
         condition: service_healthy # Wait for Postgres to be ready
     environment:
       TZ: Europe/Berlin
+      SERVER_NAME: :80
       # This URL matches the DB service name and credentials above
       DATABASE_URL: "postgresql://user:password@db:5432/booking_db?serverVersion=16&charset=utf8"
 
