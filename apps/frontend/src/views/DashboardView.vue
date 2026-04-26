@@ -249,6 +249,13 @@ onMounted(fetchData);
                                     <span>{{ new Date(course.startTime).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) }}</span>
                                 </div>
                             </div>
+                            <div class="info-row">
+                                <i class="pi pi-users"></i>
+                                <div>
+                                    <label>AVAILABLE SLOTS</label>
+                                    <span>{{ course.bookings.filter(b => !b.isWaitlist).length }} / {{ course.capacity }}</span>
+                                </div>
+                            </div>
                         </div>
                     </template>
                     <template #footer>
