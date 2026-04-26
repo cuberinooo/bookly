@@ -31,11 +31,6 @@ function handleResize() {
     isMobile.value = window.innerWidth <= 768;
 }
 
-async function onParticipationChange() {
-  fetchCourses();
-  formVisible.value = false;
-}
-
 async function fetchCourses() {
   loading.value = true;
   try {
@@ -278,7 +273,6 @@ onUnmounted(() => {
             @save="onSaveCourse"
             @cancel="formVisible = false"
             @delete="onDeleteCourse"
-            @participation-change="onParticipationChange"
         />
     </Dialog>
   </div>

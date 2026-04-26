@@ -2,7 +2,6 @@
 import { ref, watch, computed, onMounted } from 'vue';
 import { CourseFrequency } from '@/app/enums/CourseFrequency';
 import api from '../services/api';
-import { authStore } from '../store/auth';
 import { useToast } from 'primevue/usetoast';
 
 const props = defineProps<{
@@ -10,31 +9,11 @@ const props = defineProps<{
     loading?: boolean;
 }>();
 
-const emit = defineEmits(['save', 'cancel', 'delete', 'participation-change']);
+const emit = defineEmits(['save', 'cancel', 'delete']);
 
 const trainers = ref<any[]>([]);
 const toast = useToast();
 const workoutTypes = ['Functional Training', 'Run Training', 'Team WOD', 'Other'];
-
-const bookingLoading = ref(false);
-
-const isPastCourse = computed(() => {
-    if (!props.course?.endTime) return false;
-    return new Date(props.course.endTime) < new Date();
-});
-
-const isUserTrainerOfCourse = computed(() => {
-    return props.course?.trainer?.id === authStore.user?.id;
-});
-
-const isUserParticipant = computed(() => {
-    if (!props.course?.bookings) return false;
-    return props.course.bookings.some((b: any) => b.member?.id === authStore.user?.id);
-});
-
-const canParticipate = computed(() => {
-    return props.course?.id && !isUserTrainerOfCourse.value && !isPastCourse.value;
-});
 
 const form = ref({
     title: '',
@@ -85,27 +64,6 @@ watch(() => props.course, (newVal) => {
         };
     }
 }, { immediate: true });
-
-async function toggleBooking() {
-    if (!props.course?.id) return;
-
-    bookingLoading.value = true;
-    try {
-        if (isUserParticipant.value) {
-            await api.delete(`/courses/${props.course.id}/book`);
-            toast.add({ severity: 'success', summary: 'Cancelled', detail: 'Booking cancelled', life: 5000 });
-        } else {
-            await api.post(`/courses/${props.course.id}/book`);
-          toast.add({ severity: 'success', summary: 'Confirmed', detail: 'Booking confirmed!', life: 5000 });
-        }
-        emit('participation-change');
-    } catch (e: any) {
-        const errorDetail = e.response?.data?.error || 'Operation failed';
-      toast.add({ severity: 'error', summary: 'Error', detail: err.response?.data?.error || 'Booking failed', life: 5000 });
-    } finally {
-        bookingLoading.value = false;
-    }
-}
 
 function handleSubmit() {
     const finalTitle = form.value.title === 'Other' ? form.value.customTitle : form.value.title;
@@ -194,14 +152,6 @@ function handleSubmit() {
                 <InputNumber id="duration" v-model="form.durationMinutes" showButtons :min="15" fluid class="athletic-input" />
             </div>
         </div>
-
-      <div class="form-actions mt-6" v-if="!!course.id && course?.trainer?.id !== authStore.user?.id">
-        <Button v-if="!course.bookings.some((b: any) => b.member?.id === authStore.user?.id)"
-                :label="course.bookings.filter(b => !b.isWaitlist).length < course.capacity ? 'RESERVE SPOT' : 'JOIN WAITLIST'"
-                severity="primary" class="w-full p-4" @click="toggleBooking()" />
-        <Button v-else label="CANCEL RESERVATION" severity="primary" variant="text" class="w-full p-4 cancel-btn" @click="toggleBooking()" />
-      </div>
-
         <div class="form-actions mt-6">
             <Button v-if="course?.id" label="Delete" severity="danger" variant="text" @click="$emit('delete', course)" :disabled="loading" class="mr-auto delete-btn" />
             <Button label="Cancel" severity="primary" variant="text" @click="$emit('cancel')" :disabled="loading" class="cancel-btn" />
