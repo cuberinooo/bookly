@@ -49,6 +49,8 @@ services:
       - "4200:4200"
     depends_on:
       - backend
+    environment:
+      - VITE_API_URL=http://localhost:8000/api
 
 volumes:
   db_data:
