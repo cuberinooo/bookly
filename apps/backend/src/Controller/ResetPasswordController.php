@@ -12,6 +12,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Symfony\Component\RateLimiter\RateLimiterFactory;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Uid\Uuid;
 
@@ -21,8 +22,14 @@ class ResetPasswordController extends AbstractController
     public function forgotPassword(
         Request $request,
         EntityManagerInterface $entityManager,
-        MailerInterface $mailer
+        MailerInterface $mailer,
+        RateLimiterFactory $forgotPasswordLimiter
     ): JsonResponse {
+        $limiter = $forgotPasswordLimiter->create($request->getClientIp());
+        if (false === $limiter->consume(1)->isAccepted()) {
+            return new JsonResponse(['error' => 'Too many password reset attempts. Please try again later.'], Response::HTTP_TOO_MANY_REQUESTS);
+        }
+
         $data = json_decode($request->getContent(), true);
         $email = $data['email'] ?? null;
 

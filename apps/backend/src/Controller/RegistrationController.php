@@ -7,12 +7,18 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\RateLimiter\RateLimiterFactory;
 use Symfony\Component\Routing\Attribute\Route;
 
 class RegistrationController extends AbstractController
 {
     #[Route('/api/register', name: 'api_register', methods: ['POST'])]
-    public function register(Request $request, RegistrationService $registrationService): JsonResponse {
+    public function register(Request $request, RegistrationService $registrationService, RateLimiterFactory $registrationLimiter): JsonResponse {
+        $limiter = $registrationLimiter->create($request->getClientIp());
+        if (false === $limiter->consume(1)->isAccepted()) {
+            return new JsonResponse(['error' => 'Too many registration attempts. Please try again later.'], Response::HTTP_TOO_MANY_REQUESTS);
+        }
+
         $data = json_decode($request->getContent(), true);
 
         if (!isset($data['email'], $data['password'], $data['name'])) {

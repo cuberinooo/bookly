@@ -1,0 +1,17 @@
+framework:
+    rate_limiter:
+        # used by the login_throttling feature
+        login:
+            policy: 'token_bucket'
+            limit: 5
+            rate: { amount: 5, interval: '1 minute' }
+
+        registration:
+            policy: 'fixed_window'
+            limit: 3
+            interval: '1 hour'
+
+        forgot_password:
+            policy: 'fixed_window'
+            limit: 3
+            interval: '1 hour'
