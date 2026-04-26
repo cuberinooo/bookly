@@ -188,8 +188,8 @@ onUnmounted(() => {
                 <p class="text-muted">Master your discipline. Book your next session.</p>
             </div>
 
-            <div class="header-right" v-if="!isMobile">
-                <div class="view-toggle">
+            <div class="header-right">
+                <div class="view-toggle" v-if="!isMobile">
                     <span :class="{ active: !isCompactView }">STANDARD</span>
                     <ToggleSwitch v-model="isCompactView" />
                     <span :class="{ active: isCompactView }">COMPACT</span>
@@ -300,7 +300,20 @@ onUnmounted(() => {
         .home-header {
             padding: 2rem 1.5rem 1rem;
             margin-bottom: 1rem;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1.5rem;
             h1 { font-size: 2.25rem; }
+
+            .header-right {
+                width: 100%;
+                align-items: flex-start;
+            }
+
+            .header-badge {
+                padding: 0.5rem 1rem;
+                font-size: 0.75rem;
+            }
         }
     }
 }

@@ -54,6 +54,7 @@ function logout() {
         <template v-if="authStore.isLoggedIn()">
           <RouterLink to="/dashboard">Dashboard</RouterLink>
           <div class="profile-dropdown-wrapper">
+              <span class="user-name" v-if="authStore.user">{{ authStore.user.name }}</span>
               <Button type="button" @click="toggleMenu" icon="pi pi-user" severity="secondary" rounded class="profile-btn" />
               <Menu ref="menu" :model="menuItems" :popup="true" />
           </div>
@@ -96,6 +97,11 @@ function logout() {
 
   &:hover {
     color: var(--primary-color);
+  }
+
+  @media (max-width: 768px) {
+    font-size: 1.25rem;
+    letter-spacing: 0.1em;
   }
 }
 
@@ -152,6 +158,34 @@ function logout() {
   .profile-dropdown-wrapper {
       display: flex;
       align-items: center;
+      gap: 0.75rem;
+
+      .user-name {
+          color: white;
+          font-family: 'Barlow Condensed', sans-serif;
+          font-weight: 700;
+          font-size: 0.9rem;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+
+          @media (max-width: 768px) {
+              display: none;
+          }
+      }
+  }
+
+  @media (max-width: 768px) {
+    gap: 1rem;
+    
+    .mode-switcher {
+        margin-right: 0;
+        padding: 0.4rem 0.75rem;
+        span { display: none; }
+    }
+    
+    a {
+        font-size: 0.85rem;
+    }
   }
 
   .profile-btn {
