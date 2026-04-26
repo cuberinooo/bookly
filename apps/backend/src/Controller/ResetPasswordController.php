@@ -51,7 +51,7 @@ class ResetPasswordController extends AbstractController
             $resetUrl = $frontendUrl . '/reset-password?token=' . $token;
 
             $emailMessage = new TemplatedEmail()
-                ->from($_ENV['NO_REPLAY_MAIL'] ?? 'noreply@example.com')
+                ->from($_ENV['NO_REPLY_MAIL'] ?? 'noreply@example.com')
                 ->to($user->getEmail())
                 ->subject('Reset your Phoenix Booking password')
                 ->htmlTemplate('emails/reset_password.html.twig')

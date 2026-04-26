@@ -17,26 +17,26 @@ class BookingNormalizer implements NormalizerInterface
         private GlobalSettingsRepository $settingsRepository
     ) {}
 
-    public function normalize($object, string $format = null, array $context = []): array
+    public function normalize($data, ?string $format = null, array $context = []): array
     {
         // Add a flag to prevent recursion
         $context['booking_normalizer_already_called'] = true;
-        $data = $this->normalizer->normalize($object, $format, $context);
+        $normalizedData = $this->normalizer->normalize($data, $format, $context);
 
-        if ($object instanceof Booking) {
-            $course = $object->getCourse();
+        if ($data instanceof Booking) {
+            $course = $data->getCourse();
             $trainer = $course->getTrainer();
             $currentUser = $this->security->getUser();
 
             $settings = $this->settingsRepository->get();
             $isTrainer = ($currentUser && $currentUser->getUserIdentifier() === $trainer->getUserIdentifier());
-            $isOwnBooking = ($currentUser && $currentUser->getUserIdentifier() === $object->getMember()->getUserIdentifier());
+            $isOwnBooking = ($currentUser && $currentUser->getUserIdentifier() === $data->getMember()->getUserIdentifier());
 
             // Check if member is allowed to see this booking if it's waitlist
-            if ($object->isWaitlist() && !$settings->isWaitlistVisible() && !$isTrainer && !$isOwnBooking) {
+            if ($data->isWaitlist() && !$settings->isWaitlistVisible() && !$isTrainer && !$isOwnBooking) {
                 // If waitlist is not visible to members, we might want to return something empty or handle it in Course normalizer.
                 // For now, if we are normalizing a booking that shouldn't be seen, we can mark it as hidden.
-                $data['_hidden'] = true;
+                $normalizedData['_hidden'] = true;
             }
 
             $shouldShowName = true;
@@ -45,23 +45,23 @@ class BookingNormalizer implements NormalizerInterface
             }
 
             if (!$shouldShowName) {
-                if (isset($data['member']) && is_array($data['member'])) {
-                    $data['member']['name'] = 'Athlete #' . $object->getMember()->getId();
+                if (isset($normalizedData['member']) && is_array($normalizedData['member'])) {
+                    $normalizedData['member']['name'] = 'Athlete #' . $data->getMember()->getId();
                 }
             }
 
             // Always hide email unless it's the trainer or the member's own booking
             if (!$isTrainer && !$isOwnBooking) {
-                if (isset($data['member']) && is_array($data['member'])) {
-                    unset($data['member']['email']);
+                if (isset($normalizedData['member']) && is_array($normalizedData['member'])) {
+                    unset($normalizedData['member']['email']);
                 }
             }
         }
 
-        return $data;
+        return $normalizedData;
     }
 
-    public function supportsNormalization($data, string $format = null, array $context = []): bool
+    public function supportsNormalization($data, ?string $format = null, array $context = []): bool
     {
         return $data instanceof Booking && !isset($context['booking_normalizer_already_called']);
     }

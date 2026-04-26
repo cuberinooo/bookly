@@ -37,16 +37,24 @@ class RegistrationService
         $user->setPassword($hashedPassword);
 
         $role = $data['role'] ?? 'ROLE_MEMBER';
-        if (!in_array($role, ['ROLE_MEMBER', 'ROLE_TRAINER', 'ROLE_ADMIN'])) {
-            $role = 'ROLE_MEMBER';
+        if ($isAdminCreation) {
+            if (!in_array($role, ['ROLE_MEMBER', 'ROLE_TRAINER', 'ROLE_ADMIN'])) {
+                $role = 'ROLE_MEMBER';
+            }
+        } else {
+            if (!in_array($role, ['ROLE_MEMBER', 'ROLE_TRAINER'])) {
+                $role = 'ROLE_MEMBER';
+            }
         }
         $user->setRoles([$role]);
-        
+
         if ($isAdminCreation) {
             $user->setIsVerified(true);
+            $user->setIsActive(true);
             $user->setMustChangePassword(true);
         } else {
             $user->setIsVerified(false);
+            $user->setIsActive(false);
             $user->setMustChangePassword(false);
         }
 
@@ -57,7 +65,36 @@ class RegistrationService
 
         $this->sendVerificationEmail($user, $isAdminCreation, $password);
 
+        if (!$isAdminCreation) {
+            $this->sendAdminNotificationEmail($user);
+        }
+
         return $user;
+    }
+
+    private function sendAdminNotificationEmail(User $user): void
+    {
+        $admins = $this->entityManager->getRepository(User::class)->findByRole('ROLE_ADMIN');
+        $adminEmails = array_map(fn(User $admin) => $admin->getEmail(), $admins);
+
+        if (empty($adminEmails)) {
+            // Fallback to a configured admin email if no admin users found in DB
+            $fallbackAdmin = $_ENV['ADMIN_EMAIL'] ?? 'admin@example.com';
+            $adminEmails = [$fallbackAdmin];
+        }
+
+        $email = (new TemplatedEmail())
+            ->from($_ENV['NO_REPLY_MAIL'] ?? 'noreply@example.com')
+            ->to(...$adminEmails)
+            ->subject('New User Registration: ' . $user->getName())
+            ->htmlTemplate('emails/admin_new_user.html.twig')
+            ->context([
+                'name' => $user->getName(),
+                'userEmail' => $user->getEmail(),
+                'role' => str_replace('ROLE_', '', $user->getRoles()[0]),
+            ]);
+
+        $this->mailer->send($email);
     }
 
     public function verifyEmail(string $token): void
@@ -103,12 +140,12 @@ class RegistrationService
         $frontendUrl = $_ENV['FRONTEND_URL'] ?? 'http://localhost:4200';
         $verificationUrl = $frontendUrl . '/verify-email?token=' . $user->getVerificationToken();
 
-        $subject = $isAdminCreation 
-            ? 'Welcome to Phoenix Athletics - Your Account is Ready' 
+        $subject = $isAdminCreation
+            ? 'Welcome to Phoenix Athletics - Your Account is Ready'
             : 'Verify your Phoenix Booking account';
 
         $email = (new TemplatedEmail())
-            ->from($_ENV['NO_REPLAY_MAIL'] ?? 'noreply@example.com')
+            ->from($_ENV['NO_REPLY_MAIL'] ?? 'noreply@example.com')
             ->to($user->getEmail())
             ->subject($subject)
             ->htmlTemplate('emails/verify_email.html.twig')

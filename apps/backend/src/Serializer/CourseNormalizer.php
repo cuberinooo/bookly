@@ -15,30 +15,30 @@ class CourseNormalizer implements NormalizerInterface
         private Security $security
     ) {}
 
-    public function normalize($object, string $format = null, array $context = []): array
+    public function normalize($data, ?string $format = null, array $context = []): array
     {
         $context['course_normalizer_already_called'] = true;
-        $data = $this->normalizer->normalize($object, $format, $context);
+        $normalizedData = $this->normalizer->normalize($data, $format, $context);
 
-        if ($object instanceof Course) {
+        if ($data instanceof Course) {
             // Hide trainer email for non-authenticated users
             if (!$this->security->getUser()) {
-                if (isset($data['trainer']) && is_array($data['trainer'])) {
-                    unset($data['trainer']['email']);
+                if (isset($normalizedData['trainer']) && is_array($normalizedData['trainer'])) {
+                    unset($normalizedData['trainer']['email']);
                 }
             }
 
-            if (isset($data['bookings'])) {
-                $data['bookings'] = array_values(array_filter($data['bookings'], function($booking) {
+            if (isset($normalizedData['bookings'])) {
+                $normalizedData['bookings'] = array_values(array_filter($normalizedData['bookings'], function($booking) {
                     return !isset($booking['_hidden']);
                 }));
             }
         }
 
-        return $data;
+        return $normalizedData;
     }
 
-    public function supportsNormalization($data, string $format = null, array $context = []): bool
+    public function supportsNormalization($data, ?string $format = null, array $context = []): bool
     {
         return $data instanceof Course && !isset($context['course_normalizer_already_called']);
     }

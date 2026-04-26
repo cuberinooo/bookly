@@ -73,8 +73,7 @@ class RegistrationController extends AbstractController
     {
         return new JsonResponse([
             ['label' => 'Member', 'value' => 'ROLE_MEMBER'],
-            ['label' => 'Trainer', 'value' => 'ROLE_TRAINER'],
-            ['label' => 'Admin', 'value' => 'ROLE_ADMIN']
+            ['label' => 'Trainer', 'value' => 'ROLE_TRAINER']
         ]);
     }
 }
