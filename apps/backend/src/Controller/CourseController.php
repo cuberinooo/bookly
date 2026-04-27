@@ -36,7 +36,7 @@ class CourseController extends AbstractController
                 $qb->andWhere('c.endTime >= :now')
                    ->setParameter('now', new \DateTime());
             } elseif ($startDate) {
-                $qb->andWhere('c.startTime >= :startDate')
+                $qb->andWhere('c.endTime >= :startDate')
                    ->setParameter('startDate', $startDate);
             }
 

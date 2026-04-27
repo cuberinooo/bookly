@@ -59,6 +59,13 @@ class AdminUserManagementTest extends WebTestCase
         
         $this->assertEquals(Response::HTTP_OK, $client->getResponse()->getStatusCode());
         
+        $responseContent = json_decode($client->getResponse()->getContent(), true);
+        $this->assertArrayHasKey('token', $responseContent);
+        
+        $newToken = $responseContent['token'];
+        $payload = json_decode(base64_decode(explode('.', $newToken)[1]), true);
+        $this->assertFalse($payload['mustChangePassword']);
+        
         $entityManager->clear();
         $member = $entityManager->getRepository(User::class)->find($member->getId());
         $this->assertFalse($member->isMustChangePassword());

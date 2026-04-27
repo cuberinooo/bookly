@@ -43,8 +43,24 @@ watch(() => authStore.viewMode, () => {
 });
 
 watch(baseDate, (newDate) => {
-    if (!loadedRange.value.start || !loadedRange.value.end || 
-        newDate < loadedRange.value.start || newDate > loadedRange.value.end) {
+    if (!loadedRange.value.start || !loadedRange.value.end) {
+        fetchCourses();
+        return;
+    }
+
+    // Current week start (Monday)
+    const startOfWeek = new Date(newDate);
+    const day = startOfWeek.getDay();
+    const diff = (day === 0 ? 6 : day - 1);
+    startOfWeek.setDate(startOfWeek.getDate() - diff);
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    // Current week end (Sunday)
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(endOfWeek.getDate() + 6);
+    endOfWeek.setHours(23, 59, 59, 999);
+
+    if (startOfWeek < loadedRange.value.start || endOfWeek > loadedRange.value.end) {
         fetchCourses();
     }
 });
@@ -53,14 +69,18 @@ async function fetchCourses() {
   loading.value = true;
   try {
     // Fetch current week +/- 2 weeks for smoothness
-    const start = new Date(baseDate.value);
-    const day = start.getDay();
+    const base = new Date(baseDate.value);
+    const day = base.getDay();
     const diff = (day === 0 ? 6 : day - 1);
-    start.setDate(start.getDate() - diff - 14); // 2 weeks before
+    
+    // Start of the 5-week range (Monday 2 weeks ago)
+    const start = new Date(base);
+    start.setDate(base.getDate() - diff - 14);
     start.setHours(0, 0, 0, 0);
 
+    // End of the 5-week range (Sunday 2 weeks ahead)
     const end = new Date(start);
-    end.setDate(start.getDate() + 35); // 5 weeks total (2 before, current, 2 after)
+    end.setDate(start.getDate() + 34); // +4 weeks (28 days) + 6 days to get to Sunday
     end.setHours(23, 59, 59, 999);
 
     const response = await api.get(`/courses?all=true&startDate=${start.toISOString()}&endDate=${end.toISOString()}`);

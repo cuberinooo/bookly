@@ -31,7 +31,8 @@ class UserController extends AbstractController
         EntityManagerInterface $entityManager,
         UserPasswordHasherInterface $passwordHasher,
         PasswordValidator $passwordValidator,
-        UserRepository $userRepository
+        UserRepository $userRepository,
+        \Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface $jwtManager
     ): JsonResponse {
         $userInterface = $this->getUser();
         if (!$userInterface) {
@@ -62,7 +63,12 @@ class UserController extends AbstractController
         
         $entityManager->flush();
 
-        return new JsonResponse(['status' => 'Password changed successfully']);
+        $token = $jwtManager->create($user);
+
+        return new JsonResponse([
+            'status' => 'Password changed successfully',
+            'token' => $token
+        ]);
     }
 
     #[Route('/me', name: 'user_update', methods: ['PATCH'])]

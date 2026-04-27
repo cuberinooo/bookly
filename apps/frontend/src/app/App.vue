@@ -33,9 +33,12 @@ const isPasswordFormValid = computed(() => {
 async function updatePassword() {
     changingPassword.value = true;
     try {
-        await api.post('/user/change-password', { password: newPassword.value });
+        const response = await api.post('/user/change-password', { password: newPassword.value });
         toast.add({ severity: 'success', summary: 'Success', detail: 'Password updated successfully', life: 5000 });
-        if (authStore.user) {
+        
+        if (response.data.token) {
+            authStore.setToken(response.data.token);
+        } else if (authStore.user) {
             authStore.user.mustChangePassword = false;
         }
     } catch (e: any) {
