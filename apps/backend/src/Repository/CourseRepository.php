@@ -57,7 +57,7 @@ class CourseRepository extends ServiceEntityRepository
     /**
      * Finds courses with pagination and date filtering.
      */
-    public function findPaginated(int $page, int $limit, ?\DateTimeInterface $startDate = null, ?\DateTimeInterface $endDate = null, bool $futureOnly = false): array
+    public function findPaginated(int $page, int $limit, ?\DateTimeInterface $startDate = null, ?\DateTimeInterface $endDate = null, bool $futureOnly = false, ?int $trainerId = null, ?int $memberId = null): array
     {
         $qb = $this->createQueryBuilder('c');
 
@@ -72,6 +72,17 @@ class CourseRepository extends ServiceEntityRepository
         if ($endDate) {
             $qb->andWhere('c.startTime <= :endDate')
                ->setParameter('endDate', $endDate);
+        }
+
+        if ($trainerId) {
+            $qb->andWhere('c.trainer = :trainerId')
+               ->setParameter('trainerId', $trainerId);
+        }
+
+        if ($memberId) {
+            $qb->join('c.bookings', 'b')
+               ->andWhere('b.member = :memberId')
+               ->setParameter('memberId', $memberId);
         }
 
         $qb->orderBy('c.startTime', 'ASC');

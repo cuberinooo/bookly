@@ -21,6 +21,9 @@ const formVisible = ref(false);
 const editingCourse = ref<any>(null);
 const isCompactView = ref(true);
 
+const baseDate = ref(new Date());
+const loadedRange = ref({ start: null as Date | null, end: null as Date | null });
+
 const isMobile = ref(window.innerWidth <= 768);
 
 const isTrainerMode = computed(() => authStore.isTrainer() && authStore.viewMode === 'trainer');
@@ -39,11 +42,30 @@ watch(() => authStore.viewMode, () => {
     fetchCourses();
 });
 
+watch(baseDate, (newDate) => {
+    if (!loadedRange.value.start || !loadedRange.value.end || 
+        newDate < loadedRange.value.start || newDate > loadedRange.value.end) {
+        fetchCourses();
+    }
+});
+
 async function fetchCourses() {
   loading.value = true;
   try {
-    const response = await api.get('/courses?all=true');
+    // Fetch current week +/- 2 weeks for smoothness
+    const start = new Date(baseDate.value);
+    const day = start.getDay();
+    const diff = (day === 0 ? 6 : day - 1);
+    start.setDate(start.getDate() - diff - 14); // 2 weeks before
+    start.setHours(0, 0, 0, 0);
+
+    const end = new Date(start);
+    end.setDate(start.getDate() + 35); // 5 weeks total (2 before, current, 2 after)
+    end.setHours(23, 59, 59, 999);
+
+    const response = await api.get(`/courses?all=true&startDate=${start.toISOString()}&endDate=${end.toISOString()}`);
     courses.value = response.data;
+    loadedRange.value = { start, end };
   } catch (err) {
     console.error('Failed to fetch courses', err);
     toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load courses', life: 5000 });
@@ -216,6 +238,7 @@ onUnmounted(() => {
 
       <div v-if="isMobile">
         <MobileCalendar
+          v-model:base-date="baseDate"
           :courses="courses"
           :user-id="authStore.user?.id"
           @course-click="handleCourseClick"
@@ -223,6 +246,7 @@ onUnmounted(() => {
       </div>
       <div v-else>
         <WeeklyCalendar
+          v-model:base-date="baseDate"
           :courses="courses"
           :is-compact-view="isCompactView"
           :user-id="authStore.user?.id"

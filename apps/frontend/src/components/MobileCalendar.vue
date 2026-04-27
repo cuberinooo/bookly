@@ -1,18 +1,25 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { formatDate, formatTime } from '../services/date-utils';
 
 const props = defineProps<{
     courses: any[];
     userId?: number;
+    baseDate?: Date;
 }>();
 
-const emit = defineEmits(['course-click']);
+const emit = defineEmits(['course-click', 'update:baseDate']);
 
-const baseDate = ref(new Date());
+const internalBaseDate = ref(new Date(props.baseDate || new Date()));
+
+watch(() => props.baseDate, (newVal) => {
+    if (newVal && newVal.getTime() !== internalBaseDate.value.getTime()) {
+        internalBaseDate.value = new Date(newVal);
+    }
+});
 
 const currentWeek = computed(() => {
-    const start = new Date(baseDate.value);
+    const start = new Date(internalBaseDate.value);
     const day = start.getDay();
     const diff = (day === 0 ? 6 : day - 1);
     start.setDate(start.getDate() - diff);
@@ -32,13 +39,16 @@ const currentWeekLabel = computed(() => {
 });
 
 function navigate(direction: number) {
-    const newDate = new Date(baseDate.value);
+    const newDate = new Date(internalBaseDate.value);
     newDate.setDate(newDate.getDate() + (direction * 7));
-    baseDate.value = newDate;
+    internalBaseDate.value = newDate;
+    emit('update:baseDate', newDate);
 }
 
 function resetToToday() {
-    baseDate.value = new Date();
+    const newDate = new Date();
+    internalBaseDate.value = newDate;
+    emit('update:baseDate', newDate);
 }
 
 function getCoursesForDay(day: Date) {

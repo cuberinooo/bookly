@@ -22,26 +22,52 @@ class CourseController extends AbstractController
     #[Route('', name: 'course_index', methods: ['GET'])]
     public function index(Request $request, CourseRepository $courseRepository, SerializerInterface $serializer): JsonResponse
     {
+        $startDateStr = $request->query->get('startDate');
+        $endDateStr = $request->query->get('endDate');
+        $startDate = $startDateStr ? new \DateTime($startDateStr) : null;
+        $endDate = $endDateStr ? new \DateTime($endDateStr) : null;
+        $futureOnly = $request->query->getBoolean('futureOnly', false);
+        $trainerId = $request->query->get('trainerId') ? $request->query->getInt('trainerId') : null;
+        $memberId = $request->query->get('memberId') ? $request->query->getInt('memberId') : null;
+
         if ($request->query->getBoolean('all', false)) {
-            if ($request->query->getBoolean('futureOnly', false)) {
-                $courses = $courseRepository->findAllFutureCourses();
-            } else {
-                $courses = $courseRepository->findBy([], ['startTime' => 'ASC']);
+            $qb = $courseRepository->createQueryBuilder('c');
+            if ($futureOnly && !$startDate) {
+                $qb->andWhere('c.endTime >= :now')
+                   ->setParameter('now', new \DateTime());
+            } elseif ($startDate) {
+                $qb->andWhere('c.startTime >= :startDate')
+                   ->setParameter('startDate', $startDate);
             }
+
+            if ($endDate) {
+                $qb->andWhere('c.startTime <= :endDate')
+                   ->setParameter('endDate', $endDate);
+            }
+
+            if ($trainerId) {
+                $qb->andWhere('c.trainer = :trainerId')
+                   ->setParameter('trainerId', $trainerId);
+            }
+
+            if ($memberId) {
+                $qb->join('c.bookings', 'b')
+                   ->andWhere('b.member = :memberId')
+                   ->setParameter('memberId', $memberId);
+            }
+
+            $courses = $qb->orderBy('c.startTime', 'ASC')
+               ->getQuery()
+               ->getResult();
+
             $json = $serializer->serialize($courses, 'json', ['groups' => 'course:read']);
             return new JsonResponse(json_decode($json, true), Response::HTTP_OK);
         }
 
         $page = $request->query->getInt('page', 1);
         $limit = $request->query->getInt('limit', 20);
-        $startDateStr = $request->query->get('startDate');
-        $endDateStr = $request->query->get('endDate');
 
-        $startDate = $startDateStr ? new \DateTime($startDateStr) : null;
-        $endDate = $endDateStr ? new \DateTime($endDateStr) : null;
-        $futureOnly = $request->query->getBoolean('futureOnly', false);
-
-        $paginatedResults = $courseRepository->findPaginated($page, $limit, $startDate, $endDate, $futureOnly);
+        $paginatedResults = $courseRepository->findPaginated($page, $limit, $startDate, $endDate, $futureOnly, $trainerId, $memberId);
 
         $data = $paginatedResults['data'];
         unset($paginatedResults['data']);

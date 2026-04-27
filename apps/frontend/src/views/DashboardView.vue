@@ -35,13 +35,19 @@ const settings = ref({
 
 async function fetchData() {
     try {
-        const response = await api.get('/courses?all=true&futureOnly=true');
+        let url = '/courses?all=true&futureOnly=true';
         if (isTrainerMode.value) {
-            courses.value = response.data.filter((c: any) => c.trainer?.id === authStore.user?.id);
+            url += `&trainerId=${authStore.user?.id}`;
+        } else {
+            url += `&memberId=${authStore.user?.id}`;
+        }
+
+        const response = await api.get(url);
+        courses.value = response.data;
+        
+        if (isTrainerMode.value) {
             courseTable.value?.refresh();
             fetchNotifications();
-        } else {
-            courses.value = response.data.filter((c: any) => c.bookings.some((b: any) => b.member?.id === authStore.user?.id));
         }
 
         loading.value = true;

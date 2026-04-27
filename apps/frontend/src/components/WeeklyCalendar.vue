@@ -1,25 +1,33 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { formatDate, formatTime } from '../services/date-utils';
 
 const props = withDefaults(defineProps<{
     courses: any[];
     isCompactView?: boolean;
     userId?: number;
+    baseDate?: Date;
 }>(), {
     isCompactView: true,
-    userId: undefined
+    userId: undefined,
+    baseDate: () => new Date()
 });
 
-const emit = defineEmits(['course-click', 'cell-click']);
+const emit = defineEmits(['course-click', 'cell-click', 'update:baseDate']);
 
-const baseDate = ref(new Date());
+const internalBaseDate = ref(new Date(props.baseDate));
+
+watch(() => props.baseDate, (newVal) => {
+    if (newVal.getTime() !== internalBaseDate.value.getTime()) {
+        internalBaseDate.value = new Date(newVal);
+    }
+});
 
 const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const hours = Array.from({ length: 16 }, (_, i) => i + 6); // 6:00 to 22:00
 
 const currentWeek = computed(() => {
-    const start = new Date(baseDate.value);
+    const start = new Date(internalBaseDate.value);
     const day = start.getDay();
     const diff = (day === 0 ? 6 : day - 1); // Adjust for Monday-start
     start.setDate(start.getDate() - diff);
@@ -39,13 +47,16 @@ const currentWeekLabel = computed(() => {
 });
 
 function navigate(direction: number) {
-    const newDate = new Date(baseDate.value);
+    const newDate = new Date(internalBaseDate.value);
     newDate.setDate(newDate.getDate() + (direction * 7));
-    baseDate.value = newDate;
+    internalBaseDate.value = newDate;
+    emit('update:baseDate', newDate);
 }
 
 function resetToToday() {
-    baseDate.value = new Date();
+    const newDate = new Date();
+    internalBaseDate.value = newDate;
+    emit('update:baseDate', newDate);
 }
 
 function getCoursesForDay(day: Date) {
