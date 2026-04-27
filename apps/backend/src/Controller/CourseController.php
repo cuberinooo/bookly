@@ -145,12 +145,6 @@ public function new(Request $request, CourseService $courseService): JsonRespons
     {
         $this->denyAccessUnlessGranted('ROLE_TRAINER');
 
-        /** @var \App\Entity\User $currentUser */
-        $currentUser = $this->getUser();
-        if ($course->getTrainer()->getId() !== $currentUser->getId()) {
-            return new JsonResponse(['error' => 'Access denied'], Response::HTTP_FORBIDDEN);
-        }
-
         $deleteAll = $request->query->getBoolean('deleteAll', false);
         $seriesId = $course->getSeriesId();
 

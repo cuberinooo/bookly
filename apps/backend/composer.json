@@ -5,9 +5,9 @@
     "prefer-stable": true,
     "require": {
         "php": ">=8.4",
-        "ext-intl": "*",
         "ext-ctype": "*",
         "ext-iconv": "*",
+        "ext-intl": "*",
         "ext-pdo_pgsql": "*",
         "doctrine/doctrine-bundle": "^3.2",
         "doctrine/doctrine-migrations-bundle": "^4.0",
@@ -35,6 +35,7 @@
         "symfony/property-access": "8.0.*",
         "symfony/property-info": "8.0.*",
         "symfony/rate-limiter": "8.0.*",
+        "symfony/resend-mailer": "8.0.*",
         "symfony/runtime": "8.0.*",
         "symfony/security-bundle": "8.0.*",
         "symfony/serializer": "8.0.*",

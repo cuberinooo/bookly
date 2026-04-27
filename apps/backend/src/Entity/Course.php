@@ -53,7 +53,7 @@ class Course
     private CourseFrequency $frequency = CourseFrequency::ONCE;
 
     #[ORM\ManyToOne(inversedBy: 'courses')]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     #[Groups(['course:read'])]
     private ?User $trainer = null;
 

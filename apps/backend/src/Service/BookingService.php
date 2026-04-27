@@ -58,6 +58,7 @@ class BookingService
         // Notify trainer
         $notification = new Notification();
         $notification->setUser($course->getTrainer());
+        $notification->setCourse($course);
         $statusMsg = $isWaitlist ? 'joined the waitlist for' : 'has joined';
         $notification->setMessage(sprintf('%s %s your course "%s"', $user->getName(), $statusMsg, $course->getTitle()));
         $this->entityManager->persist($notification);
@@ -90,6 +91,7 @@ class BookingService
         // Notify trainer
         $notification = new Notification();
         $notification->setUser($course->getTrainer());
+        $notification->setCourse($course);
         $notification->setMessage(sprintf('%s has left your course "%s"', $user->getName(), $course->getTitle()));
         $this->entityManager->persist($notification);
 
