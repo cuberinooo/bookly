@@ -299,6 +299,20 @@ onUnmounted(() => {
           </div>
         </div>
 
+        <div class="schedule-detail-box">
+          <div class="detail-row">
+            <div class="detail-item">
+              <small>DATE & TIME</small>
+              <span class="value">{{ formatDate(selectedCourse.startTime) }} at {{ formatTime(selectedCourse.startTime) }}</span>
+            </div>
+            <div class="detail-item duration-item">
+              <small>DURATION</small>
+              <span class="value">{{ formatDuration(selectedCourse.durationMinutes) }}</span>
+            </div>
+          </div>
+          <div class="detail-accent-line"></div>
+        </div>
+
         <div class="field">
           <label>Workout Brief</label>
           <Textarea
@@ -310,35 +324,19 @@ onUnmounted(() => {
 
         <div class="specs-grid">
           <div class="field">
-            <label>DATE</label>
-            <InputText
-              disabled=""
-              class="w-full"
-              :model-value="formatDate(selectedCourse.startTime)"
-            />
-          </div>
-          <div class="field">
-            <label>TIME</label>
-            <InputText
-              disabled=""
-              class="w-full"
-              :model-value="formatTime(selectedCourse.startTime)"
-            />
-          </div>
-          <div class="field">
-            <label>DURATION</label>
-            <InputText
-              disabled=""
-              class="w-full"
-              :model-value="formatDuration(selectedCourse.durationMinutes)"
-            />
-          </div>
-          <div class="field">
             <label>CAPACITY</label>
             <InputText
               disabled=""
               class="w-full"
               :model-value="selectedCourse.bookings.filter(b => !b.isWaitlist).length < selectedCourse.capacity ? (selectedCourse.capacity - selectedCourse.bookings.filter(b => !b.isWaitlist).length) + ' SPOTS LEFT' : 'WAITLIST ACTIVE'"
+            />
+          </div>
+          <div class="field">
+            <label>REGISTERED</label>
+            <InputText
+              disabled=""
+              class="w-full"
+              :model-value="selectedCourse.bookings.filter(b => !b.isWaitlist).length + ' / ' + selectedCourse.capacity"
             />
           </div>
         </div>
@@ -527,6 +525,57 @@ onUnmounted(() => {
         color: var(--text-header);
         text-transform: uppercase;
         font-family: 'Barlow Condensed', sans-serif;
+    }
+}
+
+.schedule-detail-box {
+    background: #f1f5f9;
+    padding: 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    position: relative;
+    overflow: hidden;
+
+    .detail-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1.5rem;
+    }
+
+    .detail-item {
+        display: flex;
+        flex-direction: column;
+
+        small {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-weight: 800;
+            color: var(--text-muted);
+            letter-spacing: 0.1em;
+            font-size: 0.7rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .value {
+            font-weight: 800;
+            color: var(--text-header);
+            font-size: 1.1rem;
+        }
+
+        &.duration-item {
+            text-align: right;
+            border-left: 2px solid var(--border-color);
+            padding-left: 1.5rem;
+        }
+    }
+
+    .detail-accent-line {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background: var(--primary-color);
     }
 }
 

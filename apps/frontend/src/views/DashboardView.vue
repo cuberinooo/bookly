@@ -301,13 +301,24 @@ onMounted(fetchData);
                     <span>{{ course.trainer.name }}</span>
                   </div>
                 </div>
-                <div class="info-row">
-                  <i class="pi pi-clock" />
-                  <div>
-                    <label>TIME & DATE</label>
-                    <span>{{ formatDateTime(course.startTime) }}</span>
+                
+                <div class="schedule-focus-row">
+                  <div class="focus-item">
+                    <i class="pi pi-calendar" />
+                    <div>
+                      <label>DATE & TIME</label>
+                      <span>{{ formatDateTime(course.startTime) }}</span>
+                    </div>
+                  </div>
+                  <div class="focus-item border-left pl-3">
+                    <i class="pi pi-clock" />
+                    <div>
+                      <label>DURATION</label>
+                      <span>{{ formatDuration(course.durationMinutes) }}</span>
+                    </div>
                   </div>
                 </div>
+
                 <div class="info-row">
                   <i class="pi pi-users" />
                   <div>
@@ -479,6 +490,48 @@ onMounted(fetchData);
     }
 
     span { font-weight: 700; color: var(--text-header); }
+}
+
+.schedule-focus-row {
+    display: flex;
+    align-items: center;
+    background: #f8fafc;
+    padding: 1rem;
+    border-radius: 10px;
+    border-left: 4px solid var(--primary-color);
+    margin: 0.5rem 0;
+
+    .focus-item {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+
+        i {
+            color: var(--primary-color);
+            font-size: 1rem;
+        }
+
+        label {
+            display: block;
+            font-size: 0.6rem;
+            font-weight: 800;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 2px;
+        }
+
+        span {
+            font-weight: 800;
+            color: var(--text-header);
+            font-size: 0.9rem;
+        }
+
+        &.border-left {
+            border-left: 1px solid var(--border-color);
+        }
+    }
 }
 
 .bookings-grid {

@@ -105,17 +105,36 @@ function handleSubmit() {
       />
     </div>
 
-    <div class="form-group">
-      <label for="startTime">Scheduled Date & Time</label>
-      <DatePicker
-        id="startTime"
-        v-model="form.startTime"
-        show-time
-        hour-format="24"
-        date-format="dd.mm.yy"
-        fluid
-        class="athletic-input"
-      />
+    <div class="schedule-accent-box">
+      <div class="form-row">
+        <div class="form-group flex-2">
+          <label for="startTime">Date & Time</label>
+          <DatePicker
+            id="startTime"
+            v-model="form.startTime"
+            show-time
+            hour-format="24"
+            date-format="dd.mm.yy"
+            fluid
+            class="athletic-input"
+          />
+        </div>
+        <div class="form-group flex-1">
+          <label for="duration">Duration (Min)</label>
+          <InputNumber
+            id="duration"
+            v-model="form.durationMinutes"
+            show-buttons
+            :min="15"
+            fluid
+            class="athletic-input"
+          />
+        </div>
+      </div>
+      <div class="schedule-summary">
+        <i class="pi pi-clock" />
+        <span>Starts <strong>{{ form.startTime.toLocaleString([], { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' }) }}</strong> for <strong>{{ form.durationMinutes }} minutes</strong></span>
+      </div>
     </div>
 
     <div class="form-row">
@@ -200,17 +219,7 @@ function handleSubmit() {
           class="athletic-input"
         />
       </div>
-      <div class="form-group flex-1">
-        <label for="duration">Duration (Minutes)</label>
-        <InputNumber
-          id="duration"
-          v-model="form.durationMinutes"
-          show-buttons
-          :min="15"
-          fluid
-          class="athletic-input"
-        />
-      </div>
+      <div class="form-group flex-1 empty-spacer"></div>
     </div>
     <div class="form-actions mt-6">
       <Button
@@ -263,6 +272,29 @@ function handleSubmit() {
     padding-top: 2rem;
     border-top: 1px solid var(--border-color);
 }
+
+.schedule-accent-box {
+    background: #f1f5f9;
+    padding: 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    border-left: 6px solid var(--primary-color);
+}
+
+.schedule-summary {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 1rem;
+    color: var(--text-header);
+    font-size: 0.95rem;
+    
+    i { color: var(--primary-color); font-size: 1.1rem; }
+    strong { color: var(--text-header); font-weight: 800; }
+}
+
+.flex-1 { flex: 1; }
+.flex-2 { flex: 2; }
 
 .delete-btn {
     font-weight: 800 !important;
