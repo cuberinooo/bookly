@@ -17,6 +17,7 @@ const route = useRoute();
 const courses = ref<any[]>([]);
 const notifications = ref<any[]>([]);
 const isTrainerMode = computed(() => authStore.isTrainer() && authStore.viewMode === 'trainer');
+const dashboardLabel = computed(() => isTrainerMode.value ? 'Dashboard' : 'My bookings');
 
 const courseTable = ref<any>(null);
 const courseDialog = ref(false);
@@ -57,7 +58,7 @@ async function fetchData() {
           isWaitlistVisible: responseSettings.data.isWaitlistVisible ?? true
         };
     } catch (e) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to fetch dashboard data', life: 5000 });
+        toast.add({ severity: 'error', summary: 'Error', detail: `Failed to fetch ${dashboardLabel.value.toLowerCase()} data`, life: 5000 });
         loading.value = false;
     }
 }
@@ -190,7 +191,7 @@ onMounted(fetchData);
   <div class="dashboard-container">
     <div class="header-with-action">
       <div>
-        <h1>Dashboard</h1>
+        <h1>{{ dashboardLabel }}</h1>
         <p class="text-muted">
           Manage your athletic journey
         </p>

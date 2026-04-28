@@ -48,12 +48,16 @@ async function updatePassword() {
     }
 }
 
-const menuItems = ref([
+const dashboardLabel = computed(() => {
+    return authStore.isTrainer() && authStore.viewMode === 'trainer' ? 'Dashboard' : 'My bookings';
+});
+
+const menuItems = computed(() => [
     {
         label: 'My Account',
         items: [
             { label: 'Profile', icon: 'pi pi-user', command: () => router.push('/profile') },
-            { label: 'Dashboard', icon: 'pi pi-th-large', command: () => router.push('/dashboard') },
+            { label: dashboardLabel.value, icon: 'pi pi-th-large', command: () => router.push('/dashboard') },
             { label: 'Settings', icon: 'pi pi-cog', command: () => router.push('/settings') }
         ]
     },
@@ -104,7 +108,7 @@ function logout() {
         </RouterLink>
         <template v-if="authStore.isLoggedIn()">
           <RouterLink to="/dashboard">
-            Dashboard
+            {{ dashboardLabel }}
           </RouterLink>
           <div class="profile-dropdown-wrapper">
             <span
