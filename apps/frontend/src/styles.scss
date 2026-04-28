@@ -90,6 +90,10 @@ td {
     }
 }
 
+.p-select-option.p-select-option-selected {
+  background-color: var(--primary-color) !important;
+}
+
 .p-button-icon-only {
   color: var(--primary-color) !important;
 }
