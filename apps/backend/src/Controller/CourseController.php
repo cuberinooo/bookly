@@ -175,7 +175,7 @@ public function new(Request $request, CourseService $courseService): JsonRespons
         $seriesId = $course->getSeriesId();
 
         if ($deleteAll && $seriesId) {
-            $count = $courseService->deleteCourseSeries($seriesId, $course->getStartTime());
+            $count = $courseService->deleteCourseSeries($seriesId);
             return new JsonResponse(['status' => "Series deleted ($count courses removed)"]);
         }
 

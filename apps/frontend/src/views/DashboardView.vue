@@ -180,12 +180,12 @@ async function onDeleteCourse(course: any) {
 
     confirm.require({
         message: isSeries
-            ? `Do you want to delete only this instance or all upcoming workouts in this series?`
+            ? `Do you want to delete the entire series "${course.title}"? This cannot be undone.`
             : `Delete "${course.title}"? This cannot be undone.`,
         header: isSeries ? 'Series Detected' : 'Dangerous Action',
         icon: 'pi pi-exclamation-triangle',
         acceptProps: {
-            label: isSeries ? 'Delete Series' : 'Delete',
+            label: isSeries ? 'Delete Entire Series' : 'Delete',
             severity: 'danger'
         },
         rejectProps: {
@@ -207,7 +207,7 @@ async function onDeleteCourse(course: any) {
             if (isSeries) {
                 try {
                     await api.delete(`/courses/${course.id}`);
-                    toast.add({ severity: 'warn', summary: 'Deleted', detail: 'Single course removed', life: 5000 });
+                    toast.add({ severity: 'warn', summary: 'Deleted', detail: 'Single instance removed', life: 5000 });
                     courseDialog.value = false;
                     fetchData();
                 } catch (e) {

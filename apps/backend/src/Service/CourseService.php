@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\Entity\Course;
+use App\Entity\CourseSeries;
 use App\Exception\ScheduleConflictException;
 use App\Repository\CourseRepository;
 
@@ -133,18 +134,21 @@ class CourseService
     }
 
     /**
-     * Deletes all future courses in a series, optionally starting from a specific time.
+     * Deletes courses in a series. If fromTime is provided, only deletes future courses.
+     * Otherwise, deletes the entire series.
      */
     public function deleteCourseSeries(string $seriesId, ?\DateTimeInterface $fromTime = null): int
     {
-        $now = $fromTime ?? new \DateTime();
-        $courses = $this->courseRepository->createQueryBuilder('c')
+        $qb = $this->courseRepository->createQueryBuilder('c')
             ->where('c.series = :seriesId')
-            ->andWhere('c.startTime >= :now')
-            ->setParameter('seriesId', (int) $seriesId)
-            ->setParameter('now', $now)
-            ->getQuery()
-            ->getResult();
+            ->setParameter('seriesId', (int) $seriesId);
+
+        if ($fromTime) {
+            $qb->andWhere('c.startTime >= :now')
+               ->setParameter('now', $fromTime);
+        }
+
+        $courses = $qb->getQuery()->getResult();
 
         foreach ($courses as $course) {
             $this->entityManager->remove($course);

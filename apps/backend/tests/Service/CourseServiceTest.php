@@ -3,10 +3,11 @@
 namespace App\Tests\Service;
 
 use App\Entity\Course;
+use App\Entity\CourseSeries;
 use App\Entity\User;
-use App\Enum\CourseFrequency;
 use App\Exception\ScheduleConflictException;
 use App\Repository\CourseRepository;
+use App\Repository\CourseSeriesRepository;
 use App\Service\BookingService;
 use App\Service\CourseService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -17,6 +18,7 @@ use PHPUnit\Framework\TestCase;
 class CourseServiceTest extends TestCase
 {
     private $courseRepository;
+    private $seriesRepository;
     private $entityManager;
     private $bookingService;
     private $service;
@@ -24,9 +26,15 @@ class CourseServiceTest extends TestCase
     protected function setUp(): void
     {
         $this->courseRepository = $this->createMock(CourseRepository::class);
+        $this->seriesRepository = $this->createMock(CourseSeriesRepository::class);
         $this->entityManager = $this->createMock(EntityManagerInterface::class);
         $this->bookingService = $this->createMock(BookingService::class);
-        $this->service = new CourseService($this->courseRepository, $this->entityManager, $this->bookingService);
+        $this->service = new CourseService(
+            $this->courseRepository,
+            $this->seriesRepository,
+            $this->entityManager,
+            $this->bookingService
+        );
     }
 
     public function testCreateCourseSeriesThrowsExceptionOnOverlap(): void
@@ -54,7 +62,7 @@ class CourseServiceTest extends TestCase
             ->willReturn([$conflictCourse]);
 
         $this->expectException(ScheduleConflictException::class);
-        
+
         $this->service->createCourseSeries($data, $trainer);
     }
 
@@ -79,20 +87,22 @@ class CourseServiceTest extends TestCase
 
         $courses = $this->service->createCourseSeries($data, $trainer);
 
-        // Daily for 6 months is roughly 180+ courses
-        $this->assertGreaterThan(180, count($courses));
+        // Daily for 3 months (instead of 6) is roughly 90+ courses
+        $this->assertGreaterThan(90, count($courses));
         $this->assertEquals('Daily Course', $courses[0]->getTitle());
         $this->assertEquals($startTime->format('Y-m-d H:i:s'), $courses[0]->getStartTime()->format('Y-m-d H:i:s'));
-        
+
         $secondCourseStartTime = clone $startTime;
         $secondCourseStartTime->modify('+1 day');
         $this->assertEquals($secondCourseStartTime->format('Y-m-d H:i:s'), $courses[1]->getStartTime()->format('Y-m-d H:i:s'));
+
+        $this->assertNotNull($courses[0]->getSeries(), 'Courses in series should have a CourseSeries reference');
     }
 
     public function testDeleteCourseSeries(): void
     {
-        $seriesId = 'test-series';
-        
+        $seriesId = '123';
+
         $qb = $this->createMock(QueryBuilder::class);
         $query = $this->createMock(Query::class);
 
@@ -105,19 +115,23 @@ class CourseServiceTest extends TestCase
         $course1 = new Course();
         $course2 = new Course();
         $query->method('getResult')->willReturn([$course1, $course2]);
+
+        $series = new CourseSeries();
+        $this->seriesRepository->method('find')->with(123)->willReturn($series);
 
         $this->entityManager->expects($this->exactly(2))->method('remove');
         $this->entityManager->expects($this->once())->method('flush');
 
         $count = $this->service->deleteCourseSeries($seriesId);
         $this->assertEquals(2, $count);
+        $this->assertFalse($series->isActive(), 'Series should be deactivated after deletion');
     }
 
     public function testTransferCourseSeries(): void
     {
-        $seriesId = 'test-series';
+        $seriesId = '123';
         $newTrainer = new User();
-        
+
         $qb = $this->createMock(QueryBuilder::class);
         $query = $this->createMock(Query::class);
 
@@ -131,13 +145,17 @@ class CourseServiceTest extends TestCase
         $course2 = new Course();
         $query->method('getResult')->willReturn([$course1, $course2]);
 
+        $series = new CourseSeries();
+        $this->seriesRepository->method('find')->with(123)->willReturn($series);
+
         $this->entityManager->expects($this->once())->method('flush');
         $this->bookingService->expects($this->exactly(2))->method('removeBookingIfExists');
 
         $count = $this->service->transferCourseSeries($seriesId, $newTrainer);
-        
+
         $this->assertEquals(2, $count);
         $this->assertSame($newTrainer, $course1->getTrainer());
         $this->assertSame($newTrainer, $course2->getTrainer());
+        $this->assertSame($newTrainer, $series->getTrainer(), 'Series template trainer should be updated');
     }
 }

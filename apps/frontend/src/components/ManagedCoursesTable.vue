@@ -3,6 +3,7 @@ import { ref, onMounted, watch } from 'vue';
 import { useConfirm } from 'primevue/useconfirm';
 import { useToast } from 'primevue/usetoast';
 import api from '../services/api';
+import { authStore } from '../store/auth';
 import ParticipantsDialog from './ParticipantsDialog.vue';
 
 import { formatDate, formatTime } from '../services/date-utils';
@@ -34,6 +35,10 @@ async function loadLazyData() {
             limit: lazyParams.value.rows,
             futureOnly: true
         };
+
+        if (authStore.isTrainer()) {
+            params.trainerId = authStore.user?.id;
+        }
 
         if (lazyParams.value.startDate) {
             params.startDate = lazyParams.value.startDate.toISOString();
@@ -124,12 +129,12 @@ function confirmDeleteCourse(course: any) {
 
     confirm.require({
         message: isSeries
-            ? `Do you want to delete only this instance or all upcoming workouts in this series?`
+            ? `Do you want to delete the entire series "${course.title}"? This cannot be undone.`
             : `Delete "${course.title}"? This cannot be undone.`,
         header: isSeries ? 'Series Detected' : 'Dangerous Action',
         icon: 'pi pi-exclamation-triangle',
         acceptProps: {
-            label: isSeries ? 'Delete Series' : 'Delete',
+            label: isSeries ? 'Delete Entire Series' : 'Delete',
             severity: 'danger'
         },
         rejectProps: {
@@ -150,7 +155,7 @@ function confirmDeleteCourse(course: any) {
             if (isSeries) {
                 try {
                     await api.delete(`/courses/${course.id}`);
-                    toast.add({ severity: 'warn', summary: 'Deleted', detail: 'Single course removed', life: 5000 });
+                    toast.add({ severity: 'warn', summary: 'Deleted', detail: 'Single instance removed', life: 5000 });
                     loadLazyData();
                 } catch (e) {
                     toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to delete', life: 5000 });
