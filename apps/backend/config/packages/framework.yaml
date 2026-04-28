@@ -4,7 +4,12 @@ framework:
     secret: '%env(APP_SECRET)%'
 
     # Note that the session will be started ONLY if you read or write from it.
-    session: true
+    session:
+        # Keep the session cookie for 1 day (86400 seconds)
+        cookie_lifetime: 86400
+
+        # Keep the session file on the server for 1 day
+        gc_maxlifetime: 86400
 
     #esi: true
     #fragments: true
