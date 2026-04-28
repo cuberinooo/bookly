@@ -94,14 +94,14 @@ class CourseService
     }
 
     /**
-     * Deletes all future courses in a series.
+     * Deletes all future courses in a series, optionally starting from a specific time.
      */
-    public function deleteCourseSeries(string $seriesId): int
+    public function deleteCourseSeries(string $seriesId, ?\DateTimeInterface $fromTime = null): int
     {
-        $now = new \DateTime();
+        $now = $fromTime ?? new \DateTime();
         $courses = $this->courseRepository->createQueryBuilder('c')
             ->where('c.seriesId = :seriesId')
-            ->andWhere('c.startTime > :now')
+            ->andWhere('c.startTime >= :now')
             ->setParameter('seriesId', $seriesId)
             ->setParameter('now', $now)
             ->getQuery()
@@ -117,11 +117,11 @@ class CourseService
     }
 
     /**
-     * Transfers all future courses in a series to a new trainer.
+     * Transfers all future courses in a series to a new trainer, optionally starting from a specific time.
      */
-    public function transferCourseSeries(string $seriesId, User $newTrainer): int
+    public function transferCourseSeries(string $seriesId, User $newTrainer, ?\DateTimeInterface $fromTime = null): int
     {
-        $now = new \DateTime();
+        $now = $fromTime ?? new \DateTime();
         $courses = $this->courseRepository->createQueryBuilder('c')
             ->where('c.seriesId = :seriesId')
             ->andWhere('c.startTime >= :now')

@@ -154,7 +154,7 @@ public function new(Request $request, CourseService $courseService): JsonRespons
             $seriesId = $course->getSeriesId();
 
             if ($transferAll && $seriesId) {
-                $count = $courseService->transferCourseSeries($seriesId, $newTrainer);
+                $count = $courseService->transferCourseSeries($seriesId, $newTrainer, $course->getStartTime());
             } else {
                 $course->setTrainer($newTrainer);
                 $bookingService->removeBookingIfExists($course, $newTrainer);
@@ -175,7 +175,7 @@ public function new(Request $request, CourseService $courseService): JsonRespons
         $seriesId = $course->getSeriesId();
 
         if ($deleteAll && $seriesId) {
-            $count = $courseService->deleteCourseSeries($seriesId);
+            $count = $courseService->deleteCourseSeries($seriesId, $course->getStartTime());
             return new JsonResponse(['status' => "Series deleted ($count courses removed)"]);
         }
 
