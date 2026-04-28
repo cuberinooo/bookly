@@ -6,7 +6,10 @@ use App\Entity\Booking;
 use App\Entity\Course;
 use App\Entity\Notification;
 use App\Entity\User;
+use App\Enum\BookingWindow;
+use App\Enum\NotificationType;
 use App\Repository\BookingRepository;
+use App\Repository\GlobalSettingsRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\Mailer\MailerInterface;
@@ -16,6 +19,7 @@ class BookingService
     public function __construct(
         private EntityManagerInterface $entityManager,
         private BookingRepository $bookingRepository,
+        private GlobalSettingsRepository $settingsRepository,
         private MailerInterface $mailer
     ) {
     }
@@ -32,6 +36,9 @@ class BookingService
         if ($course->getEndTime() < new \DateTime()) {
             throw new \Exception('You cannot book a course that has already finished');
         }
+
+        // Validate booking window
+        $this->validateBookingWindow($course);
 
         // Check if the user is the trainer of the course
         if ($course->getTrainer()->getId() === $user->getId()) {
@@ -173,5 +180,53 @@ class BookingService
             ]);
 
         $this->mailer->send($email);
+    }
+
+    private function validateBookingWindow(Course $course): void
+    {
+        $settings = $this->settingsRepository->get();
+        $window = $settings->getBookingWindow();
+
+        if ($window === BookingWindow::OFF) {
+            return;
+        }
+
+        $deadline = $this->getBookingDeadline($window);
+
+        if ($course->getStartTime() > $deadline) {
+            $message = match ($window) {
+                BookingWindow::CURRENT_WEEK => 'Bookings are only allowed for the current week.',
+                BookingWindow::TWO_WEEKS => 'Bookings are only allowed for the next two weeks.',
+                BookingWindow::MONTH => 'Bookings are only allowed for the next month.',
+                default => 'Course is outside the booking window.',
+            };
+            throw new \Exception($message);
+        }
+    }
+
+    private function getBookingDeadline(BookingWindow $window): \DateTime
+    {
+        $now = new \DateTime();
+        $deadline = clone $now;
+
+        switch ($window) {
+            case BookingWindow::CURRENT_WEEK:
+                // End of current week (Sunday 23:59:59)
+                $day = (int) $now->format('w'); // 0 (Sunday) to 6 (Saturday)
+                $daysToSunday = $day === 0 ? 0 : 7 - $day;
+                $deadline->modify("+$daysToSunday days");
+                $deadline->setTime(23, 59, 59);
+                break;
+            case BookingWindow::TWO_WEEKS:
+                // 14 days from now
+                $deadline->modify('+14 days');
+                break;
+            case BookingWindow::MONTH:
+                // 1 month from now
+                $deadline->modify('+1 month');
+                break;
+        }
+
+        return $deadline;
     }
 }

@@ -2,14 +2,23 @@
 import { ref, onMounted } from 'vue';
 import api from '../services/api';
 import { useToast } from 'primevue/usetoast';
+import { BookingWindow } from '../app/enums/BookingWindow';
 
 const toast = useToast();
 const settings = ref({
     showParticipantNames: true,
-    isWaitlistVisible: true
+    isWaitlistVisible: true,
+    bookingWindow: BookingWindow.OFF
 });
 const loading = ref(true);
 const saving = ref(false);
+
+const windowOptions = [
+    { label: 'Anytime (No Restriction)', value: BookingWindow.OFF },
+    { label: 'Current Week Only', value: BookingWindow.CURRENT_WEEK },
+    { label: 'Next 2 Weeks', value: BookingWindow.TWO_WEEKS },
+    { label: 'Next Month', value: BookingWindow.MONTH }
+];
 
 async function fetchSettings() {
     loading.value = true;
@@ -17,7 +26,8 @@ async function fetchSettings() {
         const response = await api.get('/settings');
         settings.value = {
             showParticipantNames: response.data.showParticipantNames ?? true,
-            isWaitlistVisible: response.data.isWaitlistVisible ?? true
+            isWaitlistVisible: response.data.isWaitlistVisible ?? true,
+            bookingWindow: response.data.bookingWindow ?? BookingWindow.OFF
         };
     } catch (e) {
         toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load settings', life: 5000 });
@@ -91,6 +101,29 @@ onMounted(fetchSettings);
               @change="updateSettings"
             />
           </div>
+        </div>
+      </div>
+
+      <div class="settings-card phoenix-card">
+        <h3 class="settings-title">
+          Booking Restriction
+        </h3>
+        <div class="setting-row">
+          <div class="setting-info">
+            <label class="form-label">Member Booking Window</label>
+            <p class="text-xs text-slate-500">
+              Restrict how far in advance members can book their workouts.
+            </p>
+          </div>
+          <Select
+            v-model="settings.bookingWindow"
+            :options="windowOptions"
+            option-label="label"
+            option-value="value"
+            placeholder="Select Window"
+            class="w-64"
+            @change="updateSettings"
+          />
         </div>
       </div>
     </div>

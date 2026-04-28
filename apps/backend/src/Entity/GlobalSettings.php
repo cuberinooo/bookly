@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Enum\BookingWindow;
 use App\Repository\GlobalSettingsRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Attribute\Groups;
@@ -22,6 +23,10 @@ class GlobalSettings
     #[ORM\Column(options: ['default' => true])]
     #[Groups(['settings:read', 'settings:write'])]
     private ?bool $isWaitlistVisible = true;
+
+    #[ORM\Column(type: 'string', enumType: BookingWindow::class, options: ['default' => BookingWindow::OFF])]
+    #[Groups(['settings:read', 'settings:write'])]
+    private BookingWindow $bookingWindow = BookingWindow::OFF;
 
     public function getId(): ?int
     {
@@ -48,6 +53,18 @@ class GlobalSettings
     public function setWaitlistVisible(bool $isWaitlistVisible): static
     {
         $this->isWaitlistVisible = $isWaitlistVisible;
+
+        return $this;
+    }
+
+    public function getBookingWindow(): BookingWindow
+    {
+        return $this->bookingWindow;
+    }
+
+    public function setBookingWindow(BookingWindow $bookingWindow): static
+    {
+        $this->bookingWindow = $bookingWindow;
 
         return $this;
     }

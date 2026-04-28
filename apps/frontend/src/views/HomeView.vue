@@ -5,6 +5,7 @@ import api from '../services/api';
 import { authStore } from '../store/auth';
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
+import { BookingWindow } from '../app/enums/BookingWindow';
 import WeeklyCalendar from '../components/WeeklyCalendar.vue';
 import MobileCalendar from '../components/MobileCalendar.vue';
 import CourseForm from '../components/CourseForm.vue';
@@ -12,6 +13,7 @@ import CourseForm from '../components/CourseForm.vue';
 const toast = useToast();
 const confirm = useConfirm();
 const courses = ref<any[]>([]);
+const settings = ref<any>(null);
 const loading = ref(false);
 const submitting = ref(false);
 
@@ -32,6 +34,45 @@ const isMemberMode = computed(() => !authStore.isLoggedIn() || !authStore.isTrai
 const isPastCourse = computed(() => {
     if (!selectedCourse.value?.endTime) return false;
     return new Date(selectedCourse.value.endTime) < new Date();
+});
+
+const isOutsideBookingWindow = computed(() => {
+    if (!selectedCourse.value || !settings.value || settings.value.bookingWindow === BookingWindow.OFF) {
+        return false;
+    }
+
+    const start = new Date(selectedCourse.value.startTime);
+    const now = new Date();
+    const deadline = new Date();
+
+    switch (settings.value.bookingWindow) {
+        case BookingWindow.CURRENT_WEEK:
+            // End of current week (Sunday)
+            const day = now.getDay();
+            const daysToSunday = day === 0 ? 0 : 7 - day;
+            deadline.setDate(now.getDate() + daysToSunday);
+            deadline.setHours(23, 59, 59, 999);
+            break;
+        case BookingWindow.TWO_WEEKS:
+            deadline.setDate(now.getDate() + 14);
+            break;
+        case BookingWindow.MONTH:
+            deadline.setMonth(now.getMonth() + 1);
+            break;
+    }
+
+    return start > deadline;
+});
+
+const bookingWindowMessage = computed(() => {
+    if (!isOutsideBookingWindow.value) return '';
+    
+    switch (settings.value?.bookingWindow) {
+        case BookingWindow.CURRENT_WEEK: return 'Only current week bookings are allowed.';
+        case BookingWindow.TWO_WEEKS: return 'Bookings only allowed for the next 2 weeks.';
+        case BookingWindow.MONTH: return 'Bookings only allowed for the next month.';
+        default: return 'Outside allowed booking window.';
+    }
 });
 
 function handleResize() {
@@ -68,6 +109,12 @@ watch(baseDate, (newDate) => {
 async function fetchCourses() {
   loading.value = true;
   try {
+    // Fetch settings first if not loaded
+    if (!settings.value) {
+        const sResp = await api.get('/settings');
+        settings.value = sResp.data;
+    }
+
     // Fetch current week +/- 2 weeks for smoothness
     const base = new Date(baseDate.value);
     const day = base.getDay();
@@ -346,21 +393,34 @@ onUnmounted(() => {
           class="action-footer"
         >
           <template v-if="selectedCourse.trainer?.id !== authStore.user?.id">
-            <Button
-              v-if="!selectedCourse.bookings.some((b: any) => b.member?.id === authStore.user?.id)"
-              :label="selectedCourse.bookings.filter(b => !b.isWaitlist).length < selectedCourse.capacity ? 'RESERVE SPOT' : 'JOIN WAITLIST'"
-              severity="primary"
-              class="w-full p-4"
-              @click="bookCourse(selectedCourse.id)"
-            />
-            <Button
+            <template v-if="!isOutsideBookingWindow">
+              <Button
+                v-if="!selectedCourse.bookings.some((b: any) => b.member?.id === authStore.user?.id)"
+                :label="selectedCourse.bookings.filter(b => !b.isWaitlist).length < selectedCourse.capacity ? 'RESERVE SPOT' : 'JOIN WAITLIST'"
+                severity="primary"
+                class="w-full p-4"
+                @click="bookCourse(selectedCourse.id)"
+              />
+              <Button
+                v-else
+                label="CANCEL RESERVATION"
+                severity="primary"
+                variant="text"
+                class="w-full p-4 cancel-btn"
+                @click="unbookCourse(selectedCourse.id)"
+              />
+            </template>
+            <div
               v-else
-              label="CANCEL RESERVATION"
-              severity="primary"
-              variant="text"
-              class="w-full p-4 cancel-btn"
-              @click="unbookCourse(selectedCourse.id)"
-            />
+              class="text-center p-4 bg-slate-50 rounded-lg border border-slate-200"
+            >
+              <p class="font-bold text-slate-600 uppercase tracking-widest text-xs mb-2">
+                <i class="pi pi-lock" /> Booking Restricted
+              </p>
+              <p class="text-xs text-slate-500 font-medium">
+                {{ bookingWindowMessage }}
+              </p>
+            </div>
           </template>
           <div
             v-else

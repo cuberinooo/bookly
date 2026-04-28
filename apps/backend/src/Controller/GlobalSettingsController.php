@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Enum\BookingWindow;
 use App\Repository\GlobalSettingsRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -38,6 +39,12 @@ class GlobalSettingsController extends AbstractController
         }
         if (isset($data['isWaitlistVisible'])) {
             $settings->setWaitlistVisible((bool) $data['isWaitlistVisible']);
+        }
+        if (isset($data['bookingWindow'])) {
+            $window = BookingWindow::tryFrom($data['bookingWindow']);
+            if ($window) {
+                $settings->setBookingWindow($window);
+            }
         }
 
         $entityManager->flush();

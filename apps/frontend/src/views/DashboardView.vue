@@ -4,6 +4,7 @@ import api from '../services/api';
 import { authStore } from '../store/auth';
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
+import { BookingWindow } from '../app/enums/BookingWindow';
 import CourseForm from '../components/CourseForm.vue';
 import ManagedCoursesTable from '../components/ManagedCoursesTable.vue';
 import ParticipantsDialog from '../components/ParticipantsDialog.vue';
@@ -30,10 +31,48 @@ const selectedCourse = ref<any>(null);
 
 const loading = ref(true);
 
-const settings = ref({
+const settings = ref<any>({
   showParticipantNames: true,
-  isWaitlistVisible: true
+  isWaitlistVisible: true,
+  bookingWindow: BookingWindow.OFF
 });
+
+function isOutsideBookingWindow(course: any) {
+    if (!settings.value || settings.value.bookingWindow === BookingWindow.OFF) {
+        return false;
+    }
+
+    const start = new Date(course.startTime);
+    const now = new Date();
+    const deadline = new Date();
+
+    switch (settings.value.bookingWindow) {
+        case BookingWindow.CURRENT_WEEK:
+            // End of current week (Sunday)
+            const day = now.getDay();
+            const daysToSunday = day === 0 ? 0 : 7 - day;
+            deadline.setDate(now.getDate() + daysToSunday);
+            deadline.setHours(23, 59, 59, 999);
+            break;
+        case BookingWindow.TWO_WEEKS:
+            deadline.setDate(now.getDate() + 14);
+            break;
+        case BookingWindow.MONTH:
+            deadline.setMonth(now.getMonth() + 1);
+            break;
+    }
+
+    return start > deadline;
+}
+
+function getBookingWindowMessage() {
+    switch (settings.value?.bookingWindow) {
+        case BookingWindow.CURRENT_WEEK: return 'Bookings only for current week.';
+        case BookingWindow.TWO_WEEKS: return 'Bookings only for next 2 weeks.';
+        case BookingWindow.MONTH: return 'Bookings only for next month.';
+        default: return 'Outside booking window.';
+    }
+}
 
 async function fetchData() {
     try {
@@ -56,7 +95,8 @@ async function fetchData() {
         const responseSettings = await api.get('/settings');
         settings.value = {
           showParticipantNames: responseSettings.data.showParticipantNames ?? true,
-          isWaitlistVisible: responseSettings.data.isWaitlistVisible ?? true
+          isWaitlistVisible: responseSettings.data.isWaitlistVisible ?? true,
+          bookingWindow: responseSettings.data.bookingWindow ?? BookingWindow.OFF
         };
     } catch (e) {
         toast.add({ severity: 'error', summary: 'Error', detail: `Failed to fetch ${dashboardLabel.value.toLowerCase()} data`, life: 5000 });

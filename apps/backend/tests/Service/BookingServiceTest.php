@@ -4,8 +4,10 @@ namespace App\Tests\Service;
 
 use App\Entity\Booking;
 use App\Entity\Course;
+use App\Entity\GlobalSettings;
 use App\Entity\User;
 use App\Repository\BookingRepository;
+use App\Repository\GlobalSettingsRepository;
 use App\Service\BookingService;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
@@ -16,6 +18,7 @@ class BookingServiceTest extends TestCase
 {
     private $entityManager;
     private $bookingRepository;
+    private $settingsRepository;
     private $mailer;
     private $service;
 
@@ -23,8 +26,15 @@ class BookingServiceTest extends TestCase
     {
         $this->entityManager = $this->createMock(EntityManagerInterface::class);
         $this->bookingRepository = $this->createMock(BookingRepository::class);
+        $this->settingsRepository = $this->createMock(GlobalSettingsRepository::class);
+        $this->settingsRepository->method('get')->willReturn(new GlobalSettings());
         $this->mailer = $this->createMock(MailerInterface::class);
-        $this->service = new BookingService($this->entityManager, $this->bookingRepository, $this->mailer);
+        $this->service = new BookingService(
+            $this->entityManager, 
+            $this->bookingRepository, 
+            $this->settingsRepository,
+            $this->mailer
+        );
     }
 
     public function testBookConfirmed(): void
