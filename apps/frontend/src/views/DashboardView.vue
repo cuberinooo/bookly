@@ -229,11 +229,11 @@ onMounted(fetchData);
 </script>
 
 <template>
-  <div class="dashboard-container">
-    <div class="header-with-action">
+  <div class="dashboard-container px-4 md:px-0">
+    <div class="header-with-action flex flex-col md:flex-row md:justify-between md:items-center gap-6 mb-8 md:mb-16">
       <div>
-        <h1>{{ dashboardLabel }}</h1>
-        <p class="text-muted">
+        <h1 class="text-4xl md:text-[3.5rem]">{{ dashboardLabel }}</h1>
+        <p class="text-muted text-sm md:text-lg">
           Manage your athletic journey
         </p>
       </div>
@@ -243,24 +243,25 @@ onMounted(fetchData);
         icon="pi pi-plus"
         severity="primary"
         size="large"
+        class="w-full md:w-auto py-4 md:py-3"
         @click="openNewCourse"
       />
     </div>
 
     <div
       v-if="isTrainerMode"
-      class="trainer-layout"
+      class="trainer-layout flex flex-col lg:grid lg:grid-columns-[1fr_380px] gap-8 md:gap-12"
     >
-      <div class="main-content">
+      <div class="main-content order-2 lg:order-1">
         <ManagedCoursesTable
           ref="courseTable"
           @edit="editCourse"
         />
       </div>
 
-      <aside class="notifications-panel">
-        <div class="panel-header">
-          <h2>Live Feed</h2>
+      <aside class="notifications-panel order-1 lg:order-2">
+        <div class="panel-header mb-4">
+          <h2 class="text-xl md:text-2xl font-black uppercase tracking-tight" style="font-family: 'Barlow Condensed', sans-serif;">Live Feed</h2>
         </div>
         <div class="notif-list">
           <NotificationItem

@@ -90,6 +90,10 @@ td {
     }
 }
 
+.p-button-icon-only {
+  color: var(--primary-color) !important;
+}
+
 .p-button-text {
   color: var(--primary-color) !important;
 }
@@ -309,7 +313,7 @@ color: var(--accent-color);
     border-radius: 12px;
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
     border: none;
-    
+
     .p-toast-message-content {
       padding: 1rem;
       align-items: center;
@@ -367,7 +371,7 @@ color: var(--accent-color);
       font-size: 4rem;
       margin-bottom: 1.5rem;
       color: var(--primary-color);
-      
+
       &.pi-exclamation-triangle {
         color: var(--danger-color);
       }

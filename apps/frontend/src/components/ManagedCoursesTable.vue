@@ -150,26 +150,28 @@ onMounted(loadLazyData);
 <template>
   <section class="managed-courses-section">
     <div class="section-header mb-6">
-      <div class="flex justify-between items-center">
+      <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
         <h2>Managed Courses</h2>
-        <div class="flex gap-4 items-end">
-          <div class="flex flex-col gap-1">
-            <label class="text-xs font-bold uppercase text-slate-500">From</label>
+        <div class="flex flex-wrap items-end gap-3 md:gap-4">
+          <div class="flex flex-col gap-1 flex-1 min-w-[120px]">
+            <label class="text-[10px] md:text-xs font-bold uppercase text-slate-500">From</label>
             <DatePicker
               v-model="lazyParams.startDate"
-              placeholder="Start Date"
+              placeholder="Start"
               size="small"
               date-format="dd.mm.yy"
+              fluid
               @date-select="onFilter"
             />
           </div>
-          <div class="flex flex-col gap-1">
-            <label class="text-xs font-bold uppercase text-slate-500">To</label>
+          <div class="flex flex-col gap-1 flex-1 min-w-[120px]">
+            <label class="text-[10px] md:text-xs font-bold uppercase text-slate-500">To</label>
             <DatePicker
               v-model="lazyParams.endDate"
-              placeholder="End Date"
+              placeholder="End"
               size="small"
               date-format="dd.mm.yy"
+              fluid
               @date-select="onFilter"
             />
           </div>
@@ -177,86 +179,160 @@ onMounted(loadLazyData);
             v-tooltip="'Clear Filters'"
             icon="pi pi-filter-slash"
             variant="text"
+            class="h-10 w-10 md:h-8 md:w-8"
             @click="clearFilters"
           />
         </div>
       </div>
     </div>
 
-    <DataTable
-      :value="courses"
-      lazy
-      paginator
-      :rows="10"
-      :total-records="totalRecords"
-      :loading="loading"
-      responsive-layout="stack"
-      breakpoint="960px"
-      class="managed-table"
-      @page="onPage"
-    >
-      <Column
-        field="title"
-        header="Course"
+    <!-- Desktop Table View (Hidden on mobile) -->
+    <div class="hidden md:block">
+      <DataTable
+        :value="courses"
+        lazy
+        paginator
+        :rows="10"
+        :total-records="totalRecords"
+        :loading="loading"
+        class="managed-table"
+        @page="onPage"
       >
-        <template #body="slotProps">
-          <span class="course-title-cell">{{ slotProps.data.title }}</span>
-        </template>
-      </Column>
-      <Column header="Schedule">
-        <template #body="slotProps">
-          <div class="flex flex-col">
-            <span class="font-bold text-sm">{{ formatDate(slotProps.data.startTime) }}</span>
-            <span class="text-xs">{{ formatTime(slotProps.data.startTime) }}</span>
-          </div>
-        </template>
-      </Column>
-      <Column header="Duration">
-        <template #body="slotProps">
-          <span>
-            {{ formatDuration(slotProps.data.durationMinutes) }}
-          </span>
-        </template>
-      </Column>
-      <Column header="Slots">
-        <template #body="slotProps">
-          <div class="flex items-center gap-2">
-            <span :class="['slot-badge', { 'is-full': slotProps.data.bookings.length >= slotProps.data.capacity }]">
-              {{ slotProps.data.bookings.length }} / {{ slotProps.data.capacity }}
+        <Column
+          field="title"
+          header="Course"
+        >
+          <template #body="slotProps">
+            <span class="course-title-cell">{{ slotProps.data.title }}</span>
+          </template>
+        </Column>
+        <Column header="Schedule">
+          <template #body="slotProps">
+            <div class="flex flex-col">
+              <span class="font-bold text-sm">{{ formatDate(slotProps.data.startTime) }}</span>
+              <span class="text-xs">{{ formatTime(slotProps.data.startTime) }}</span>
+            </div>
+          </template>
+        </Column>
+        <Column header="Duration">
+          <template #body="slotProps">
+            <span>
+              {{ formatDuration(slotProps.data.durationMinutes) }}
+            </span>
+          </template>
+        </Column>
+        <Column header="Slots">
+          <template #body="slotProps">
+            <div class="flex items-center gap-2">
+              <span :class="['slot-badge', { 'is-full': slotProps.data.bookings.length >= slotProps.data.capacity }]">
+                {{ slotProps.data.bookings.length }} / {{ slotProps.data.capacity }}
+              </span>
+            </div>
+          </template>
+        </Column>
+        <Column
+          header="Actions"
+          class="text-right"
+        >
+          <template #body="slotProps">
+            <div class="flex justify-end gap-2">
+              <Button
+                v-tooltip="'Participants'"
+                icon="pi pi-users"
+                variant="text"
+                class="action-btn"
+                @click="selectedCourse = slotProps.data; participantsDialog = true"
+              />
+              <Button
+                icon="pi pi-pencil"
+                variant="text"
+                class="action-btn"
+                @click="$emit('edit', slotProps.data)"
+              />
+              <Button
+                icon="pi pi-trash"
+                variant="text"
+                severity="danger"
+                class="action-btn delete-btn"
+                @click="confirmDeleteCourse(slotProps.data)"
+              />
+            </div>
+          </template>
+        </Column>
+      </DataTable>
+    </div>
+
+    <!-- Mobile Card View (Hidden on desktop) -->
+    <div class="md:hidden flex flex-col gap-4">
+      <div v-if="loading" class="flex justify-center p-8">
+        <i class="pi pi-spin pi-spinner text-4xl text-amber-500"></i>
+      </div>
+      <template v-else>
+        <div
+          v-for="course in courses"
+          :key="course.id"
+          class="mobile-course-card p-4 bg-slate-50 rounded-xl border border-slate-200"
+        >
+          <div class="flex justify-between items-start mb-3">
+            <div class="flex flex-col">
+              <span class="text-lg font-black uppercase tracking-tight leading-tight mb-1" style="font-family: 'Barlow Condensed', sans-serif;">
+                {{ course.title }}
+              </span>
+              <div class="flex items-center gap-2 text-xs font-bold text-slate-500">
+                <i class="pi pi-calendar text-[10px]"></i>
+                {{ formatDate(course.startTime) }} @ {{ formatTime(course.startTime) }}
+              </div>
+            </div>
+            <span :class="['slot-badge !py-1 !px-2 !text-[10px]', { 'is-full': course.bookings.length >= course.capacity }]">
+              {{ course.bookings.length }} / {{ course.capacity }}
             </span>
           </div>
-        </template>
-      </Column>
-      <Column
-        header="Actions"
-        class="text-right"
-      >
-        <template #body="slotProps">
-          <div class="flex justify-end gap-2">
-            <Button
-              v-tooltip="'Participants'"
-              icon="pi pi-users"
-              variant="text"
-              class="action-btn"
-              @click="selectedCourse = slotProps.data; participantsDialog = true"
-            />
-            <Button
-              icon="pi pi-pencil"
-              variant="text"
-              class="action-btn"
-              @click="$emit('edit', slotProps.data)"
-            />
-            <Button
-              icon="pi pi-trash"
-              variant="text"
-              severity="danger"
-              class="action-btn delete-btn"
-              @click="confirmDeleteCourse(slotProps.data)"
-            />
+
+          <div class="flex items-center justify-between mt-4 pt-3 border-t border-slate-200">
+            <div class="text-[10px] font-black uppercase text-slate-400" style="font-family: 'Barlow Condensed', sans-serif;">
+              Duration: {{ formatDuration(course.durationMinutes) }}
+            </div>
+            <div class="flex gap-2">
+              <Button
+                icon="pi pi-users"
+                rounded
+                outlined
+                class="!h-10 !w-10 !p-0"
+                @click="selectedCourse = course; participantsDialog = true"
+              />
+              <Button
+                icon="pi pi-pencil"
+                rounded
+                outlined
+                class="!h-10 !w-10 !p-0"
+                @click="$emit('edit', course)"
+              />
+              <Button
+                icon="pi pi-trash"
+                rounded
+                outlined
+                severity="danger"
+                class="!h-10 !w-10 !p-0"
+                @click="confirmDeleteCourse(course)"
+              />
+            </div>
           </div>
-        </template>
-      </Column>
-    </DataTable>
+        </div>
+
+        <Paginator
+          :rows="10"
+          :total-records="totalRecords"
+          template="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
+          class="mobile-paginator !bg-transparent !border-none mt-4"
+          @page="onPage"
+        />
+
+        <div v-if="courses.length === 0" class="text-center py-8 text-slate-400">
+          <i class="pi pi-calendar-slash text-4xl mb-2"></i>
+          <p class="font-bold uppercase text-sm">No courses found</p>
+        </div>
+      </template>
+    </div>
 
     <ParticipantsDialog
       v-model:visible="participantsDialog"
@@ -268,7 +344,14 @@ onMounted(loadLazyData);
 
 <style lang="scss" scoped>
 .managed-courses-section {
-    @apply bg-white p-10 rounded-2xl border border-slate-200 shadow-sm;
+    @apply bg-white p-4 md:p-10 rounded-xl md:rounded-2xl border border-slate-200 shadow-sm;
+}
+
+.section-header {
+    h2 {
+        @apply text-xl md:text-2xl font-black uppercase tracking-tighter text-slate-900;
+        font-family: 'Barlow Condensed', sans-serif;
+    }
 }
 
 .managed-table {
@@ -303,26 +386,9 @@ onMounted(loadLazyData);
     &.delete-btn:hover { @apply text-red-500 bg-red-50; }
 }
 
-.participants-table {
-    @apply border border-slate-200 rounded-lg overflow-hidden;
-
-    :deep(.p-datatable-thead > tr > th) {
-        @apply bg-slate-50 text-slate-600 font-bold text-xs uppercase tracking-widest p-4;
+.mobile-paginator {
+    :deep(.p-paginator-page), :deep(.p-paginator-next), :deep(.p-paginator-last), :deep(.p-paginator-prev), :deep(.p-paginator-first) {
+      @apply #{"!min-w-[32px] !h-8 !text-xs"};
     }
-}
-
-.section-title {
-    @apply flex items-center text-sm font-black uppercase tracking-tighter text-slate-700 mb-4;
-    font-family: 'Barlow Condensed', sans-serif;
-}
-
-.waitlist-badge {
-    @apply px-2 py-1 bg-amber-100 text-amber-700 rounded text-xs font-black;
-    font-family: 'Barlow Condensed', sans-serif;
-}
-
-.empty-squad {
-    @apply py-12 text-center text-slate-400 flex flex-col items-center;
-    p { @apply font-bold uppercase text-sm tracking-tight; font-family: 'Barlow Condensed', sans-serif; }
 }
 </style>
