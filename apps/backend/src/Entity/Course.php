@@ -20,9 +20,10 @@ class Course
     #[Groups(['course:read'])]
     private ?int $id = null;
 
-    #[ORM\Column(length: 255, nullable: true)]
+    #[ORM\ManyToOne(inversedBy: 'courses')]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
     #[Groups(['course:read'])]
-    private ?string $seriesId = null;
+    private ?CourseSeries $series = null;
 
     #[ORM\Column(length: 255)]
     #[Groups(['course:read', 'course:write'])]
@@ -170,16 +171,22 @@ class Course
         return $this;
     }
 
-    public function getSeriesId(): ?string
+    public function getSeries(): ?CourseSeries
     {
-        return $this->seriesId;
+        return $this->series;
     }
 
-    public function setSeriesId(?string $seriesId): static
+    public function setSeries(?CourseSeries $series): static
     {
-        $this->seriesId = $seriesId;
+        $this->series = $series;
 
         return $this;
+    }
+
+    #[Groups(['course:read'])]
+    public function getSeriesId(): ?string
+    {
+        return $this->series ? (string) $this->series->getId() : null;
     }
 
     #[ORM\PreUpdate]

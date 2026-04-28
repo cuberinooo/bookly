@@ -6,6 +6,7 @@ use App\Entity\Course;
 use App\Exception\ScheduleConflictException;
 use App\Repository\CourseRepository;
 
+use App\Repository\CourseSeriesRepository;
 use App\Entity\User;
 use App\Enum\CourseFrequency;
 use Doctrine\ORM\EntityManagerInterface;
@@ -14,6 +15,7 @@ class CourseService
 {
     public function __construct(
         private CourseRepository $courseRepository,
+        private CourseSeriesRepository $seriesRepository,
         private EntityManagerInterface $entityManager,
         private BookingService $bookingService
     ) {
@@ -26,70 +28,107 @@ class CourseService
      */
     public function createCourseSeries(array $data, User $trainer): array
     {
-        $courses = [];
         $startTime = new \DateTime($data['startTime']);
         $duration = (int) ($data['durationMinutes'] ?? 60);
         $recurrence = CourseFrequency::tryFrom($data['recurrence'] ?? '') ?? CourseFrequency::ONCE;
-        
-        $seriesId = $recurrence !== CourseFrequency::ONCE ? bin2hex(random_bytes(8)) : null;
 
-        $limitDate = (clone $startTime)->modify('+6 months');
-        $currentDate = clone $startTime;
-
-        while ($currentDate <= $limitDate) {
-            $courseStartTime = clone $currentDate;
-            $courseEndTime = (clone $courseStartTime)->modify("+$duration minutes");
-
-            try {
-                $this->validateSchedule($courseStartTime, $courseEndTime, null, $trainer->getId());
-            } catch (ScheduleConflictException $e) {
-                // If it's a series, we might want to skip conflicts or abort.
-                // For now, let's abort if the first one conflicts, but maybe skip subsequent ones?
-                // The user said "symfony will do the rest", usually implying it should be robust.
-                // Let's collect successful ones.
-                if ($currentDate == $startTime) {
-                    throw $e;
-                }
-                goto next_iteration;
-            }
-
+        if ($recurrence === CourseFrequency::ONCE) {
             $course = new Course();
             $course->setTitle($data['title']);
             $course->setDescription($data['description'] ?? '');
             $course->setCapacity((int) $data['capacity']);
-            $course->setStartTime($courseStartTime);
+            $course->setStartTime($startTime);
             $course->setDurationMinutes($duration);
-            $course->setEndTime($courseEndTime);
+            $course->setEndTime((clone $startTime)->modify("+$duration minutes"));
             $course->setFrequency($recurrence);
-            $course->setSeriesId($seriesId);
             $course->setTrainer($trainer);
 
-            $this->entityManager->persist($course);
-            $courses[] = $course;
+            $this->validateSchedule($course->getStartTime(), $course->getEndTime(), null, $trainer->getId());
 
-            if ($recurrence === CourseFrequency::ONCE) {
-                break;
+            $this->entityManager->persist($course);
+            $this->entityManager->flush();
+
+            return [$course];
+        }
+
+        $series = new CourseSeries();
+        $series->setTitle($data['title']);
+        $series->setDescription($data['description'] ?? '');
+        $series->setCapacity((int) $data['capacity']);
+        $series->setScheduleStartTime($startTime);
+        $series->setDurationMinutes($duration);
+        $series->setFrequency($recurrence);
+        $series->setTrainer($trainer);
+
+        $this->entityManager->persist($series);
+        
+        // Generate courses for the next 3 months
+        $courses = $this->generateCoursesForSeries($series, $startTime, (clone $startTime)->modify('+3 months'));
+        
+        $this->entityManager->flush();
+        return $courses;
+    }
+
+    public function generateCoursesForSeries(\App\Entity\CourseSeries $series, \DateTimeInterface $start, \DateTimeInterface $end): array
+    {
+        $courses = [];
+        $currentDate = clone $start;
+        $trainer = $series->getTrainer();
+        $duration = $series->getDurationMinutes();
+
+        while ($currentDate <= $end) {
+            $courseStartTime = clone $currentDate;
+            $courseEndTime = (clone $courseStartTime)->modify("+$duration minutes");
+
+            // Check if course already exists for this series at this time
+            $existing = $this->courseRepository->findOneBy([
+                'series' => $series,
+                'startTime' => $courseStartTime
+            ]);
+
+            if (!$existing) {
+                try {
+                    $this->validateSchedule($courseStartTime, $courseEndTime, null, $trainer->getId());
+                    
+                    $course = new Course();
+                    $course->setTitle($series->getTitle());
+                    $course->setDescription($series->getDescription());
+                    $course->setCapacity($series->getCapacity());
+                    $course->setStartTime($courseStartTime);
+                    $course->setDurationMinutes($duration);
+                    $course->setEndTime($courseEndTime);
+                    $course->setFrequency($series->getFrequency());
+                    $course->setSeries($series);
+                    $course->setTrainer($trainer);
+
+                    $this->entityManager->persist($course);
+                    $courses[] = $course;
+                } catch (ScheduleConflictException $e) {
+                    // Skip conflicts for series generation
+                }
             }
 
-            next_iteration:
-            switch ($recurrence) {
+            switch ($series->getFrequency()) {
                 case CourseFrequency::DAILY:
                     $currentDate->modify('+1 day');
                     break;
                 case CourseFrequency::WEEKLY:
                     $currentDate->modify('+1 week');
                     break;
+                case CourseFrequency::MONTHLY:
+                    $currentDate->modify('+1 month');
+                    break;
                 case CourseFrequency::WEEKDAYS:
                     do {
                         $currentDate->modify('+1 day');
-                    } while ($currentDate->format('N') >= 6); // Skip Saturday (6) and Sunday (7)
+                    } while ($currentDate->format('N') >= 6);
                     break;
                 default:
-                    break 2; // Break the while loop
+                    break 2;
             }
         }
-
-        $this->entityManager->flush();
+        
+        $series->setLastGeneratedDate($end);
         return $courses;
     }
 
@@ -100,15 +139,21 @@ class CourseService
     {
         $now = $fromTime ?? new \DateTime();
         $courses = $this->courseRepository->createQueryBuilder('c')
-            ->where('c.seriesId = :seriesId')
+            ->where('c.series = :seriesId')
             ->andWhere('c.startTime >= :now')
-            ->setParameter('seriesId', $seriesId)
+            ->setParameter('seriesId', (int) $seriesId)
             ->setParameter('now', $now)
             ->getQuery()
             ->getResult();
 
         foreach ($courses as $course) {
             $this->entityManager->remove($course);
+        }
+
+        // Also deactivate the series so no more courses are generated
+        $series = $this->seriesRepository->find((int) $seriesId);
+        if ($series) {
+            $series->setActive(false);
         }
 
         $this->entityManager->flush();
@@ -123,9 +168,9 @@ class CourseService
     {
         $now = $fromTime ?? new \DateTime();
         $courses = $this->courseRepository->createQueryBuilder('c')
-            ->where('c.seriesId = :seriesId')
+            ->where('c.series = :seriesId')
             ->andWhere('c.startTime >= :now')
-            ->setParameter('seriesId', $seriesId)
+            ->setParameter('seriesId', (int) $seriesId)
             ->setParameter('now', $now)
             ->getQuery()
             ->getResult();
@@ -133,6 +178,12 @@ class CourseService
         foreach ($courses as $course) {
             $course->setTrainer($newTrainer);
             $this->bookingService->removeBookingIfExists($course, $newTrainer);
+        }
+
+        // Update the series template as well
+        $series = $this->seriesRepository->find((int) $seriesId);
+        if ($series) {
+            $series->setTrainer($newTrainer);
         }
 
         $this->entityManager->flush();
