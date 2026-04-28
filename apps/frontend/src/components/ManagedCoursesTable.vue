@@ -229,12 +229,11 @@ onMounted(loadLazyData);
     <div class="hidden md:block">
       <DataTable
         v-model:first="lazyParams.first"
-        :value="courses"
+        :value="loading ? Array(5).fill({}) : courses"
         lazy
         paginator
         :rows="lazyParams.rows"
         :total-records="totalRecords"
-        :loading="loading"
         class="managed-table"
         @page="onPage"
       >
@@ -243,12 +242,29 @@ onMounted(loadLazyData);
           header="Course"
         >
           <template #body="slotProps">
-            <span class="course-title-cell">{{ slotProps.data.title }}</span>
+            <Skeleton
+              v-if="loading"
+              width="60%"
+            />
+            <span
+              v-else
+              class="course-title-cell"
+            >{{ slotProps.data.title }}</span>
           </template>
         </Column>
         <Column header="Schedule">
           <template #body="slotProps">
-            <div class="flex flex-col">
+            <div
+              v-if="loading"
+              class="flex flex-col gap-1"
+            >
+              <Skeleton width="40%" />
+              <Skeleton width="30%" />
+            </div>
+            <div
+              v-else
+              class="flex flex-col"
+            >
               <span class="font-bold text-sm">{{ formatDate(slotProps.data.startTime) }}</span>
               <span class="text-xs">{{ formatTime(slotProps.data.startTime) }}</span>
             </div>
@@ -256,14 +272,26 @@ onMounted(loadLazyData);
         </Column>
         <Column header="Duration">
           <template #body="slotProps">
-            <span>
+            <Skeleton
+              v-if="loading"
+              width="3rem"
+            />
+            <span v-else>
               {{ formatDuration(slotProps.data.durationMinutes) }}
             </span>
           </template>
         </Column>
         <Column header="Slots">
           <template #body="slotProps">
-            <div class="flex items-center gap-2">
+            <Skeleton
+              v-if="loading"
+              width="4rem"
+              height="1.5rem"
+            />
+            <div
+              v-else
+              class="flex items-center gap-2"
+            >
               <span :class="['slot-badge', { 'is-full': slotProps.data.bookings.length >= slotProps.data.capacity }]">
                 {{ slotProps.data.bookings.length }} / {{ slotProps.data.capacity }}
               </span>
@@ -275,7 +303,27 @@ onMounted(loadLazyData);
           class="text-right"
         >
           <template #body="slotProps">
-            <div class="flex justify-end gap-2">
+            <div
+              v-if="loading"
+              class="flex justify-end gap-2"
+            >
+              <Skeleton
+                shape="circle"
+                size="2rem"
+              />
+              <Skeleton
+                shape="circle"
+                size="2rem"
+              />
+              <Skeleton
+                shape="circle"
+                size="2rem"
+              />
+            </div>
+            <div
+              v-else
+              class="flex justify-end gap-2"
+            >
               <Button
                 v-tooltip="'Participants'"
                 icon="pi pi-users"
@@ -304,16 +352,54 @@ onMounted(loadLazyData);
 
     <!-- Mobile Card View (Hidden on desktop) -->
     <div
-      class="md:hidden flex flex-col gap-4"
+      class="md:hidden flex flex-col gap-4 min-h-[500px]"
       @touchstart="handleTouchStart"
       @touchend="handleTouchEnd"
     >
-      <div
-        v-if="loading"
-        class="flex justify-center p-8"
-      >
-        <i class="pi pi-spin pi-spinner text-4xl text-amber-500" />
-      </div>
+      <template v-if="loading">
+        <div
+          v-for="i in 3"
+          :key="i"
+          class="mobile-course-card p-4 bg-slate-50 rounded-xl border border-slate-200"
+        >
+          <div class="flex justify-between items-start mb-3">
+            <div class="flex flex-col gap-2">
+              <Skeleton
+                width="140px"
+                height="1.5rem"
+              />
+              <Skeleton
+                width="100px"
+                height="1rem"
+              />
+            </div>
+            <Skeleton
+              width="50px"
+              height="1.5rem"
+            />
+          </div>
+          <div class="flex items-center justify-between mt-4 pt-3 border-t border-slate-200">
+            <Skeleton
+              width="80px"
+              height="1rem"
+            />
+            <div class="flex gap-2">
+              <Skeleton
+                shape="circle"
+                size="2.5rem"
+              />
+              <Skeleton
+                shape="circle"
+                size="2.5rem"
+              />
+              <Skeleton
+                shape="circle"
+                size="2.5rem"
+              />
+            </div>
+          </div>
+        </div>
+      </template>
       <template v-else>
         <div
           v-for="course in courses"
@@ -372,20 +458,25 @@ onMounted(loadLazyData);
           </div>
         </div>
 
-        <Paginator
-          v-model:first="lazyParams.first"
-          :rows="lazyParams.rows"
-          :total-records="totalRecords"
-          template="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
-          class="mobile-paginator !bg-transparent !border-none mt-4"
-          @page="onPage"
-        />
-
-        <div v-if="courses.length === 0" class="text-center py-8 text-slate-400">
-          <i class="pi pi-calendar-slash text-4xl mb-2"></i>
-          <p class="font-bold uppercase text-sm">No courses found</p>
+        <div
+          v-if="courses.length === 0"
+          class="text-center py-8 text-slate-400"
+        >
+          <i class="pi pi-calendar-slash text-4xl mb-2" />
+          <p class="font-bold uppercase text-sm">
+            No courses found
+          </p>
         </div>
       </template>
+
+      <Paginator
+        v-model:first="lazyParams.first"
+        :rows="lazyParams.rows"
+        :total-records="totalRecords"
+        template="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
+        class="mobile-paginator !bg-transparent !border-none mt-4"
+        @page="onPage"
+      />
     </div>
 
     <ParticipantsDialog
