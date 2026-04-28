@@ -24,8 +24,9 @@ class CourseController extends AbstractController
     {
         $startDateStr = $request->query->get('startDate');
         $endDateStr = $request->query->get('endDate');
-        $startDate = $startDateStr ? new \DateTime($startDateStr) : null;
-        $endDate = $endDateStr ? new \DateTime($endDateStr) : null;
+        $serverTz = new \DateTimeZone(date_default_timezone_get());
+        $startDate = $startDateStr ? (new \DateTime($startDateStr))->setTimezone($serverTz) : null;
+        $endDate = $endDateStr ? (new \DateTime($endDateStr))->setTimezone($serverTz) : null;
         $futureOnly = $request->query->getBoolean('futureOnly', false);
         $trainerId = $request->query->get('trainerId') ? $request->query->getInt('trainerId') : null;
         $memberId = $request->query->get('memberId') ? $request->query->getInt('memberId') : null;
@@ -126,7 +127,8 @@ public function new(Request $request, CourseService $courseService): JsonRespons
         }
 
         if (isset($data['startTime']) || isset($data['durationMinutes']) || isset($data['trainerId'])) {
-            $startTime = isset($data['startTime']) ? new \DateTime($data['startTime']) : $course->getStartTime();
+            $serverTz = new \DateTimeZone(date_default_timezone_get());
+            $startTime = isset($data['startTime']) ? (new \DateTime($data['startTime']))->setTimezone($serverTz) : $course->getStartTime();
             $duration = (int) (isset($data['durationMinutes']) ? $data['durationMinutes'] : ($course->getDurationMinutes() ?? 60));
 
             $endTime = clone $startTime;

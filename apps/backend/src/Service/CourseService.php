@@ -30,6 +30,7 @@ class CourseService
     public function createCourseSeries(array $data, User $trainer): array
     {
         $startTime = new \DateTime($data['startTime']);
+        $startTime->setTimezone(new \DateTimeZone(date_default_timezone_get()));
         $duration = (int) ($data['durationMinutes'] ?? 60);
         $recurrence = CourseFrequency::tryFrom($data['recurrence'] ?? '') ?? CourseFrequency::ONCE;
 
