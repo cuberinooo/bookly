@@ -58,7 +58,7 @@ watch(() => props.course, (newVal) => {
             capacity: newVal.capacity,
             startTime: new Date(newVal.startTime),
             durationMinutes: newVal.durationMinutes,
-            recurrence: CourseFrequency.ONCE, // Default to once on edit
+            recurrence: newVal.frequency || CourseFrequency.ONCE,
             trainerId: newVal.trainer?.id || null,
             transferAll: false
         };
