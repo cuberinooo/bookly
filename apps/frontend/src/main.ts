@@ -28,7 +28,7 @@ import Tab from 'primevue/tab';
 import TabPanels from 'primevue/tabpanels';
 import TabPanel from 'primevue/tabpanel';
 import Menu from 'primevue/menu';
-import {Checkbox, Divider, Password, Tag, Tooltip} from "primevue";
+import {Checkbox, Divider, Paginator, Password, Tag, Tooltip} from "primevue";
 
 const app = createApp(App);
 
@@ -80,6 +80,7 @@ app.component('Tabs', Tabs);
 app.component('TabList', TabList);
 app.component('Tab', Tab);
 app.component('TabPanels', TabPanels);
+app.component('Paginator', Paginator);
 app.component('TabPanel', TabPanel);
 app.component('Menu', Menu);
 

@@ -59,6 +59,45 @@ function onPage(event: any) {
     loadLazyData();
 }
 
+const touchStart = ref({ x: 0, y: 0 });
+
+function handleTouchStart(e: TouchEvent) {
+    touchStart.value = {
+        x: e.changedTouches[0].screenX,
+        y: e.changedTouches[0].screenY
+    };
+}
+
+function handleTouchEnd(e: TouchEvent) {
+    const deltaX = e.changedTouches[0].screenX - touchStart.value.x;
+    const deltaY = e.changedTouches[0].screenY - touchStart.value.y;
+
+    // Only trigger if horizontal swipe is dominant and significant
+    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 60) {
+        if (deltaX < 0) {
+            // Swipe Left -> Next Page
+            const nextFirst = lazyParams.value.first + lazyParams.value.rows;
+            if (nextFirst < totalRecords.value) {
+                onPage({
+                    first: nextFirst,
+                    rows: lazyParams.value.rows,
+                    page: Math.floor(nextFirst / lazyParams.value.rows)
+                });
+            }
+        } else {
+            // Swipe Right -> Prev Page
+            const prevFirst = lazyParams.value.first - lazyParams.value.rows;
+            if (prevFirst >= 0) {
+                onPage({
+                    first: prevFirst,
+                    rows: lazyParams.value.rows,
+                    page: Math.floor(prevFirst / lazyParams.value.rows)
+                });
+            }
+        }
+    }
+}
+
 function onFilter() {
     lazyParams.value.page = 1;
     lazyParams.value.first = 0;
@@ -189,10 +228,11 @@ onMounted(loadLazyData);
     <!-- Desktop Table View (Hidden on mobile) -->
     <div class="hidden md:block">
       <DataTable
+        v-model:first="lazyParams.first"
         :value="courses"
         lazy
         paginator
-        :rows="10"
+        :rows="lazyParams.rows"
         :total-records="totalRecords"
         :loading="loading"
         class="managed-table"
@@ -263,9 +303,16 @@ onMounted(loadLazyData);
     </div>
 
     <!-- Mobile Card View (Hidden on desktop) -->
-    <div class="md:hidden flex flex-col gap-4">
-      <div v-if="loading" class="flex justify-center p-8">
-        <i class="pi pi-spin pi-spinner text-4xl text-amber-500"></i>
+    <div
+      class="md:hidden flex flex-col gap-4"
+      @touchstart="handleTouchStart"
+      @touchend="handleTouchEnd"
+    >
+      <div
+        v-if="loading"
+        class="flex justify-center p-8"
+      >
+        <i class="pi pi-spin pi-spinner text-4xl text-amber-500" />
       </div>
       <template v-else>
         <div
@@ -275,11 +322,14 @@ onMounted(loadLazyData);
         >
           <div class="flex justify-between items-start mb-3">
             <div class="flex flex-col">
-              <span class="text-lg font-black uppercase tracking-tight leading-tight mb-1" style="font-family: 'Barlow Condensed', sans-serif;">
+              <span
+                class="text-lg font-black uppercase tracking-tight leading-tight mb-1"
+                style="font-family: 'Barlow Condensed', sans-serif;"
+              >
                 {{ course.title }}
               </span>
               <div class="flex items-center gap-2 text-xs font-bold text-slate-500">
-                <i class="pi pi-calendar text-[10px]"></i>
+                <i class="pi pi-calendar text-[10px]" />
                 {{ formatDate(course.startTime) }} @ {{ formatTime(course.startTime) }}
               </div>
             </div>
@@ -289,7 +339,10 @@ onMounted(loadLazyData);
           </div>
 
           <div class="flex items-center justify-between mt-4 pt-3 border-t border-slate-200">
-            <div class="text-[10px] font-black uppercase text-slate-400" style="font-family: 'Barlow Condensed', sans-serif;">
+            <div
+              class="text-[10px] font-black uppercase text-slate-400"
+              style="font-family: 'Barlow Condensed', sans-serif;"
+            >
               Duration: {{ formatDuration(course.durationMinutes) }}
             </div>
             <div class="flex gap-2">
@@ -320,7 +373,8 @@ onMounted(loadLazyData);
         </div>
 
         <Paginator
-          :rows="10"
+          v-model:first="lazyParams.first"
+          :rows="lazyParams.rows"
           :total-records="totalRecords"
           template="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
           class="mobile-paginator !bg-transparent !border-none mt-4"
