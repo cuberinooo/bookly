@@ -1,0 +1,9 @@
+{
+  "name": "NotificationType",
+  "values": {
+    "INFO": "info",
+    "SUCCESS": "success",
+    "WARNING": "warning",
+    "DANGER": "danger"
+  }
+}

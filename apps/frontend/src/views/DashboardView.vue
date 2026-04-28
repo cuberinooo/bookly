@@ -7,6 +7,7 @@ import { useConfirm } from 'primevue/useconfirm';
 import CourseForm from '../components/CourseForm.vue';
 import ManagedCoursesTable from '../components/ManagedCoursesTable.vue';
 import ParticipantsDialog from '../components/ParticipantsDialog.vue';
+import NotificationItem from '../components/NotificationItem.vue';
 import { useRoute } from 'vue-router';
 
 import { formatDateTime } from '../services/date-utils';
@@ -222,24 +223,12 @@ onMounted(fetchData);
           <h2>Live Feed</h2>
         </div>
         <div class="notif-list">
-          <div
+          <NotificationItem
             v-for="notif in notifications"
             :key="notif.id"
-            :class="['notif-item', { unread: !notif.isRead }]"
-          >
-            <p>{{ notif.message }}</p>
-            <div class="flex justify-content-between align-items-center mt-3">
-              <small>{{ new Date(notif.createdAt).toLocaleTimeString() }}</small>
-              <Button
-                v-if="!notif.isRead"
-                icon="pi pi-check"
-                variant="text"
-                size="small"
-                class="mark-read-btn"
-                @click="api.patch(`/notifications/${notif.id}/read`).then(fetchNotifications)"
-              />
-            </div>
-          </div>
+            :notification="notif"
+            @read="(id) => api.patch(`/notifications/${id}/read`).then(fetchNotifications)"
+          />
           <div
             v-if="notifications.length === 0"
             class="empty-notifs"

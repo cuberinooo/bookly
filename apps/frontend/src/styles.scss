@@ -3,7 +3,10 @@
 :root {
   --primary-color: #ffc107;      // Amber yellow (Brand Primary)
   --accent-color: #ffc107;       // Consistent with primary
-  --danger-color: #a52f2f;       // Red (Danger)
+  --success-color: #22c55e;      // Vibrant Green (Success)
+  --success-bg: #f0fdf4;         // Light green background
+  --danger-color: #ef4444;       // Vibrant Red (Danger)
+  --danger-bg: #fef2f2;          // Light red background
   --bg-color: #ffffff;           // Clean white
   --bg-primary-color: #0f172a;   // Deep slate (Primary Background)
   --card-bg: #ffffff;
@@ -298,4 +301,94 @@ box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25) !important;
 
 .text-accent {
 color: var(--accent-color);
+}
+
+// Global Toast Styling
+.p-toast {
+  .p-toast-message {
+    border-radius: 12px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    border: none;
+    
+    .p-toast-message-content {
+      padding: 1rem;
+      align-items: center;
+    }
+
+    .p-toast-message-icon {
+      font-size: 1.5rem;
+    }
+
+    .p-toast-summary {
+      font-family: 'Barlow Condensed', sans-serif;
+      text-transform: uppercase;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+    }
+
+    .p-toast-detail {
+      font-weight: 500;
+      margin-top: 0.25rem;
+    }
+
+    &.p-toast-message-success {
+      background: var(--success-bg) !important;
+      border-left: 6px solid var(--success-color) !important;
+      .p-toast-message-icon, .p-toast-summary { color: var(--success-color) !important; }
+      .p-toast-detail { color: #166534; }
+    }
+
+    &.p-toast-message-error, &.p-toast-message-warn {
+      background: var(--danger-bg) !important;
+      border-left: 6px solid var(--danger-color) !important;
+      .p-toast-message-icon, .p-toast-summary { color: var(--danger-color) !important; }
+      .p-toast-detail { color: #991b1b; }
+    }
+
+    &.p-toast-message-info {
+      background: #eff6ff !important;
+      border-left: 6px solid #3b82f6 !important;
+      .p-toast-message-icon, .p-toast-summary { color: #3b82f6 !important; }
+      .p-toast-detail { color: #1e40af; }
+    }
+  }
+}
+
+// Global ConfirmDialog Styling
+.p-confirmdialog {
+  .p-dialog-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 2.5rem !important;
+
+    .p-confirmdialog-icon {
+      font-size: 4rem;
+      margin-bottom: 1.5rem;
+      color: var(--primary-color);
+      
+      &.pi-exclamation-triangle {
+        color: var(--danger-color);
+      }
+    }
+
+    .p-confirmdialog-message {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: white;
+    }
+  }
+
+  .p-dialog-footer {
+    display: flex;
+    gap: 1rem;
+    padding: 0 2rem 2.5rem 2rem !important;
+    justify-content: center;
+
+    button {
+      flex: 1;
+      max-width: 200px;
+    }
+  }
 }
