@@ -167,6 +167,92 @@ class CourseService
     }
 
     /**
+     * Updates all future courses in a series based on provided fields.
+     */
+    public function updateCourseSeries(string $seriesId, array $updates, ?\DateTimeInterface $fromTime = null): int
+    {
+        $now = $fromTime ?? new \DateTime();
+        $courses = $this->courseRepository->createQueryBuilder('c')
+            ->where('c.series = :seriesId')
+            ->andWhere('c.startTime >= :now')
+            ->setParameter('seriesId', (int) $seriesId)
+            ->setParameter('now', $now)
+            ->getQuery()
+            ->getResult();
+
+        $series = $this->seriesRepository->find((int) $seriesId);
+
+        foreach ($courses as $course) {
+            if (isset($updates['title'])) {
+                $course->setTitle($updates['title']);
+            }
+            if (isset($updates['description'])) {
+                $course->setDescription($updates['description']);
+            }
+            if (isset($updates['capacity'])) {
+                $course->setCapacity($updates['capacity']);
+            }
+            if (isset($updates['trainer'])) {
+                $course->setTrainer($updates['trainer']);
+                $this->bookingService->removeBookingIfExists($course, $updates['trainer']);
+            }
+            if (isset($updates['durationMinutes'])) {
+                $course->setDurationMinutes($updates['durationMinutes']);
+                $endTime = clone $course->getStartTime();
+                $endTime->modify("+{$updates['durationMinutes']} minutes");
+                $course->setEndTime($endTime);
+            }
+            if (isset($updates['startTime'])) {
+                $newTime = $updates['startTime'];
+                $oldStartTime = $course->getStartTime();
+                
+                $updatedStartTime = clone $oldStartTime;
+                $updatedStartTime->setTime(
+                    (int) $newTime->format('H'),
+                    (int) $newTime->format('i'),
+                    (int) $newTime->format('s')
+                );
+                
+                $course->setStartTime($updatedStartTime);
+                
+                $duration = $course->getDurationMinutes();
+                $updatedEndTime = clone $updatedStartTime;
+                $updatedEndTime->modify("+$duration minutes");
+                $course->setEndTime($updatedEndTime);
+            }
+            
+            if (isset($updates['startTime']) || isset($updates['durationMinutes']) || isset($updates['trainer'])) {
+                $this->validateSchedule($course->getStartTime(), $course->getEndTime(), $course->getId(), $course->getTrainer()->getId());
+            }
+        }
+
+        if ($series) {
+            if (isset($updates['title'])) $series->setTitle($updates['title']);
+            if (isset($updates['description'])) $series->setDescription($updates['description']);
+            if (isset($updates['capacity'])) $series->setCapacity($updates['capacity']);
+            if (isset($updates['trainer'])) $series->setTrainer($updates['trainer']);
+            if (isset($updates['durationMinutes'])) $series->setDurationMinutes($updates['durationMinutes']);
+            if (isset($updates['startTime'])) {
+                $newTime = $updates['startTime'];
+                $seriesStartTime = $series->getScheduleStartTime();
+                if ($seriesStartTime) {
+                    $updatedSeriesStartTime = clone $seriesStartTime;
+                    $updatedSeriesStartTime->setTime(
+                        (int) $newTime->format('H'),
+                        (int) $newTime->format('i'),
+                        (int) $newTime->format('s')
+                    );
+                    $series->setScheduleStartTime($updatedSeriesStartTime);
+                }
+            }
+        }
+
+        $this->entityManager->flush();
+
+        return count($courses);
+    }
+
+    /**
      * Transfers all future courses in a series to a new trainer, optionally starting from a specific time.
      */
     public function transferCourseSeries(string $seriesId, User $newTrainer, ?\DateTimeInterface $fromTime = null): int

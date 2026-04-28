@@ -117,50 +117,82 @@ public function new(Request $request, CourseService $courseService): JsonRespons
     {
         $this->denyAccessUnlessGranted('ROLE_TRAINER');
         $data = json_decode($request->getContent(), true);
+        $updateSeries = $request->query->getBoolean('transferAll', false);
+        $seriesId = $course->getSeriesId();
 
+        $updates = [];
         $newTrainer = $course->getTrainer();
+
         if (isset($data['trainerId'])) {
             $newTrainer = $userRepository->find($data['trainerId']);
             if (!$newTrainer || !in_array('ROLE_TRAINER', $newTrainer->getRoles())) {
                 return new JsonResponse(['error' => 'Invalid trainer'], Response::HTTP_BAD_REQUEST);
             }
+            if ($newTrainer->getId() !== $course->getTrainer()->getId()) {
+                $updates['trainer'] = $newTrainer;
+            }
         }
 
-        if (isset($data['startTime']) || isset($data['durationMinutes']) || isset($data['trainerId'])) {
+        if (isset($data['startTime']) || isset($data['durationMinutes'])) {
             $serverTz = new \DateTimeZone(date_default_timezone_get());
             $startTime = isset($data['startTime']) ? (new \DateTime($data['startTime']))->setTimezone($serverTz) : $course->getStartTime();
             $duration = (int) (isset($data['durationMinutes']) ? $data['durationMinutes'] : ($course->getDurationMinutes() ?? 60));
 
-            $endTime = clone $startTime;
-            $endTime->modify("+$duration minutes");
+            if ($startTime->format('H:i') !== $course->getStartTime()->format('H:i')) {
+                $updates['startTime'] = $startTime;
+            }
+            if ($duration !== $course->getDurationMinutes()) {
+                $updates['durationMinutes'] = $duration;
+            }
+        }
 
+        if (isset($data['title']) && $data['title'] !== $course->getTitle()) {
+            $updates['title'] = $data['title'];
+        }
+        if (isset($data['description']) && $data['description'] !== $course->getDescription()) {
+            $updates['description'] = $data['description'];
+        }
+        if (isset($data['capacity']) && (int)$data['capacity'] !== $course->getCapacity()) {
+            $updates['capacity'] = (int)$data['capacity'];
+        }
+
+        if ($updateSeries && $seriesId) {
             try {
-                $courseService->validateSchedule($startTime, $endTime, $course->getId(), $newTrainer->getId());
+                $courseService->updateCourseSeries($seriesId, $updates, $course->getStartTime());
             } catch (ScheduleConflictException $e) {
                 return new JsonResponse(['error' => $e->getFrontendMessage()], Response::HTTP_CONFLICT);
             } catch (\Exception $e) {
                 return new JsonResponse(['error' => 'An unexpected error occurred.'], Response::HTTP_INTERNAL_SERVER_ERROR);
             }
-
-            $course->setStartTime($startTime);
-            $course->setDurationMinutes($duration);
-            $course->setEndTime($endTime);
-        }
-
-        if (isset($data['title'])) $course->setTitle($data['title']);
-        if (isset($data['description'])) $course->setDescription($data['description']);
-        if (isset($data['capacity'])) $course->setCapacity((int) $data['capacity']);
-
-        if (isset($data['trainerId'])) {
-            $transferAll = $request->query->getBoolean('transferAll', false);
-            $seriesId = $course->getSeriesId();
-
-            if ($transferAll && $seriesId) {
-                $count = $courseService->transferCourseSeries($seriesId, $newTrainer, $course->getStartTime());
-            } else {
+        } else {
+            // Update only this course
+            if (isset($updates['trainer'])) {
                 $course->setTrainer($newTrainer);
                 $bookingService->removeBookingIfExists($course, $newTrainer);
             }
+
+            if (isset($data['startTime']) || isset($data['durationMinutes'])) {
+                $serverTz = new \DateTimeZone(date_default_timezone_get());
+                $startTime = isset($data['startTime']) ? (new \DateTime($data['startTime']))->setTimezone($serverTz) : $course->getStartTime();
+                $duration = (int) (isset($data['durationMinutes']) ? $data['durationMinutes'] : ($course->getDurationMinutes() ?? 60));
+
+                $endTime = clone $startTime;
+                $endTime->modify("+$duration minutes");
+
+                try {
+                    $courseService->validateSchedule($startTime, $endTime, $course->getId(), $newTrainer->getId());
+                } catch (ScheduleConflictException $e) {
+                    return new JsonResponse(['error' => $e->getFrontendMessage()], Response::HTTP_CONFLICT);
+                }
+
+                $course->setStartTime($startTime);
+                $course->setDurationMinutes($duration);
+                $course->setEndTime($endTime);
+            }
+
+            if (isset($data['title'])) $course->setTitle($data['title']);
+            if (isset($data['description'])) $course->setDescription($data['description']);
+            if (isset($data['capacity'])) $course->setCapacity((int) $data['capacity']);
         }
 
         $entityManager->flush();

@@ -65,6 +65,23 @@ watch(() => props.course, (newVal) => {
     }
 }, { immediate: true });
 
+const isChanged = computed(() => {
+    if (!props.course) return false;
+
+    const finalTitle = form.value.title === 'Other' ? form.value.customTitle : form.value.title;
+    const isPreset = workoutTypes.includes(props.course.title) && props.course.title !== 'Other';
+    const originalTitle = isPreset ? props.course.title : props.course.title; // wait, this is same
+
+    const timeChanged = new Date(form.value.startTime).getTime() !== new Date(props.course.startTime).getTime();
+    const trainerChanged = form.value.trainerId !== (props.course.trainer?.id || null);
+    const titleChanged = finalTitle !== props.course.title;
+    const descriptionChanged = form.value.description !== (props.course.description || '');
+    const capacityChanged = form.value.capacity !== props.course.capacity;
+    const durationChanged = form.value.durationMinutes !== props.course.durationMinutes;
+
+    return timeChanged || trainerChanged || titleChanged || descriptionChanged || capacityChanged || durationChanged;
+});
+
 function handleSubmit() {
     const finalTitle = form.value.title === 'Other' ? form.value.customTitle : form.value.title;
     const payload = {
@@ -175,26 +192,6 @@ function handleSubmit() {
         />
       </div>
     </div>
-
-    <div
-      v-if="course?.id && course.seriesId && form.trainerId !== course?.trainer?.id"
-      class="form-group animate-fadein"
-    >
-      <div class="flex items-center gap-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-        <Checkbox
-          v-model="form.transferAll"
-          :binary="true"
-          input-id="transferAll"
-        />
-        <label
-          for="transferAll"
-          class="text-sm font-bold text-amber-900 cursor-pointer"
-        >
-          Transfer all future workouts in this series
-        </label>
-      </div>
-    </div>
-
     <div class="form-group">
       <label for="description">Workout Description</label>
       <Textarea
@@ -220,6 +217,24 @@ function handleSubmit() {
         />
       </div>
       <div class="form-group flex-1 empty-spacer"></div>
+    </div>
+    <div
+      v-if="course?.id && course.seriesId && isChanged"
+      class="form-group animate-fadein"
+    >
+      <div class="flex items-center gap-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+        <Checkbox
+          v-model="form.transferAll"
+          :binary="true"
+          input-id="transferAll"
+        />
+        <label
+          for="transferAll"
+          class="text-sm font-bold text-amber-900 cursor-pointer"
+        >
+          Apply to all future workouts in this series
+        </label>
+      </div>
     </div>
     <div class="form-actions mt-6">
       <Button
@@ -288,7 +303,7 @@ function handleSubmit() {
     margin-top: 1rem;
     color: var(--text-header);
     font-size: 0.95rem;
-    
+
     i { color: var(--primary-color); font-size: 1.1rem; }
     strong { color: var(--text-header); font-weight: 800; }
 }
