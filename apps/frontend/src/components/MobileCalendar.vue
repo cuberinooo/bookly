@@ -11,6 +11,9 @@ const props = defineProps<{
 const emit = defineEmits(['course-click', 'update:baseDate']);
 
 const internalBaseDate = ref(new Date(props.baseDate || new Date()));
+const touchStartX = ref(0);
+const touchStartY = ref(0);
+const swipeThreshold = 50;
 
 watch(() => props.baseDate, (newVal) => {
     if (newVal && newVal.getTime() !== internalBaseDate.value.getTime()) {
@@ -37,6 +40,30 @@ const currentWeekLabel = computed(() => {
     const end = currentWeek.value[6];
     return `${start.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })} - ${end.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })}`;
 });
+
+function handleTouchStart(e: TouchEvent) {
+    touchStartX.value = e.touches[0].clientX;
+    touchStartY.value = e.touches[0].clientY;
+}
+
+function handleTouchEnd(e: TouchEvent) {
+    const touchEndX = e.changedTouches[0].clientX;
+    const touchEndY = e.changedTouches[0].clientY;
+    
+    const deltaX = touchEndX - touchStartX.value;
+    const deltaY = touchEndY - touchStartY.value;
+
+    // Ensure it's mostly a horizontal swipe and exceeds threshold
+    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > swipeThreshold) {
+        if (deltaX > 0) {
+            // Swipe Right -> Previous Week
+            navigate(-1);
+        } else {
+            // Swipe Left -> Next Week
+            navigate(1);
+        }
+    }
+}
 
 function navigate(direction: number) {
     const newDate = new Date(internalBaseDate.value);
@@ -76,7 +103,11 @@ function formatDayName(date: Date) {
 </script>
 
 <template>
-  <div class="mobile-calendar animate-fadein">
+  <div
+    class="mobile-calendar animate-fadein"
+    @touchstart="handleTouchStart"
+    @touchend="handleTouchEnd"
+  >
     <div class="mobile-nav">
       <div class="nav-header">
         <h2>{{ currentWeekLabel }}</h2>
@@ -176,6 +207,7 @@ function formatDayName(date: Date) {
     display: flex;
     flex-direction: column;
     background: #f8fafc;
+    touch-action: pan-y; /* Allow vertical scrolling but let us handle horizontal swipes */
 }
 
 .mobile-nav {
