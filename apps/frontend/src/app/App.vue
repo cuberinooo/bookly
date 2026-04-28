@@ -85,7 +85,7 @@ function logout() {
   <header class="main-header">
     <nav class="nav-container">
       <div class="brand">
-        <RouterLink to="/">
+        <RouterLink :to="authStore.isLoggedIn() ? '/' : '/login'">
           PHOENIX ATHLETICS
         </RouterLink>
       </div>
@@ -103,7 +103,10 @@ function logout() {
             <span :class="{ active: authStore.viewMode === 'member' }">MEMBER</span>
           </div>
         </template>
-        <RouterLink to="/">
+        <RouterLink
+          v-if="authStore.isLoggedIn()"
+          to="/"
+        >
           Courses
         </RouterLink>
         <template v-if="authStore.isLoggedIn()">
