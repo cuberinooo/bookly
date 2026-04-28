@@ -35,7 +35,7 @@ async function updatePassword() {
     try {
         const response = await api.post('/user/change-password', { password: newPassword.value });
         toast.add({ severity: 'success', summary: 'Success', detail: 'Password updated successfully', life: 5000 });
-        
+
         if (response.data.token) {
             authStore.setToken(response.data.token);
         } else if (authStore.user) {
@@ -82,8 +82,15 @@ function logout() {
 <template>
   <Toast position="bottom-right" />
   <ConfirmDialog />
-  <header class="main-header">
-    <nav class="nav-container">
+
+  <div v-if="!authStore.initialized" class="loading-overlay">
+    <div class="spinner"></div>
+    <p class="loading-text">PHOENIX ATHLETICS</p>
+  </div>
+
+  <div v-else>
+    <header class="main-header">
+      <nav class="nav-container">
       <div class="brand">
         <RouterLink :to="authStore.isLoggedIn() ? '/' : '/login'">
           PHOENIX ATHLETICS
@@ -225,6 +232,7 @@ function logout() {
       />
     </template>
   </Dialog>
+</div>
 </template>
 
 <style scoped lang="scss">
@@ -331,13 +339,13 @@ function logout() {
 
   @media (max-width: 768px) {
     gap: 1rem;
-    
+
     .mode-switcher {
         margin-right: 0;
         padding: 0.4rem 0.75rem;
         span { display: none; }
     }
-    
+
     a {
         font-size: 0.85rem;
     }
@@ -386,5 +394,48 @@ function logout() {
         color: #ef4444 !important;
     }
   }
+}
+
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: #0f172a;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+
+  .spinner {
+    width: 50px;
+    height: 50px;
+    border: 3px solid rgba(255, 255, 255, 0.1);
+    border-top: 3px solid var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 1.5rem;
+  }
+
+  .loading-text {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: white;
+    letter-spacing: 0.3em;
+    animation: pulse 2s ease-in-out infinite;
+  }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }
 </style>

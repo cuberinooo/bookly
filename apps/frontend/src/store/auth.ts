@@ -11,19 +11,32 @@ interface User {
 
 export const authStore = reactive({
   user: null as User | null,
-  token: localStorage.getItem('token'),
+  token: null as string | null,
+  initialized: false,
   viewMode: (localStorage.getItem('viewMode') || 'trainer') as 'trainer' | 'member',
 
   setToken(token: string) {
     this.token = token;
-    localStorage.setItem('token', token);
     this.parseUser();
   },
 
   logout() {
     this.token = null;
     this.user = null;
-    localStorage.removeItem('token');
+  },
+
+  async init() {
+    // This will be called on app mount to check if we have a valid refresh token cookie
+    try {
+      // We import api dynamically to avoid circular dependencies if any
+      const { default: api } = await import('../services/api');
+      const response = await api.post('/token/refresh');
+      this.setToken(response.data.token);
+    } catch (e) {
+      this.logout();
+    } finally {
+      this.initialized = true;
+    }
   },
 
   toggleViewMode() {
