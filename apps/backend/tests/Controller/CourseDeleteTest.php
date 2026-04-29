@@ -33,6 +33,7 @@ class CourseDeleteTest extends WebTestCase
         $series->setDurationMinutes(60);
         $series->setCapacity(10);
         $series->setFrequency(CourseFrequency::WEEKLY);
+        $series->setLastGeneratedDate(new \DateTime('+3 months'));
         $entityManager->persist($series);
         $entityManager->flush();
         return $series;
