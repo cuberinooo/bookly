@@ -5,6 +5,8 @@ framework:
 
     # Note that the session will be started ONLY if you read or write from it.
     session:
+        cookie_samesite: none
+        cookie_secure: auto
         # Keep the session cookie for 1 day (86400 seconds)
         cookie_lifetime: 86400
 
