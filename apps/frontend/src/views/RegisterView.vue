@@ -32,6 +32,10 @@ const isFormValid = computed(() => {
     return name.value && email.value && v.minLength && v.uppercase && v.lowercase && v.number && v.special && v.match && acceptedTerms.value;
 });
 
+const privacyPolicyDownloadUrl = computed(() => {
+  return `${api.defaults.baseURL}/legal-settings/privacy-policy/download`;
+});
+
 async function fetchRoles() {
     try {
         const response = await api.get('/register/roles');
@@ -188,7 +192,7 @@ onMounted(fetchRoles);
           />
         </div>
 
-        <div class="mt-2">
+        <div class="flex items-start gap-3 mt-2">
           <Checkbox
             id="terms"
             v-model="acceptedTerms"
@@ -197,16 +201,17 @@ onMounted(fetchRoles);
           />
           <label
             for="terms"
-            class="ml-3 text-sm text-slate-600 font-medium leading-tight cursor-pointer"
+            class="text-sm text-slate-600 font-medium leading-tight cursor-pointer"
           >
             I agree to the
             <RouterLink
               to="/terms"
+              target="_blank"
               class="text-primary font-bold hover:underline"
             >Terms & Conditions (AGB)</RouterLink>
             and have read the
             <a
-              href="/api/legal-settings/privacy-policy/download"
+              :href="privacyPolicyDownloadUrl"
               target="_blank"
               class="text-primary font-bold hover:underline"
             >Privacy Policy</a>.
