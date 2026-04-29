@@ -70,6 +70,14 @@ td {
         }
     }
 
+    &.p-fileupload-choose-button {
+      background-color: var(--primary-color);
+      &:hover {
+        background-color: #eab308 !important;
+        transform: translateY(-1px);
+      }
+    }
+
     &.p-button-danger {
       background-color: var(--danger-color) !important;
       color: #000 !important; // Dark text on Amber for contrast
@@ -403,4 +411,8 @@ color: var(--accent-color);
 
 .primary-text {
   color: var(--primary-color);
+}
+
+.secondary-text {
+  color: var(--text-header);
 }

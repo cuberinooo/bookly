@@ -1,7 +1,28 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted, computed } from 'vue';
+import api from '../services/api';
 
-const showImpressum = ref(false);
+const showLegalNotice = ref(false);
+const settings = ref<any>(null);
+
+async function fetchSettings() {
+    try {
+        const response = await api.get('/settings');
+        settings.value = response.data;
+    } catch (e) {
+        console.error('Failed to load footer settings');
+    }
+}
+
+const privacyPolicyUrl = computed(() => {
+    if (!settings.value?.privacyPolicyPdfPath) return '/privacy-policy.pdf'; // Fallback
+    const baseURL = import.meta.env.VITE_API_URL || '';
+    return settings.value.privacyPolicyPdfPath.startsWith('http') 
+        ? settings.value.privacyPolicyPdfPath 
+        : baseURL + settings.value.privacyPolicyPdfPath;
+});
+
+onMounted(fetchSettings);
 </script>
 
 <template>
@@ -22,13 +43,13 @@ const showImpressum = ref(false);
         <h4 class="footer-title">Legal</h4>
         <ul class="footer-list">
           <li>
-            <a href="/datenschutz.pdf" download class="footer-link">
-              <i class="pi pi-download"></i> Datenschutz (Privacy Policy)
+            <a :href="privacyPolicyUrl" download class="footer-link">
+              <i class="pi pi-download"></i> Privacy Policy (Datenschutz)
             </a>
           </li>
           <li>
-            <a href="javascript:void(0)" @click="showImpressum = true" class="footer-link">
-              <i class="pi pi-info-circle"></i> Impressum (Legal Notice)
+            <a href="javascript:void(0)" @click="showLegalNotice = true" class="footer-link">
+              <i class="pi pi-info-circle"></i> Legal Notice (Impressum)
             </a>
           </li>
         </ul>
@@ -47,42 +68,55 @@ const showImpressum = ref(false);
       <p>&copy; {{ new Date().getFullYear() }} Phoenix Athletics. All rights reserved.</p>
     </div>
 
-    <Dialog v-model:visible="showImpressum" header="Impressum" :modal="true" class="w-full max-w-2xl">
-      <div class="impressum-content">
-        <section>
-          <h3 class="primary-text">Angaben gemäß § 5 TMG</h3>
+    <Dialog v-model:visible="showLegalNotice" header="Legal Notice" :modal="true" class="w-full max-w-2xl">
+      <div v-if="settings" class="legal-notice-content">
+        <section v-if="settings.legalNoticeCompanyName">
+          <h3 class="text-primary">Angaben gemäß § 5 TMG</h3>
           <p>
-            Kubilay Anil<br />
-            Kreuzstr.<br />
-            89160 Dornstadt<br />
-            Germany
+            {{ settings.legalNoticeRepresentative }}<br v-if="settings.legalNoticeRepresentative" />
+            {{ settings.legalNoticeCompanyName }}<br />
+            {{ settings.legalNoticeStreet }} {{ settings.legalNoticeHouseNumber }}<br />
+            {{ settings.legalNoticeZipCode }} {{ settings.legalNoticeCity }}
+          </p>
+        </section>
+
+        <section v-if="settings.legalNoticeEmail || settings.legalNoticePhone" class="mt-4">
+          <h3 class="text-primary">Kontakt</h3>
+          <p>
+            <span v-if="settings.legalNoticePhone">Telefon: {{ settings.legalNoticePhone }}<br /></span>
+            <span v-if="settings.legalNoticeEmail">E-Mail: <a :href="'mailto:' + settings.legalNoticeEmail">{{ settings.legalNoticeEmail }}</a></span>
+          </p>
+        </section>
+
+        <section v-if="settings.legalNoticeTaxId || settings.legalNoticeVatId" class="mt-4">
+          <h3 class="text-primary">Steuern</h3>
+          <p>
+            <span v-if="settings.legalNoticeTaxId">Steuernummer: {{ settings.legalNoticeTaxId }}<br /></span>
+            <span v-if="settings.legalNoticeVatId">Umsatzsteuer-Identifikationsnummer gemäß § 27 a Umsatzsteuergesetz: {{ settings.legalNoticeVatId }}</span>
           </p>
         </section>
 
         <section class="mt-4">
-          <h3 class="primary-text">Kontakt</h3>
+          <h3 class="text-primary">EU-Streitschlichtung</h3>
           <p>
-            Telefon: +49 (0) 162 7895106<br />
-            E-Mail: <a href="mailto:kubilay.anil@codingcube.de">kubilay.anil@codingcube.de</a>
+            Die Europäische Kommission stellt eine Plattform zur Online-Streitbeilegung (OS) bereit:
+            <a href="https://ec.europa.eu/consumers/odr/" target="_blank" rel="noopener">https://ec.europa.eu/consumers/odr/</a>.<br />
+            Unsere E-Mail-Adresse finden Sie oben im Impressum.
           </p>
         </section>
 
         <section class="mt-4">
-          <h3 class="primary-text">Haftung für Inhalte</h3>
+          <h3 class="text-primary">Verbraucherstreitbeilegung/Universalschlichtungsstelle</h3>
           <p>
-            Als Diensteanbieter sind wir gemäß § 7 Abs.1 DDG für eigene Inhalte auf diesen Seiten nach den allgemeinen Gesetzen verantwortlich. Nach §§ 8 bis 10 DDG sind wir als Diensteanbieter jedoch nicht verpflichtet, übermittelte oder gespeicherte fremde Informationen zu überwachen.
-          </p>
-        </section>
-
-        <section class="mt-4">
-          <h3 class="primary-text">Urheberrecht</h3>
-          <p>
-            Die durch die Seitenbetreiber erstellten Inhalte und Werke auf diesen Seiten unterliegen dem deutschen Urheberrecht. Die Vervielfältigung, Bearbeitung, Verbreitung und jede Art der Verwertung außerhalb der Grenzen des Urheberrechtes bedürfen der schriftlichen Zustimmung des jeweiligen Autors bzw. Erstellers.
+            Wir sind nicht bereit oder verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.
           </p>
         </section>
       </div>
+      <div v-else class="text-center py-8">
+        <p>Legal information not yet configured.</p>
+      </div>
       <template #footer>
-        <Button severity="primary" label="Close" icon="pi pi-check" @click="showImpressum = false" autofocus />
+        <Button label="Close" icon="pi pi-check" @click="showLegalNotice = false" autofocus />
       </template>
     </Dialog>
   </footer>
@@ -180,7 +214,7 @@ const showImpressum = ref(false);
   font-size: 0.85rem;
 }
 
-.impressum-content {
+.legal-notice-content {
   color: white;
   line-height: 1.6;
 

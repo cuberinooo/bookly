@@ -2,6 +2,7 @@
 import { authStore } from '../store/auth';
 import TrainerSettingsForm from '../components/TrainerSettingsForm.vue';
 import UserManagementTab from '../components/UserManagementTab.vue';
+import LegalSettingsForm from '../components/LegalSettingsForm.vue';
 </script>
 
 <template>
@@ -25,8 +26,15 @@ import UserManagementTab from '../components/UserManagementTab.vue';
           USER MANAGEMENT
         </Tab>
         <Tab
+          v-if="authStore.isAdmin()"
+          value="1"
+          class="font-barlow font-bold"
+        >
+          LEGAL & COMPLIANCE
+        </Tab>
+        <Tab
           v-if="authStore.isTrainer()"
-          :value="authStore.isAdmin() ? '1' : '0'"
+          :value="authStore.isAdmin() ? '2' : '0'"
           class="font-barlow font-bold"
         >
           TRAINER PREFERENCES
@@ -46,10 +54,19 @@ import UserManagementTab from '../components/UserManagementTab.vue';
         >
           <UserManagementTab />
         </TabPanel>
+
+        <TabPanel
+          v-if="authStore.isAdmin()"
+          value="1"
+        >
+          <div class="max-w-4xl mt-6">
+            <LegalSettingsForm />
+          </div>
+        </TabPanel>
             
         <TabPanel
           v-if="authStore.isTrainer()"
-          :value="authStore.isAdmin() ? '1' : '0'"
+          :value="authStore.isAdmin() ? '2' : '0'"
         >
           <div class="max-w-4xl mt-6">
             <TrainerSettingsForm />
