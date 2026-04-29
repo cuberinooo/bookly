@@ -154,6 +154,12 @@ td {
     }
 }
 
+.p-tab {
+  &:hover {
+    color: var(--primary-color) !important;
+  }
+}
+
 .p-tabpanels {
   background-color: var(--bg-color) !important;
 }

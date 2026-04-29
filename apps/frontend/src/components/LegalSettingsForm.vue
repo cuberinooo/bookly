@@ -15,6 +15,7 @@ const settings = ref({
     legalNoticePhone: '',
     legalNoticeTaxId: '',
     legalNoticeVatId: '',
+    legalNoticeMarkdown: '',
     privacyPolicyPdfPath: ''
 });
 const loading = ref(true);
@@ -24,7 +25,7 @@ const uploading = ref(false);
 async function fetchSettings() {
     loading.value = true;
     try {
-        const response = await api.get('/settings');
+        const response = await api.get('/legal-settings');
         settings.value = {
             legalNoticeCompanyName: response.data.legalNoticeCompanyName || '',
             legalNoticeRepresentative: response.data.legalNoticeRepresentative || '',
@@ -36,6 +37,7 @@ async function fetchSettings() {
             legalNoticePhone: response.data.legalNoticePhone || '',
             legalNoticeTaxId: response.data.legalNoticeTaxId || '',
             legalNoticeVatId: response.data.legalNoticeVatId || '',
+            legalNoticeMarkdown: response.data.legalNoticeMarkdown || '',
             privacyPolicyPdfPath: response.data.privacyPolicyPdfPath || ''
         };
     } catch (e) {
@@ -48,7 +50,7 @@ async function fetchSettings() {
 async function updateSettings() {
     saving.value = true;
     try {
-        await api.patch('/settings', settings.value);
+        await api.patch('/legal-settings', settings.value);
         toast.add({ severity: 'success', summary: 'Updated', detail: 'Legal information saved', life: 5000 });
     } catch (e) {
         toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to update settings', life: 5000 });
@@ -66,7 +68,7 @@ async function onUpload(event: any) {
     formData.append('file', file);
 
     try {
-        const response = await api.post('/settings/privacy-policy', formData, {
+        const response = await api.post('/legal-settings/privacy-policy', formData, {
             headers: {
                 'Content-Type': 'multipart/form-data'
             }
@@ -94,6 +96,29 @@ onMounted(fetchSettings);
         <h3 class="settings-title">Legal Notice (Impressum)</h3>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="md:col-span-2">
+            <div class="p-4 bg-amber-50 border-l-4 border-amber-500 text-amber-900 text-sm mb-6">
+              <p class="font-bold mb-1">Markdown Enabled</p>
+              <p>You can use Markdown to format your Legal Notice. This will replace the structured fields in the footer if provided.</p>
+            </div>
+            <div class="field">
+              <label class="secondary-text" for="markdown">Content (Markdown)</label>
+              <Textarea
+                id="markdown"
+                v-model="settings.legalNoticeMarkdown"
+                rows="10"
+                placeholder="# Impressum&#10;&#10;Angaben gemäß § 5 TMG..."
+                class="w-full font-mono text-sm"
+              />
+            </div>
+          </div>
+
+          <Divider class="md:col-span-2" />
+
+          <div class="md:col-span-2">
+             <h4 class="text-sm font-bold uppercase tracking-wider text-slate-400 mb-4">Structured Data (Fallback)</h4>
+          </div>
+
           <div class="field">
             <label class="secondary-text" for="companyName">Company Name / Name</label>
             <InputText id="companyName" v-model="settings.legalNoticeCompanyName" placeholder="Max Mustermann" />
@@ -167,7 +192,7 @@ onMounted(fetchSettings);
                 <p class="text-xs text-slate-500">{{ settings.privacyPolicyPdfPath }}</p>
               </div>
             </div>
-            <a :href="settings.privacyPolicyPdfPath" target="_blank" class="p-button p-button-sm p-button-secondary no-underline">
+            <a :href="settings.privacyPolicyPdfPath" download="privacyPolicy.pdf" target="_blank" class="p-button p-button-sm p-button-secondary no-underline">
               View Current
             </a>
           </div>

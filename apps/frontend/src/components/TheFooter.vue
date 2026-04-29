@@ -1,28 +1,41 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
 import api from '../services/api';
+import { marked } from 'marked';
+import DOMPurify from 'dompurify';
 
 const showLegalNotice = ref(false);
-const settings = ref<any>(null);
+const legalSettings = ref<any>(null);
 
-async function fetchSettings() {
+async function fetchLegalSettings() {
     try {
-        const response = await api.get('/settings');
-        settings.value = response.data;
+        const response = await api.get('/legal-settings');
+        legalSettings.value = response.data;
     } catch (e) {
-        console.error('Failed to load footer settings');
+        console.error('Failed to load legal settings');
     }
 }
 
 const privacyPolicyUrl = computed(() => {
-    if (!settings.value?.privacyPolicyPdfPath) return '/privacy-policy.pdf'; // Fallback
+    if (!legalSettings.value?.privacyPolicyPdfPath) return '/privacy-policy.pdf'; // Fallback placeholder
     const baseURL = import.meta.env.VITE_API_URL || '';
-    return settings.value.privacyPolicyPdfPath.startsWith('http') 
-        ? settings.value.privacyPolicyPdfPath 
-        : baseURL + settings.value.privacyPolicyPdfPath;
+    return legalSettings.value.privacyPolicyPdfPath.startsWith('http')
+        ? legalSettings.value.privacyPolicyPdfPath
+        : baseURL + legalSettings.value.privacyPolicyPdfPath;
 });
 
-onMounted(fetchSettings);
+async function onClickShow() {
+  await fetchLegalSettings();
+  showLegalNotice.value = true;
+}
+
+const renderedLegalNotice = computed(() => {
+    if (!legalSettings.value?.legalNoticeMarkdown) return null;
+    const rawHtml = marked.parse(legalSettings.value.legalNoticeMarkdown) as string;
+    return DOMPurify.sanitize(rawHtml);
+});
+
+onMounted(fetchLegalSettings);
 </script>
 
 <template>
@@ -48,7 +61,7 @@ onMounted(fetchSettings);
             </a>
           </li>
           <li>
-            <a href="javascript:void(0)" @click="showLegalNotice = true" class="footer-link">
+            <a href="javascript:void(0)" @click="onClickShow" class="footer-link">
               <i class="pi pi-info-circle"></i> Legal Notice (Impressum)
             </a>
           </li>
@@ -69,54 +82,57 @@ onMounted(fetchSettings);
     </div>
 
     <Dialog v-model:visible="showLegalNotice" header="Legal Notice" :modal="true" class="w-full max-w-2xl">
-      <div v-if="settings" class="legal-notice-content">
-        <section v-if="settings.legalNoticeCompanyName">
-          <h3 class="text-primary">Angaben gemäß § 5 TMG</h3>
-          <p>
-            {{ settings.legalNoticeRepresentative }}<br v-if="settings.legalNoticeRepresentative" />
-            {{ settings.legalNoticeCompanyName }}<br />
-            {{ settings.legalNoticeStreet }} {{ settings.legalNoticeHouseNumber }}<br />
-            {{ settings.legalNoticeZipCode }} {{ settings.legalNoticeCity }}
-          </p>
-        </section>
+      <div class="legal-notice-content">
+        <div v-if="legalSettings?.legalNoticeCompanyName">
+          <section>
+            <h3 class="primary-text">Angaben gemäß § 5 TMG</h3>
+            <p>
+              {{ legalSettings.legalNoticeRepresentative }}<br v-if="legalSettings.legalNoticeRepresentative" />
+              {{ legalSettings.legalNoticeCompanyName }}<br />
+              {{ legalSettings.legalNoticeStreet }} {{ legalSettings.legalNoticeHouseNumber }}<br />
+              {{ legalSettings.legalNoticeZipCode }} {{ legalSettings.legalNoticeCity }}
+            </p>
+          </section>
 
-        <section v-if="settings.legalNoticeEmail || settings.legalNoticePhone" class="mt-4">
-          <h3 class="text-primary">Kontakt</h3>
-          <p>
-            <span v-if="settings.legalNoticePhone">Telefon: {{ settings.legalNoticePhone }}<br /></span>
-            <span v-if="settings.legalNoticeEmail">E-Mail: <a :href="'mailto:' + settings.legalNoticeEmail">{{ settings.legalNoticeEmail }}</a></span>
-          </p>
-        </section>
+          <section v-if="legalSettings.legalNoticeEmail || legalSettings.legalNoticePhone" class="mt-4">
+            <h3 class="primary-text">Kontakt</h3>
+            <p>
+              <span v-if="legalSettings.legalNoticePhone">Telefon: {{ legalSettings.legalNoticePhone }}<br /></span>
+              <span v-if="legalSettings.legalNoticeEmail">E-Mail: <a :href="'mailto:' + legalSettings.legalNoticeEmail">{{ legalSettings.legalNoticeEmail }}</a></span>
+            </p>
+          </section>
 
-        <section v-if="settings.legalNoticeTaxId || settings.legalNoticeVatId" class="mt-4">
-          <h3 class="text-primary">Steuern</h3>
-          <p>
-            <span v-if="settings.legalNoticeTaxId">Steuernummer: {{ settings.legalNoticeTaxId }}<br /></span>
-            <span v-if="settings.legalNoticeVatId">Umsatzsteuer-Identifikationsnummer gemäß § 27 a Umsatzsteuergesetz: {{ settings.legalNoticeVatId }}</span>
-          </p>
-        </section>
-
-        <section class="mt-4">
-          <h3 class="text-primary">EU-Streitschlichtung</h3>
-          <p>
-            Die Europäische Kommission stellt eine Plattform zur Online-Streitbeilegung (OS) bereit:
-            <a href="https://ec.europa.eu/consumers/odr/" target="_blank" rel="noopener">https://ec.europa.eu/consumers/odr/</a>.<br />
-            Unsere E-Mail-Adresse finden Sie oben im Impressum.
-          </p>
-        </section>
-
-        <section class="mt-4">
-          <h3 class="text-primary">Verbraucherstreitbeilegung/Universalschlichtungsstelle</h3>
-          <p>
-            Wir sind nicht bereit oder verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.
-          </p>
-        </section>
-      </div>
-      <div v-else class="text-center py-8">
-        <p>Legal information not yet configured.</p>
+          <section v-if="legalSettings.legalNoticeTaxId || legalSettings.legalNoticeVatId" class="mt-4">
+            <h3 class="primary-text">Steuern</h3>
+            <p>
+              <span v-if="legalSettings.legalNoticeTaxId">Steuernummer: {{ legalSettings.legalNoticeTaxId }}<br /></span>
+              <span v-if="legalSettings.legalNoticeVatId">Umsatzsteuer-Identifikationsnummer gemäß § 27 a Umsatzsteuergesetz: {{ legalSettings.legalNoticeVatId }}</span>
+            </p>
+          </section>
+          <div v-if="renderedLegalNotice" class="markdown-content" v-html="renderedLegalNotice"></div>
+        </div>
+        <div v-else>
+          <!-- Placeholders -->
+          <section>
+            <h3 class="primary-text">Angaben gemäß § 5 TMG</h3>
+            <p>
+              [Name/Company Name]<br />
+              [Representative]<br />
+              [Street] [Number]<br />
+              [Zip Code] [City]
+            </p>
+          </section>
+          <section class="mt-4">
+            <h3 class="primary-text">Kontakt</h3>
+            <p>
+              Telefon: [Phone Number]<br />
+              E-Mail: [Email Address]
+            </p>
+          </section>
+        </div>
       </div>
       <template #footer>
-        <Button label="Close" icon="pi pi-check" @click="showLegalNotice = false" autofocus />
+        <Button severity="primary" label="Close" icon="pi pi-check" @click="showLegalNotice = false" autofocus />
       </template>
     </Dialog>
   </footer>
@@ -232,6 +248,26 @@ onMounted(fetchSettings);
     color: var(--primary-color);
     text-decoration: none;
     &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  .markdown-content {
+    :deep(h1), :deep(h2), :deep(h3) {
+      color: var(--primary-color);
+      margin-top: 1.5rem;
+      margin-bottom: 0.75rem;
+    }
+    :deep(p) {
+      margin-bottom: 1rem;
+    }
+    :deep(ul) {
+      margin-left: 1.5rem;
+      margin-bottom: 1rem;
+      list-style-type: disc;
+    }
+    :deep(a) {
+      color: var(--primary-color);
       text-decoration: underline;
     }
   }
