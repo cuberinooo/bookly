@@ -64,6 +64,10 @@ class LegalSettings
     #[Groups(['legal:read', 'legal:write'])]
     private ?string $legalNoticeMarkdown = null;
 
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[Groups(['legal:read', 'legal:write'])]
+    private ?string $termsAndConditionsMarkdown = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -198,6 +202,17 @@ class LegalSettings
     public function setLegalNoticeMarkdown(?string $legalNoticeMarkdown): static
     {
         $this->legalNoticeMarkdown = $legalNoticeMarkdown;
+        return $this;
+    }
+
+    public function getTermsAndConditionsMarkdown(): ?string
+    {
+        return $this->termsAndConditionsMarkdown;
+    }
+
+    public function setTermsAndConditionsMarkdown(?string $termsAndConditionsMarkdown): static
+    {
+        $this->termsAndConditionsMarkdown = $termsAndConditionsMarkdown;
         return $this;
     }
 }

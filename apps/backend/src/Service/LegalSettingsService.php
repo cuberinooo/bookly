@@ -38,7 +38,8 @@ class LegalSettingsService
             'legalNoticePhone',
             'legalNoticeTaxId',
             'legalNoticeVatId',
-            'legalNoticeMarkdown'
+            'legalNoticeMarkdown',
+            'termsAndConditionsMarkdown'
         ];
 
         foreach ($fields as $field) {

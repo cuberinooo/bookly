@@ -74,8 +74,8 @@ function toggleMenu(event: any) {
     menu.value.toggle(event);
 }
 
-function logout() {
-  authStore.logout();
+async function logout() {
+  await authStore.logout();
   router.push({ name: 'login' });
 }
 </script>

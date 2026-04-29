@@ -16,6 +16,7 @@ const settings = ref({
     legalNoticeTaxId: '',
     legalNoticeVatId: '',
     legalNoticeMarkdown: '',
+    termsAndConditionsMarkdown: '',
     privacyPolicyPdfPath: ''
 });
 const loading = ref(true);
@@ -42,6 +43,7 @@ async function fetchSettings() {
             legalNoticeTaxId: response.data.legalNoticeTaxId || '',
             legalNoticeVatId: response.data.legalNoticeVatId || '',
             legalNoticeMarkdown: response.data.legalNoticeMarkdown || '',
+            termsAndConditionsMarkdown: response.data.termsAndConditionsMarkdown || '',
             privacyPolicyPdfPath: response.data.privacyPolicyPdfPath || ''
         };
     } catch (e) {
@@ -178,6 +180,28 @@ onMounted(fetchSettings);
 
         <div class="mt-6 flex justify-end">
           <Button severity="primary" label="Save Legal Notice" icon="pi pi-save" :loading="saving" @click="updateSettings" />
+        </div>
+      </div>
+
+      <div class="settings-card phoenix-card">
+        <h3 class="settings-title">Terms & Conditions (AGB)</h3>
+        <div class="flex flex-col gap-4">
+          <p class="text-sm text-slate-600">
+            Define the general terms and conditions for your athletes. These will be linked during registration.
+          </p>
+          <div class="field">
+            <label class="secondary-text" for="termsMarkdown">Content (Markdown)</label>
+            <Textarea
+              id="termsMarkdown"
+              v-model="settings.termsAndConditionsMarkdown"
+              rows="15"
+              placeholder="# Allgemeine Geschäftsbedingungen (AGB)&#10;&#10;1. Geltungsbereich..."
+              class="w-full font-mono text-sm"
+            />
+          </div>
+          <div class="mt-4 flex justify-end">
+            <Button severity="primary" label="Save AGB" icon="pi pi-save" :loading="saving" @click="updateSettings" />
+          </div>
         </div>
       </div>
 

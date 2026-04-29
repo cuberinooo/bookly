@@ -9,6 +9,7 @@ const email = ref('');
 const password = ref('');
 const confirmPassword = ref('');
 const role = ref('ROLE_MEMBER');
+const acceptedTerms = ref(false);
 const loading = ref(false);
 const router = useRouter();
 const toast = useToast();
@@ -28,7 +29,7 @@ const passwordValidation = computed(() => {
 
 const isFormValid = computed(() => {
     const v = passwordValidation.value;
-    return name.value && email.value && v.minLength && v.uppercase && v.lowercase && v.number && v.special && v.match;
+    return name.value && email.value && v.minLength && v.uppercase && v.lowercase && v.number && v.special && v.match && acceptedTerms.value;
 });
 
 async function fetchRoles() {
@@ -185,6 +186,31 @@ onMounted(fetchRoles);
             option-value="value"
             class="w-full"
           />
+        </div>
+
+        <div class="mt-2">
+          <Checkbox
+            id="terms"
+            v-model="acceptedTerms"
+            :binary="true"
+            class="mt-1"
+          />
+          <label
+            for="terms"
+            class="ml-3 text-sm text-slate-600 font-medium leading-tight cursor-pointer"
+          >
+            I agree to the
+            <RouterLink
+              to="/terms"
+              class="text-primary font-bold hover:underline"
+            >Terms & Conditions (AGB)</RouterLink>
+            and have read the
+            <a
+              href="/api/legal-settings/privacy-policy/download"
+              target="_blank"
+              class="text-primary font-bold hover:underline"
+            >Privacy Policy</a>.
+          </label>
         </div>
 
         <Button

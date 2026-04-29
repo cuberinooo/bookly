@@ -20,9 +20,16 @@ export const authStore = reactive({
     this.parseUser();
   },
 
-  logout() {
-    this.token = null;
-    this.user = null;
+  async logout() {
+    try {
+      const { default: api } = await import('../services/api');
+      await api.post('/logout');
+    } catch (e) {
+      console.error('Logout failed', e);
+    } finally {
+      this.token = null;
+      this.user = null;
+    }
   },
 
   async init() {
