@@ -4,7 +4,7 @@
     "config:recommended"
   ],
   "prHourlyLimit": 0,
-  "prConcurrentLimit": 10
+  "prConcurrentLimit": 10,
   "packageRules": [
     {
       "matchPackagePatterns": ["*"],
