@@ -54,4 +54,23 @@ class LegalSettingsController extends AbstractController
             return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
+
+    #[Route('/privacy-policy/download', name: 'legal_settings_download_privacy_policy', methods: ['GET'])]
+    public function downloadPrivacyPolicy(): Response
+    {
+        $settings = $this->legalSettingsService->getSettings();
+        $path = $settings->getPrivacyPolicyPdfPath();
+
+        if (!$path) {
+            return new Response('Privacy policy not found', Response::HTTP_NOT_FOUND);
+        }
+
+        $fullPath = $this->getParameter('kernel.project_dir') . '/public' . $path;
+
+        if (!file_exists($fullPath)) {
+            return new Response('File not found', Response::HTTP_NOT_FOUND);
+        }
+
+        return $this->file($fullPath, 'privacy-policy.pdf');
+    }
 }

@@ -17,11 +17,7 @@ async function fetchLegalSettings() {
 }
 
 const privacyPolicyUrl = computed(() => {
-    if (!legalSettings.value?.privacyPolicyPdfPath) return '/privacy-policy.pdf'; // Fallback placeholder
-    const baseURL = import.meta.env.VITE_API_URL || '';
-    return legalSettings.value.privacyPolicyPdfPath.startsWith('http')
-        ? legalSettings.value.privacyPolicyPdfPath
-        : baseURL + legalSettings.value.privacyPolicyPdfPath;
+    return `${api.defaults.baseURL}/legal-settings/privacy-policy/download`;
 });
 
 async function onClickShow() {
@@ -55,7 +51,7 @@ onMounted(fetchLegalSettings);
       <div class="footer-section">
         <h4 class="footer-title">Legal</h4>
         <ul class="footer-list">
-          <li>
+          <li v-if="legalSettings?.privacyPolicyPdfPath">
             <a :href="privacyPolicyUrl" download class="footer-link">
               <i class="pi pi-download"></i> Privacy Policy (Datenschutz)
             </a>

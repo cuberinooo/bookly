@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import api from '../services/api';
 import { useToast } from 'primevue/usetoast';
 
@@ -21,6 +21,10 @@ const settings = ref({
 const loading = ref(true);
 const saving = ref(false);
 const uploading = ref(false);
+
+const privacyPolicyDownloadUrl = computed(() => {
+  return `${api.defaults.baseURL}/legal-settings/privacy-policy/download`;
+});
 
 async function fetchSettings() {
     loading.value = true;
@@ -192,7 +196,7 @@ onMounted(fetchSettings);
                 <p class="text-xs text-slate-500">{{ settings.privacyPolicyPdfPath }}</p>
               </div>
             </div>
-            <a :href="settings.privacyPolicyPdfPath" download="privacyPolicy.pdf" target="_blank" class="p-button p-button-sm p-button-secondary no-underline">
+            <a :href="privacyPolicyDownloadUrl" download="privacyPolicy.pdf" target="_blank" class="p-button p-button-sm p-button-secondary no-underline">
               View Current
             </a>
           </div>
