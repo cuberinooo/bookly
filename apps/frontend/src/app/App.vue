@@ -5,6 +5,7 @@ import { useRouter } from 'vue-router';
 import { ref, computed } from 'vue';
 import api from '../services/api';
 import { useToast } from 'primevue/usetoast';
+import TheFooter from '../components/TheFooter.vue';
 
 const router = useRouter();
 const menu = ref();
@@ -155,6 +156,8 @@ function logout() {
   <main class="container">
     <RouterView />
   </main>
+
+  <TheFooter />
 
   <Dialog
     v-if="authStore.user"
