@@ -32,6 +32,12 @@ services:
     depends_on:
       db:
         condition: service_healthy # Wait for Postgres to be ready
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
     environment:
       TZ: Europe/Berlin
       SERVER_NAME: :80
