@@ -9,12 +9,13 @@ const confirm = useConfirm();
 const users = ref<any[]>([]);
 const loading = ref(false);
 const userDialog = ref(false);
-const editingUser = ref<any>({ name: '', email: '', role: 'ROLE_MEMBER', password: '' });
+const editingUser = ref<any>({ name: '', email: '', roles: ['ROLE_MEMBER'], password: '' });
 const submitting = ref(false);
 
 const roleOptions = [
     { label: 'Member', value: 'ROLE_MEMBER' },
-    { label: 'Trainer', value: 'ROLE_TRAINER' }
+    { label: 'Trainer', value: 'ROLE_TRAINER' },
+    { label: 'Admin', value: 'ROLE_ADMIN' }
 ];
 
 async function fetchUsers() {
@@ -30,7 +31,7 @@ async function fetchUsers() {
 }
 
 function openNewUser() {
-    editingUser.value = { name: '', email: '', role: 'ROLE_MEMBER', password: Math.random().toString(36).slice(-10) + 'A1!' };
+    editingUser.value = { name: '', email: '', roles: ['ROLE_MEMBER'], password: Math.random().toString(36).slice(-10) + 'A1!' };
     userDialog.value = true;
 }
 
@@ -39,7 +40,7 @@ function editUser(user: any) {
         id: user.id,
         name: user.name,
         email: user.email,
-        role: user.roles.includes('ROLE_TRAINER') ? 'ROLE_TRAINER' : 'ROLE_MEMBER'
+        roles: [...user.roles].filter(r => r !== 'ROLE_USER') // Filter out internal base role
     };
     userDialog.value = true;
 }
@@ -50,7 +51,7 @@ async function saveUser() {
         if (editingUser.value.id) {
             await api.patch(`/admin/users/${editingUser.value.id}`, {
                 name: editingUser.value.name,
-                role: editingUser.value.role
+                roles: editingUser.value.roles
             });
             toast.add({ severity: 'success', summary: 'Updated', detail: 'User updated', life: 5000 });
         } else {
@@ -131,12 +132,16 @@ onMounted(fetchUsers);
           </div>
         </template>
       </Column>
-      <Column header="ROLE">
+      <Column header="ROLES">
         <template #body="{ data }">
-          <Tag
-            :value="data.roles.includes('ROLE_TRAINER') ? 'TRAINER' : 'MEMBER'"
-            :severity="data.roles.includes('ROLE_TRAINER') ? 'warn' : 'info'"
-          />
+          <div class="flex flex-wrap gap-1">
+            <Tag
+              v-for="role in data.roles.filter(r => r !== 'ROLE_USER')"
+              :key="role"
+              :value="role.replace('ROLE_', '')"
+              :severity="role === 'ROLE_ADMIN' ? 'danger' : (role === 'ROLE_TRAINER' ? 'warn' : 'info')"
+            />
+          </div>
         </template>
       </Column>
       <Column header="STATUS">
@@ -204,13 +209,15 @@ onMounted(fetchUsers);
           />
         </div>
         <div class="flex flex-col gap-2">
-          <label class="text-sm uppercase tracking-wider">Role</label>
-          <Select
-            v-model="editingUser.role"
+          <label class="text-sm uppercase tracking-wider">Roles</label>
+          <MultiSelect
+            v-model="editingUser.roles"
             :options="roleOptions"
             option-label="label"
             option-value="value"
+            placeholder="Select Roles"
             class="w-full"
+            display="chip"
           />
         </div>
         <div

@@ -50,7 +50,7 @@ async function updatePassword() {
 }
 
 const dashboardLabel = computed(() => {
-    return authStore.isTrainer() && authStore.viewMode === 'trainer' ? 'Dashboard' : 'My bookings';
+    return authStore.isElevated() && authStore.viewMode === 'trainer' ? 'Dashboard' : 'My bookings';
 });
 
 const menuItems = computed(() => [
@@ -98,12 +98,12 @@ async function logout() {
         </RouterLink>
       </div>
       <div class="nav-links">
-        <template v-if="authStore.isTrainer()">
+        <template v-if="authStore.isElevated()">
           <div
-            v-tooltip.bottom="authStore.viewMode === 'trainer' ? 'Switch to Member View' : 'Switch to Trainer View'"
+            v-tooltip.bottom="authStore.viewMode === 'trainer' ? 'Switch to Member View' : 'Switch to ' + (authStore.isAdmin() ? 'Admin' : 'Trainer') + ' View'"
             class="mode-switcher"
           >
-            <span :class="{ active: authStore.viewMode === 'trainer' }">TRAINER</span>
+            <span :class="{ active: authStore.viewMode === 'trainer' }">{{ authStore.isAdmin() ? 'ADMIN' : 'TRAINER' }}</span>
             <ToggleSwitch
               :model-value="authStore.viewMode === 'member'"
               @update:model-value="authStore.toggleViewMode()"

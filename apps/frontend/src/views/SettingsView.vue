@@ -1,8 +1,24 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import { authStore } from '../store/auth';
 import TrainerSettingsForm from '../components/TrainerSettingsForm.vue';
 import UserManagementTab from '../components/UserManagementTab.vue';
 import LegalSettingsForm from '../components/LegalSettingsForm.vue';
+
+const activeTabs = computed(() => {
+    const tabs = [];
+    if (authStore.isAdmin()) {
+        tabs.push({ id: 'users', label: 'USER MANAGEMENT', component: UserManagementTab });
+        tabs.push({ id: 'legal', label: 'LEGAL & COMPLIANCE', component: LegalSettingsForm });
+    }
+    if (authStore.isTrainer()) {
+        tabs.push({ id: 'trainer', label: 'TRAINER PREFERENCES', component: TrainerSettingsForm });
+    }
+    if (!authStore.isAdmin() && !authStore.isTrainer()) {
+        tabs.push({ id: 'privacy', label: 'PRIVACY', component: null });
+    }
+    return tabs;
+});
 </script>
 
 <template>
@@ -16,68 +32,34 @@ import LegalSettingsForm from '../components/LegalSettingsForm.vue';
       </p>
     </div>
 
-    <Tabs value="0">
+    <Tabs :value="activeTabs[0]?.id">
       <TabList>
         <Tab
-          v-if="authStore.isAdmin()"
-          value="0"
+          v-for="tab in activeTabs"
+          :key="tab.id"
+          :value="tab.id"
           class="font-barlow font-bold"
         >
-          USER MANAGEMENT
-        </Tab>
-        <Tab
-          v-if="authStore.isAdmin()"
-          value="1"
-          class="font-barlow font-bold"
-        >
-          LEGAL & COMPLIANCE
-        </Tab>
-        <Tab
-          v-if="authStore.isTrainer()"
-          :value="authStore.isAdmin() ? '2' : '0'"
-          class="font-barlow font-bold"
-        >
-          TRAINER PREFERENCES
-        </Tab>
-        <Tab
-          v-if="!authStore.isAdmin() && !authStore.isTrainer()"
-          value="0"
-          class="font-barlow font-bold"
-        >
-          PRIVACY
+          {{ tab.label }}
         </Tab>
       </TabList>
       <TabPanels>
         <TabPanel
-          v-if="authStore.isAdmin()"
-          value="0"
+          v-for="tab in activeTabs"
+          :key="tab.id"
+          :value="tab.id"
         >
-          <UserManagementTab />
-        </TabPanel>
-
-        <TabPanel
-          v-if="authStore.isAdmin()"
-          value="1"
-        >
-          <div class="max-w-4xl mt-6">
-            <LegalSettingsForm />
+          <div
+            v-if="tab.component"
+            :class="tab.id === 'users' ? '' : 'max-w-4xl mt-6'"
+          >
+            <component :is="tab.component" />
           </div>
-        </TabPanel>
-            
-        <TabPanel
-          v-if="authStore.isTrainer()"
-          :value="authStore.isAdmin() ? '2' : '0'"
-        >
-          <div class="max-w-4xl mt-6">
-            <TrainerSettingsForm />
-          </div>
-        </TabPanel>
-
-        <TabPanel
-          v-if="!authStore.isAdmin() && !authStore.isTrainer()"
-          value="0"
-        >
-          <div class="phoenix-card p-10 text-center mt-6">
+          
+          <div
+            v-else-if="tab.id === 'privacy'"
+            class="phoenix-card p-10 text-center mt-6"
+          >
             <i class="pi pi-shield text-4xl text-slate-300 mb-4" />
             <h2 class="text-xl font-bold text-slate-900 mb-2">
               Member Privacy

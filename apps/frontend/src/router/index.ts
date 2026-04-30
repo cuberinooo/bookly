@@ -62,21 +62,27 @@ const router = createRouter({
   ],
 });
 
-router.beforeEach(async (to, from, next) => {
-  // Wait for authStore to be initialized
+router.beforeEach(async (to, from) => {
+  // 1. Wait for authStore to be initialized
   if (!authStore.initialized) {
     await authStore.init();
   }
 
   const loggedIn = authStore.isLoggedIn();
 
+  // 2. Handle Authentication logic via return values
   if (to.meta.requiresAuth && !loggedIn) {
-    next({ name: 'login' });
-  } else if ((to.name === 'login' || to.name === 'register') && loggedIn) {
-    next({ name: 'home' });
-  } else {
-    next();
+    return { name: 'login' };
   }
+
+  // 3. Redirect logged-in users away from auth pages
+  if ((to.name === 'login' || to.name === 'register') && loggedIn) {
+    return { name: 'home' };
+  }
+
+  // 4. If no conditions are met, navigation proceeds automatically.
+  // Returning true (or nothing) allows the transition.
+  return true;
 });
 
 export default router;

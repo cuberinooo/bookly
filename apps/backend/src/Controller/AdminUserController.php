@@ -22,13 +22,8 @@ class AdminUserController extends AbstractController
     public function index(UserRepository $userRepository, SerializerInterface $serializer): JsonResponse
     {
         $users = $userRepository->findAll();
-        // Filter out admins from the list if desired, or keep them. 
-        // User asked to manage non-admin users.
-        $filteredUsers = array_filter($users, function(User $user) {
-            return !in_array('ROLE_ADMIN', $user->getRoles());
-        });
 
-        $json = $serializer->serialize(array_values($filteredUsers), 'json', ['groups' => 'user:read']);
+        $json = $serializer->serialize($users, 'json', ['groups' => 'user:read']);
         return new JsonResponse($json, 200, [], true);
     }
 
@@ -90,17 +85,22 @@ class AdminUserController extends AbstractController
     #[Route('/{id}', name: 'admin_user_update', methods: ['PATCH'])]
     public function update(User $user, Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
-        if (in_array('ROLE_ADMIN', $user->getRoles())) {
-            return new JsonResponse(['error' => 'Cannot edit admin accounts via this endpoint'], Response::HTTP_FORBIDDEN);
-        }
-
+        // Prevent editing OTHER admin accounts if desired, but here we just check if it's an admin 
+        // to maybe restrict some fields. For now, let's allow editing if the requester is ROLE_ADMIN.
+        
         $data = json_decode($request->getContent(), true);
         
         if (isset($data['name'])) $user->setName($data['name']);
-        if (isset($data['role'])) {
-            $role = $data['role'];
-            if (in_array($role, ['ROLE_MEMBER', 'ROLE_TRAINER'])) {
-                $user->setRoles([$role]);
+        
+        // Handle multiple roles
+        if (isset($data['roles']) && is_array($data['roles'])) {
+            $allowedRoles = ['ROLE_MEMBER', 'ROLE_TRAINER', 'ROLE_ADMIN'];
+            $newRoles = array_intersect($data['roles'], $allowedRoles);
+            
+            // Basic safety: Don't allow removing own ROLE_ADMIN if we implemented it, 
+            // but for now we follow simple logic.
+            if (!empty($newRoles)) {
+                $user->setRoles(array_values($newRoles));
             }
         }
         

@@ -36,17 +36,25 @@ class RegistrationService
         $hashedPassword = $this->passwordHasher->hashPassword($user, $password);
         $user->setPassword($hashedPassword);
 
-        $role = $data['role'] ?? 'ROLE_MEMBER';
-        if ($isAdminCreation) {
-            if (!in_array($role, ['ROLE_MEMBER', 'ROLE_TRAINER', 'ROLE_ADMIN'])) {
-                $role = 'ROLE_MEMBER';
-            }
-        } else {
-            if (!in_array($role, ['ROLE_MEMBER', 'ROLE_TRAINER'])) {
-                $role = 'ROLE_MEMBER';
-            }
+        // Handle multiple roles
+        $roles = ['ROLE_MEMBER']; // Default
+        if (isset($data['roles']) && is_array($data['roles'])) {
+            $roles = $data['roles'];
+        } elseif (isset($data['role'])) {
+            $roles = [$data['role']];
         }
-        $user->setRoles([$role]);
+
+        $allowedRoles = ['ROLE_MEMBER', 'ROLE_TRAINER'];
+        if ($isAdminCreation) {
+            $allowedRoles[] = 'ROLE_ADMIN';
+        }
+
+        $finalRoles = array_intersect($roles, $allowedRoles);
+        if (empty($finalRoles)) {
+            $finalRoles = ['ROLE_MEMBER'];
+        }
+
+        $user->setRoles(array_values($finalRoles));
 
         if ($isAdminCreation) {
             $user->setIsVerified(true);
@@ -91,7 +99,7 @@ class RegistrationService
             ->context([
                 'name' => $user->getName(),
                 'userEmail' => $user->getEmail(),
-                'role' => str_replace('ROLE_', '', $user->getRoles()[0]),
+                'role' => implode(', ', array_map(fn($r) => str_replace('ROLE_', '', $r), $user->getRoles())),
             ]);
 
         $this->mailer->send($email);

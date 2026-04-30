@@ -18,8 +18,8 @@ const confirm = useConfirm();
 const route = useRoute();
 const courses = ref<any[]>([]);
 const notifications = ref<any[]>([]);
-const isTrainerMode = computed(() => authStore.isTrainer() && authStore.viewMode === 'trainer');
-const dashboardLabel = computed(() => isTrainerMode.value ? 'Dashboard' : 'My bookings');
+const isTrainerMode = computed(() => authStore.isElevated() && authStore.viewMode === 'trainer');
+const dashboardLabel = computed(() => isTrainerMode.value ? (authStore.isAdmin() ? 'Admin Dashboard' : 'Trainer Dashboard') : 'My bookings');
 
 const courseTable = ref<any>(null);
 const courseDialog = ref(false);
