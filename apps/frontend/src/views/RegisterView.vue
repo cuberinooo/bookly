@@ -7,6 +7,7 @@ import { useToast } from 'primevue/usetoast';
 const name = ref('');
 const email = ref('');
 const password = ref('');
+const passwordTouched = ref(false);
 const confirmPassword = ref('');
 const role = ref('ROLE_MEMBER');
 const acceptedTerms = ref(false);
@@ -27,9 +28,13 @@ const passwordValidation = computed(() => {
     };
 });
 
-const isFormValid = computed(() => {
+const isPasswordValid = computed(() => {
     const v = passwordValidation.value;
-    return name.value && email.value && v.minLength && v.uppercase && v.lowercase && v.number && v.special && v.match && acceptedTerms.value;
+    return v.minLength && v.uppercase && v.lowercase && v.number && v.special;
+});
+
+const isFormValid = computed(() => {
+    return name.value && email.value && isPasswordValid.value && passwordValidation.value.match && acceptedTerms.value;
 });
 
 const privacyPolicyDownloadUrl = computed(() => {
@@ -131,6 +136,8 @@ onMounted(fetchRoles);
             placeholder="••••••••"
             class="w-full"
             input-class="w-full"
+            :class="{ 'p-invalid': passwordTouched && !isPasswordValid }"
+            @blur="passwordTouched = true"
           >
             <template #footer>
               <Divider />
@@ -156,6 +163,41 @@ onMounted(fetchRoles);
               </ul>
             </template>
           </Password>
+          <ul
+            v-if="passwordTouched && !isPasswordValid"
+            class="mt-2 flex flex-col gap-1 text-xs font-bold"
+          >
+            <li
+              v-if="!passwordValidation.minLength"
+              class="text-red-500"
+            >
+              • At least 8 characters
+            </li>
+            <li
+              v-if="!passwordValidation.uppercase"
+              class="text-red-500"
+            >
+              • At least one uppercase
+            </li>
+            <li
+              v-if="!passwordValidation.lowercase"
+              class="text-red-500"
+            >
+              • At least one lowercase
+            </li>
+            <li
+              v-if="!passwordValidation.number"
+              class="text-red-500"
+            >
+              • At least one number
+            </li>
+            <li
+              v-if="!passwordValidation.special"
+              class="text-red-500"
+            >
+              • At least one special character
+            </li>
+          </ul>
         </div>
 
         <div class="flex flex-col">

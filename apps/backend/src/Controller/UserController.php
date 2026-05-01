@@ -81,6 +81,14 @@ class UserController extends AbstractController
             $user->setName($data['name']);
         }
 
+        if (isset($data['courseStartNotificationHours'])) {
+            $user->setCourseStartNotificationHours((int) $data['courseStartNotificationHours']);
+        }
+
+        if (isset($data['courseStartNotificationMinutes'])) {
+            $user->setCourseStartNotificationMinutes((int) $data['courseStartNotificationMinutes']);
+        }
+
         $entityManager->flush();
 
         return new JsonResponse(['status' => 'Profile updated']);

@@ -12,6 +12,7 @@ const menu = ref();
 const toast = useToast();
 
 const newPassword = ref('');
+const newPasswordTouched = ref(false);
 const confirmNewPassword = ref('');
 const changingPassword = ref(false);
 
@@ -26,9 +27,13 @@ const passwordValidation = computed(() => {
     };
 });
 
-const isPasswordFormValid = computed(() => {
+const isNewPasswordValid = computed(() => {
     const v = passwordValidation.value;
-    return v.minLength && v.uppercase && v.lowercase && v.number && v.special && v.match;
+    return v.minLength && v.uppercase && v.lowercase && v.number && v.special;
+});
+
+const isPasswordFormValid = computed(() => {
+    return isNewPasswordValid.value && passwordValidation.value.match;
 });
 
 async function updatePassword() {
@@ -183,6 +188,8 @@ async function logout() {
           placeholder="••••••••"
           class="w-full"
           input-class="w-full"
+          :class="{ 'p-invalid': newPasswordTouched && !isNewPasswordValid }"
+          @blur="newPasswordTouched = true"
         >
           <template #footer>
             <Divider />
@@ -208,6 +215,41 @@ async function logout() {
             </ul>
           </template>
         </Password>
+        <ul
+          v-if="newPasswordTouched && !isNewPasswordValid"
+          class="mt-2 flex flex-col gap-1 text-xs font-bold"
+        >
+          <li
+            v-if="!passwordValidation.minLength"
+            class="text-red-500"
+          >
+            • At least 8 characters
+          </li>
+          <li
+            v-if="!passwordValidation.uppercase"
+            class="text-red-500"
+          >
+            • At least one uppercase
+          </li>
+          <li
+            v-if="!passwordValidation.lowercase"
+            class="text-red-500"
+          >
+            • At least one lowercase
+          </li>
+          <li
+            v-if="!passwordValidation.number"
+            class="text-red-500"
+          >
+            • At least one number
+          </li>
+          <li
+            v-if="!passwordValidation.special"
+            class="text-red-500"
+          >
+            • At least one special character
+          </li>
+        </ul>
       </div>
 
       <div class="flex flex-col gap-2">

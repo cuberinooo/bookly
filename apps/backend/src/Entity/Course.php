@@ -65,6 +65,10 @@ class Course
     #[Groups(['course:read'])]
     private Collection $bookings;
 
+    #[ORM\Column(options: ['default' => false])]
+    #[Groups(['course:read'])]
+    private bool $reminderSent = false;
+
     public function __construct()
     {
         $this->bookings = new ArrayCollection();
@@ -195,6 +199,18 @@ class Course
         if ($event->hasChangedField('frequency')) {
             throw new \LogicException('The frequency of a course cannot be changed once created.');
         }
+    }
+
+    public function isReminderSent(): bool
+    {
+        return $this->reminderSent;
+    }
+
+    public function setReminderSent(bool $reminderSent): static
+    {
+        $this->reminderSent = $reminderSent;
+
+        return $this;
     }
 
     /**

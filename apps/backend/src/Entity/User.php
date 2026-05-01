@@ -66,6 +66,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Groups(['user:read'])]
     private ?bool $mustChangePassword = false;
 
+    #[ORM\Column(type: 'integer', options: ['default' => 0])]
+    #[Groups(['user:read'])]
+    private int $courseStartNotificationHours = 0;
+
+    #[ORM\Column(type: 'integer', options: ['default' => 0])]
+    #[Groups(['user:read'])]
+    private int $courseStartNotificationMinutes = 0;
+
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $verificationToken = null;
 
@@ -116,6 +124,30 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setMustChangePassword(bool $mustChangePassword): static
     {
         $this->mustChangePassword = $mustChangePassword;
+
+        return $this;
+    }
+
+    public function getCourseStartNotificationHours(): int
+    {
+        return $this->courseStartNotificationHours;
+    }
+
+    public function setCourseStartNotificationHours(int $hours): static
+    {
+        $this->courseStartNotificationHours = $hours;
+
+        return $this;
+    }
+
+    public function getCourseStartNotificationMinutes(): int
+    {
+        return $this->courseStartNotificationMinutes;
+    }
+
+    public function setCourseStartNotificationMinutes(int $minutes): static
+    {
+        $this->courseStartNotificationMinutes = $minutes;
 
         return $this;
     }
