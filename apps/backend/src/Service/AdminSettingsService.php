@@ -2,33 +2,32 @@
 
 namespace App\Service;
 
-use App\Entity\LegalSettings;
-use App\Repository\LegalSettingsRepository;
+use App\Entity\AdminSettings;
+use App\Repository\AdminSettingsRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\String\Slugger\SluggerInterface;
 
-class LegalSettingsService
+class AdminSettingsService
 {
     public function __construct(
-        private LegalSettingsRepository $repository,
+        private AdminSettingsRepository $repository,
         private EntityManagerInterface $entityManager,
         private SluggerInterface $slugger,
         private string $projectDir
     ) {}
 
-    public function getSettings(): LegalSettings
+    public function getSettings(): AdminSettings
     {
         return $this->repository->get();
     }
 
-    public function updateSettings(array $data): LegalSettings
+    public function updateSettings(array $data): AdminSettings
     {
         $settings = $this->repository->get();
 
         $fields = [
-            'legalNoticeCompanyName',
             'legalNoticeRepresentative',
             'legalNoticeStreet',
             'legalNoticeHouseNumber',

@@ -19,7 +19,7 @@ class BookingController extends AbstractController
     {
         $this->denyAccessUnlessGranted('ROLE_TRAINER');
 
-        if ($course->getTrainer() !== $this->getUser()) {
+        if ($course->getUser() !== $this->getUser()) {
             return new JsonResponse(['error' => 'Access denied'], Response::HTTP_FORBIDDEN);
         }
 

@@ -94,7 +94,7 @@ function isToday(date: Date) {
 
 function isBookedByUser(course: any) {
     if (!props.userId) return false;
-    return course.bookings?.some((b: any) => b.member?.id === props.userId);
+    return course.bookings?.some((b: any) => b.user?.id === props.userId);
 }
 
 function formatDayName(date: Date) {
@@ -175,7 +175,7 @@ function formatDayName(date: Date) {
                 {{ course.title }}
               </div>
               <div class="course-coach">
-                Coach: {{ course.trainer?.name }}
+                Coach: {{ course.user?.name }}
               </div>
             </div>
 

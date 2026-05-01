@@ -68,7 +68,7 @@ class AdminUserController extends AbstractController
         // If trainer has courses, deactivate instead of delete
         $isTrainer = in_array('ROLE_TRAINER', $user->getRoles());
         if ($isTrainer) {
-            $courses = $courseRepository->findBy(['trainer' => $user]);
+            $courses = $courseRepository->findBy(['user' => $user]);
             if (count($courses) > 0) {
                 $user->setIsActive(false);
                 $entityManager->flush();

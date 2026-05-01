@@ -60,7 +60,7 @@ class BookingWindowTest extends TestCase
 
         $course = new Course();
         $course->setTitle('Next Week Course');
-        $course->setTrainer($trainer);
+        $course->setUser($trainer);
         $course->setStartTime($nextMonday);
         $course->setEndTime((clone $nextMonday)->modify('+1 hour'));
 
@@ -98,7 +98,7 @@ class BookingWindowTest extends TestCase
 
         $course = new Course();
         $course->setTitle('This Week Course');
-        $course->setTrainer($trainer);
+        $course->setUser($trainer);
         $course->setStartTime($courseDate);
         $course->setEndTime((clone $courseDate)->modify('+1 hour'));
         $course->setCapacity(10);

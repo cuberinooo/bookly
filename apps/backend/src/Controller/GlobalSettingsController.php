@@ -16,9 +16,14 @@ use Symfony\Component\Serializer\SerializerInterface;
 class GlobalSettingsController extends AbstractController
 {
     #[Route('', name: 'settings_get', methods: ['GET'])]
-    public function getSettings(GlobalSettingsRepository $repository, SerializerInterface $serializer): JsonResponse
+    public function getSettings(SerializerInterface $serializer): JsonResponse
     {
-        $settings = $repository->get();
+        $user = $this->getUser();
+        if (!$user instanceof \App\Entity\User || !$user->getCompany()) {
+             return new JsonResponse(['error' => 'Company not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        $settings = $user->getCompany()->getGlobalSettings();
         $json = $serializer->serialize($settings, 'json', ['groups' => 'settings:read']);
         return new JsonResponse($json, Response::HTTP_OK, [], true);
     }
@@ -26,12 +31,15 @@ class GlobalSettingsController extends AbstractController
     #[Route('', name: 'settings_update', methods: ['PATCH'])]
     public function updateSettings(
         Request $request, 
-        GlobalSettingsRepository $repository, 
         EntityManagerInterface $entityManager
     ): JsonResponse {
         $this->denyAccessUnlessGranted('ROLE_TRAINER');
+        $user = $this->getUser();
+        if (!$user instanceof \App\Entity\User || !$user->getCompany()) {
+             return new JsonResponse(['error' => 'Company not found'], Response::HTTP_NOT_FOUND);
+        }
 
-        $settings = $repository->get();
+        $settings = $user->getCompany()->getGlobalSettings();
         $data = json_decode($request->getContent(), true);
 
         if (isset($data['showParticipantNames'])) {

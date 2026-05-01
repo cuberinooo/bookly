@@ -41,12 +41,12 @@ class BookingService
         $this->validateBookingWindow($course);
 
         // Check if the user is the trainer of the course
-        if ($course->getTrainer()->getId() === $user->getId()) {
+        if ($course->getUser()->getId() === $user->getId()) {
             throw new \Exception('As a trainer, you cannot book your own course');
         }
 
         // Check if already booked
-        $existingBooking = $this->bookingRepository->findOneBy(['member' => $user, 'course' => $course]);
+        $existingBooking = $this->bookingRepository->findOneBy(['user' => $user, 'course' => $course]);
         if ($existingBooking) {
             throw new \Exception('You already booked this course');
         }
@@ -56,15 +56,16 @@ class BookingService
         $isWaitlist = $confirmedBookingsCount >= $course->getCapacity();
 
         $booking = new Booking();
-        $booking->setMember($user);
+        $booking->setUser($user);
         $booking->setCourse($course);
         $booking->setWaitlist($isWaitlist);
+        $booking->setCompany($course->getCompany());
 
         $this->entityManager->persist($booking);
 
         // Notify trainer
         $notification = new Notification();
-        $notification->setUser($course->getTrainer());
+        $notification->setUser($course->getUser());
         $notification->setCourse($course);
         $statusMsg = $isWaitlist ? 'joined the waitlist for' : 'has joined';
         $notification->setMessage(sprintf('%s %s your course "%s"', $user->getName(), $statusMsg, $course->getTitle()));
@@ -87,7 +88,7 @@ class BookingService
             throw new \Exception('You cannot cancel a booking for a course that has already finished');
         }
 
-        $booking = $this->bookingRepository->findOneBy(['member' => $user, 'course' => $course]);
+        $booking = $this->bookingRepository->findOneBy(['user' => $user, 'course' => $course]);
         if (!$booking) {
             throw new \Exception('Booking not found');
         }
@@ -97,7 +98,7 @@ class BookingService
 
         // Notify trainer
         $notification = new Notification();
-        $notification->setUser($course->getTrainer());
+        $notification->setUser($course->getUser());
         $notification->setCourse($course);
         $notification->setMessage(sprintf('%s has left your course "%s"', $user->getName(), $course->getTitle()));
         $this->entityManager->persist($notification);
@@ -131,7 +132,7 @@ class BookingService
      */
     public function removeBookingIfExists(Course $course, User $user): void
     {
-        $booking = $this->bookingRepository->findOneBy(['member' => $user, 'course' => $course]);
+        $booking = $this->bookingRepository->findOneBy(['user' => $user, 'course' => $course]);
         if ($booking) {
             $wasWaitlist = $booking->isWaitlist();
             $this->entityManager->remove($booking);
@@ -165,7 +166,7 @@ class BookingService
 
     private function sendWaitlistPromotedEmail(Booking $booking): void
     {
-        $user = $booking->getMember();
+        $user = $booking->getUser();
         $course = $booking->getCourse();
 
         $email = (new TemplatedEmail())
@@ -184,7 +185,7 @@ class BookingService
 
     private function validateBookingWindow(Course $course): void
     {
-        $settings = $this->settingsRepository->get();
+        $settings = $this->settingsRepository->find($course->getUser()->getCompany()->getGlobalSettings()->getId());
         $window = $settings->getBookingWindow();
 
         if ($window === BookingWindow::OFF) {

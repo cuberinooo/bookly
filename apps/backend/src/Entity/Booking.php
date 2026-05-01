@@ -7,14 +7,18 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Attribute\Groups;
 
 #[ORM\Entity(repositoryClass: BookingRepository::class)]
-#[ORM\UniqueConstraint(name: 'UNIQ_BOOKING', fields: ['member', 'course'])]
-class Booking
+#[ORM\UniqueConstraint(name: 'UNIQ_BOOKING', fields: ['user', 'course'])]
+class Booking implements CompanyAwareInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
     #[Groups(['booking:read'])]
     private ?int $id = null;
+
+    #[ORM\ManyToOne]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Company $company = null;
 
     #[ORM\Column]
     #[Groups(['booking:read', 'course:read'])]
@@ -23,7 +27,7 @@ class Booking
     #[ORM\ManyToOne(inversedBy: 'bookings')]
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     #[Groups(['booking:read', 'course:read'])]
-    private ?User $member = null;
+    private ?User $user = null;
 
     #[ORM\ManyToOne(inversedBy: 'bookings')]
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
@@ -56,14 +60,14 @@ class Booking
         return $this;
     }
 
-    public function getMember(): ?User
+    public function getUser(): ?User
     {
-        return $this->member;
+        return $this->user;
     }
 
-    public function setMember(?User $member): static
+    public function setUser(?User $user): static
     {
-        $this->member = $member;
+        $this->user = $user;
 
         return $this;
     }
@@ -88,6 +92,18 @@ class Booking
     public function setWaitlist(bool $isWaitlist): static
     {
         $this->isWaitlist = $isWaitlist;
+
+        return $this;
+    }
+
+    public function getCompany(): ?Company
+    {
+        return $this->company;
+    }
+
+    public function setCompany(?Company $company): static
+    {
+        $this->company = $company;
 
         return $this;
     }

@@ -40,7 +40,9 @@ export const authStore = reactive({
       const response = await api.post('/token/refresh');
       this.setToken(response.data.token);
     } catch (e) {
-      this.logout();
+      if(this.isLoggedIn()) {
+        this.logout();
+      }
     } finally {
       this.initialized = true;
     }
@@ -79,10 +81,6 @@ export const authStore = reactive({
   isAdmin() {
     return this.user?.roles.includes('ROLE_ADMIN');
   },
-
-  isElevated() {
-    return this.isAdmin() || this.isTrainer();
-  }
 });
 
 authStore.parseUser();

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Phoenix Booking{% endblock %}</title>
+    <title>{% block title %}{{ siteName }}{% endblock %}</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Barlow:wght@400;600&display=swap');
         
@@ -77,13 +77,13 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>Phoenix Booking</h1>
+            <h1>{{ siteName }}</h1>
         </div>
         <div class="content">
             {% block body %}{% endblock %}
         </div>
         <div class="footer">
-            &copy; {{ "now"|date("Y") }} Phoenix Booking. All rights reserved.
+            &copy; {{ "now"|date("Y") }} {{ siteName }}. All rights reserved.
         </div>
     </div>
 </body>

@@ -11,13 +11,17 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Attribute\Groups;
 
 #[ORM\Entity(repositoryClass: CourseSeriesRepository::class)]
-class CourseSeries
+class CourseSeries implements CompanyAwareInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
     #[Groups(['course:read'])]
     private ?int $id = null;
+
+    #[ORM\ManyToOne]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Company $company = null;
 
     #[ORM\Column(length: 255)]
     #[Groups(['course:read'])]
@@ -46,7 +50,7 @@ class CourseSeries
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
     #[Groups(['course:read'])]
-    private ?User $trainer = null;
+    private ?User $user = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     private ?\DateTimeInterface $lastGeneratedDate = null;
@@ -140,14 +144,14 @@ class CourseSeries
         return $this;
     }
 
-    public function getTrainer(): ?User
+    public function getUser(): ?User
     {
-        return $this->trainer;
+        return $this->user;
     }
 
-    public function setTrainer(?User $trainer): static
+    public function setUser(?User $user): static
     {
-        $this->trainer = $trainer;
+        $this->user = $user;
         return $this;
     }
 
@@ -202,6 +206,17 @@ class CourseSeries
                 $course->setSeries(null);
             }
         }
+        return $this;
+    }
+
+    public function getCompany(): ?Company
+    {
+        return $this->company;
+    }
+
+    public function setCompany(?Company $company): static
+    {
+        $this->company = $company;
         return $this;
     }
 }

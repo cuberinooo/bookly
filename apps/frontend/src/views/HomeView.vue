@@ -342,7 +342,7 @@ onUnmounted(() => {
           </div>
           <div>
             <small>HEAD COACH</small>
-            <span class="trainer-name">{{ selectedCourse.trainer?.name }}</span>
+            <span class="trainer-name">{{ selectedCourse.user?.name }}</span>
           </div>
         </div>
 
@@ -392,10 +392,10 @@ onUnmounted(() => {
           v-if="isMemberMode && !isPastCourse"
           class="action-footer"
         >
-          <template v-if="selectedCourse.trainer?.id !== authStore.user?.id">
+          <template v-if="selectedCourse.user?.id !== authStore.user?.id">
             <template v-if="!isOutsideBookingWindow">
               <Button
-                v-if="!selectedCourse.bookings.some((b: any) => b.member?.id === authStore.user?.id)"
+                v-if="!selectedCourse.bookings.some((b: any) => b.user?.id === authStore.user?.id)"
                 :label="selectedCourse.bookings.filter(b => !b.isWaitlist).length < selectedCourse.capacity ? 'RESERVE SPOT' : 'JOIN WAITLIST'"
                 severity="primary"
                 class="w-full p-4"

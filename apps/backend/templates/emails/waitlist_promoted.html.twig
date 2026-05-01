@@ -3,23 +3,17 @@
 {% block title %}Spot Available: {{ courseTitle }}{% endblock %}
 
 {% block body %}
-<div class="container">
-    <div class="header">
-        <h1>You're In!</h1>
+    <h2>You're In!</h2>
+    <p>Hello {{ name }},</p>
+    <p>Good news! A spot has opened up for <strong>{{ courseTitle }}</strong> and you have been moved from the waitlist to the confirmed participant list.</p>
+    
+    <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
+        <p><strong>Course:</strong> {{ courseTitle }}</p>
+        <p><strong>Time:</strong> {{ startTime|date('d.m.Y H:i') }}</p>
     </div>
-    <div class="content">
-        <p>Hello {{ name }},</p>
-        <p>Good news! A spot has opened up for <strong>{{ courseTitle }}</strong> and you have been moved from the waitlist to the confirmed participant list.</p>
-        
-        <div class="info-box">
-            <p><strong>Course:</strong> {{ courseTitle }}</p>
-            <p><strong>Time:</strong> {{ startTime|date('d.m.Y H:i') }}</p>
-        </div>
 
-        <p>We look forward to seeing you there!</p>
-        <p>If you can no longer attend, please make sure to cancel your booking as soon as possible to give others a chance.</p>
-        
-        <p>Regards,<br>Phoenix Athletics Team</p>
-    </div>
-</div>
+    <p>We look forward to seeing you there!</p>
+    <p>If you can no longer attend, please make sure to cancel your booking as soon as possible to give others a chance.</p>
+    
+    <p>Regards,<br>{{ siteName }} Team</p>
 {% endblock %}

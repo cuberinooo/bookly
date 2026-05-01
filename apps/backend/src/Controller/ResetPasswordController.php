@@ -24,6 +24,7 @@ class ResetPasswordController extends AbstractController
         Request $request,
         EntityManagerInterface $entityManager,
         MailerInterface $mailer,
+        \App\Repository\AdminSettingsRepository $adminSettingsRepository,
         #[Autowire(service: 'limiter.forgot_password')] RateLimiterFactory $forgotPasswordLimiter
     ): JsonResponse {
         $limiter = $forgotPasswordLimiter->create($request->getClientIp());
@@ -49,11 +50,12 @@ class ResetPasswordController extends AbstractController
 
             $frontendUrl = $_ENV['FRONTEND_URL'] ?? 'http://localhost:4200';
             $resetUrl = $frontendUrl . '/reset-password?token=' . $token;
+            $siteName = $user->getCompany() ? $user->getCompany()->getName() : 'Phoenix Athletics';
 
             $emailMessage = new TemplatedEmail()
                 ->from($_ENV['NO_REPLY_MAIL'] ?? 'noreply@example.com')
                 ->to($user->getEmail())
-                ->subject('Reset your Phoenix Booking password')
+                ->subject(sprintf('Reset your %s password', $siteName))
                 ->htmlTemplate('emails/reset_password.html.twig')
                 ->context([
                     'name' => $user->getName(),

@@ -8,6 +8,7 @@ use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Uid\Uuid;
+use Symfony\Bundle\SecurityBundle\Security;
 
 class RegistrationService
 {
@@ -15,7 +16,9 @@ class RegistrationService
         private EntityManagerInterface $entityManager,
         private UserPasswordHasherInterface $passwordHasher,
         private MailerInterface $mailer,
-        private PasswordValidator $passwordValidator
+        private PasswordValidator $passwordValidator,
+        private \App\Repository\AdminSettingsRepository $adminSettingsRepository,
+        private Security $security
     ) {
     }
 
@@ -29,9 +32,33 @@ class RegistrationService
         $password = $data['password'] ?? '';
         $this->passwordValidator->validate($password);
 
+        $currentUser = $this->security->getUser();
+        $defaultCompanyName = ($currentUser instanceof User && $currentUser->getCompany()) 
+            ? $currentUser->getCompany()->getName() 
+            : 'Phoenix Athletics';
+
+        $companyName = $data['companyName'] ?? $defaultCompanyName;
+        $company = $this->entityManager->getRepository(\App\Entity\Company::class)->findOneBy(['name' => $companyName]);
+
+        if (!$company) {
+            $company = new \App\Entity\Company();
+            $company->setName($companyName);
+
+            $adminSettings = new \App\Entity\AdminSettings();
+            $company->setAdminSettings($adminSettings);
+
+            $globalSettings = new \App\Entity\GlobalSettings();
+            $company->setGlobalSettings($globalSettings);
+
+            $this->entityManager->persist($adminSettings);
+            $this->entityManager->persist($globalSettings);
+            $this->entityManager->persist($company);
+        }
+
         $user = new User();
         $user->setEmail($data['email']);
         $user->setName($data['name']);
+        $user->setCompany($company);
 
         $hashedPassword = $this->passwordHasher->hashPassword($user, $password);
         $user->setPassword($hashedPassword);
@@ -147,10 +174,11 @@ class RegistrationService
     {
         $frontendUrl = $_ENV['FRONTEND_URL'] ?? 'http://localhost:4200';
         $verificationUrl = $frontendUrl . '/verify-email?token=' . $user->getVerificationToken();
+        $siteName = $user->getCompany() ? $user->getCompany()->getName() : 'Phoenix Athletics';
 
         $subject = $isAdminCreation
-            ? 'Welcome to Phoenix Athletics - Your Account is Ready'
-            : 'Verify your Phoenix Booking account';
+            ? sprintf('Welcome to %s - Your Account is Ready', $siteName)
+            : sprintf('Verify your %s account', $siteName);
 
         $email = (new TemplatedEmail())
             ->from($_ENV['NO_REPLY_MAIL'] ?? 'noreply@example.com')

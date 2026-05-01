@@ -12,13 +12,18 @@ use Symfony\Component\Serializer\Attribute\Groups;
 
 #[ORM\Entity(repositoryClass: CourseRepository::class)]
 #[ORM\HasLifecycleCallbacks]
-class Course
+class Course implements CompanyAwareInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
     #[Groups(['course:read'])]
     private ?int $id = null;
+
+    #[ORM\ManyToOne(inversedBy: 'courses')]
+    #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['course:read'])]
+    private ?Company $company = null;
 
     #[ORM\ManyToOne(inversedBy: 'courses')]
     #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
@@ -56,7 +61,7 @@ class Course
     #[ORM\ManyToOne(inversedBy: 'courses')]
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     #[Groups(['course:read'])]
-    private ?User $trainer = null;
+    private ?User $user = null;
 
     /**
      * @var Collection<int, Booking>
@@ -163,14 +168,14 @@ class Course
         return $this;
     }
 
-    public function getTrainer(): ?User
+    public function getUser(): ?User
     {
-        return $this->trainer;
+        return $this->user;
     }
 
-    public function setTrainer(?User $trainer): static
+    public function setUser(?User $user): static
     {
-        $this->trainer = $trainer;
+        $this->user = $user;
 
         return $this;
     }
@@ -239,6 +244,18 @@ class Course
                 $booking->setCourse(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getCompany(): ?Company
+    {
+        return $this->company;
+    }
+
+    public function setCompany(?Company $company): static
+    {
+        $this->company = $company;
 
         return $this;
     }

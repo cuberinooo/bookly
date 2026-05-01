@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { RouterLink, RouterView } from 'vue-router';
-import { authStore } from '../store/auth';
-import { useRouter } from 'vue-router';
-import { ref, computed } from 'vue';
+import {RouterLink, RouterView} from 'vue-router';
+import {authStore} from '../store/auth';
+import {settingsStore} from '../store/settings';
+import {useRouter} from 'vue-router';
+import {ref, computed, onMounted, watch} from 'vue';
 import api from '../services/api';
-import { useToast } from 'primevue/usetoast';
+import {useToast} from 'primevue/usetoast';
 import TheFooter from '../components/TheFooter.vue';
 
 const router = useRouter();
@@ -17,273 +18,315 @@ const confirmNewPassword = ref('');
 const changingPassword = ref(false);
 
 const passwordValidation = computed(() => {
-    return {
-        minLength: newPassword.value.length >= 8,
-        uppercase: /[A-Z]/.test(newPassword.value),
-        lowercase: /[a-z]/.test(newPassword.value),
-        number: /[0-9]/.test(newPassword.value),
-        special: /[^A-Za-z0-9]/.test(newPassword.value),
-        match: newPassword.value === confirmNewPassword.value && newPassword.value !== ''
-    };
+  return {
+    minLength: newPassword.value.length >= 8,
+    uppercase: /[A-Z]/.test(newPassword.value),
+    lowercase: /[a-z]/.test(newPassword.value),
+    number: /[0-9]/.test(newPassword.value),
+    special: /[^A-Za-z0-9]/.test(newPassword.value),
+    match: newPassword.value === confirmNewPassword.value && newPassword.value !== ''
+  };
 });
 
 const isNewPasswordValid = computed(() => {
-    const v = passwordValidation.value;
-    return v.minLength && v.uppercase && v.lowercase && v.number && v.special;
+  const v = passwordValidation.value;
+  return v.minLength && v.uppercase && v.lowercase && v.number && v.special;
 });
 
 const isPasswordFormValid = computed(() => {
-    return isNewPasswordValid.value && passwordValidation.value.match;
+  return isNewPasswordValid.value && passwordValidation.value.match;
+});
+
+const isAppReady = computed(() => {
+  // 1. Always wait for Auth to check the session (cookies/refresh token)
+  if (!authStore.initialized) return false;
+
+  // 2. If the user is logged in, we MUST also wait for settings
+  if (authStore.isLoggedIn()) {
+    return settingsStore.initialized;
+  }
+
+  // 3. If not logged in, we are ready (to show login/register)
+  return true;
 });
 
 async function updatePassword() {
-    changingPassword.value = true;
-    try {
-        const response = await api.post('/user/change-password', { password: newPassword.value });
-        toast.add({ severity: 'success', summary: 'Success', detail: 'Password updated successfully', life: 5000 });
+  changingPassword.value = true;
+  try {
+    const response = await api.post('/user/change-password', {password: newPassword.value});
+    toast.add({severity: 'success', summary: 'Success', detail: 'Password updated successfully', life: 5000});
 
-        if (response.data.token) {
-            authStore.setToken(response.data.token);
-        } else if (authStore.user) {
-            authStore.user.mustChangePassword = false;
-        }
-    } catch (e: any) {
-        toast.add({ severity: 'error', summary: 'Error', detail: e.response?.data?.error || 'Failed to update password', life: 5000 });
-    } finally {
-        changingPassword.value = false;
+    if (response.data.token) {
+      authStore.setToken(response.data.token);
+    } else if (authStore.user) {
+      authStore.user.mustChangePassword = false;
     }
+  } catch (e: any) {
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: e.response?.data?.error || 'Failed to update password',
+      life: 5000
+    });
+  } finally {
+    changingPassword.value = false;
+  }
 }
 
 const dashboardLabel = computed(() => {
-    return authStore.isElevated() && authStore.viewMode === 'trainer' ? 'Dashboard' : 'My bookings';
+  return authStore.isTrainer() && authStore.viewMode === 'trainer' ? 'Dashboard' : 'My bookings';
 });
 
 const menuItems = computed(() => [
-    {
-        label: 'My Account',
-        items: [
-            { label: 'Profile', icon: 'pi pi-user', command: () => router.push('/profile') },
-            { label: dashboardLabel.value, icon: 'pi pi-th-large', command: () => router.push('/dashboard') },
-            { label: 'Settings', icon: 'pi pi-cog', command: () => router.push('/settings') }
-        ]
-    },
-    {
-        label: 'Account Action',
-        items: [
-            { label: 'Logout', icon: 'pi pi-sign-out', command: () => logout() }
-        ]
-    }
+  {
+    label: 'My Account',
+    items: [
+      {label: 'Profile', icon: 'pi pi-user', command: () => router.push('/profile')},
+      {label: dashboardLabel.value, icon: 'pi pi-th-large', command: () => router.push('/dashboard')},
+      {label: 'Settings', icon: 'pi pi-cog', command: () => router.push('/settings')}
+    ]
+  },
+  {
+    label: 'Account Action',
+    items: [
+      {label: 'Logout', icon: 'pi pi-sign-out', command: () => logout()}
+    ]
+  }
 ]);
 
 function toggleMenu(event: any) {
-    menu.value.toggle(event);
+  menu.value.toggle(event);
 }
+const companyName = computed(() => settingsStore.companyName);
 
 async function logout() {
   await authStore.logout();
-  router.push({ name: 'login' });
+  router.push({name: 'login'});
 }
+
+watch(
+  () => authStore.isLoggedIn(),
+  (isLoggedIn) => {
+    if (!isLoggedIn) {
+      settingsStore.reset();
+    } else {
+      settingsStore.fetchSettings();
+    }
+  }
+);
+
+onMounted(async () => {
+  // First, wait for Auth to see who we are
+  await authStore.init();
+
+  // If we found a user, go get their specific company settings
+  if (authStore.isLoggedIn()) {
+    await settingsStore.fetchSettings();
+  }
+});
 </script>
 
 <template>
-  <Toast position="bottom-right" />
-  <ConfirmDialog />
+  <Toast position="bottom-right"/>
+  <ConfirmDialog/>
 
-  <div v-if="!authStore.initialized" class="loading-overlay">
+  <div v-if="!isAppReady" class="loading-overlay">
     <div class="spinner"></div>
-    <p class="loading-text">PHOENIX ATHLETICS</p>
+    <p class="loading-text">{{ companyName }}</p>
   </div>
 
   <div v-else>
     <header class="main-header">
       <nav class="nav-container">
-      <div class="brand">
-        <RouterLink :to="authStore.isLoggedIn() ? '/' : '/login'">
-          PHOENIX ATHLETICS
-        </RouterLink>
-      </div>
-      <div class="nav-links">
-        <template v-if="authStore.isElevated()">
-          <div
-            v-tooltip.bottom="authStore.viewMode === 'trainer' ? 'Switch to Member View' : 'Switch to ' + (authStore.isAdmin() ? 'Admin' : 'Trainer') + ' View'"
-            class="mode-switcher"
-          >
-            <span :class="{ active: authStore.viewMode === 'trainer' }">{{ authStore.isAdmin() ? 'ADMIN' : 'TRAINER' }}</span>
-            <ToggleSwitch
-              :model-value="authStore.viewMode === 'member'"
-              @update:model-value="authStore.toggleViewMode()"
-            />
-            <span :class="{ active: authStore.viewMode === 'member' }">MEMBER</span>
-          </div>
-        </template>
-        <RouterLink
-          v-if="authStore.isLoggedIn()"
-          to="/"
-        >
-          Courses
-        </RouterLink>
-        <template v-if="authStore.isLoggedIn()">
-          <RouterLink to="/dashboard">
-            {{ dashboardLabel }}
+        <div class="brand">
+          <RouterLink :to="authStore.isLoggedIn() ? '/' : '/login'">
+            {{ companyName }}
           </RouterLink>
-          <div class="profile-dropdown-wrapper">
+        </div>
+        <div class="nav-links">
+          <template v-if="authStore.isTrainer()">
+            <div
+              v-tooltip.bottom="authStore.viewMode === 'trainer' ? 'Switch to Member View' : 'Switch to Trainer View'"
+              class="mode-switcher"
+            >
+              <span :class="{ active: authStore.viewMode === 'trainer' }">{{
+                 'TRAINER'
+                }}</span>
+              <ToggleSwitch
+                :model-value="authStore.viewMode === 'member'"
+                @update:model-value="authStore.toggleViewMode()"
+              />
+              <span :class="{ active: authStore.viewMode === 'member' }">MEMBER</span>
+            </div>
+          </template>
+          <RouterLink
+            v-if="authStore.isLoggedIn()"
+            to="/"
+          >
+            Courses
+          </RouterLink>
+          <template v-if="authStore.isLoggedIn()">
+            <RouterLink to="/dashboard">
+              {{ dashboardLabel }}
+            </RouterLink>
+            <div class="profile-dropdown-wrapper">
             <span
               v-if="authStore.user"
               class="user-name"
             >{{ authStore.user.name }}</span>
-            <Button
-              type="button"
-              icon="pi pi-user"
-              severity="secondary"
-              rounded
-              class="profile-btn"
-              @click="toggleMenu"
-            />
-            <Menu
-              ref="menu"
-              :model="menuItems"
-              :popup="true"
-            />
-          </div>
-        </template>
-        <template v-else>
-          <RouterLink to="/login">
-            Login
-          </RouterLink>
-          <RouterLink to="/register">
-            Register
-          </RouterLink>
-        </template>
-      </div>
-    </nav>
-  </header>
-
-  <main class="container">
-    <RouterView />
-  </main>
-
-  <TheFooter />
-
-  <Dialog
-    v-if="authStore.user"
-    v-model:visible="authStore.user.mustChangePassword"
-    header="Action Required: Update Password"
-    :modal="true"
-    :closable="false"
-    class="w-full max-w-md"
-  >
-    <div class="flex flex-col gap-6 py-4">
-      <div class="p-4 bg-amber-50 border-l-4 border-amber-500 text-amber-900 text-sm mb-2">
-        <p class="font-bold mb-1">
-          Security Update Required
-        </p>
-        <p>Your account was created with a temporary password. Please set a new secure password to continue.</p>
-      </div>
-
-      <div class="flex flex-col gap-2">
-        <label class="font-bold text-sm uppercase tracking-wider text-slate-500">New Password</label>
-        <Password
-          v-model="newPassword"
-          toggle-mask
-          placeholder="••••••••"
-          class="w-full"
-          input-class="w-full"
-          :class="{ 'p-invalid': newPasswordTouched && !isNewPasswordValid }"
-          @blur="newPasswordTouched = true"
-        >
-          <template #footer>
-            <Divider />
-            <p class="mt-2 font-bold text-xs uppercase tracking-wider">
-              Requirements
-            </p>
-            <ul class="pl-2 ml-2 mt-2 list-disc flex flex-col gap-1 text-xs">
-              <li :class="passwordValidation.minLength ? 'text-green-600' : 'text-slate-400'">
-                At least 8 characters
-              </li>
-              <li :class="passwordValidation.uppercase ? 'text-green-600' : 'text-slate-400'">
-                At least one uppercase
-              </li>
-              <li :class="passwordValidation.lowercase ? 'text-green-600' : 'text-slate-400'">
-                At least one lowercase
-              </li>
-              <li :class="passwordValidation.number ? 'text-green-600' : 'text-slate-400'">
-                At least one number
-              </li>
-              <li :class="passwordValidation.special ? 'text-green-600' : 'text-slate-400'">
-                At least one special character
-              </li>
-            </ul>
+              <Button
+                type="button"
+                icon="pi pi-user"
+                severity="secondary"
+                rounded
+                class="profile-btn"
+                @click="toggleMenu"
+              />
+              <Menu
+                ref="menu"
+                :model="menuItems"
+                :popup="true"
+              />
+            </div>
           </template>
-        </Password>
-        <ul
-          v-if="newPasswordTouched && !isNewPasswordValid"
-          class="mt-2 flex flex-col gap-1 text-xs font-bold"
-        >
-          <li
-            v-if="!passwordValidation.minLength"
-            class="text-red-500"
-          >
-            • At least 8 characters
-          </li>
-          <li
-            v-if="!passwordValidation.uppercase"
-            class="text-red-500"
-          >
-            • At least one uppercase
-          </li>
-          <li
-            v-if="!passwordValidation.lowercase"
-            class="text-red-500"
-          >
-            • At least one lowercase
-          </li>
-          <li
-            v-if="!passwordValidation.number"
-            class="text-red-500"
-          >
-            • At least one number
-          </li>
-          <li
-            v-if="!passwordValidation.special"
-            class="text-red-500"
-          >
-            • At least one special character
-          </li>
-        </ul>
-      </div>
+          <template v-else>
+            <RouterLink to="/login">
+              Login
+            </RouterLink>
+            <RouterLink to="/register">
+              Register
+            </RouterLink>
+          </template>
+        </div>
+      </nav>
+    </header>
 
-      <div class="flex flex-col gap-2">
-        <label class="font-bold text-sm uppercase tracking-wider text-slate-500">Confirm New Password</label>
-        <InputText
-          v-model="confirmNewPassword"
-          type="password"
-          placeholder="••••••••"
-          :class="{ 'p-invalid': confirmNewPassword && !passwordValidation.match }"
-        />
-        <small
-          v-if="confirmNewPassword && !passwordValidation.match"
-          class="text-red-500 font-bold"
-        >Passwords do not match</small>
+    <main class="container">
+      <RouterView/>
+    </main>
+
+    <TheFooter v-if="authStore.isLoggedIn()"/>
+
+    <Dialog
+      v-if="authStore.user"
+      v-model:visible="authStore.user.mustChangePassword"
+      header="Action Required: Update Password"
+      :modal="true"
+      :closable="false"
+      class="w-full max-w-md"
+    >
+      <div class="flex flex-col gap-6 py-4">
+        <div class="p-4 bg-amber-50 border-l-4 border-amber-500 text-amber-900 text-sm mb-2">
+          <p class="font-bold mb-1">
+            Security Update Required
+          </p>
+          <p>Your account was created with a temporary password. Please set a new secure password to continue.</p>
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <label class="font-bold text-sm uppercase tracking-wider text-slate-500">New Password</label>
+          <Password
+            v-model="newPassword"
+            toggle-mask
+            placeholder="••••••••"
+            class="w-full"
+            input-class="w-full"
+            :class="{ 'p-invalid': newPasswordTouched && !isNewPasswordValid }"
+            @blur="newPasswordTouched = true"
+          >
+            <template #footer>
+              <Divider/>
+              <p class="mt-2 font-bold text-xs uppercase tracking-wider">
+                Requirements
+              </p>
+              <ul class="pl-2 ml-2 mt-2 list-disc flex flex-col gap-1 text-xs">
+                <li :class="passwordValidation.minLength ? 'text-green-600' : 'text-slate-400'">
+                  At least 8 characters
+                </li>
+                <li :class="passwordValidation.uppercase ? 'text-green-600' : 'text-slate-400'">
+                  At least one uppercase
+                </li>
+                <li :class="passwordValidation.lowercase ? 'text-green-600' : 'text-slate-400'">
+                  At least one lowercase
+                </li>
+                <li :class="passwordValidation.number ? 'text-green-600' : 'text-slate-400'">
+                  At least one number
+                </li>
+                <li :class="passwordValidation.special ? 'text-green-600' : 'text-slate-400'">
+                  At least one special character
+                </li>
+              </ul>
+            </template>
+          </Password>
+          <ul
+            v-if="newPasswordTouched && !isNewPasswordValid"
+            class="mt-2 flex flex-col gap-1 text-xs font-bold"
+          >
+            <li
+              v-if="!passwordValidation.minLength"
+              class="text-red-500"
+            >
+              • At least 8 characters
+            </li>
+            <li
+              v-if="!passwordValidation.uppercase"
+              class="text-red-500"
+            >
+              • At least one uppercase
+            </li>
+            <li
+              v-if="!passwordValidation.lowercase"
+              class="text-red-500"
+            >
+              • At least one lowercase
+            </li>
+            <li
+              v-if="!passwordValidation.number"
+              class="text-red-500"
+            >
+              • At least one number
+            </li>
+            <li
+              v-if="!passwordValidation.special"
+              class="text-red-500"
+            >
+              • At least one special character
+            </li>
+          </ul>
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <label class="font-bold text-sm uppercase tracking-wider text-slate-500">Confirm New Password</label>
+          <InputText
+            v-model="confirmNewPassword"
+            type="password"
+            placeholder="••••••••"
+            :class="{ 'p-invalid': confirmNewPassword && !passwordValidation.match }"
+          />
+          <small
+            v-if="confirmNewPassword && !passwordValidation.match"
+            class="text-red-500 font-bold"
+          >Passwords do not match</small>
+        </div>
       </div>
-    </div>
-    <template #footer>
-      <Button
-        label="Update Password & Continue"
-        severity="primary"
-        class="w-full py-3"
-        :loading="changingPassword"
-        :disabled="!isPasswordFormValid"
-        @click="updatePassword"
-      />
-    </template>
-  </Dialog>
-</div>
+      <template #footer>
+        <Button
+          label="Update Password & Continue"
+          severity="primary"
+          class="w-full py-3"
+          :loading="changingPassword"
+          :disabled="!isPasswordFormValid"
+          @click="updatePassword"
+        />
+      </template>
+    </Dialog>
+  </div>
 </template>
 
 <style scoped lang="scss">
 .main-header {
   // background-color: #0F172A; // Now handled by global .main-header in styles.scss
-  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
 }
 
 .nav-container {
@@ -347,6 +390,7 @@ async function logout() {
 
       .p-toggleswitch-slider {
         background: rgba(255, 255, 255, 0.2);
+
         &:before {
           width: 0.85rem;
           height: 0.85rem;
@@ -356,6 +400,7 @@ async function logout() {
 
       &.p-toggleswitch-checked .p-toggleswitch-slider {
         background: var(--primary-color);
+
         &:before {
           background: #000;
         }
@@ -364,49 +409,53 @@ async function logout() {
   }
 
   .profile-dropdown-wrapper {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
 
-      .user-name {
-          color: white;
-          font-family: 'Barlow Condensed', sans-serif;
-          font-weight: 700;
-          font-size: 0.9rem;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
+    .user-name {
+      color: white;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
 
-          @media (max-width: 768px) {
-              display: none;
-          }
+      @media (max-width: 768px) {
+        display: none;
       }
+    }
   }
 
   @media (max-width: 768px) {
     gap: 1rem;
 
     .mode-switcher {
-        margin-right: 0;
-        padding: 0.4rem 0.75rem;
-        span { display: none; }
+      margin-right: 0;
+      padding: 0.4rem 0.75rem;
+
+      span {
+        display: none;
+      }
     }
 
     a {
-        font-size: 0.85rem;
+      font-size: 0.85rem;
     }
   }
 
   .profile-btn {
-      background: rgba(255,255,255,0.1) !important;
-      border: 1px solid rgba(255,255,255,0.2) !important;
-      color: white !important;
-      width: 40px;
-      height: 40px;
-      &:hover {
-          background: var(--primary-color) !important;
-          color: #000 !important;
-          border-color: var(--primary-color) !important;
-      }
+    background: rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    color: white !important;
+    width: 40px;
+    height: 40px;
+
+    &:hover {
+      background: var(--primary-color) !important;
+      color: #000 !important;
+      border-color: var(--primary-color) !important;
+    }
   }
 
   a {
@@ -426,8 +475,8 @@ async function logout() {
     }
 
     &.router-link-active {
-        color: var(--primary-color);
-        border-bottom-color: var(--primary-color);
+      color: var(--primary-color);
+      border-bottom-color: var(--primary-color);
     }
   }
 
@@ -435,8 +484,9 @@ async function logout() {
     color: #94a3b8 !important;
     font-size: 0.85rem;
     padding: 0.5rem 1rem !important;
+
     &:hover {
-        color: #ef4444 !important;
+      color: #ef4444 !important;
     }
   }
 }
@@ -475,12 +525,20 @@ async function logout() {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 </style>

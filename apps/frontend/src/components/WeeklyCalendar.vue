@@ -88,7 +88,7 @@ function isToday(date: Date) {
 
 function isBookedByUser(course: any) {
     if (!props.userId) return false;
-    return course.bookings?.some((b: any) => b.member?.id === props.userId);
+    return course.bookings?.some((b: any) => b.user?.id === props.userId);
 }
 
 function onSlotClick(day: Date, hour: number) {
@@ -223,7 +223,7 @@ function onSlotClick(day: Date, hour: number) {
                     v-if="!isCompactView"
                     class="coach-line"
                   >
-                    <i class="pi pi-user text-[10px]" /> {{ course.trainer?.name }}
+                    <i class="pi pi-user text-[10px]" /> {{ course.user?.name }}
                   </div>
                   <div class="course-spots">
                     <template v-if="course.bookings.filter(b => !b.isWaitlist).length < course.capacity">

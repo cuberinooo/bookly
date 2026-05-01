@@ -1,0 +1,117 @@
+<?php
+
+namespace App\Controller;
+
+use App\Service\AdminSettingsService;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Serializer\SerializerInterface;
+
+#[Route('/api/admin-settings')]
+class AdminSettingsController extends AbstractController
+{
+    public function __construct(
+        private AdminSettingsService $adminSettingsService,
+        private SerializerInterface $serializer,
+        private \Doctrine\ORM\EntityManagerInterface $entityManager
+    ) {}
+
+    #[Route('', name: 'admin_settings_get', methods: ['GET'])]
+    public function getSettings(): JsonResponse
+    {
+        $user = $this->getUser();
+        if (!$user instanceof \App\Entity\User || !$user->getCompany()) {
+             return new JsonResponse(['error' => 'Company not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        $company = $user->getCompany();
+        $settings = $company->getAdminSettings();
+        
+        $data = json_decode($this->serializer->serialize($settings, 'json', ['groups' => 'admin:read']), true);
+        $data['name'] = $company->getName();
+        
+        return new JsonResponse($data);
+    }
+
+    #[Route('', name: 'admin_settings_update', methods: ['PATCH'])]
+    public function updateSettings(Request $request): JsonResponse
+    {
+        $this->denyAccessUnlessGranted('ROLE_ADMIN');
+        $user = $this->getUser();
+        if (!$user instanceof \App\Entity\User || !$user->getCompany()) {
+             return new JsonResponse(['error' => 'Company not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        $data = json_decode($request->getContent(), true);
+        $settings = $user->getCompany()->getAdminSettings();
+        
+        $fields = [
+            'legalNoticeRepresentative',
+            'legalNoticeStreet',
+            'legalNoticeHouseNumber',
+            'legalNoticeZipCode',
+            'legalNoticeCity',
+            'legalNoticeEmail',
+            'legalNoticePhone',
+            'legalNoticeTaxId',
+            'legalNoticeVatId',
+            'legalNoticeMarkdown',
+            'termsAndConditionsMarkdown'
+        ];
+
+        foreach ($fields as $field) {
+            if (array_key_exists($field, $data)) {
+                $setter = 'set' . ucfirst($field);
+                $settings->$setter($data[$field]);
+            }
+        }
+        
+        if (isset($data['name'])) {
+            $user->getCompany()->setName((string) $data['name']);
+        }
+
+        $this->entityManager->flush();
+
+        return new JsonResponse(['status' => 'Admin settings updated']);
+    }
+
+    #[Route('/privacy-policy', name: 'admin_settings_upload_privacy_policy', methods: ['POST'])]
+    public function uploadPrivacyPolicy(Request $request): JsonResponse
+    {
+        $this->denyAccessUnlessGranted('ROLE_ADMIN');
+
+        $file = $request->files->get('file');
+        if (!$file) {
+            return new JsonResponse(['error' => 'No file uploaded'], Response::HTTP_BAD_REQUEST);
+        }
+
+        try {
+            $path = $this->adminSettingsService->uploadPrivacyPolicy($file);
+            return new JsonResponse(['path' => $path]);
+        } catch (\RuntimeException $e) {
+            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    #[Route('/privacy-policy/download', name: 'admin_settings_download_privacy_policy', methods: ['GET'])]
+    public function downloadPrivacyPolicy(): Response
+    {
+        $settings = $this->adminSettingsService->getSettings();
+        $path = $settings->getPrivacyPolicyPdfPath();
+
+        if (!$path) {
+            return new Response('Privacy policy not found', Response::HTTP_NOT_FOUND);
+        }
+
+        $fullPath = $this->getParameter('kernel.project_dir') . '/public' . $path;
+
+        if (!file_exists($fullPath)) {
+            return new Response('File not found', Response::HTTP_NOT_FOUND);
+        }
+
+        return $this->file($fullPath, 'privacy-policy.pdf');
+    }
+}

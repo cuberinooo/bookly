@@ -2,70 +2,69 @@
 
 namespace App\Entity;
 
-use App\Repository\LegalSettingsRepository;
+use App\Repository\AdminSettingsRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Attribute\Groups;
 
-#[ORM\Entity(repositoryClass: LegalSettingsRepository::class)]
-class LegalSettings
+#[ORM\Entity(repositoryClass: AdminSettingsRepository::class)]
+class AdminSettings
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['legal:read'])]
+    #[Groups(['admin:read'])]
     private ?int $id = null;
 
-    #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(['legal:read', 'legal:write'])]
-    private ?string $legalNoticeCompanyName = null;
+    #[ORM\OneToOne(mappedBy: 'adminSettings')]
+    private ?Company $company = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(['legal:read', 'legal:write'])]
+    #[Groups(['admin:read', 'admin:write'])]
     private ?string $legalNoticeRepresentative = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(['legal:read', 'legal:write'])]
+    #[Groups(['admin:read', 'admin:write'])]
     private ?string $legalNoticeStreet = null;
 
     #[ORM\Column(length: 20, nullable: true)]
-    #[Groups(['legal:read', 'legal:write'])]
+    #[Groups(['admin:read', 'admin:write'])]
     private ?string $legalNoticeHouseNumber = null;
 
     #[ORM\Column(length: 20, nullable: true)]
-    #[Groups(['legal:read', 'legal:write'])]
+    #[Groups(['admin:read', 'admin:write'])]
     private ?string $legalNoticeZipCode = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(['legal:read', 'legal:write'])]
+    #[Groups(['admin:read', 'admin:write'])]
     private ?string $legalNoticeCity = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(['legal:read', 'legal:write'])]
+    #[Groups(['admin:read', 'admin:write'])]
     private ?string $legalNoticeEmail = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(['legal:read', 'legal:write'])]
+    #[Groups(['admin:read', 'admin:write'])]
     private ?string $legalNoticePhone = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(['legal:read', 'legal:write'])]
+    #[Groups(['admin:read', 'admin:write'])]
     private ?string $legalNoticeTaxId = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(['legal:read', 'legal:write'])]
+    #[Groups(['admin:read', 'admin:write'])]
     private ?string $legalNoticeVatId = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(['legal:read', 'legal:write'])]
+    #[Groups(['admin:read', 'admin:write'])]
     private ?string $privacyPolicyPdfPath = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
-    #[Groups(['legal:read', 'legal:write'])]
+    #[Groups(['admin:read', 'admin:write'])]
     private ?string $legalNoticeMarkdown = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
-    #[Groups(['legal:read', 'legal:write'])]
+    #[Groups(['admin:read', 'admin:write'])]
     private ?string $termsAndConditionsMarkdown = null;
 
     public function getId(): ?int
@@ -73,14 +72,14 @@ class LegalSettings
         return $this->id;
     }
 
-    public function getLegalNoticeCompanyName(): ?string
+    public function getCompany(): ?Company
     {
-        return $this->legalNoticeCompanyName;
+        return $this->company;
     }
 
-    public function setLegalNoticeCompanyName(?string $legalNoticeCompanyName): static
+    public function setCompany(?Company $company): static
     {
-        $this->legalNoticeCompanyName = $legalNoticeCompanyName;
+        $this->company = $company;
         return $this;
     }
 

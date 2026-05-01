@@ -28,7 +28,7 @@ class CourseDeleteTest extends WebTestCase
     {
         $series = new CourseSeries();
         $series->setTitle($title);
-        $series->setTrainer($trainer);
+        $series->setUser($trainer);
         $series->setScheduleStartTime(new \DateTime('+1 day'));
         $series->setDurationMinutes(60);
         $series->setCapacity(10);
@@ -47,7 +47,7 @@ class CourseDeleteTest extends WebTestCase
 
         $course = new Course();
         $course->setTitle('Single Course');
-        $course->setTrainer($trainer);
+        $course->setUser($trainer);
         $course->setStartTime(new \DateTime('+1 day'));
         $course->setEndTime(new \DateTime('+1 day 1 hour'));
         $course->setCapacity(10);
@@ -77,7 +77,7 @@ class CourseDeleteTest extends WebTestCase
         // Course 1: Starts 1 minute ago (Past but should be deleted as it's the target)
         $course1 = new Course();
         $course1->setTitle('Series Course 1');
-        $course1->setTrainer($trainer);
+        $course1->setUser($trainer);
         $course1->setStartTime(new \DateTime('-1 minute'));
         $course1->setEndTime(new \DateTime('+59 minutes'));
         $course1->setCapacity(10);
@@ -87,7 +87,7 @@ class CourseDeleteTest extends WebTestCase
         // Course 2: Starts tomorrow
         $course2 = new Course();
         $course2->setTitle('Series Course 2');
-        $course2->setTrainer($trainer);
+        $course2->setUser($trainer);
         $course2->setStartTime(new \DateTime('+1 day'));
         $course2->setEndTime(new \DateTime('+1 day 1 hour'));
         $course2->setCapacity(10);
@@ -129,7 +129,7 @@ class CourseDeleteTest extends WebTestCase
         
         $course1 = new Course();
         $course1->setTitle('Occurrence 1');
-        $course1->setTrainer($trainer);
+        $course1->setUser($trainer);
         $course1->setStartTime(new \DateTime('+1 day'));
         $course1->setEndTime(new \DateTime('+1 day 1 hour'));
         $course1->setCapacity(10);
@@ -138,7 +138,7 @@ class CourseDeleteTest extends WebTestCase
 
         $course2 = new Course();
         $course2->setTitle('Occurrence 2');
-        $course2->setTrainer($trainer);
+        $course2->setUser($trainer);
         $course2->setStartTime(new \DateTime('+2 days'));
         $course2->setEndTime(new \DateTime('+2 days 1 hour'));
         $course2->setCapacity(10);

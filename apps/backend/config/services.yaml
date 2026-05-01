@@ -30,9 +30,15 @@ services:
         tags:
             - { name: kernel.event_listener, event: lexik_jwt_authentication.on_authentication_success, method: onAuthenticationSuccessResponse }
 
-    App\Service\LegalSettingsService:
+    App\Service\AdminSettingsService:
         arguments:
             $projectDir: '%kernel.project_dir%'
+
+when@test:
+    services:
+        App\EventListener\TestDefaultCompanyListener:
+            tags:
+                - { name: doctrine.event_listener, event: prePersist }
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

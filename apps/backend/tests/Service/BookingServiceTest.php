@@ -48,7 +48,7 @@ class BookingServiceTest extends TestCase
 
         $course = new Course();
         $course->setEndTime(new \DateTime('+1 hour'));
-        $course->setTrainer($trainer);
+        $course->setUser($trainer);
         $course->setCapacity(10);
         $course->setTitle('Yoga');
 
@@ -61,7 +61,7 @@ class BookingServiceTest extends TestCase
         [$booking, $isWaitlist] = $this->service->book($course, $user);
 
         $this->assertFalse($isWaitlist);
-        $this->assertSame($user, $booking->getMember());
+        $this->assertSame($user, $booking->getUser());
         $this->assertSame($course, $booking->getCourse());
     }
 
@@ -76,7 +76,7 @@ class BookingServiceTest extends TestCase
 
         $course = new Course();
         $course->setEndTime(new \DateTime('+1 hour'));
-        $course->setTrainer($trainer);
+        $course->setUser($trainer);
         $course->setCapacity(1);
         $course->setTitle('Pilates');
 
@@ -100,7 +100,7 @@ class BookingServiceTest extends TestCase
         $trainer = new User();
         $course = new Course();
         $course->setEndTime(new \DateTime('+1 hour'));
-        $course->setTrainer($trainer);
+        $course->setUser($trainer);
         $course->setTitle('Pilates');
         $course->setCapacity(1);
         $course->setStartTime(new \DateTime('+1 day'));
@@ -116,7 +116,7 @@ class BookingServiceTest extends TestCase
         $waitlistedUser->setEmail('waiting@example.com');
         
         $waitlistedBooking = new Booking();
-        $waitlistedBooking->setMember($waitlistedUser);
+        $waitlistedBooking->setUser($waitlistedUser);
         $waitlistedBooking->setCourse($course);
         $waitlistedBooking->setWaitlist(true);
 
@@ -141,7 +141,7 @@ class BookingServiceTest extends TestCase
 
         $course = $this->createMock(Course::class);
         $course->method('getEndTime')->willReturn(new \DateTime('+1 hour'));
-        $course->method('getTrainer')->willReturn($trainer);
+        $course->method('getUser')->willReturn($trainer);
 
         $this->bookingRepository->method('findOneBy')->willReturn(new Booking());
 
@@ -158,7 +158,7 @@ class BookingServiceTest extends TestCase
         
         $course = $this->createMock(Course::class);
         $course->method('getEndTime')->willReturn(new \DateTime('+1 hour'));
-        $course->method('getTrainer')->willReturn($user);
+        $course->method('getUser')->willReturn($user);
 
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage('As a trainer, you cannot book your own course');
@@ -174,7 +174,7 @@ class BookingServiceTest extends TestCase
         $trainer = new User();
         $course = $this->createMock(Course::class);
         $course->method('getEndTime')->willReturn(new \DateTime('+1 hour'));
-        $course->method('getTrainer')->willReturn($trainer);
+        $course->method('getUser')->willReturn($trainer);
         $course->method('getTitle')->willReturn('Pilates');
 
         $booking = new Booking();

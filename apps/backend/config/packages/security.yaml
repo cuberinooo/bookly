@@ -74,4 +74,4 @@ when@test:
                 stateless: true
                 jwt: ~
                 http_basic: ~ # Allow basic auth or loginUser in tests
-                entry_point: jwt
+                entry_point: http_basic

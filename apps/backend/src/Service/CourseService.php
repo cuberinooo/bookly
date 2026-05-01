@@ -43,7 +43,8 @@ class CourseService
             $course->setDurationMinutes($duration);
             $course->setEndTime((clone $startTime)->modify("+$duration minutes"));
             $course->setFrequency($recurrence);
-            $course->setTrainer($trainer);
+            $course->setUser($trainer);
+            $course->setCompany($trainer->getCompany());
 
             $this->validateSchedule($course->getStartTime(), $course->getEndTime(), null, $trainer->getId());
 
@@ -60,13 +61,14 @@ class CourseService
         $series->setScheduleStartTime($startTime);
         $series->setDurationMinutes($duration);
         $series->setFrequency($recurrence);
-        $series->setTrainer($trainer);
+        $series->setUser($trainer);
+        $series->setCompany($trainer->getCompany());
 
         $this->entityManager->persist($series);
-        
+
         // Generate courses for the next 3 months
         $courses = $this->generateCoursesForSeries($series, $startTime, (clone $startTime)->modify('+3 months'));
-        
+
         $this->entityManager->flush();
         return $courses;
     }
@@ -75,7 +77,7 @@ class CourseService
     {
         $courses = [];
         $currentDate = clone $start;
-        $trainer = $series->getTrainer();
+        $trainer = $series->getUser();
         $duration = $series->getDurationMinutes();
 
         while ($currentDate <= $end) {
@@ -91,7 +93,7 @@ class CourseService
             if (!$existing) {
                 try {
                     $this->validateSchedule($courseStartTime, $courseEndTime, null, $trainer->getId());
-                    
+
                     $course = new Course();
                     $course->setTitle($series->getTitle());
                     $course->setDescription($series->getDescription());
@@ -101,7 +103,8 @@ class CourseService
                     $course->setEndTime($courseEndTime);
                     $course->setFrequency($series->getFrequency());
                     $course->setSeries($series);
-                    $course->setTrainer($trainer);
+                    $course->setUser($trainer);
+                    $course->setCompany($series->getCompany());
 
                     $this->entityManager->persist($course);
                     $courses[] = $course;
@@ -129,7 +132,7 @@ class CourseService
                     break 2;
             }
         }
-        
+
         $series->setLastGeneratedDate($end);
         return $courses;
     }
@@ -193,7 +196,7 @@ class CourseService
                 $course->setCapacity($updates['capacity']);
             }
             if (isset($updates['trainer'])) {
-                $course->setTrainer($updates['trainer']);
+                $course->setUser($updates['trainer']);
                 $this->bookingService->removeBookingIfExists($course, $updates['trainer']);
             }
             if (isset($updates['durationMinutes'])) {
@@ -205,24 +208,24 @@ class CourseService
             if (isset($updates['startTime'])) {
                 $newTime = $updates['startTime'];
                 $oldStartTime = $course->getStartTime();
-                
+
                 $updatedStartTime = clone $oldStartTime;
                 $updatedStartTime->setTime(
                     (int) $newTime->format('H'),
                     (int) $newTime->format('i'),
                     (int) $newTime->format('s')
                 );
-                
+
                 $course->setStartTime($updatedStartTime);
-                
+
                 $duration = $course->getDurationMinutes();
                 $updatedEndTime = clone $updatedStartTime;
                 $updatedEndTime->modify("+$duration minutes");
                 $course->setEndTime($updatedEndTime);
             }
-            
+
             if (isset($updates['startTime']) || isset($updates['durationMinutes']) || isset($updates['trainer'])) {
-                $this->validateSchedule($course->getStartTime(), $course->getEndTime(), $course->getId(), $course->getTrainer()->getId());
+                $this->validateSchedule($course->getStartTime(), $course->getEndTime(), $course->getId(), $course->getUser()->getId());
             }
         }
 
@@ -230,7 +233,7 @@ class CourseService
             if (isset($updates['title'])) $series->setTitle($updates['title']);
             if (isset($updates['description'])) $series->setDescription($updates['description']);
             if (isset($updates['capacity'])) $series->setCapacity($updates['capacity']);
-            if (isset($updates['trainer'])) $series->setTrainer($updates['trainer']);
+            if (isset($updates['trainer'])) $series->setUser($updates['trainer']);
             if (isset($updates['durationMinutes'])) $series->setDurationMinutes($updates['durationMinutes']);
             if (isset($updates['startTime'])) {
                 $newTime = $updates['startTime'];
@@ -267,14 +270,14 @@ class CourseService
             ->getResult();
 
         foreach ($courses as $course) {
-            $course->setTrainer($newTrainer);
+            $course->setUser($newTrainer);
             $this->bookingService->removeBookingIfExists($course, $newTrainer);
         }
 
         // Update the series template as well
         $series = $this->seriesRepository->find((int) $seriesId);
         if ($series) {
-            $series->setTrainer($newTrainer);
+            $series->setUser($newTrainer);
         }
 
         $this->entityManager->flush();

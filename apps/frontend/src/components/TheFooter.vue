@@ -1,15 +1,17 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
+import { settingsStore } from '../store/settings';
 import api from '../services/api';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
+import {authStore} from "../store/auth";
 
 const showLegalNotice = ref(false);
 const legalSettings = ref<any>(null);
 
-async function fetchLegalSettings() {
+async function fetchSettings() {
     try {
-        const response = await api.get('/legal-settings');
+        const response = await api.get('/admin-settings');
         legalSettings.value = response.data;
     } catch (e) {
         console.error('Failed to load legal settings');
@@ -17,11 +19,11 @@ async function fetchLegalSettings() {
 }
 
 const privacyPolicyUrl = computed(() => {
-    return `${api.defaults.baseURL}/legal-settings/privacy-policy/download`;
+    return `${api.defaults.baseURL}/admin-settings/privacy-policy/download`;
 });
 
 async function onClickShow() {
-  await fetchLegalSettings();
+  await fetchSettings();
   showLegalNotice.value = true;
 }
 
@@ -31,14 +33,14 @@ const renderedLegalNotice = computed(() => {
     return DOMPurify.sanitize(rawHtml);
 });
 
-onMounted(fetchLegalSettings);
+onMounted(fetchSettings);
 </script>
 
 <template>
   <footer class="app-footer">
     <div class="footer-content">
       <div class="footer-section">
-        <h4 class="footer-title">Phoenix Athletics</h4>
+        <h4 class="footer-title">{{ settingsStore.companyName }}</h4>
         <p class="footer-text">
           Visit our official website for information on
           <a href="https://phoenix-athletics.de/" target="_blank" rel="noopener">Satzung, Beitragsordnung</a> and more.
@@ -74,17 +76,17 @@ onMounted(fetchLegalSettings);
     </div>
 
     <div class="footer-bottom">
-      <p>&copy; {{ new Date().getFullYear() }} Phoenix Athletics. All rights reserved.</p>
+      <p>&copy; {{ new Date().getFullYear() }} {{ settingsStore.companyName }}. All rights reserved.</p>
     </div>
 
     <Dialog v-model:visible="showLegalNotice" header="Legal Notice" :modal="true" class="w-full max-w-2xl">
       <div class="legal-notice-content">
-        <div v-if="legalSettings?.legalNoticeCompanyName">
+        <div v-if="legalSettings?.companyName">
           <section>
             <h3 class="primary-text">Angaben gemäß § 5 TMG</h3>
             <p>
               {{ legalSettings.legalNoticeRepresentative }}<br v-if="legalSettings.legalNoticeRepresentative" />
-              {{ legalSettings.legalNoticeCompanyName }}<br />
+              {{ legalSettings.companyName }}<br />
               {{ legalSettings.legalNoticeStreet }} {{ legalSettings.legalNoticeHouseNumber }}<br />
               {{ legalSettings.legalNoticeZipCode }} {{ legalSettings.legalNoticeCity }}
             </p>

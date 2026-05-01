@@ -31,7 +31,7 @@ class CourseRepository extends ServiceEntityRepository
         }
 
         if ($trainerId) {
-            $qb->andWhere('c.trainer = :trainerId')
+            $qb->andWhere('c.user = :trainerId')
                 ->setParameter('trainerId', $trainerId);
         }
 
@@ -75,13 +75,13 @@ class CourseRepository extends ServiceEntityRepository
         }
 
         if ($trainerId) {
-            $qb->andWhere('c.trainer = :trainerId')
+            $qb->andWhere('c.user = :trainerId')
                ->setParameter('trainerId', $trainerId);
         }
 
         if ($memberId) {
             $qb->join('c.bookings', 'b')
-               ->andWhere('b.member = :memberId')
+               ->andWhere('b.user = :memberId')
                ->setParameter('memberId', $memberId);
         }
 

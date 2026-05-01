@@ -25,12 +25,12 @@ class BookingNormalizer implements NormalizerInterface
 
         if ($data instanceof Booking) {
             $course = $data->getCourse();
-            $trainer = $course->getTrainer();
+            $trainer = $course->getUser();
             $currentUser = $this->security->getUser();
 
-            $settings = $this->settingsRepository->get();
+            $settings = $this->settingsRepository->find($trainer->getCompany()->getGlobalSettings()->getId());
             $isTrainer = ($currentUser && $currentUser->getUserIdentifier() === $trainer->getUserIdentifier());
-            $isOwnBooking = ($currentUser && $currentUser->getUserIdentifier() === $data->getMember()->getUserIdentifier());
+            $isOwnBooking = ($currentUser && $currentUser->getUserIdentifier() === $data->getUser()->getUserIdentifier());
 
             // Check if member is allowed to see this booking if it's waitlist
             if ($data->isWaitlist() && !$settings->isWaitlistVisible() && !$isTrainer && !$isOwnBooking) {
@@ -45,15 +45,15 @@ class BookingNormalizer implements NormalizerInterface
             }
 
             if (!$shouldShowName) {
-                if (isset($normalizedData['member']) && is_array($normalizedData['member'])) {
-                    $normalizedData['member']['name'] = 'Athlete #' . $data->getMember()->getId();
+                if (isset($normalizedData['user']) && is_array($normalizedData['user'])) {
+                    $normalizedData['user']['name'] = 'Athlete #' . $data->getUser()->getId();
                 }
             }
 
             // Always hide email unless it's the trainer or the member's own booking
             if (!$isTrainer && !$isOwnBooking) {
-                if (isset($normalizedData['member']) && is_array($normalizedData['member'])) {
-                    unset($normalizedData['member']['email']);
+                if (isset($normalizedData['user']) && is_array($normalizedData['user'])) {
+                    unset($normalizedData['user']['email']);
                 }
             }
         }

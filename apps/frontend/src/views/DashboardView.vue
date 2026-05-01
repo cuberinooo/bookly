@@ -18,7 +18,7 @@ const confirm = useConfirm();
 const route = useRoute();
 const courses = ref<any[]>([]);
 const notifications = ref<any[]>([]);
-const isTrainerMode = computed(() => authStore.isElevated() && authStore.viewMode === 'trainer');
+const isTrainerMode = computed(() => authStore.isTrainer() && authStore.viewMode === 'trainer');
 const dashboardLabel = computed(() => isTrainerMode.value ? (authStore.isAdmin() ? 'Admin Dashboard' : 'Trainer Dashboard') : 'My bookings');
 
 const courseTable = ref<any>(null);
@@ -85,7 +85,7 @@ async function fetchData() {
 
         const response = await api.get(url);
         courses.value = response.data;
-        
+
         if (isTrainerMode.value) {
             courseTable.value?.refresh();
             fetchNotifications();
@@ -326,7 +326,7 @@ onMounted(fetchData);
                 <div class="flex flex-col">
                   <span>{{ course.title }}</span>
                   <span
-                    v-if="course.bookings.find(b => b.member.email === authStore.user?.email)?.isWaitlist"
+                    v-if="course.bookings.find(b => b.user.email === authStore.user?.email)?.isWaitlist"
                     class="waitlist-indicator"
                   >WAITLIST QUEUE</span>
                 </div>
@@ -339,10 +339,10 @@ onMounted(fetchData);
                   <i class="pi pi-user" />
                   <div>
                     <label>TRAINER</label>
-                    <span>{{ course.trainer.name }}</span>
+                    <span>{{ course.user.name }}</span>
                   </div>
                 </div>
-                
+
                 <div class="schedule-focus-row">
                   <div class="focus-item">
                     <i class="pi pi-calendar" />

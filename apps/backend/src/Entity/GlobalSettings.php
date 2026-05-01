@@ -28,6 +28,9 @@ class GlobalSettings
     #[Groups(['settings:read', 'settings:write'])]
     private BookingWindow $bookingWindow = BookingWindow::OFF;
 
+    #[ORM\OneToOne(mappedBy: 'globalSettings')]
+    private ?Company $company = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -65,6 +68,18 @@ class GlobalSettings
     public function setBookingWindow(BookingWindow $bookingWindow): static
     {
         $this->bookingWindow = $bookingWindow;
+
+        return $this;
+    }
+
+    public function getCompany(): ?Company
+    {
+        return $this->company;
+    }
+
+    public function setCompany(?Company $company): static
+    {
+        $this->company = $company;
 
         return $this;
     }

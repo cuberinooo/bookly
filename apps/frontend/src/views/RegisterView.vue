@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
+import { settingsStore } from '../store/settings';
 import { useRouter } from 'vue-router';
 import api from '../services/api';
 import { useToast } from 'primevue/usetoast';
 
 const name = ref('');
 const email = ref('');
+const companyName = ref('');
 const password = ref('');
 const passwordTouched = ref(false);
 const confirmPassword = ref('');
@@ -34,11 +36,11 @@ const isPasswordValid = computed(() => {
 });
 
 const isFormValid = computed(() => {
-    return name.value && email.value && isPasswordValid.value && passwordValidation.value.match && acceptedTerms.value;
+    return name.value && email.value && companyName.value && isPasswordValid.value && passwordValidation.value.match && acceptedTerms.value;
 });
 
 const privacyPolicyDownloadUrl = computed(() => {
-  return `${api.defaults.baseURL}/legal-settings/privacy-policy/download`;
+  return `${api.defaults.baseURL}/admin-settings/privacy-policy/download`;
 });
 
 async function fetchRoles() {
@@ -65,6 +67,7 @@ async function register() {
     await api.post('/register', {
       name: name.value,
       email: email.value,
+      companyName: companyName.value,
       password: password.value,
       role: role.value,
     });
@@ -85,7 +88,7 @@ onMounted(fetchRoles);
     <div class="phoenix-card w-full max-w-md">
       <div class="text-center mb-10">
         <h1 class="text-3xl font-extrabold tracking-tight">
-          Join the Phoenix
+          Join Bookly
         </h1>
         <p class="text-slate-600 mt-2 font-medium">
           Start your athletic transformation
@@ -119,7 +122,20 @@ onMounted(fetchRoles);
             v-model="email"
             type="email"
             required
-            placeholder="athlete@phoenix.com"
+            :placeholder="'athlete@' + settingsStore.companyName.toLowerCase().replace(/[^a-z0-9]/g, '-') + '.com'"
+          />
+        </div>
+
+        <div class="flex flex-col">
+          <label
+            for="companyName"
+            class="form-label-base"
+          >Company Name</label>
+          <InputText
+            id="companyName"
+            v-model="companyName"
+            required
+            placeholder="Phoenix Athletics"
           />
         </div>
 

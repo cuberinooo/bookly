@@ -154,8 +154,8 @@ class CourseServiceTest extends TestCase
         $count = $this->service->transferCourseSeries($seriesId, $newTrainer);
 
         $this->assertEquals(2, $count);
-        $this->assertSame($newTrainer, $course1->getTrainer());
-        $this->assertSame($newTrainer, $course2->getTrainer());
-        $this->assertSame($newTrainer, $series->getTrainer(), 'Series template trainer should be updated');
+        $this->assertSame($newTrainer, $course1->getUser());
+        $this->assertSame($newTrainer, $course2->getUser());
+        $this->assertSame($newTrainer, $series->getUser(), 'Series template trainer should be updated');
     }
 }

@@ -59,7 +59,7 @@ watch(() => props.course, (newVal) => {
             startTime: new Date(newVal.startTime),
             durationMinutes: newVal.durationMinutes,
             recurrence: newVal.frequency || CourseFrequency.ONCE,
-            trainerId: newVal.trainer?.id || null,
+            trainerId: newVal.user?.id || null,
             transferAll: false
         };
     }
@@ -73,7 +73,7 @@ const isChanged = computed(() => {
     const originalTitle = isPreset ? props.course.title : props.course.title; // wait, this is same
 
     const timeChanged = new Date(form.value.startTime).getTime() !== new Date(props.course.startTime).getTime();
-    const trainerChanged = form.value.trainerId !== (props.course.trainer?.id || null);
+    const trainerChanged = form.value.trainerId !== (props.course.user?.id || null);
     const titleChanged = finalTitle !== props.course.title;
     const descriptionChanged = form.value.description !== (props.course.description || '');
     const capacityChanged = form.value.capacity !== props.course.capacity;

@@ -48,10 +48,10 @@ function close() {
           <Column header="Athlete">
             <template #body="slotProps">
               <div class="flex flex-col">
-                <span :class="['font-bold', isAnonymized(slotProps.data.member.name) ? 'text-slate-400' : 'text-slate-900']">
-                  {{ slotProps.data.member.name }}
+                <span :class="['font-bold', isAnonymized(slotProps.data.user.name) ? 'text-slate-400' : 'text-slate-900']">
+                  {{ slotProps.data.user.name }}
                 </span>
-                <small v-if="slotProps.data.member.email">{{ slotProps.data.member.email }}</small>
+                <small v-if="slotProps.data.user.email">{{ slotProps.data.user.email }}</small>
               </div>
             </template>
           </Column>
@@ -88,12 +88,12 @@ function close() {
           <Column header="Athlete">
             <template #body="slotProps">
               <div class="flex flex-col">
-                <span :class="['font-bold', isAnonymized(slotProps.data.member.name) ? 'text-slate-400' : 'text-slate-900']">
-                  {{ slotProps.data.member.name }}
+                <span :class="['font-bold', isAnonymized(slotProps.data.user.name) ? 'text-slate-400' : 'text-slate-900']">
+                  {{ slotProps.data.user.name }}
                 </span>
                 <small
-                  v-if="slotProps.data.member.email"
-                >{{ slotProps.data.member.email }}</small>
+                  v-if="slotProps.data.user.email"
+                >{{ slotProps.data.user.email }}</small>
               </div>
             </template>
           </Column>

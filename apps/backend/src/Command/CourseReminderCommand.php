@@ -33,7 +33,7 @@ class CourseReminderCommand extends Command
         
         // Find all future courses where reminder hasn't been sent
         $qb = $this->courseRepository->createQueryBuilder('c')
-            ->join('c.trainer', 't')
+            ->join('c.user', 'u')
             ->where('c.reminderSent = :false')
             ->andWhere('c.startTime > :now')
             ->setParameter('false', false)
@@ -43,7 +43,7 @@ class CourseReminderCommand extends Command
         $sentCount = 0;
 
         foreach ($courses as $course) {
-            $trainer = $course->getTrainer();
+            $trainer = $course->getUser();
             $notificationHours = $trainer->getCourseStartNotificationHours();
             $notificationMinutes = $trainer->getCourseStartNotificationMinutes();
 
@@ -76,13 +76,13 @@ class CourseReminderCommand extends Command
 
     private function sendReminder($course): void
     {
-        $trainer = $course->getTrainer();
+        $trainer = $course->getUser();
         $participants = [];
         foreach ($course->getBookings() as $booking) {
             if (!$booking->isWaitlist()) {
                 $participants[] = [
-                    'name' => $booking->getMember()->getName(),
-                    'email' => $booking->getMember()->getEmail(),
+                    'name' => $booking->getUser()->getName(),
+                    'email' => $booking->getUser()->getEmail(),
                 ];
             }
         }

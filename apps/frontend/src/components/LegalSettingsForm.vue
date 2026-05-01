@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
+import { settingsStore } from '../store/settings';
 import api from '../services/api';
 import { useToast } from 'primevue/usetoast';
 
 const toast = useToast();
 const settings = ref({
-    legalNoticeCompanyName: '',
     legalNoticeRepresentative: '',
     legalNoticeStreet: '',
     legalNoticeHouseNumber: '',
@@ -24,15 +24,14 @@ const saving = ref(false);
 const uploading = ref(false);
 
 const privacyPolicyDownloadUrl = computed(() => {
-  return `${api.defaults.baseURL}/legal-settings/privacy-policy/download`;
+  return `${api.defaults.baseURL}/admin-settings/privacy-policy/download`;
 });
 
 async function fetchSettings() {
     loading.value = true;
     try {
-        const response = await api.get('/legal-settings');
+        const response = await api.get('/admin-settings');
         settings.value = {
-            legalNoticeCompanyName: response.data.legalNoticeCompanyName || '',
             legalNoticeRepresentative: response.data.legalNoticeRepresentative || '',
             legalNoticeStreet: response.data.legalNoticeStreet || '',
             legalNoticeHouseNumber: response.data.legalNoticeHouseNumber || '',
@@ -56,8 +55,8 @@ async function fetchSettings() {
 async function updateSettings() {
     saving.value = true;
     try {
-        await api.patch('/legal-settings', settings.value);
-        toast.add({ severity: 'success', summary: 'Updated', detail: 'Legal information saved', life: 5000 });
+        await api.patch('/admin-settings', settings.value);
+        toast.add({ severity: 'success', summary: 'Updated', detail: 'Settings saved successfully', life: 5000 });
     } catch (e) {
         toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to update settings', life: 5000 });
     } finally {
@@ -74,7 +73,7 @@ async function onUpload(event: any) {
     formData.append('file', file);
 
     try {
-        const response = await api.post('/legal-settings/privacy-policy', formData, {
+        const response = await api.post('/admin-settings/privacy-policy', formData, {
             headers: {
                 'Content-Type': 'multipart/form-data'
             }

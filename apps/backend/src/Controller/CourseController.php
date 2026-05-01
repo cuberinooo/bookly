@@ -47,13 +47,13 @@ class CourseController extends AbstractController
             }
 
             if ($trainerId) {
-                $qb->andWhere('c.trainer = :trainerId')
+                $qb->andWhere('c.user = :trainerId')
                    ->setParameter('trainerId', $trainerId);
             }
 
             if ($memberId) {
                 $qb->join('c.bookings', 'b')
-                   ->andWhere('b.member = :memberId')
+                   ->andWhere('b.user = :memberId')
                    ->setParameter('memberId', $memberId);
             }
 
@@ -80,55 +80,66 @@ class CourseController extends AbstractController
             'meta' => $paginatedResults
         ], Response::HTTP_OK);
     }
-#[Route('', name: 'course_new', methods: ['POST'])]
-public function new(Request $request, CourseService $courseService): JsonResponse
-{
-    $this->denyAccessUnlessGranted('ROLE_TRAINER');
 
-    $data = json_decode($request->getContent(), true);
+    #[Route('', name: 'course_new', methods: ['POST'])]
+    public function new(Request $request, CourseService $courseService): JsonResponse
+    {
+        $this->denyAccessUnlessGranted('ROLE_TRAINER');
 
-    try {
-        /** @var \App\Entity\User $user */
-        $user = $this->getUser();
-        $courses = $courseService->createCourseSeries($data, $user);
-    } catch (ScheduleConflictException $e) {
-        return new JsonResponse(['error' => $e->getFrontendMessage()], Response::HTTP_CONFLICT);
-    } catch (\Exception $e) {
-        return new JsonResponse(['error' => 'An unexpected error occurred: ' . $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        $data = json_decode($request->getContent(), true);
+
+        try {
+            /** @var \App\Entity\User $user */
+            $user = $this->getUser();
+            $courses = $courseService->createCourseSeries($data, $user);
+        } catch (ScheduleConflictException $e) {
+            return new JsonResponse(['error' => $e->getFrontendMessage()], Response::HTTP_CONFLICT);
+        } catch (\Exception $e) {
+            return new JsonResponse(['error' => 'An unexpected error occurred: ' . $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        return new JsonResponse([
+            'status' => 'Course(s) created',
+            'count' => count($courses),
+            'ids' => array_map(fn($c) => $c->getId(), $courses)
+        ], Response::HTTP_CREATED);
     }
 
-    return new JsonResponse([
-        'status' => 'Course(s) created',
-        'count' => count($courses),
-        'ids' => array_map(fn($c) => $c->getId(), $courses)
-    ], Response::HTTP_CREATED);
-}
-
-
     #[Route('/{id}', name: 'course_show', methods: ['GET'])]
-    public function show(Course $course, SerializerInterface $serializer): JsonResponse
+    public function show(int $id, CourseRepository $courseRepository, SerializerInterface $serializer): JsonResponse
     {
+        $course = $courseRepository->find($id);
+        if (!$course) {
+            throw $this->createNotFoundException('Course not found');
+        }
+
         $json = $serializer->serialize($course, 'json', ['groups' => 'course:read']);
         return new JsonResponse($json, Response::HTTP_OK, [], true);
     }
 
     #[Route('/{id}', name: 'course_edit', methods: ['PATCH'])]
-    public function edit(Request $request, Course $course, EntityManagerInterface $entityManager, CourseService $courseService, UserRepository $userRepository, BookingService $bookingService): JsonResponse
+    public function edit(Request $request, int $id, CourseRepository $courseRepository, EntityManagerInterface $entityManager, CourseService $courseService, UserRepository $userRepository, BookingService $bookingService): JsonResponse
     {
         $this->denyAccessUnlessGranted('ROLE_TRAINER');
+
+        $course = $courseRepository->find($id);
+        if (!$course) {
+            throw $this->createNotFoundException('Course not found');
+        }
+
         $data = json_decode($request->getContent(), true);
         $updateSeries = $request->query->getBoolean('transferAll', false);
         $seriesId = $course->getSeriesId();
 
         $updates = [];
-        $newTrainer = $course->getTrainer();
+        $newTrainer = $course->getUser();
 
         if (isset($data['trainerId'])) {
             $newTrainer = $userRepository->find($data['trainerId']);
             if (!$newTrainer || !in_array('ROLE_TRAINER', $newTrainer->getRoles())) {
                 return new JsonResponse(['error' => 'Invalid trainer'], Response::HTTP_BAD_REQUEST);
             }
-            if ($newTrainer->getId() !== $course->getTrainer()->getId()) {
+            if ($newTrainer->getId() !== $course->getUser()->getId()) {
                 $updates['trainer'] = $newTrainer;
             }
         }
@@ -167,7 +178,7 @@ public function new(Request $request, CourseService $courseService): JsonRespons
         } else {
             // Update only this course
             if (isset($updates['trainer'])) {
-                $course->setTrainer($newTrainer);
+                $course->setUser($newTrainer);
                 $bookingService->removeBookingIfExists($course, $newTrainer);
             }
 
@@ -201,9 +212,14 @@ public function new(Request $request, CourseService $courseService): JsonRespons
     }
 
     #[Route('/{id}', name: 'course_delete', methods: ['DELETE'])]
-    public function delete(Request $request, Course $course, EntityManagerInterface $entityManager, CourseService $courseService): JsonResponse
+    public function delete(Request $request, int $id, CourseRepository $courseRepository, EntityManagerInterface $entityManager, CourseService $courseService): JsonResponse
     {
         $this->denyAccessUnlessGranted('ROLE_TRAINER');
+
+        $course = $courseRepository->find($id);
+        if (!$course) {
+            throw $this->createNotFoundException('Course not found');
+        }
 
         $deleteAll = $request->query->getBoolean('deleteAll', false);
         $seriesId = $course->getSeriesId();

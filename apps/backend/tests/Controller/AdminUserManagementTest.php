@@ -84,14 +84,14 @@ class AdminUserManagementTest extends WebTestCase
         
         $course = new Course();
         $course->setTitle('Test Course');
-        $course->setTrainer($trainer);
+        $course->setUser($trainer);
         $course->setStartTime(new \DateTime('+1 day'));
         $course->setEndTime(new \DateTime('+1 day 1 hour'));
         $course->setCapacity(10);
         $entityManager->persist($course);
 
         $booking = new Booking();
-        $booking->setMember($member);
+        $booking->setUser($member);
         $booking->setCourse($course);
         $entityManager->persist($booking);
 
@@ -126,7 +126,7 @@ class AdminUserManagementTest extends WebTestCase
         
         $course = new Course();
         $course->setTitle('Trainer Course');
-        $course->setTrainer($trainer);
+        $course->setUser($trainer);
         $course->setStartTime(new \DateTime('+1 day'));
         $course->setEndTime(new \DateTime('+1 day 1 hour'));
         $course->setCapacity(10);

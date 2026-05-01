@@ -4,11 +4,13 @@ import { authStore } from '../store/auth';
 import TrainerSettingsForm from '../components/TrainerSettingsForm.vue';
 import UserManagementTab from '../components/UserManagementTab.vue';
 import LegalSettingsForm from '../components/LegalSettingsForm.vue';
+import CompanySettingsForm from '../components/CompanySettingsForm.vue';
 
 const activeTabs = computed(() => {
     const tabs = [];
     if (authStore.isAdmin()) {
         tabs.push({ id: 'users', label: 'USER MANAGEMENT', component: UserManagementTab });
+        tabs.push({ id: 'company', label: 'COMPANY', component: CompanySettingsForm });
         tabs.push({ id: 'legal', label: 'LEGAL & COMPLIANCE', component: LegalSettingsForm });
     }
     if (authStore.isTrainer()) {
