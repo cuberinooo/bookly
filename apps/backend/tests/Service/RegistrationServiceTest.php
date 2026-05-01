@@ -4,12 +4,14 @@ namespace App\Tests\Service;
 
 use App\Entity\User;
 use App\Repository\UserRepository;
+use App\Repository\AdminSettingsRepository;
 use App\Service\RegistrationService;
 use App\Service\PasswordValidator;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Symfony\Bundle\SecurityBundle\Security;
 
 class RegistrationServiceTest extends TestCase
 {
@@ -20,6 +22,9 @@ class RegistrationServiceTest extends TestCase
     private $service;
     private $userRepository;
 
+    private $adminSettingsRepository;
+    private $security;
+
     protected function setUp(): void
     {
         $this->entityManager = $this->createMock(EntityManagerInterface::class);
@@ -27,14 +32,21 @@ class RegistrationServiceTest extends TestCase
         $this->mailer = $this->createMock(MailerInterface::class);
         $this->userRepository = $this->createMock(UserRepository::class);
         $this->passwordValidator = new PasswordValidator();
+        $this->adminSettingsRepository = $this->createMock(AdminSettingsRepository::class);
+        $this->security = $this->createMock(Security::class);
 
-        $this->entityManager->method('getRepository')->with(User::class)->willReturn($this->userRepository);
+        $this->entityManager->method('getRepository')->willReturnMap([
+            [User::class, $this->userRepository],
+            [\App\Entity\Company::class, $this->createMock(\App\Repository\CompanyRepository::class)],
+        ]);
 
         $this->service = new RegistrationService(
             $this->entityManager, 
             $this->passwordHasher, 
             $this->mailer, 
-            $this->passwordValidator
+            $this->passwordValidator,
+            $this->adminSettingsRepository,
+            $this->security
         );
     }
 
@@ -51,7 +63,7 @@ class RegistrationServiceTest extends TestCase
         $this->userRepository->method('findByRole')->with('ROLE_ADMIN')->willReturn([]);
         $this->passwordHasher->method('hashPassword')->willReturn('hashed_password');
 
-        $this->entityManager->expects($this->once())->method('persist');
+        $this->entityManager->expects($this->atLeastOnce())->method('persist');
         $this->entityManager->expects($this->once())->method('flush');
         // Expect 2 emails: verification email to user and notification email to admin
         $this->mailer->expects($this->exactly(2))->method('send');
@@ -79,7 +91,7 @@ class RegistrationServiceTest extends TestCase
         $this->userRepository->method('findOneBy')->willReturn(null);
         $this->passwordHasher->method('hashPassword')->willReturn('hashed_password');
 
-        $this->entityManager->expects($this->once())->method('persist');
+        $this->entityManager->expects($this->atLeastOnce())->method('persist');
         $this->entityManager->expects($this->once())->method('flush');
         // Expect only 1 email: verification email to user (no admin notification for admin creation)
         $this->mailer->expects($this->once())->method('send');

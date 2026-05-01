@@ -2,16 +2,16 @@
 
 namespace App\Tests\Service;
 
-use App\Entity\LegalSettings;
-use App\Repository\LegalSettingsRepository;
-use App\Service\LegalSettingsService;
+use App\Entity\AdminSettings;
+use App\Repository\AdminSettingsRepository;
+use App\Service\AdminSettingsService;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\String\Slugger\SluggerInterface;
 use Symfony\Component\String\UnicodeString;
 
-class LegalSettingsServiceTest extends TestCase
+class AdminSettingsServiceTest extends TestCase
 {
     private $repository;
     private $entityManager;
@@ -21,12 +21,12 @@ class LegalSettingsServiceTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->repository = $this->createMock(LegalSettingsRepository::class);
+        $this->repository = $this->createMock(AdminSettingsRepository::class);
         $this->entityManager = $this->createMock(EntityManagerInterface::class);
         $this->slugger = $this->createMock(SluggerInterface::class);
         $this->projectDir = '/tmp';
 
-        $this->service = new LegalSettingsService(
+        $this->service = new AdminSettingsService(
             $this->repository,
             $this->entityManager,
             $this->slugger,
@@ -36,7 +36,7 @@ class LegalSettingsServiceTest extends TestCase
 
     public function testGetSettings(): void
     {
-        $settings = new LegalSettings();
+        $settings = new AdminSettings();
         $this->repository->expects($this->once())->method('get')->willReturn($settings);
 
         $result = $this->service->getSettings();
@@ -45,23 +45,23 @@ class LegalSettingsServiceTest extends TestCase
 
     public function testUpdateSettings(): void
     {
-        $settings = new LegalSettings();
+        $settings = new AdminSettings();
         $this->repository->expects($this->once())->method('get')->willReturn($settings);
         $this->entityManager->expects($this->once())->method('flush');
 
         $data = [
-            'legalNoticeCompanyName' => 'Test Company',
+            'legalNoticeRepresentative' => 'John Doe',
             'legalNoticeMarkdown' => '# Test'
         ];
 
         $result = $this->service->updateSettings($data);
-        $this->assertEquals('Test Company', $result->getLegalNoticeCompanyName());
+        $this->assertEquals('John Doe', $result->getLegalNoticeRepresentative());
         $this->assertEquals('# Test', $result->getLegalNoticeMarkdown());
     }
 
     public function testUploadPrivacyPolicy(): void
     {
-        $settings = new LegalSettings();
+        $settings = new AdminSettings();
         $this->repository->expects($this->once())->method('get')->willReturn($settings);
         $this->entityManager->expects($this->once())->method('flush');
 

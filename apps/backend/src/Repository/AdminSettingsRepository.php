@@ -15,4 +15,16 @@ class AdminSettingsRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, AdminSettings::class);
     }
+
+    public function get(): AdminSettings
+    {
+        $settings = $this->findOneBy([]);
+        if (!$settings) {
+            $settings = new AdminSettings();
+            $this->getEntityManager()->persist($settings);
+            $this->getEntityManager()->flush();
+        }
+
+        return $settings;
+    }
 }

@@ -43,13 +43,18 @@ class BookingWindowTest extends TestCase
         $trainer = new User();
         $trainer->setName('Trainer');
 
+        $company = new \App\Entity\Company();
+        $globalSettings = new GlobalSettings();
+        $company->setGlobalSettings($globalSettings);
+        $trainer->setCompany($company);
+
         $user = new User();
         $user->setName('Member');
 
         $settings = new GlobalSettings();
         $settings->setBookingWindow(BookingWindow::CURRENT_WEEK);
 
-        $this->settingsRepository->method('get')->willReturn($settings);
+        $this->settingsRepository->method('find')->willReturn($settings);
 
         // Course starts next Monday
         $nextMonday = new \DateTime();
@@ -72,18 +77,24 @@ class BookingWindowTest extends TestCase
 
     public function testBookWithinCurrentWeekWindow(): void
     {
-        $trainer = new User();
-        $trainer->setName('Trainer');
-        $trainer->setID(1);
+        $trainer = $this->createMock(User::class);
+        $trainer->method('getId')->willReturn(1);
+        $trainer->method('getName')->willReturn('Trainer');
 
-        $user = new User();
-        $user->setName('Member');
-        $user->setID(2);
+        $user = $this->createMock(User::class);
+        $user->method('getId')->willReturn(2);
+        $user->method('getName')->willReturn('Member');
+
+        $company = new \App\Entity\Company();
+        $globalSettings = new GlobalSettings();
+        $company->setGlobalSettings($globalSettings);
+
+        $trainer->method('getCompany')->willReturn($company);
 
         $settings = new GlobalSettings();
         $settings->setBookingWindow(BookingWindow::CURRENT_WEEK);
 
-        $this->settingsRepository->method('get')->willReturn($settings);
+        $this->settingsRepository->method('find')->willReturn($settings);
 
         // Course starts this Friday (or Sunday if today is Friday/Saturday)
         $courseDate = new \DateTime();
@@ -108,7 +119,7 @@ class BookingWindowTest extends TestCase
 
         // Should NOT throw exception
         $this->bookingService->book($course, $user);
-        
+
         $this->assertTrue(true);
     }
 }

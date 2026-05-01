@@ -21,20 +21,26 @@ class BookingServiceTest extends TestCase
     private $settingsRepository;
     private $mailer;
     private $service;
+    private $defaultCompany;
+    private $defaultSettings;
 
     protected function setUp(): void
     {
         $this->entityManager = $this->createMock(EntityManagerInterface::class);
         $this->bookingRepository = $this->createMock(BookingRepository::class);
         $this->settingsRepository = $this->createMock(GlobalSettingsRepository::class);
-        $this->settingsRepository->method('get')->willReturn(new GlobalSettings());
+        $this->settingsRepository->method('find')->willReturn(new GlobalSettings());
         $this->mailer = $this->createMock(MailerInterface::class);
         $this->service = new BookingService(
-            $this->entityManager, 
-            $this->bookingRepository, 
+            $this->entityManager,
+            $this->bookingRepository,
             $this->settingsRepository,
             $this->mailer
         );
+
+        $this->defaultCompany = new \App\Entity\Company();
+        $this->defaultSettings = new GlobalSettings();
+        $this->defaultCompany->setGlobalSettings($this->defaultSettings);
     }
 
     public function testBookConfirmed(): void
@@ -45,6 +51,7 @@ class BookingServiceTest extends TestCase
 
         $trainer = $this->createMock(User::class);
         $trainer->method('getId')->willReturn(2);
+        $trainer->method('getCompany')->willReturn($this->defaultCompany);
 
         $course = new Course();
         $course->setEndTime(new \DateTime('+1 hour'));
@@ -70,9 +77,10 @@ class BookingServiceTest extends TestCase
         $user = $this->createMock(User::class);
         $user->method('getId')->willReturn(1);
         $user->method('getName')->willReturn('Jane Doe');
-        
+
         $trainer = $this->createMock(User::class);
         $trainer->method('getId')->willReturn(2);
+        $trainer->method('getCompany')->willReturn($this->defaultCompany);
 
         $course = new Course();
         $course->setEndTime(new \DateTime('+1 hour'));
@@ -96,8 +104,9 @@ class BookingServiceTest extends TestCase
     {
         $user = new User();
         $user->setName('Jane Doe');
-        
+
         $trainer = new User();
+        $trainer->setCompany($this->defaultCompany);
         $course = new Course();
         $course->setEndTime(new \DateTime('+1 hour'));
         $course->setUser($trainer);
@@ -114,7 +123,7 @@ class BookingServiceTest extends TestCase
         $waitlistedUser = new User();
         $waitlistedUser->setName('Waiting User');
         $waitlistedUser->setEmail('waiting@example.com');
-        
+
         $waitlistedBooking = new Booking();
         $waitlistedBooking->setUser($waitlistedUser);
         $waitlistedBooking->setCourse($course);
@@ -138,6 +147,7 @@ class BookingServiceTest extends TestCase
 
         $trainer = $this->createMock(User::class);
         $trainer->method('getId')->willReturn(2);
+        $trainer->method('getCompany')->willReturn($this->defaultCompany);
 
         $course = $this->createMock(Course::class);
         $course->method('getEndTime')->willReturn(new \DateTime('+1 hour'));
@@ -155,7 +165,8 @@ class BookingServiceTest extends TestCase
     {
         $user = $this->createMock(User::class);
         $user->method('getId')->willReturn(1);
-        
+        $user->method('getCompany')->willReturn($this->defaultCompany);
+
         $course = $this->createMock(Course::class);
         $course->method('getEndTime')->willReturn(new \DateTime('+1 hour'));
         $course->method('getUser')->willReturn($user);
@@ -170,8 +181,9 @@ class BookingServiceTest extends TestCase
     {
         $user = new User();
         $user->setName('Jane Doe');
-        
+
         $trainer = new User();
+        $trainer->setCompany($this->defaultCompany);
         $course = $this->createMock(Course::class);
         $course->method('getEndTime')->willReturn(new \DateTime('+1 hour'));
         $course->method('getUser')->willReturn($trainer);
