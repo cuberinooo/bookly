@@ -89,7 +89,7 @@ class RegistrationService
             $user->setMustChangePassword(true);
         } else {
             $user->setIsVerified(false);
-            $user->setIsActive(false);
+            $user->setIsActive(true);
             $user->setMustChangePassword(false);
         }
 

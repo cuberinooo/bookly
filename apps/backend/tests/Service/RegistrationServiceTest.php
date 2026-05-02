@@ -80,6 +80,7 @@ class RegistrationServiceTest extends TestCase
         $this->assertEquals('test@example.com', $user->getEmail());
         $this->assertEquals('Test User', $user->getName());
         $this->assertContains('ROLE_ADMIN', $user->getRoles());
+        $this->assertTrue($user->isActive());
     }
 
     public function testRegisterTrialMemberSuccess(): void
@@ -108,6 +109,7 @@ class RegistrationServiceTest extends TestCase
         $user = $this->service->register($data);
 
         $this->assertContains('ROLE_TRIAL', $user->getRoles());
+        $this->assertTrue($user->isActive());
     }
 
     public function testAdminRegisterSuccess(): void
