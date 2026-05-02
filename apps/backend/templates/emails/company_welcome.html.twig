@@ -1,0 +1,31 @@
+{% extends 'emails/base.html.twig' %}
+
+{% block body %}
+    <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 1.6; color: #334155;">
+        {{ content|raw }}
+
+        <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+            {% if isAdminCreation %}
+                <p>An administrator has created an account for you in our booking system.</p>
+                <p>Your temporary password is: <strong>{{ temporaryPassword }}</strong></p>
+                <p>For security reasons, you will be required to change this password upon your first login.</p>
+                <p>Please click the button below to verify your account and get started.</p>
+            {% else %}
+                <p style="font-size: 14px; color: #64748b;">
+                    To finalize your registration, please verify your email address by clicking the button below:
+                </p>
+
+                <div style="text-align: center; margin: 30px 0;">
+                    <a href="{{ verificationUrl }}" style="background-color: #ffc107; color: #000; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; display: inline-block;">
+                        Verify Account
+                    </a>
+                </div>
+
+                <p style="font-size: 12px; color: #94a3b8; margin-top: 20px;">
+                    If the button above doesn't work, copy and paste this link into your browser:<br>
+                    <a href="{{ verificationUrl }}" style="color: #64748b;">{{ verificationUrl }}</a>
+                </p>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}

@@ -38,13 +38,6 @@ onMounted(fetchSettings);
     <div class="footer-content">
       <div class="footer-section">
         <h4 class="footer-title">{{ settingsStore.companyName }}</h4>
-        <p class="footer-text">
-          Visit our official website for information on
-          <a href="https://phoenix-athletics.de/" target="_blank" rel="noopener">Satzung, Beitragsordnung</a> and more.
-        </p>
-        <a href="https://phoenix-athletics.de/" target="_blank" rel="noopener" class="footer-link">
-          phoenix-athletics.de <i class="pi pi-external-link"></i>
-        </a>
       </div>
 
       <div class="footer-section">

@@ -7,6 +7,8 @@ const defaults = {
   showParticipantNames: true,
   isWaitlistVisible: true,
   bookingWindow: 'OFF',
+  welcomeMailMarkdown: '',
+  welcomeMailAttachments: [] as any[],
   initialized: false,
 };
 
@@ -21,6 +23,8 @@ export const settingsStore = reactive({
             this.showParticipantNames = response.data.showParticipantNames;
             this.isWaitlistVisible = response.data.isWaitlistVisible;
             this.bookingWindow = response.data.bookingWindow;
+            this.welcomeMailMarkdown = adminResponse.data.welcomeMailMarkdown || '';
+            this.welcomeMailAttachments = adminResponse.data.welcomeMailAttachments || [];
         } catch (e) {
             console.error('Failed to fetch global settings', e);
         } finally {

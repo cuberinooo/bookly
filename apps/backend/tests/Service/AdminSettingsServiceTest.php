@@ -71,6 +71,7 @@ class AdminSettingsServiceTest extends TestCase
     public function testUploadPrivacyPolicy(): void
     {
         $company = new Company();
+        $company->setName('Test Company');
         $settings = $company->getAdminSettings();
         
         $this->entityManager->expects($this->once())->method('flush');
@@ -79,17 +80,20 @@ class AdminSettingsServiceTest extends TestCase
         $file->method('getClientOriginalName')->willReturn('test.pdf');
         $file->method('guessExtension')->willReturn('pdf');
         
-        $this->slugger->method('slug')->willReturn(new UnicodeString('test'));
+        $this->slugger->method('slug')->willReturnMap([
+            ['Test Company', new UnicodeString('test-company')],
+            ['test', new UnicodeString('test')]
+        ]);
 
         $file->expects($this->once())->method('move')->with(
-            $this->projectDir . '/public/uploads/legal',
+            $this->projectDir . '/public/uploads/test-company/legal',
             $this->callback(function($filename) {
                 return str_starts_with($filename, 'test-');
             })
         );
 
         $result = $this->service->uploadPrivacyPolicy($company, $file);
-        $this->assertStringStartsWith('/uploads/legal/test-', $result);
+        $this->assertStringStartsWith('/uploads/test-company/legal/test-', $result);
         $this->assertEquals($result, $settings->getPrivacyPolicyPdfPath());
     }
 }

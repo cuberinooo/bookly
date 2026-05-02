@@ -67,6 +67,14 @@ class AdminSettings
     #[Groups(['admin:read', 'admin:write'])]
     private ?string $termsAndConditionsMarkdown = null;
 
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[Groups(['admin:read', 'admin:write'])]
+    private ?string $welcomeMailMarkdown = null;
+
+    #[ORM\Column(type: Types::JSON, nullable: true)]
+    #[Groups(['admin:read', 'admin:write'])]
+    private ?array $welcomeMailAttachments = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -212,6 +220,28 @@ class AdminSettings
     public function setTermsAndConditionsMarkdown(?string $termsAndConditionsMarkdown): static
     {
         $this->termsAndConditionsMarkdown = $termsAndConditionsMarkdown;
+        return $this;
+    }
+
+    public function getWelcomeMailMarkdown(): ?string
+    {
+        return $this->welcomeMailMarkdown;
+    }
+
+    public function setWelcomeMailMarkdown(?string $welcomeMailMarkdown): static
+    {
+        $this->welcomeMailMarkdown = $welcomeMailMarkdown;
+        return $this;
+    }
+
+    public function getWelcomeMailAttachments(): ?array
+    {
+        return $this->welcomeMailAttachments;
+    }
+
+    public function setWelcomeMailAttachments(?array $welcomeMailAttachments): static
+    {
+        $this->welcomeMailAttachments = $welcomeMailAttachments;
         return $this;
     }
 }

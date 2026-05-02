@@ -73,6 +73,47 @@ class AdminSettingsController extends AbstractController
         }
     }
 
+    #[Route('/welcome-attachment', name: 'admin_settings_upload_welcome_attachment', methods: ['POST'])]
+    public function uploadWelcomeMailAttachment(Request $request): JsonResponse
+    {
+        $this->denyAccessUnlessGranted('ROLE_ADMIN');
+        $user = $this->getUser();
+        if (!$user instanceof \App\Entity\User || !$user->getCompany()) {
+             return new JsonResponse(['error' => 'Company not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        $file = $request->files->get('file');
+        if (!$file) {
+            return new JsonResponse(['error' => 'No file uploaded'], Response::HTTP_BAD_REQUEST);
+        }
+
+        try {
+            $attachment = $this->adminSettingsService->uploadWelcomeMailAttachment($user->getCompany(), $file);
+            return new JsonResponse($attachment);
+        } catch (\RuntimeException $e) {
+            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    #[Route('/welcome-attachment', name: 'admin_settings_delete_welcome_attachment', methods: ['DELETE'])]
+    public function deleteWelcomeMailAttachment(Request $request): JsonResponse
+    {
+        $this->denyAccessUnlessGranted('ROLE_ADMIN');
+        $user = $this->getUser();
+        if (!$user instanceof \App\Entity\User || !$user->getCompany()) {
+             return new JsonResponse(['error' => 'Company not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        $path = $request->query->get('path');
+        if (!$path) {
+            return new JsonResponse(['error' => 'No path provided'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $this->adminSettingsService->deleteWelcomeMailAttachment($user->getCompany(), $path);
+
+        return new JsonResponse(['status' => 'Attachment deleted']);
+    }
+
     #[Route('/privacy-policy/download', name: 'admin_settings_download_privacy_policy', methods: ['GET'])]
     public function downloadPrivacyPolicy(Request $request): Response
     {

@@ -9,6 +9,7 @@ use App\Repository\CompanyRepository;
 use App\Repository\AdminSettingsRepository;
 use App\Service\RegistrationService;
 use App\Service\PasswordValidator;
+use App\Service\WelcomeEmailService;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Mailer\MailerInterface;
@@ -26,6 +27,7 @@ class RegistrationServiceTest extends TestCase
     private $companyRepository;
     private $adminSettingsRepository;
     private $security;
+    private $welcomeEmailService;
 
     protected function setUp(): void
     {
@@ -37,6 +39,7 @@ class RegistrationServiceTest extends TestCase
         $this->passwordValidator = new PasswordValidator();
         $this->adminSettingsRepository = $this->createMock(AdminSettingsRepository::class);
         $this->security = $this->createMock(Security::class);
+        $this->welcomeEmailService = $this->createMock(WelcomeEmailService::class);
 
         $this->entityManager->method('getRepository')->willReturnMap([
             [User::class, $this->userRepository],
@@ -49,7 +52,8 @@ class RegistrationServiceTest extends TestCase
             $this->mailer, 
             $this->passwordValidator,
             $this->adminSettingsRepository,
-            $this->security
+            $this->security,
+            $this->welcomeEmailService
         );
     }
 
@@ -69,7 +73,7 @@ class RegistrationServiceTest extends TestCase
 
         $this->entityManager->expects($this->atLeastOnce())->method('persist');
         $this->entityManager->expects($this->once())->method('flush');
-        $this->mailer->expects($this->once())->method('send');
+        $this->welcomeEmailService->expects($this->once())->method('sendWelcomeEmail');
 
         $user = $this->service->register($data);
 
@@ -98,7 +102,8 @@ class RegistrationServiceTest extends TestCase
         $this->companyRepository->method('findOneBy')->willReturn($existingCompany);
         $this->passwordHasher->method('hashPassword')->willReturn('hashed_password');
 
-        $this->mailer->expects($this->exactly(2))->method('send'); // Verification + Admin notification
+        $this->welcomeEmailService->expects($this->once())->method('sendWelcomeEmail');
+        $this->mailer->expects($this->once())->method('send'); // Admin notification
 
         $user = $this->service->register($data);
 
@@ -119,7 +124,7 @@ class RegistrationServiceTest extends TestCase
 
         $this->entityManager->expects($this->atLeastOnce())->method('persist');
         $this->entityManager->expects($this->once())->method('flush');
-        $this->mailer->expects($this->once())->method('send');
+        $this->welcomeEmailService->expects($this->once())->method('sendWelcomeEmail');
 
         $user = $this->service->register($data, true);
 

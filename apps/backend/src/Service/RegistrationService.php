@@ -18,7 +18,8 @@ class RegistrationService
         private MailerInterface $mailer,
         private PasswordValidator $passwordValidator,
         private \App\Repository\AdminSettingsRepository $adminSettingsRepository,
-        private Security $security
+        private Security $security,
+        private WelcomeEmailService $welcomeEmailService
     ) {
     }
 
@@ -33,8 +34,8 @@ class RegistrationService
         $this->passwordValidator->validate($password);
 
         $currentUser = $this->security->getUser();
-        $defaultCompanyName = ($currentUser instanceof User && $currentUser->getCompany()) 
-            ? $currentUser->getCompany()->getName() 
+        $defaultCompanyName = ($currentUser instanceof User && $currentUser->getCompany())
+            ? $currentUser->getCompany()->getName()
             : 'Phoenix Athletics';
 
         $companyName = $data['companyName'] ?? $defaultCompanyName;
@@ -97,7 +98,7 @@ class RegistrationService
         $this->entityManager->persist($user);
         $this->entityManager->flush();
 
-        $this->sendVerificationEmail($user, $isAdminCreation, $password);
+        $this->welcomeEmailService->sendWelcomeEmail($user, $isNewCompany, $password, $isAdminCreation);
 
         if (!$isAdminCreation && !$isNewCompany) {
             $this->sendAdminNotificationEmail($user);
@@ -160,37 +161,12 @@ class RegistrationService
         $this->generateVerificationToken($user);
         $this->entityManager->flush();
 
-        $this->sendVerificationEmail($user);
+        $this->welcomeEmailService->sendWelcomeEmail($user);
     }
 
     private function generateVerificationToken(User $user): void
     {
         $user->setVerificationToken(Uuid::v4()->toBase58());
         $user->setVerificationTokenExpiresAt(new \DateTime('+24 hours'));
-    }
-
-    private function sendVerificationEmail(User $user, bool $isAdminCreation = false, ?string $temporaryPassword = null): void
-    {
-        $frontendUrl = $_ENV['FRONTEND_URL'] ?? 'http://localhost:4200';
-        $verificationUrl = $frontendUrl . '/verify-email?token=' . $user->getVerificationToken();
-        $siteName = $user->getCompany() ? $user->getCompany()->getName() : 'Phoenix Athletics';
-
-        $subject = $isAdminCreation
-            ? sprintf('Welcome to %s - Your Account is Ready', $siteName)
-            : sprintf('Verify your %s account', $siteName);
-
-        $email = (new TemplatedEmail())
-            ->from($_ENV['NO_REPLY_MAIL'] ?? 'noreply@example.com')
-            ->to($user->getEmail())
-            ->subject($subject)
-            ->htmlTemplate('emails/verify_email.html.twig')
-            ->context([
-                'name' => $user->getName(),
-                'url' => $verificationUrl,
-                'isAdminCreation' => $isAdminCreation,
-                'temporaryPassword' => $temporaryPassword,
-            ]);
-
-        $this->mailer->send($email);
     }
 }
