@@ -9,16 +9,24 @@ import LegalDialog from "../components/LegalDialog.vue";
 
 const step = ref(1);
 const name = ref('');
+const nameTouched = ref(false);
 const email = ref('');
+const emailTouched = ref(false);
 const companyName = ref('');
+const companyNameTouched = ref(false);
 const password = ref('');
 const passwordTouched = ref(false);
 const confirmPassword = ref('');
+const confirmPasswordTouched = ref(false);
 const role = ref('ROLE_MEMBER');
 const acceptedTerms = ref(false);
 const loading = ref(false);
 const router = useRouter();
 const toast = useToast();
+
+const isEmailValid = computed(() => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value);
+});
 
 const roleOptions = ref([]);
 const companyLegal = ref({ found: false, companyName: '', termsAndConditionsMarkdown: '', legalNoticeMarkdown: '', privacyPolicyPdfPath: '' });
@@ -61,6 +69,12 @@ async function fetchRoles() {
 }
 
 async function goToStep2() {
+  nameTouched.value = true;
+  emailTouched.value = true;
+  companyNameTouched.value = true;
+  passwordTouched.value = true;
+  confirmPasswordTouched.value = true;
+
   if (!isStep1Valid.value) {
     toast.add({ severity: 'error', summary: 'Error', detail: 'Please fill in all fields correctly.', life: 3000 });
     return;
@@ -145,7 +159,10 @@ onMounted(fetchRoles);
               v-model="name"
               required
               placeholder="Coach Carter"
+              :class="{ 'p-invalid': nameTouched && !name }"
+              @blur="nameTouched = true"
             />
+            <small v-if="nameTouched && !name" class="text-red-500 text-xs mt-1">Full name is required.</small>
           </div>
 
           <div class="flex flex-col">
@@ -159,7 +176,11 @@ onMounted(fetchRoles);
               type="email"
               required
               :placeholder="'athlete@' + settingsStore.companyName.toLowerCase().replace(/[^a-z0-9]/g, '-') + '.com'"
+              :class="{ 'p-invalid': emailTouched && (!email || !isEmailValid) }"
+              @blur="emailTouched = true"
             />
+            <small v-if="emailTouched && !email" class="text-red-500 text-xs mt-1">Email is required.</small>
+            <small v-else-if="emailTouched && !isEmailValid" class="text-red-500 text-xs mt-1">Please enter a valid email address.</small>
           </div>
 
           <div class="flex flex-col">
@@ -172,7 +193,10 @@ onMounted(fetchRoles);
               v-model="companyName"
               required
               placeholder="Phoenix Athletics"
+              :class="{ 'p-invalid': companyNameTouched && !companyName }"
+              @blur="companyNameTouched = true"
             />
+            <small v-if="companyNameTouched && !companyName" class="text-red-500 text-xs mt-1">Company name is required.</small>
           </div>
 
           <div class="flex flex-col">
@@ -187,8 +211,7 @@ onMounted(fetchRoles);
               required
               placeholder="••••••••"
               class="w-full"
-              input-class="w-full"
-              :class="{ 'p-invalid': passwordTouched && !isPasswordValid }"
+              :input-class="{ 'w-full': true, 'p-invalid': passwordTouched && !isPasswordValid }"
               @blur="passwordTouched = true"
             >
               <template #footer>
@@ -215,6 +238,7 @@ onMounted(fetchRoles);
                 </ul>
               </template>
             </Password>
+            <small v-if="passwordTouched && !isPasswordValid" class="text-red-500 text-xs mt-1">Password does not meet requirements.</small>
           </div>
 
           <div class="flex flex-col">
@@ -228,8 +252,10 @@ onMounted(fetchRoles);
               type="password"
               required
               placeholder="••••••••"
-              :class="{ 'p-invalid': confirmPassword && !passwordValidation.match }"
+              :class="{ 'p-invalid': confirmPasswordTouched && !passwordValidation.match }"
+              @blur="confirmPasswordTouched = true"
             />
+            <small v-if="confirmPasswordTouched && !passwordValidation.match" class="text-red-500 text-xs mt-1">Passwords do not match.</small>
           </div>
 
           <div class="flex flex-col">
@@ -252,7 +278,6 @@ onMounted(fetchRoles);
             severity="primary"
             label="Continue"
             :loading="loading"
-            :disabled="!isStep1Valid"
             class="btn-primary w-full py-4 text-lg"
           />
         </form>
