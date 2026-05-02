@@ -28,7 +28,7 @@ class AdminUserManagementTest extends WebTestCase
         $token = $this->getToken($client, $admin);
 
         // 2. Admin creates a new member
-        $memberEmail = 'new_member_' . uniqid() . '@example.com';
+        $memberEmail = 'new_member_' . uniqid('', true) . '@example.com';
         $client->request('POST', '/api/admin/users', [], [], [
             'CONTENT_TYPE' => 'application/json',
             'HTTP_AUTHORIZATION' => 'Bearer ' . $token
@@ -40,7 +40,7 @@ class AdminUserManagementTest extends WebTestCase
         ]));
 
         $this->assertEquals(Response::HTTP_CREATED, $client->getResponse()->getStatusCode());
-        
+
         // 3. Verify member state
         $entityManager->clear();
         $member = $entityManager->getRepository(User::class)->findOneBy(['email' => $memberEmail]);
@@ -56,16 +56,16 @@ class AdminUserManagementTest extends WebTestCase
         ], json_encode([
             'password' => 'NewStrongPass123!'
         ]));
-        
+
         $this->assertEquals(Response::HTTP_OK, $client->getResponse()->getStatusCode());
-        
+
         $responseContent = json_decode($client->getResponse()->getContent(), true);
         $this->assertArrayHasKey('token', $responseContent);
-        
+
         $newToken = $responseContent['token'];
         $payload = json_decode(base64_decode(explode('.', $newToken)[1]), true);
         $this->assertFalse($payload['mustChangePassword']);
-        
+
         $entityManager->clear();
         $member = $entityManager->getRepository(User::class)->find($member->getId());
         $this->assertFalse($member->isMustChangePassword());
@@ -81,7 +81,7 @@ class AdminUserManagementTest extends WebTestCase
         $admin = $this->createUser($entityManager, ['ROLE_ADMIN']);
         $member = $this->createUser($entityManager, ['ROLE_MEMBER']);
         $trainer = $this->createUser($entityManager, ['ROLE_TRAINER']);
-        
+
         $course = new Course();
         $course->setTitle('Test Course');
         $course->setUser($trainer);
@@ -123,7 +123,7 @@ class AdminUserManagementTest extends WebTestCase
 
         $admin = $this->createUser($entityManager, ['ROLE_ADMIN']);
         $trainer = $this->createUser($entityManager, ['ROLE_TRAINER']);
-        
+
         $course = new Course();
         $course->setTitle('Trainer Course');
         $course->setUser($trainer);
@@ -139,7 +139,7 @@ class AdminUserManagementTest extends WebTestCase
         $client->request('DELETE', '/api/admin/users/' . $trainer->getId(), [], [], [
             'HTTP_AUTHORIZATION' => 'Bearer ' . $token
         ]);
-        
+
         $this->assertEquals(Response::HTTP_OK, $client->getResponse()->getStatusCode());
 
         // Verify Trainer is still there but deactivated

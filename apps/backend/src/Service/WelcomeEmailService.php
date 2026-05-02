@@ -26,22 +26,25 @@ class WelcomeEmailService
 
         if ($isNewCompanyCreator || !$settings || !$settings->getWelcomeMailMarkdown()) {
             // System Default Welcome Mail
-            $this->sendSystemDefaultWelcomeEmail($email, $user);
+            $this->sendSystemDefaultWelcomeEmail($email, $user, $temporaryPassword, $isAdminCreation);
         } else {
             // Company-Specific Welcome Mail
             $this->sendCompanySpecificWelcomeEmail($email, $user, $settings, $isAdminCreation, $temporaryPassword);
         }
     }
 
-    private function sendSystemDefaultWelcomeEmail(TemplatedEmail $email, User $user): void
+    private function sendSystemDefaultWelcomeEmail(TemplatedEmail $email, User $user, ?string $temporaryPassword, bool $isAdminCreation): void
     {
-        $siteName = $user->getCompany() ? $user->getCompany()->getName() : 'Bookly';
+        $siteName = $user->getCompany() ? $user->getCompany()->getName() : 'Phoenix Athletics';
 
         $email->subject(sprintf('Welcome to %s - Your Account is Ready', $siteName))
             ->htmlTemplate('emails/verify_email.html.twig')
             ->context([
                 'name' => $user->getName(),
+                'siteName' => $siteName,
                 'url' => $this->getVerificationUrl($user),
+                'isAdminCreation' => $isAdminCreation,
+                'temporaryPassword' => $temporaryPassword,
             ]);
 
         $this->mailer->send($email);
@@ -50,18 +53,20 @@ class WelcomeEmailService
     private function sendCompanySpecificWelcomeEmail(TemplatedEmail $email, User $user, AdminSettings $settings, bool $isAdminCreation, ?string $temporaryPassword): void
     {
         $markdown = $settings->getWelcomeMailMarkdown();
+        $siteName = $user->getCompany()->getName();
         $placeholders = [
             '{user_name}' => $user->getName(),
-            '{company_name}' => $user->getCompany()->getName(),
+            '{company_name}' => $siteName,
         ];
 
         $content = str_replace(array_keys($placeholders), array_values($placeholders), $markdown);
 
-        $email->subject(sprintf('Welcome to %s!', $user->getCompany()->getName()))
+        $email->subject(sprintf('Welcome to %s!', $siteName))
             ->htmlTemplate('emails/company_welcome.html.twig')
             ->context([
                 'content' => $content,
                 'name' => $user->getName(),
+                'siteName' => $siteName,
                 'isAdminCreation' => $isAdminCreation,
                 'temporaryPassword' => $temporaryPassword,
                 'verificationUrl' => $this->getVerificationUrl($user),
