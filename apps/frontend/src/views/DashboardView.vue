@@ -9,6 +9,7 @@ import CourseForm from '../components/CourseForm.vue';
 import ManagedCoursesTable from '../components/ManagedCoursesTable.vue';
 import ParticipantsDialog from '../components/ParticipantsDialog.vue';
 import NotificationItem from '../components/NotificationItem.vue';
+import TrialStatusCard from '../components/TrialStatusCard.vue';
 import { useRoute } from 'vue-router';
 
 import { formatDateTime } from '../services/date-utils';
@@ -34,8 +35,16 @@ const loading = ref(true);
 const settings = ref<any>({
   showParticipantNames: true,
   isWaitlistVisible: true,
-  bookingWindow: BookingWindow.OFF
+  bookingWindow: BookingWindow.OFF,
+  trialBookingLimit: 0
 });
+
+const trialInfo = ref({
+    count: 0,
+    limit: 0
+});
+
+const isTrialMember = computed(() => authStore.user?.roles.includes('ROLE_TRIAL'));
 
 function isOutsideBookingWindow(course: any) {
     if (!settings.value || settings.value.bookingWindow === BookingWindow.OFF) {
@@ -92,14 +101,27 @@ async function fetchData() {
         }
 
         loading.value = true;
-        const responseSettings = await api.get('/settings');
+        const [responseSettings, responseMe] = await Promise.all([
+            api.get('/settings'),
+            api.get('/user/me')
+        ]);
+
         settings.value = {
           showParticipantNames: responseSettings.data.showParticipantNames ?? true,
           isWaitlistVisible: responseSettings.data.isWaitlistVisible ?? true,
-          bookingWindow: responseSettings.data.bookingWindow ?? BookingWindow.OFF
+          bookingWindow: responseSettings.data.bookingWindow ?? BookingWindow.OFF,
+          trialBookingLimit: responseSettings.data.trialBookingLimit ?? 0
         };
+
+        if (isTrialMember.value) {
+            trialInfo.value = {
+                count: responseMe.data.bookingCount ?? 0,
+                limit: responseSettings.data.trialBookingLimit ?? 0
+            };
+        }
     } catch (e) {
         toast.add({ severity: 'error', summary: 'Error', detail: `Failed to fetch ${dashboardLabel.value.toLowerCase()} data`, life: 5000 });
+    } finally {
         loading.value = false;
     }
 }
@@ -245,6 +267,13 @@ onMounted(fetchData);
         size="large"
         class="w-full md:w-auto py-4 md:py-3"
         @click="openNewCourse"
+      />
+
+      <TrialStatusCard
+        v-if="isTrialMember && !isTrainerMode"
+        :count="trialInfo.count"
+        :limit="trialInfo.limit"
+        class="md:w-80"
       />
     </div>
 
