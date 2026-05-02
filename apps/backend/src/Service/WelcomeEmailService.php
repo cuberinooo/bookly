@@ -12,7 +12,7 @@ class WelcomeEmailService
 {
     public function __construct(
         private MailerInterface $mailer,
-        private string $projectDir
+        private string $uploadDir
     ) {}
 
     public function sendWelcomeEmail(User $user, bool $isNewCompanyCreator = false, ?string $temporaryPassword = null, bool $isAdminCreation = false): void
@@ -75,7 +75,9 @@ class WelcomeEmailService
         // Attach files
         $attachments = $settings->getWelcomeMailAttachments() ?? [];
         foreach ($attachments as $att) {
-            $fullPath = $this->projectDir . '/public' . $att['path'];
+            // Remove /uploads/ prefix from path when using uploadDir
+            $relativePaths = str_replace('/uploads/', '', $att['path']);
+            $fullPath = $this->uploadDir . '/' . $relativePaths;
             if (file_exists($fullPath)) {
                 $email->attachFromPath($fullPath, $att['name']);
             }

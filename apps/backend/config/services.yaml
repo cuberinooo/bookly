@@ -8,6 +8,7 @@
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
     timezone: 'Europe/Berlin'
+    upload_dir: '%kernel.project_dir%/data/uploads'
 
 services:
     # default configuration for services in *this* file
@@ -32,11 +33,11 @@ services:
 
     App\Service\AdminSettingsService:
         arguments:
-            $projectDir: '%kernel.project_dir%'
+            $uploadDir: '%upload_dir%'
 
     App\Service\WelcomeEmailService:
         arguments:
-            $projectDir: '%kernel.project_dir%'
+            $uploadDir: '%upload_dir%'
 
 when@test:
     services:

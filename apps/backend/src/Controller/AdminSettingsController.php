@@ -141,7 +141,9 @@ class AdminSettingsController extends AbstractController
             return new Response('Privacy policy not found', Response::HTTP_NOT_FOUND);
         }
 
-        $fullPath = $this->getParameter('kernel.project_dir') . '/public' . $path;
+        // Remove /uploads/ prefix from path when using upload_dir
+        $relativePaths = str_replace('/uploads/', '', $path);
+        $fullPath = $this->getParameter('upload_dir') . '/' . $relativePaths;
 
         if (!file_exists($fullPath)) {
             return new Response('File not found', Response::HTTP_NOT_FOUND);

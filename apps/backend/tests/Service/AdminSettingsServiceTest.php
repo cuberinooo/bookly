@@ -17,7 +17,7 @@ class AdminSettingsServiceTest extends TestCase
     private $repository;
     private $entityManager;
     private $slugger;
-    private $projectDir;
+    private $uploadDir;
     private $service;
 
     protected function setUp(): void
@@ -25,13 +25,13 @@ class AdminSettingsServiceTest extends TestCase
         $this->repository = $this->createMock(AdminSettingsRepository::class);
         $this->entityManager = $this->createMock(EntityManagerInterface::class);
         $this->slugger = $this->createMock(SluggerInterface::class);
-        $this->projectDir = '/tmp';
+        $this->uploadDir = '/tmp/uploads';
 
         $this->service = new AdminSettingsService(
             $this->repository,
             $this->entityManager,
             $this->slugger,
-            $this->projectDir
+            $this->uploadDir
         );
     }
 
@@ -86,7 +86,7 @@ class AdminSettingsServiceTest extends TestCase
         ]);
 
         $file->expects($this->once())->method('move')->with(
-            $this->projectDir . '/public/uploads/test-company/legal',
+            $this->uploadDir . '/test-company/legal',
             $this->callback(function($filename) {
                 return str_starts_with($filename, 'test-');
             })

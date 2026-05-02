@@ -15,7 +15,7 @@ class AdminSettingsService
         private AdminSettingsRepository $repository,
         private EntityManagerInterface $entityManager,
         private SluggerInterface $slugger,
-        private string $projectDir
+        private string $uploadDir
     ) {}
 
     public function getSettingsByCompanyName(string $companyName): ?AdminSettings
@@ -61,7 +61,7 @@ class AdminSettingsService
     public function uploadPrivacyPolicy(\App\Entity\Company $company, UploadedFile $file): string
     {
         $companySlug = $this->slugger->slug($company->getName())->lower();
-        $uploadDir = $this->projectDir . '/public/uploads/' . $companySlug . '/legal';
+        $uploadDir = $this->uploadDir . '/' . $companySlug . '/legal';
 
         $originalFilename = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
         $safeFilename = $this->slugger->slug($originalFilename);
@@ -83,7 +83,7 @@ class AdminSettingsService
     public function uploadWelcomeMailAttachment(\App\Entity\Company $company, UploadedFile $file): array
     {
         $companySlug = $this->slugger->slug($company->getName())->lower();
-        $uploadDir = $this->projectDir . '/public/uploads/' . $companySlug . '/company_assets';
+        $uploadDir = $this->uploadDir . '/' . $companySlug . '/company_assets';
 
         $originalFilename = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
         $safeFilename = $this->slugger->slug($originalFilename);
@@ -116,7 +116,9 @@ class AdminSettingsService
         $newAttachments = [];
         foreach ($attachments as $att) {
             if ($att['path'] === $path) {
-                $fullPath = $this->projectDir . '/public' . $att['path'];
+                // Remove /uploads/ prefix from path when using uploadDir
+                $relativePaths = str_replace('/uploads/', '', $att['path']);
+                $fullPath = $this->uploadDir . '/' . $relativePaths;
                 if (file_exists($fullPath)) {
                     unlink($fullPath);
                 }
