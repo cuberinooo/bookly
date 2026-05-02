@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { settingsStore } from '../store/settings';
 import api from '../services/api';
 import { useToast } from 'primevue/usetoast';
@@ -10,6 +10,16 @@ const settings = ref({
 });
 const loading = ref(true);
 const saving = ref(false);
+
+const registrationLink = computed(() => {
+    const origin = window.location.origin;
+    return `${origin}/register?companyName=${encodeURIComponent(settings.value.name)}`;
+});
+
+function copyLink() {
+    navigator.clipboard.writeText(registrationLink.value);
+    toast.add({ severity: 'success', summary: 'Copied', detail: 'Registration link copied to clipboard', life: 3000 });
+}
 
 async function fetchSettings() {
     loading.value = true;
@@ -61,6 +71,28 @@ onMounted(fetchSettings);
           </div>
           <div class="mt-4 flex justify-end">
             <Button severity="primary" label="Save Company Settings" icon="pi pi-save" :loading="saving" @click="updateSettings" />
+          </div>
+        </div>
+
+        <Divider class="my-8" />
+
+        <div class="registration-link-section">
+          <h4 class="text-sm font-bold uppercase tracking-wider text-slate-900 mb-2">Member Registration Link</h4>
+          <p class="text-sm text-slate-600 mb-4">
+            Share this link with new members to make their registration easier. The company name will be pre-filled and locked.
+          </p>
+          <div class="flex gap-2 p-2 bg-slate-50 border border-slate-200 rounded-lg items-center">
+            <code class="text-xs text-slate-700 flex-1 overflow-hidden text-ellipsis whitespace-nowrap px-2">
+              {{ registrationLink }}
+            </code>
+            <Button
+                icon="pi pi-copy"
+                severity="secondary"
+                text
+                size="small"
+                v-tooltip.top="'Copy Link'"
+                @click="copyLink"
+            />
           </div>
         </div>
       </div>

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
 import { settingsStore } from '../store/settings';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import api from '../services/api';
 import { useToast } from 'primevue/usetoast';
 import {downloadPrivacyPolicy} from "../services/download";
@@ -21,10 +21,17 @@ const confirmPasswordTouched = ref(false);
 const acceptedTerms = ref(false);
 const loading = ref(false);
 const router = useRouter();
+const route = useRoute();
 const toast = useToast();
 
 const isEmailValid = computed(() => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value);
+});
+
+onMounted(() => {
+    if (route.query.companyName) {
+        companyName.value = route.query.companyName as string;
+    }
 });
 
 const companyLegal = ref({ found: false, companyName: '', termsAndConditionsMarkdown: '', legalNoticeMarkdown: '', privacyPolicyPdfPath: '' });
@@ -185,6 +192,7 @@ async function register() {
               required
               placeholder="Foo GmbH"
               :class="{ 'p-invalid': companyNameTouched && !companyName }"
+              :disabled="!!route.query.companyName"
               @blur="companyNameTouched = true"
             />
             <small v-if="companyNameTouched && !companyName" class="text-red-500 text-xs mt-1">Company name is required.</small>
