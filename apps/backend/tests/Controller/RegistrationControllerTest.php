@@ -43,4 +43,36 @@ class RegistrationControllerTest extends WebTestCase
         $client->request('GET', '/api/register/company-legal');
         $this->assertResponseStatusCodeSame(Response::HTTP_BAD_REQUEST);
     }
+
+    public function testGetTermsAndConditions(): void
+    {
+        $client = static::createClient();
+        $entityManager = static::getContainer()->get('doctrine')->getManager();
+
+        $companyName = 'Test Terms Company ' . uniqid();
+        $company = new Company();
+        $company->setName($companyName);
+
+        $adminSettings = new AdminSettings();
+        $adminSettings->setTermsAndConditionsMarkdown('# Privacy Terms');
+        $company->setAdminSettings($adminSettings);
+
+        $entityManager->persist($adminSettings);
+        $entityManager->persist($company);
+        $entityManager->flush();
+
+        // Test found
+        $client->request('GET', '/api/register/terms-and-conditions?name=' . urlencode($companyName));
+        $this->assertResponseIsSuccessful();
+        $data = json_decode($client->getResponse()->getContent(), true);
+        $this->assertEquals('# Privacy Terms', $data['termsAndConditionsMarkdown']);
+
+        // Test not found
+        $client->request('GET', '/api/register/terms-and-conditions?name=NonExistentCompany');
+        $this->assertResponseStatusCodeSame(Response::HTTP_NOT_FOUND);
+
+        // Test missing name
+        $client->request('GET', '/api/register/terms-and-conditions');
+        $this->assertResponseStatusCodeSame(Response::HTTP_BAD_REQUEST);
+    }
 }

@@ -101,4 +101,24 @@ class RegistrationController extends AbstractController
             'privacyPolicyPdfPath' => $settings?->getPrivacyPolicyPdfPath(),
         ]);
     }
+
+    #[Route('/api/register/terms-and-conditions', name: 'api_register_terms', methods: ['GET'])]
+    public function getTermsAndConditions(Request $request, CompanyRepository $companyRepository): JsonResponse
+    {
+        $name = $request->query->get('name');
+        if (!$name) {
+            return new JsonResponse(['error' => 'Missing company name'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $company = $companyRepository->findOneBy(['name' => $name]);
+        if (!$company) {
+            return new JsonResponse(['error' => 'Company not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        $settings = $company->getAdminSettings();
+
+        return new JsonResponse([
+            'termsAndConditionsMarkdown' => $settings?->getTermsAndConditionsMarkdown(),
+        ]);
+    }
 }

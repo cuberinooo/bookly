@@ -25,6 +25,8 @@ const companyLegal = ref({ found: false, companyName: '', termsAndConditionsMark
 const showTermsModal = ref(false);
 const dialogType = ref<'terms' | 'legal'>('terms');
 
+const legalSettings = computed(() => companyLegal.value);
+
 const passwordValidation = computed(() => {
     return {
         minLength: password.value.length >= 8,
@@ -68,6 +70,12 @@ async function goToStep2() {
   try {
     const response = await api.get(`/register/company-legal?name=${encodeURIComponent(companyName.value)}`);
     companyLegal.value = response.data;
+
+    if(companyLegal.value.found) {
+      const termsResponse = await api.get(`/register/terms-and-conditions?name=${encodeURIComponent(companyName.value)}`);
+      companyLegal.value.termsAndConditionsMarkdown = termsResponse.data.termsAndConditionsMarkdown;
+    }
+
     step.value = 2;
     window.scrollTo(0, 0);
   } catch (err) {
