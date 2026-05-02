@@ -48,7 +48,7 @@ const isStep1Valid = computed(() => {
 });
 
 const isFormValid = computed(() => {
-    return isStep1Valid.value && acceptedTerms.value;
+    return isStep1Valid.value && (!companyLegal.value.found || acceptedTerms.value);
 });
 
 async function fetchRoles() {
@@ -71,9 +71,10 @@ async function goToStep2() {
     const response = await api.get(`/register/company-legal?name=${encodeURIComponent(companyName.value)}`);
     companyLegal.value = response.data;
 
-    if(companyLegal.value.found) {
-      const termsResponse = await api.get(`/register/terms-and-conditions?name=${encodeURIComponent(companyName.value)}`);
-      companyLegal.value.termsAndConditionsMarkdown = termsResponse.data.termsAndConditionsMarkdown;
+    // Fetch terms and conditions only if company exists
+    if (companyLegal.value.found) {
+        const termsResponse = await api.get(`/register/terms-and-conditions?name=${encodeURIComponent(companyName.value)}`);
+        companyLegal.value.termsAndConditionsMarkdown = termsResponse.data.termsAndConditionsMarkdown;
     }
 
     step.value = 2;
@@ -122,10 +123,10 @@ onMounted(fetchRoles);
     <div class="phoenix-card w-full max-w-2xl">
       <div class="text-center mb-10">
         <h1 class="text-3xl font-extrabold tracking-tight">
-          {{ step === 1 ? 'Join Bookly' : 'Legal Agreement' }}
+          {{ step === 1 ? 'Join Bookly' : (companyLegal.found ? 'Legal Agreement' : 'Create New Company') }}
         </h1>
         <p class="text-slate-600 mt-2 font-medium">
-          {{ step === 1 ? 'Start your athletic transformation' : 'Please review and accept the following terms' }}
+          {{ step === 1 ? 'Start your athletic transformation' : (companyLegal.found ? 'Please review and accept the following terms' : 'Confirm your registration details') }}
         </p>
       </div>
 
@@ -260,32 +261,43 @@ onMounted(fetchRoles);
       <div v-else-if="step === 2">
         <div class="space-y-8">
           <div class="flex items-start gap-4 p-5 bg-primary/5 rounded-2xl border border-primary/10">
-            <Checkbox
-              id="terms"
-              v-model="acceptedTerms"
-              :binary="true"
-              class="mt-1"
-            />
-            <label
-              for="terms"
-              class="text-sm text-slate-700 font-medium leading-relaxed cursor-pointer"
-            >
-              I agree to the
-              <a href="javascript:void(0)"
-                 @click="onClickShowTerms"
-                 class="font-bold text-primary hover:underline">
-                Terms & Conditions (AGB)
-              </a>
-              of {{ companyLegal.found ? companyLegal.companyName : companyName }}
-              and I have read the
-              <a href="javascript:void(0)"
-                 @click="downloadPrivacyPolicy(companyLegal.companyName || companyName)"
-                 class="text-primary font-bold hover:underline">
-                Privacy Policy (Datenschutz)
-              </a>
-            </label>
-          </div>
+            <div v-if="companyLegal.found">
+              <Checkbox
+                id="terms"
+                v-model="acceptedTerms"
+                :binary="true"
+                class="mt-1"
+              />
+              <label
 
+                for="terms"
+                class="text-sm text-slate-700 font-medium leading-relaxed cursor-pointer"
+              >
+                I agree to the
+                <a href="javascript:void(0)"
+                   @click="onClickShowTerms"
+                   class="font-bold text-primary hover:underline">
+                  Terms & Conditions (AGB)
+                </a>
+                of {{ companyLegal.companyName }}
+                and I have read the
+                <a href="javascript:void(0)"
+                   @click="downloadPrivacyPolicy(companyLegal.companyName)"
+                   class="text-primary font-bold hover:underline">
+                  Privacy Policy (Datenschutz)
+                </a>
+              </label>
+            </div>
+            <div v-else>
+              <label
+                for="terms"
+                class="text-sm text-slate-700 font-medium leading-relaxed cursor-pointer"
+              >
+                The company <strong>{{ companyName }}</strong> could not be found.
+                You can continue and a new company will be created.
+              </label>
+            </div>
+          </div>
           <div class="flex gap-4">
             <Button
               type="button"
@@ -301,7 +313,7 @@ onMounted(fetchRoles);
               severity="primary"
               label="Accept & Create Account"
               :loading="loading"
-              :disabled="!acceptedTerms"
+              :disabled="companyLegal.found ? !acceptedTerms : false"
               @click="register"
               class="flex-2 btn-primary py-4 text-lg"
             />
