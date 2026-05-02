@@ -11,6 +11,11 @@ const loading = ref(false);
 const userDialog = ref(false);
 const editingUser = ref<any>({ name: '', email: '', roles: ['ROLE_MEMBER'], password: '' });
 const submitting = ref(false);
+const submitted = ref(false);
+
+const isEmailValid = (email: string) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+};
 
 const roleOptions = [
     { label: 'Member', value: 'ROLE_MEMBER' },
@@ -32,6 +37,7 @@ async function fetchUsers() {
 
 function openNewUser() {
     editingUser.value = { name: '', email: '', roles: ['ROLE_MEMBER'], password: Math.random().toString(36).slice(-10) + 'A1!' };
+    submitted.value = false;
     userDialog.value = true;
 }
 
@@ -42,10 +48,17 @@ function editUser(user: any) {
         email: user.email,
         roles: [...user.roles].filter(r => r !== 'ROLE_USER') // Filter out internal base role
     };
+    submitted.value = false;
     userDialog.value = true;
 }
 
 async function saveUser() {
+    submitted.value = true;
+    
+    if (!editingUser.value.name || !editingUser.value.email || !isEmailValid(editingUser.value.email)) {
+        return;
+    }
+
     submitting.value = true;
     try {
         if (editingUser.value.id) {
@@ -61,7 +74,11 @@ async function saveUser() {
         userDialog.value = false;
         fetchUsers();
     } catch (e: any) {
-        toast.add({ severity: 'error', summary: 'Error', detail: e.response?.data?.error || 'Operation failed', life: 5000 });
+        let detail = e.response?.data?.error || 'Operation failed';
+        if (e.response?.status === 409 || detail === 'Email already registered') {
+            detail = 'This email address is already in use by another athlete.';
+        }
+        toast.add({ severity: 'error', summary: 'Validation Error', detail: detail, life: 7000 });
     } finally {
         submitting.value = false;
     }
@@ -198,7 +215,9 @@ onMounted(fetchUsers);
           <InputText
             v-model="editingUser.name"
             placeholder="Name"
+            :class="{ 'p-invalid': submitted && !editingUser.name }"
           />
+          <small v-if="submitted && !editingUser.name" class="p-error">Name is required.</small>
         </div>
         <div class="flex flex-col gap-2">
           <label class="text-sm uppercase tracking-wider">Email Address</label>
@@ -206,7 +225,10 @@ onMounted(fetchUsers);
             v-model="editingUser.email"
             :disabled="!!editingUser.id"
             placeholder="email@example.com"
+            :class="{ 'p-invalid': submitted && (!editingUser.email || !isEmailValid(editingUser.email)) }"
           />
+          <small v-if="submitted && !editingUser.email" class="p-error">Email is required.</small>
+          <small v-else-if="submitted && !isEmailValid(editingUser.email)" class="p-error">Invalid email format.</small>
         </div>
         <div class="flex flex-col gap-2">
           <label class="text-sm uppercase tracking-wider">Roles</label>
@@ -254,4 +276,9 @@ onMounted(fetchUsers);
 
 <style scoped>
 .font-barlow { font-family: 'Barlow Condensed', sans-serif; }
+.p-error {
+    color: var(--danger-color);
+    font-size: 0.75rem;
+    margin-top: -0.25rem;
+}
 </style>

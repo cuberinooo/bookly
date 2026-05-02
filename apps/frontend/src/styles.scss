@@ -96,6 +96,10 @@ td {
             color: white !important;
         }
     }
+
+    &.p-confirmdialog-reject-button {
+      background-color: var(--primary-color) !important;
+    }
 }
 
 .p-select-option.p-select-option-selected {

@@ -39,7 +39,11 @@ class AdminUserController extends AbstractController
         try {
             $registrationService->register($data, true);
         } catch (\Exception $e) {
-            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
+            $statusCode = Response::HTTP_BAD_REQUEST;
+            if ($e->getMessage() === 'Email already registered') {
+                $statusCode = Response::HTTP_CONFLICT;
+            }
+            return new JsonResponse(['error' => $e->getMessage()], $statusCode);
         }
 
         return new JsonResponse(['status' => 'User created successfully. Temporary password sent via email.'], Response::HTTP_CREATED);

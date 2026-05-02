@@ -123,7 +123,11 @@ async function register() {
     toast.add({ severity: 'success', summary: 'Check your email', detail: 'Account created! Please verify your email before logging in.', life: 5000 });
     router.push({ name: 'login' });
   } catch (err: any) {
-    toast.add({ severity: 'error', summary: 'Error', detail: err.response?.data?.error || 'Registration failed', life: 5000 });
+    let detail = err.response?.data?.error || 'Registration failed';
+    if (err.response?.status === 409 || detail === 'Email already registered') {
+        detail = 'This email address is already registered. Please login or use a different email.';
+    }
+    toast.add({ severity: 'error', summary: 'Error', detail: detail, life: 7000 });
   } finally {
     loading.value = false;
   }
