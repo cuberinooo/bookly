@@ -57,7 +57,7 @@ onMounted(fetchSettings);
           </p>
           <div class="field flex flex-col gap-2">
             <label class="font-bold uppercase text-xs" for="companyName">Company Name</label>
-            <InputText id="companyName" v-model="settings.name" placeholder="e.g. Phoenix Athletics" class="w-full max-w-md" />
+            <InputText id="companyName" v-model="settings.name" placeholder="e.g. Foo GmbH" class="w-full max-w-md" />
           </div>
           <div class="mt-4 flex justify-end">
             <Button severity="primary" label="Save Company Settings" icon="pi pi-save" :loading="saving" @click="updateSettings" />

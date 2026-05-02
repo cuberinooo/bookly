@@ -183,7 +183,7 @@ async function register() {
               id="companyName"
               v-model="companyName"
               required
-              placeholder="Phoenix Athletics"
+              placeholder="Foo GmbH"
               :class="{ 'p-invalid': companyNameTouched && !companyName }"
               @blur="companyNameTouched = true"
             />
