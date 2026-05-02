@@ -10,13 +10,13 @@ import WelcomeMailSettingsTab from '../components/WelcomeMailSettingsTab.vue';
 const activeTabs = computed(() => {
     const tabs = [];
     if (authStore.isAdmin()) {
-        tabs.push({ id: 'users', label: 'USER MANAGEMENT', component: UserManagementTab });
-        tabs.push({ id: 'company', label: 'COMPANY', component: CompanySettingsForm });
-        tabs.push({ id: 'welcome', label: 'WELCOME EMAIL', component: WelcomeMailSettingsTab });
+        tabs.push({ id: 'users', label: 'ATHLETES', component: UserManagementTab });
+        tabs.push({ id: 'company', label: 'IDENTITY', component: CompanySettingsForm });
+        tabs.push({ id: 'welcome', label: 'WELCOME MAIL', component: WelcomeMailSettingsTab });
         tabs.push({ id: 'legal', label: 'LEGAL & COMPLIANCE', component: LegalSettingsForm });
     }
     if (authStore.isTrainer()) {
-        tabs.push({ id: 'trainer', label: 'TRAINER PREFERENCES', component: TrainerSettingsForm });
+        tabs.push({ id: 'system', label: 'SYSTEM & ALERTS', component: TrainerSettingsForm });
     }
     if (!authStore.isAdmin() && !authStore.isTrainer()) {
         tabs.push({ id: 'privacy', label: 'PRIVACY', component: null });
@@ -59,7 +59,7 @@ const activeTabs = computed(() => {
           >
             <component :is="tab.component" />
           </div>
-          
+
           <div
             v-else-if="tab.id === 'privacy'"
             class="phoenix-card p-10 text-center mt-6"

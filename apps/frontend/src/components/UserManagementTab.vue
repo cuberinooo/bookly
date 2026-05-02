@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue';
 import api from '../services/api';
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
+import {authStore} from "../store/auth";
 
 const toast = useToast();
 const confirm = useConfirm();
@@ -55,7 +56,7 @@ function editUser(user: any) {
 
 async function saveUser() {
     submitted.value = true;
-    
+
     if (!editingUser.value.name || !editingUser.value.email || !isEmailValid(editingUser.value.email)) {
         return;
     }
@@ -68,6 +69,15 @@ async function saveUser() {
                 roles: editingUser.value.roles
             });
             toast.add({ severity: 'success', summary: 'Updated', detail: 'User updated', life: 5000 });
+
+            if (editingUser.value.id === authStore.user?.id) {
+                // Refresh current user info to update roles in session
+                const response = await api.get('/user/me');
+                authStore.user = {
+                    ...authStore.user,
+                    ...response.data
+                } as any;
+            }
         } else {
             await api.post('/admin/users', editingUser.value);
             toast.add({ severity: 'success', summary: 'Created', detail: 'User created and email sent', life: 5000 });

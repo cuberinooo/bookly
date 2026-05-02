@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import api from '../services/api';
+import { authStore } from '../store/auth';
 import { useToast } from 'primevue/usetoast';
 import { BookingWindow } from '../app/enums/BookingWindow';
 
@@ -94,8 +95,8 @@ onMounted(fetchSettings);
       <!-- GLOBAL SETTINGS SECTION -->
       <section class="settings-section">
         <div class="section-header mb-6">
-          <h2 class="text-2xl font-black text-slate-900 tracking-tight font-barlow">SYSTEM PREFERENCES</h2>
-          <p class="text-sm text-slate-500 font-medium">Global settings applied to all trainers and members.</p>
+          <h2 class="text-2xl font-black text-slate-900 tracking-tight font-barlow uppercase">Global Operations</h2>
+          <p class="text-sm text-slate-500 font-medium">Configure organization-wide rules for bookings and privacy.</p>
         </div>
 
         <div class="flex flex-col gap-6">
@@ -184,9 +185,9 @@ onMounted(fetchSettings);
       </section>
 
       <!-- PERSONAL SETTINGS SECTION -->
-      <section class="settings-section">
+      <section v-if="authStore.isTrainer()" class="settings-section">
         <div class="section-header mb-6">
-          <h2 class="text-2xl font-black text-slate-900 tracking-tight font-barlow">PERSONAL PREFERENCES</h2>
+          <h2 class="text-2xl font-black text-slate-900 tracking-tight font-barlow uppercase">Trainer Alerts</h2>
           <p class="text-sm text-slate-500 font-medium">Individual settings specific to your account.</p>
         </div>
 
