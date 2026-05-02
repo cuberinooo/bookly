@@ -87,7 +87,7 @@ onMounted(fetchSettings);
     >
       <i class="pi pi-spin pi-spinner text-3xl text-amber-400" />
     </div>
-        
+
     <div
       v-else
       class="settings-grid flex flex-col gap-12"
@@ -226,12 +226,12 @@ onMounted(fetchSettings);
             </div>
           </div>
           <div class="flex justify-end pt-4 border-t border-slate-100">
-            <Button 
-                label="Save Notification Settings" 
-                icon="pi pi-check" 
-                severity="primary" 
+            <Button
+                label="Save Notification Settings"
+                icon="pi pi-check"
+                severity="primary"
                 :loading="saving"
-                @click="updatePersonalSettings" 
+                @click="updatePersonalSettings"
             />
           </div>
         </div>
@@ -261,6 +261,7 @@ onMounted(fetchSettings);
 }
 
 .setting-info {
+  color: var(--bg-primary-color);
     label { @apply mb-1 block font-bold text-slate-700 uppercase text-sm; font-family: 'Barlow Condensed', sans-serif; }
 }
 </style>
