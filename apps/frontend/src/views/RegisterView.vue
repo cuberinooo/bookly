@@ -4,9 +4,8 @@ import { settingsStore } from '../store/settings';
 import { useRouter } from 'vue-router';
 import api from '../services/api';
 import { useToast } from 'primevue/usetoast';
-import { marked } from 'marked';
-import DOMPurify from 'dompurify';
 import {downloadPrivacyPolicy} from "../services/download";
+import LegalDialog from "../components/LegalDialog.vue";
 
 const step = ref(1);
 const name = ref('');
@@ -24,6 +23,7 @@ const toast = useToast();
 const roleOptions = ref([]);
 const companyLegal = ref({ found: false, companyName: '', termsAndConditionsMarkdown: '', legalNoticeMarkdown: '', privacyPolicyPdfPath: '' });
 const showTermsModal = ref(false);
+const dialogType = ref<'terms' | 'legal'>('terms');
 
 const passwordValidation = computed(() => {
     return {
@@ -47,11 +47,6 @@ const isStep1Valid = computed(() => {
 
 const isFormValid = computed(() => {
     return isStep1Valid.value && acceptedTerms.value;
-});
-
-const renderedTerms = computed(() => {
-  const md = companyLegal.value?.termsAndConditionsMarkdown || '# Terms & Conditions\n\nPlease agree to our general terms of service to continue.';
-  return DOMPurify.sanitize(marked.parse(md) as string);
 });
 
 async function fetchRoles() {
@@ -80,6 +75,11 @@ async function goToStep2() {
   } finally {
     loading.value = false;
   }
+}
+
+function onClickShowTerms() {
+  dialogType.value = 'terms';
+  showTermsModal.value = true;
 }
 
 async function register() {
@@ -263,11 +263,15 @@ onMounted(fetchRoles);
               class="text-sm text-slate-700 font-medium leading-relaxed cursor-pointer"
             >
               I agree to the
-              <span class="font-bold text-primary">Terms & Conditions (AGB)</span>
+              <a href="javascript:void(0)"
+                 @click="onClickShowTerms"
+                 class="font-bold text-primary hover:underline">
+                Terms & Conditions (AGB)
+              </a>
               of {{ companyLegal.found ? companyLegal.companyName : companyName }}
               and I have read the
               <a href="javascript:void(0)"
-                 @click="downloadPrivacyPolicy()"
+                 @click="downloadPrivacyPolicy(companyLegal.companyName || companyName)"
                  class="text-primary font-bold hover:underline">
                 Privacy Policy (Datenschutz)
               </a>
@@ -310,15 +314,12 @@ onMounted(fetchRoles);
       </div>
     </div>
 
-    <Dialog v-model:visible="showTermsModal" :header="'Terms & Conditions - ' + (companyLegal.found ? companyLegal.companyName : companyName)" :modal="true" class="w-full max-w-3xl" :breakpoints="{'960px': '75vw', '640px': '90vw'}">
-      <div class="prose prose-slate max-w-none p-2 markdown-content overflow-y-auto max-h-[60vh]" v-html="renderedTerms"></div>
-      <template #footer>
-        <div class="flex justify-between items-center w-full">
-          <p class="text-xs text-slate-500 italic">Please read carefully before accepting.</p>
-          <Button label="I Understand" icon="pi pi-check" @click="showTermsModal = false" class="btn-primary" autofocus />
-        </div>
-      </template>
-    </Dialog>
+    <LegalDialog
+      v-model:visible="showTermsModal"
+      :type="dialogType"
+      :data="legalSettings"
+      :company-name="companyLegal.companyName || companyName"
+    />
   </div>
 </template>
 

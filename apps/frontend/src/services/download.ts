@@ -1,14 +1,18 @@
 import api from "./api";
 import {authStore} from "../store/auth";
 
-export async function downloadPrivacyPolicy() {
+export async function downloadPrivacyPolicy(companyName?: string) {
   try {
-    const response = await api.get('/admin-settings/privacy-policy/download', {
+    const urlParams = companyName ? `?companyName=${encodeURIComponent(companyName)}` : '';
+    
+    const headers: any = {};
+    if (authStore.token) {
+        headers.Authorization = `Bearer ${authStore.token}`;
+    }
+
+    const response = await api.get(`/admin-settings/privacy-policy/download${urlParams}`, {
       responseType: 'blob',
-      headers: {
-        // Force the header here just in case the interceptor misses it
-        Authorization: `Bearer ${authStore.token}`
-      }
+      headers
     });
 
     const blob = new Blob([response.data], { type: 'application/pdf' });

@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted } from 'vue';
 import { settingsStore } from '../store/settings';
 import api from '../services/api';
-import { marked } from 'marked';
-import DOMPurify from 'dompurify';
-import {downloadPrivacyPolicy} from "../services/download";
+import { downloadPrivacyPolicy } from "../services/download";
+import LegalDialog from "./LegalDialog.vue";
 
-const showLegalNotice = ref(false);
+const showLegalDialog = ref(false);
+const dialogType = ref<'terms' | 'legal'>('legal');
 const legalSettings = ref<any>(null);
 
 async function fetchSettings() {
@@ -18,16 +18,17 @@ async function fetchSettings() {
     }
 }
 
-async function onClickShow() {
+async function onClickShowLegal() {
   await fetchSettings();
-  showLegalNotice.value = true;
+  dialogType.value = 'legal';
+  showLegalDialog.value = true;
 }
 
-const renderedLegalNotice = computed(() => {
-    if (!legalSettings.value?.legalNoticeMarkdown) return null;
-    const rawHtml = marked.parse(legalSettings.value.legalNoticeMarkdown) as string;
-    return DOMPurify.sanitize(rawHtml);
-});
+async function onClickShowTerms() {
+  await fetchSettings();
+  dialogType.value = 'terms';
+  showLegalDialog.value = true;
+}
 
 onMounted(fetchSettings);
 </script>
@@ -58,8 +59,13 @@ onMounted(fetchSettings);
             </a>
           </li>
           <li>
-            <a href="javascript:void(0)" @click="onClickShow" class="footer-link">
+            <a href="javascript:void(0)" @click="onClickShowLegal" class="footer-link">
               <i class="pi pi-info-circle"></i> Legal Notice (Impressum)
+            </a>
+          </li>
+          <li>
+            <a href="javascript:void(0)" @click="onClickShowTerms" class="footer-link">
+              <i class="pi pi-file-text"></i> Terms & Conditions (AGB)
             </a>
           </li>
         </ul>
@@ -78,59 +84,12 @@ onMounted(fetchSettings);
       <p>&copy; {{ new Date().getFullYear() }} {{ settingsStore.companyName }}. All rights reserved.</p>
     </div>
 
-    <Dialog v-model:visible="showLegalNotice" header="Legal Notice" :modal="true" class="w-full max-w-2xl">
-      <div class="legal-notice-content">
-        <div v-if="legalSettings?.legalNoticeRepresentative">
-          <section>
-            <h3 class="primary-text">Angaben gemäß § 5 TMG</h3>
-            <p>
-              {{ legalSettings.legalNoticeRepresentative }}<br v-if="legalSettings.legalNoticeRepresentative" />
-              {{ legalSettings.legalNoticeStreet }} {{ legalSettings.legalNoticeHouseNumber }}<br />
-              {{ legalSettings.legalNoticeZipCode }} {{ legalSettings.legalNoticeCity }}
-            </p>
-          </section>
-
-          <section v-if="legalSettings.legalNoticeEmail || legalSettings.legalNoticePhone" class="mt-4">
-            <h3 class="primary-text">Kontakt</h3>
-            <p>
-              <span v-if="legalSettings.legalNoticePhone">Telefon: {{ legalSettings.legalNoticePhone }}<br /></span>
-              <span v-if="legalSettings.legalNoticeEmail">E-Mail: <a :href="'mailto:' + legalSettings.legalNoticeEmail">{{ legalSettings.legalNoticeEmail }}</a></span>
-            </p>
-          </section>
-
-          <section v-if="legalSettings.legalNoticeTaxId || legalSettings.legalNoticeVatId" class="mt-4">
-            <h3 class="primary-text">Steuern</h3>
-            <p>
-              <span v-if="legalSettings.legalNoticeTaxId">Steuernummer: {{ legalSettings.legalNoticeTaxId }}<br /></span>
-              <span v-if="legalSettings.legalNoticeVatId">Umsatzsteuer-Identifikationsnummer gemäß § 27 a Umsatzsteuergesetz: {{ legalSettings.legalNoticeVatId }}</span>
-            </p>
-          </section>
-          <div v-if="renderedLegalNotice" class="markdown-content" v-html="renderedLegalNotice"></div>
-        </div>
-        <div v-else>
-          <!-- Placeholders -->
-          <section>
-            <h3 class="primary-text">Angaben gemäß § 5 TMG</h3>
-            <p>
-              [Name/Company Name]<br />
-              [Representative]<br />
-              [Street] [Number]<br />
-              [Zip Code] [City]
-            </p>
-          </section>
-          <section class="mt-4">
-            <h3 class="primary-text">Kontakt</h3>
-            <p>
-              Telefon: [Phone Number]<br />
-              E-Mail: [Email Address]
-            </p>
-          </section>
-        </div>
-      </div>
-      <template #footer>
-        <Button severity="primary" label="Close" icon="pi pi-check" @click="showLegalNotice = false" autofocus />
-      </template>
-    </Dialog>
+    <LegalDialog
+      v-model:visible="showLegalDialog"
+      :type="dialogType"
+      :data="legalSettings"
+      :company-name="settingsStore.companyName"
+    />
   </footer>
 </template>
 
