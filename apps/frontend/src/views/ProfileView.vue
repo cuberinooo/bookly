@@ -5,7 +5,7 @@ import { useToast } from 'primevue/usetoast';
 import api from '../services/api';
 
 const toast = useToast();
-const user = ref({ name: '', email: '', id: null });
+const user = ref({ name: '', email: '', id: null, roles: [] as string[] });
 const loading = ref(false);
 const fetching = ref(true);
 
@@ -16,9 +16,8 @@ async function fetchProfile() {
         // Sync back to authStore just in case
         authStore.user = {
             ...authStore.user,
-            name: response.data.name,
-            email: response.data.email
-        };
+            ...response.data
+        } as any;
     } catch (e) {
         toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load profile', life: 5000 });
     } finally {
@@ -114,9 +113,15 @@ onMounted(fetchProfile);
           <h2 class="text-xl font-bold text-slate-900">
             {{ user.name }}
           </h2>
-          <span class="inline-block mt-2 px-3 py-1 bg-amber-100 text-amber-800 text-xs font-black rounded-full tracking-widest uppercase">
-            {{ authStore.isTrainer() ? 'Trainer' : 'Member' }}
-          </span>
+          <div class="flex flex-wrap gap-2 justify-center mt-3">
+            <span
+              v-for="role in user.roles.filter(r => r !== 'ROLE_USER')"
+              :key="role"
+              class="px-3 py-1 bg-amber-100 text-amber-800 text-[10px] font-black rounded-full tracking-widest uppercase"
+            >
+              {{ role.replace('ROLE_', '') }}
+            </span>
+          </div>
 
           <div class="mt-8 w-full pt-6 border-t border-slate-100">
             <div class="flex justify-between text-sm mb-2">

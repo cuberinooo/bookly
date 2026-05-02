@@ -89,6 +89,14 @@ class UserController extends AbstractController
             $user->setCourseStartNotificationMinutes((int) $data['courseStartNotificationMinutes']);
         }
 
+        if (isset($data['roles']) && is_array($data['roles']) && $this->isGranted('ROLE_ADMIN')) {
+            $allowedRoles = ['ROLE_MEMBER', 'ROLE_TRAINER', 'ROLE_ADMIN', 'ROLE_TRIAL'];
+            $newRoles = array_intersect($data['roles'], $allowedRoles);
+            if (!empty($newRoles)) {
+                $user->setRoles(array_values($newRoles));
+            }
+        }
+
         $entityManager->flush();
 
         return new JsonResponse(['status' => 'Profile updated']);

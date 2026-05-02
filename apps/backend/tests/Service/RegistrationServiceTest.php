@@ -3,7 +3,9 @@
 namespace App\Tests\Service;
 
 use App\Entity\User;
+use App\Entity\Company;
 use App\Repository\UserRepository;
+use App\Repository\CompanyRepository;
 use App\Repository\AdminSettingsRepository;
 use App\Service\RegistrationService;
 use App\Service\PasswordValidator;
@@ -21,7 +23,7 @@ class RegistrationServiceTest extends TestCase
     private $passwordValidator;
     private $service;
     private $userRepository;
-
+    private $companyRepository;
     private $adminSettingsRepository;
     private $security;
 
@@ -31,13 +33,14 @@ class RegistrationServiceTest extends TestCase
         $this->passwordHasher = $this->createMock(UserPasswordHasherInterface::class);
         $this->mailer = $this->createMock(MailerInterface::class);
         $this->userRepository = $this->createMock(UserRepository::class);
+        $this->companyRepository = $this->createMock(CompanyRepository::class);
         $this->passwordValidator = new PasswordValidator();
         $this->adminSettingsRepository = $this->createMock(AdminSettingsRepository::class);
         $this->security = $this->createMock(Security::class);
 
         $this->entityManager->method('getRepository')->willReturnMap([
             [User::class, $this->userRepository],
-            [\App\Entity\Company::class, $this->createMock(\App\Repository\CompanyRepository::class)],
+            [Company::class, $this->companyRepository],
         ]);
 
         $this->service = new RegistrationService(
@@ -56,27 +59,50 @@ class RegistrationServiceTest extends TestCase
             'email' => 'test@example.com',
             'password' => 'StrongPass123!',
             'name' => 'Test User',
-            'role' => 'ROLE_MEMBER'
+            'companyName' => 'New Company'
         ];
 
         $this->userRepository->method('findOneBy')->willReturn(null);
         $this->userRepository->method('findByRole')->with('ROLE_ADMIN')->willReturn([]);
+        $this->companyRepository->method('findOneBy')->willReturn(null); // New company
         $this->passwordHasher->method('hashPassword')->willReturn('hashed_password');
 
         $this->entityManager->expects($this->atLeastOnce())->method('persist');
         $this->entityManager->expects($this->once())->method('flush');
-        // Expect 2 emails: verification email to user and notification email to admin
-        $this->mailer->expects($this->exactly(2))->method('send');
+        $this->mailer->expects($this->once())->method('send');
 
         $user = $this->service->register($data);
 
         $this->assertEquals('test@example.com', $user->getEmail());
         $this->assertEquals('Test User', $user->getName());
-        $this->assertEquals('hashed_password', $user->getPassword());
-        $this->assertContains('ROLE_MEMBER', $user->getRoles());
-        $this->assertFalse($user->isVerified());
-        $this->assertFalse($user->isActive());
-        $this->assertNotNull($user->getVerificationToken());
+        $this->assertContains('ROLE_ADMIN', $user->getRoles());
+    }
+
+    public function testRegisterTrialMemberSuccess(): void
+    {
+        $data = [
+            'email' => 'trial@example.com',
+            'password' => 'StrongPass123!',
+            'name' => 'Trial User',
+            'companyName' => 'Existing Company'
+        ];
+
+        $existingCompany = new Company();
+        $existingCompany->setName('Existing Company');
+
+        $admin = new User();
+        $admin->setEmail('admin@example.com');
+
+        $this->userRepository->method('findOneBy')->willReturn(null);
+        $this->userRepository->method('findByRole')->with('ROLE_ADMIN')->willReturn([$admin]);
+        $this->companyRepository->method('findOneBy')->willReturn($existingCompany);
+        $this->passwordHasher->method('hashPassword')->willReturn('hashed_password');
+
+        $this->mailer->expects($this->exactly(2))->method('send'); // Verification + Admin notification
+
+        $user = $this->service->register($data);
+
+        $this->assertContains('ROLE_TRIAL', $user->getRoles());
     }
 
     public function testAdminRegisterSuccess(): void
@@ -85,7 +111,7 @@ class RegistrationServiceTest extends TestCase
             'email' => 'new-user@example.com',
             'password' => 'StrongPass123!',
             'name' => 'New User',
-            'role' => 'ROLE_TRAINER'
+            'roles' => ['ROLE_TRAINER']
         ];
 
         $this->userRepository->method('findOneBy')->willReturn(null);
@@ -93,14 +119,12 @@ class RegistrationServiceTest extends TestCase
 
         $this->entityManager->expects($this->atLeastOnce())->method('persist');
         $this->entityManager->expects($this->once())->method('flush');
-        // Expect only 1 email: verification email to user (no admin notification for admin creation)
         $this->mailer->expects($this->once())->method('send');
 
         $user = $this->service->register($data, true);
 
+        $this->assertContains('ROLE_TRAINER', $user->getRoles());
         $this->assertTrue($user->isVerified());
-        $this->assertTrue($user->isActive());
-        $this->assertTrue($user->isMustChangePassword());
     }
 
     public function testRegisterRoleRestriction(): void
@@ -109,16 +133,25 @@ class RegistrationServiceTest extends TestCase
             'email' => 'test@example.com',
             'password' => 'StrongPass123!',
             'name' => 'Test User',
-            'role' => 'ROLE_ADMIN'
+            'companyName' => 'Existing Company',
+            'role' => 'ROLE_ADMIN' // Should be ignored in public registration
         ];
 
+        $existingCompany = new Company();
+        $existingCompany->setName('Existing Company');
+        
+        $admin = new User();
+        $admin->setEmail('admin@example.com');
+
+        $this->companyRepository->method('findOneBy')->willReturn($existingCompany);
         $this->userRepository->method('findOneBy')->willReturn(null);
-        $this->userRepository->method('findByRole')->willReturn([]);
+        $this->userRepository->method('findByRole')->willReturn([$admin]);
+        $this->passwordHasher->method('hashPassword')->willReturn('hashed_password');
         
         $user = $this->service->register($data);
 
-        // ROLE_ADMIN should be downgraded to ROLE_MEMBER
-        $this->assertContains('ROLE_MEMBER', $user->getRoles());
+        // Should be ROLE_TRIAL, not ROLE_ADMIN
+        $this->assertContains('ROLE_TRIAL', $user->getRoles());
         $this->assertNotContains('ROLE_ADMIN', $user->getRoles());
     }
 

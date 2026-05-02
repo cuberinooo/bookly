@@ -20,7 +20,8 @@ const isEmailValid = (email: string) => {
 const roleOptions = [
     { label: 'Member', value: 'ROLE_MEMBER' },
     { label: 'Trainer', value: 'ROLE_TRAINER' },
-    { label: 'Admin', value: 'ROLE_ADMIN' }
+    { label: 'Admin', value: 'ROLE_ADMIN' },
+    { label: 'Trial', value: 'ROLE_TRIAL' }
 ];
 
 async function fetchUsers() {
@@ -156,7 +157,7 @@ onMounted(fetchUsers);
               v-for="role in data.roles.filter(r => r !== 'ROLE_USER')"
               :key="role"
               :value="role.replace('ROLE_', '')"
-              :severity="role === 'ROLE_ADMIN' ? 'danger' : (role === 'ROLE_TRAINER' ? 'warn' : 'info')"
+              :severity="role === 'ROLE_ADMIN' ? 'danger' : (role === 'ROLE_TRAINER' ? 'warn' : (role === 'ROLE_TRIAL' ? 'secondary' : 'info'))"
             />
           </div>
         </template>

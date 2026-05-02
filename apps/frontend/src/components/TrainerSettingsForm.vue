@@ -9,6 +9,7 @@ const settings = ref({
     showParticipantNames: true,
     isWaitlistVisible: true,
     bookingWindow: BookingWindow.OFF,
+    trialBookingLimit: 0,
     courseStartNotificationHours: 0,
     courseStartNotificationMinutes: 0
 });
@@ -31,6 +32,7 @@ async function fetchSettings() {
             showParticipantNames: response.data.showParticipantNames ?? true,
             isWaitlistVisible: response.data.isWaitlistVisible ?? true,
             bookingWindow: response.data.bookingWindow ?? BookingWindow.OFF,
+            trialBookingLimit: response.data.trialBookingLimit ?? 0,
             courseStartNotificationHours: userResponse.data.courseStartNotificationHours ?? 0,
             courseStartNotificationMinutes: userResponse.data.courseStartNotificationMinutes ?? 0
         };
@@ -47,7 +49,8 @@ async function updateGlobalSettings() {
         await api.patch('/settings', {
             showParticipantNames: settings.value.showParticipantNames,
             isWaitlistVisible: settings.value.isWaitlistVisible,
-            bookingWindow: settings.value.bookingWindow
+            bookingWindow: settings.value.bookingWindow,
+            trialBookingLimit: settings.value.trialBookingLimit
         });
         toast.add({ severity: 'success', summary: 'Updated', detail: 'Global settings updated', life: 3000 });
     } catch (e) {
@@ -153,6 +156,27 @@ onMounted(fetchSettings);
                 placeholder="Select Window"
                 class="w-64"
                 @change="updateGlobalSettings"
+              />
+            </div>
+          </div>
+
+          <div class="settings-card phoenix-card">
+            <h3 class="settings-title">
+              Trial Membership
+            </h3>
+            <div class="setting-row">
+              <div class="setting-info">
+                <label class="form-label">Trial Booking Limit</label>
+                <p class="text-xs text-slate-500">
+                  How many total classes a trial member can book before needing an upgrade.
+                </p>
+              </div>
+              <InputNumber
+                v-model="settings.trialBookingLimit"
+                show-buttons
+                :min="0"
+                class="w-32"
+                @update:model-value="updateGlobalSettings"
               />
             </div>
           </div>

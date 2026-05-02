@@ -36,7 +36,7 @@ api.interceptors.response.use(
     const originalRequest = error.config;
 
     // Don't attempt to refresh if it's already a refresh request or if it's not a 401
-    if (error.response?.status !== 401 || originalRequest._retry || originalRequest.url?.includes('/token/refresh')) {
+    if (error.response?.status !== 401 || originalRequest._retry || originalRequest.url?.includes('/token/refresh') || originalRequest.url?.includes('/login_check')) {
       return Promise.reject(error);
     }
 

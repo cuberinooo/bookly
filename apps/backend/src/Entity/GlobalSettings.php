@@ -28,6 +28,10 @@ class GlobalSettings
     #[Groups(['settings:read', 'settings:write'])]
     private BookingWindow $bookingWindow = BookingWindow::OFF;
 
+    #[ORM\Column(type: 'integer', options: ['default' => 0])]
+    #[Groups(['settings:read', 'settings:write'])]
+    private int $trialBookingLimit = 0;
+
     #[ORM\OneToOne(mappedBy: 'globalSettings', targetEntity: Company::class)]
     private ?Company $company = null;
 
@@ -68,6 +72,18 @@ class GlobalSettings
     public function setBookingWindow(BookingWindow $bookingWindow): static
     {
         $this->bookingWindow = $bookingWindow;
+
+        return $this;
+    }
+
+    public function getTrialBookingLimit(): int
+    {
+        return $this->trialBookingLimit;
+    }
+
+    public function setTrialBookingLimit(int $limit): static
+    {
+        $this->trialBookingLimit = $limit;
 
         return $this;
     }

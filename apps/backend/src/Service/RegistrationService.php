@@ -40,11 +40,13 @@ class RegistrationService
         $companyName = $data['companyName'] ?? $defaultCompanyName;
         $company = $this->entityManager->getRepository(\App\Entity\Company::class)->findOneBy(['name' => $companyName]);
 
+        $isNewCompany = false;
         if (!$company) {
             $company = new \App\Entity\Company();
             $company->setName($companyName);
 
             $this->entityManager->persist($company);
+            $isNewCompany = true;
         }
 
         $user = new User();
@@ -56,21 +58,26 @@ class RegistrationService
         $user->setPassword($hashedPassword);
 
         // Handle multiple roles
-        $roles = ['ROLE_MEMBER']; // Default
-        if (isset($data['roles']) && is_array($data['roles'])) {
-            $roles = $data['roles'];
-        } elseif (isset($data['role'])) {
-            $roles = [$data['role']];
-        }
-
-        $allowedRoles = ['ROLE_MEMBER', 'ROLE_TRAINER'];
         if ($isAdminCreation) {
-            $allowedRoles[] = 'ROLE_ADMIN';
-        }
+            $roles = ['ROLE_MEMBER']; // Default
+            if (isset($data['roles']) && is_array($data['roles'])) {
+                $roles = $data['roles'];
+            } elseif (isset($data['role'])) {
+                $roles = [$data['role']];
+            }
 
-        $finalRoles = array_intersect($roles, $allowedRoles);
-        if (empty($finalRoles)) {
-            $finalRoles = ['ROLE_MEMBER'];
+            $allowedRoles = ['ROLE_MEMBER', 'ROLE_TRAINER', 'ROLE_ADMIN', 'ROLE_TRIAL'];
+            $finalRoles = array_intersect($roles, $allowedRoles);
+            if (empty($finalRoles)) {
+                $finalRoles = ['ROLE_MEMBER'];
+            }
+        } else {
+            // Public registration logic
+            if ($isNewCompany) {
+                $finalRoles = ['ROLE_ADMIN'];
+            } else {
+                $finalRoles = ['ROLE_TRIAL'];
+            }
         }
 
         $user->setRoles(array_values($finalRoles));
@@ -92,7 +99,7 @@ class RegistrationService
 
         $this->sendVerificationEmail($user, $isAdminCreation, $password);
 
-        if (!$isAdminCreation) {
+        if (!$isAdminCreation && !$isNewCompany) {
             $this->sendAdminNotificationEmail($user);
         }
 

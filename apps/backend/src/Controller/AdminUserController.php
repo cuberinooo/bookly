@@ -98,7 +98,7 @@ class AdminUserController extends AbstractController
         
         // Handle multiple roles
         if (isset($data['roles']) && is_array($data['roles'])) {
-            $allowedRoles = ['ROLE_MEMBER', 'ROLE_TRAINER', 'ROLE_ADMIN'];
+            $allowedRoles = ['ROLE_MEMBER', 'ROLE_TRAINER', 'ROLE_ADMIN', 'ROLE_TRIAL'];
             $newRoles = array_intersect($data['roles'], $allowedRoles);
             
             // Basic safety: Don't allow removing own ROLE_ADMIN if we implemented it, 

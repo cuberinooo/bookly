@@ -18,7 +18,6 @@ const password = ref('');
 const passwordTouched = ref(false);
 const confirmPassword = ref('');
 const confirmPasswordTouched = ref(false);
-const role = ref('ROLE_MEMBER');
 const acceptedTerms = ref(false);
 const loading = ref(false);
 const router = useRouter();
@@ -28,7 +27,6 @@ const isEmailValid = computed(() => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value);
 });
 
-const roleOptions = ref([]);
 const companyLegal = ref({ found: false, companyName: '', termsAndConditionsMarkdown: '', legalNoticeMarkdown: '', privacyPolicyPdfPath: '' });
 const showTermsModal = ref(false);
 const dialogType = ref<'terms' | 'legal'>('terms');
@@ -58,15 +56,6 @@ const isStep1Valid = computed(() => {
 const isFormValid = computed(() => {
     return isStep1Valid.value && (!companyLegal.value.found || acceptedTerms.value);
 });
-
-async function fetchRoles() {
-    try {
-        const response = await api.get('/register/roles');
-        roleOptions.value = response.data;
-    } catch (err) {
-        console.error('Failed to fetch roles', err);
-    }
-}
 
 async function goToStep2() {
   nameTouched.value = true;
@@ -117,8 +106,7 @@ async function register() {
       name: name.value,
       email: email.value,
       companyName: companyName.value,
-      password: password.value,
-      role: role.value,
+      password: password.value
     });
     toast.add({ severity: 'success', summary: 'Check your email', detail: 'Account created! Please verify your email before logging in.', life: 5000 });
     router.push({ name: 'login' });
@@ -133,7 +121,6 @@ async function register() {
   }
 }
 
-onMounted(fetchRoles);
 </script>
 
 <template>
@@ -260,21 +247,6 @@ onMounted(fetchRoles);
               @blur="confirmPasswordTouched = true"
             />
             <small v-if="confirmPasswordTouched && !passwordValidation.match" class="text-red-500 text-xs mt-1">Passwords do not match.</small>
-          </div>
-
-          <div class="flex flex-col">
-            <label
-              for="role"
-              class="form-label-base"
-            >Account Type</label>
-            <Select
-              id="role"
-              v-model="role"
-              :options="roleOptions"
-              option-label="label"
-              option-value="value"
-              class="w-full"
-            />
           </div>
 
           <Button

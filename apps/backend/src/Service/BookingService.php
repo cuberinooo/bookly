@@ -51,6 +51,19 @@ class BookingService
             throw new \Exception('You already booked this course');
         }
 
+        // Trial limit check
+        if (in_array('ROLE_TRIAL', $user->getRoles())) {
+            $globalSettings = $user->getCompany()->getGlobalSettings();
+            $limit = $globalSettings ? $globalSettings->getTrialBookingLimit() : 0;
+            
+            if ($limit > 0) {
+                $totalBookings = $this->bookingRepository->count(['user' => $user]);
+                if ($totalBookings >= $limit) {
+                    throw new \Exception(sprintf('Trial limit reached. You can only have %d bookings during your trial. Please upgrade to a full membership.', $limit));
+                }
+            }
+        }
+
         // Waitlist logic: if count of confirmed bookings >= capacity, it's a waitlist booking
         $confirmedBookingsCount = $this->bookingRepository->count(['course' => $course, 'isWaitlist' => false]);
         $isWaitlist = $confirmedBookingsCount >= $course->getCapacity();

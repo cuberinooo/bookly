@@ -54,6 +54,9 @@ class GlobalSettingsController extends AbstractController
                 $settings->setBookingWindow($window);
             }
         }
+        if (isset($data['trialBookingLimit'])) {
+            $settings->setTrialBookingLimit((int) $data['trialBookingLimit']);
+        }
 
         $entityManager->flush();
 
