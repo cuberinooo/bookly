@@ -12,7 +12,7 @@ const name = ref('');
 const nameTouched = ref(false);
 const email = ref('');
 const emailTouched = ref(false);
-const companyName = ref('');
+const companyName = ref('Bookly');
 const companyNameTouched = ref(false);
 const password = ref('');
 const passwordTouched = ref(false);
@@ -135,7 +135,7 @@ async function register() {
     <div class="phoenix-card w-full max-w-2xl">
       <div class="text-center mb-10">
         <h1 class="text-3xl font-extrabold tracking-tight">
-          {{ step === 1 ? 'Join Bookly' : (companyLegal.found ? 'Legal Agreement' : 'Create New Company') }}
+          {{ step === 1 ? 'Join ' + companyName : (companyLegal.found ? 'Legal Agreement' : 'Create New Company') }}
         </h1>
         <p class="text-slate-600 mt-2 font-medium">
           {{ step === 1 ? 'Start your athletic transformation' : (companyLegal.found ? 'Please review and accept the following terms' : 'Confirm your registration details') }}
