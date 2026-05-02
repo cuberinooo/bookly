@@ -18,14 +18,14 @@ class AdminSettingsService
         private string $projectDir
     ) {}
 
-    public function getSettings(): AdminSettings
+    public function getSettingsByCompanyName(string $companyName): ?AdminSettings
     {
-        return $this->repository->get();
+        return $this->repository->findOneByCompanyName($companyName);
     }
 
-    public function updateSettings(array $data): AdminSettings
+    public function updateSettings(\App\Entity\Company $company, array $data): AdminSettings
     {
-        $settings = $this->repository->get();
+        $settings = $company->getAdminSettings();
 
         $fields = [
             'legalNoticeRepresentative',
@@ -48,12 +48,16 @@ class AdminSettingsService
             }
         }
 
+        if (isset($data['name'])) {
+            $company->setName((string) $data['name']);
+        }
+
         $this->entityManager->flush();
 
         return $settings;
     }
 
-    public function uploadPrivacyPolicy(UploadedFile $file): string
+    public function uploadPrivacyPolicy(\App\Entity\Company $company, UploadedFile $file): string
     {
         $originalFilename = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
         $safeFilename = $this->slugger->slug($originalFilename);
@@ -68,7 +72,7 @@ class AdminSettingsService
             throw new \RuntimeException('Failed to upload file');
         }
 
-        $settings = $this->repository->get();
+        $settings = $company->getAdminSettings();
         $settings->setPrivacyPolicyPdfPath('/uploads/legal/' . $newFilename);
         $this->entityManager->flush();
 

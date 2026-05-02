@@ -44,14 +44,6 @@ class RegistrationService
             $company = new \App\Entity\Company();
             $company->setName($companyName);
 
-            $adminSettings = new \App\Entity\AdminSettings();
-            $company->setAdminSettings($adminSettings);
-
-            $globalSettings = new \App\Entity\GlobalSettings();
-            $company->setGlobalSettings($globalSettings);
-
-            $this->entityManager->persist($adminSettings);
-            $this->entityManager->persist($globalSettings);
             $this->entityManager->persist($company);
         }
 

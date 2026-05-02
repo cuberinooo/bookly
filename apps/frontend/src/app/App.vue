@@ -116,9 +116,6 @@ watch(
 );
 
 onMounted(async () => {
-  // First, wait for Auth to see who we are
-  await authStore.init();
-
   // If we found a user, go get their specific company settings
   if (authStore.isLoggedIn()) {
     await settingsStore.fetchSettings();

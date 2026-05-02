@@ -28,7 +28,7 @@ class GlobalSettings
     #[Groups(['settings:read', 'settings:write'])]
     private BookingWindow $bookingWindow = BookingWindow::OFF;
 
-    #[ORM\OneToOne(mappedBy: 'globalSettings')]
+    #[ORM\OneToOne(mappedBy: 'globalSettings', targetEntity: Company::class)]
     private ?Company $company = null;
 
     public function getId(): ?int

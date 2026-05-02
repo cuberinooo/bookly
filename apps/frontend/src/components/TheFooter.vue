@@ -4,7 +4,7 @@ import { settingsStore } from '../store/settings';
 import api from '../services/api';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
-import {authStore} from "../store/auth";
+import {downloadPrivacyPolicy} from "../services/download";
 
 const showLegalNotice = ref(false);
 const legalSettings = ref<any>(null);
@@ -17,10 +17,6 @@ async function fetchSettings() {
         console.error('Failed to load legal settings');
     }
 }
-
-const privacyPolicyUrl = computed(() => {
-    return `${api.defaults.baseURL}/admin-settings/privacy-policy/download`;
-});
 
 async function onClickShow() {
   await fetchSettings();
@@ -53,8 +49,11 @@ onMounted(fetchSettings);
       <div class="footer-section">
         <h4 class="footer-title">Legal</h4>
         <ul class="footer-list">
+
           <li v-if="legalSettings?.privacyPolicyPdfPath">
-            <a :href="privacyPolicyUrl" download class="footer-link">
+            <a href="javascript:void(0)"
+               @click="downloadPrivacyPolicy()"
+               class="footer-link">
               <i class="pi pi-download"></i> Privacy Policy (Datenschutz)
             </a>
           </li>
@@ -81,12 +80,11 @@ onMounted(fetchSettings);
 
     <Dialog v-model:visible="showLegalNotice" header="Legal Notice" :modal="true" class="w-full max-w-2xl">
       <div class="legal-notice-content">
-        <div v-if="legalSettings?.companyName">
+        <div v-if="legalSettings?.legalNoticeRepresentative">
           <section>
             <h3 class="primary-text">Angaben gemäß § 5 TMG</h3>
             <p>
               {{ legalSettings.legalNoticeRepresentative }}<br v-if="legalSettings.legalNoticeRepresentative" />
-              {{ legalSettings.companyName }}<br />
               {{ legalSettings.legalNoticeStreet }} {{ legalSettings.legalNoticeHouseNumber }}<br />
               {{ legalSettings.legalNoticeZipCode }} {{ legalSettings.legalNoticeCity }}
             </p>

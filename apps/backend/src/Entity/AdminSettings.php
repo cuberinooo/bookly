@@ -16,7 +16,7 @@ class AdminSettings
     #[Groups(['admin:read'])]
     private ?int $id = null;
 
-    #[ORM\OneToOne(mappedBy: 'adminSettings')]
+    #[ORM\OneToOne(mappedBy: 'adminSettings', targetEntity: Company::class)]
     private ?Company $company = null;
 
     #[ORM\Column(length: 255, nullable: true)]

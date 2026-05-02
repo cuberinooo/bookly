@@ -3,6 +3,7 @@ import { ref, onMounted, computed } from 'vue';
 import { settingsStore } from '../store/settings';
 import api from '../services/api';
 import { useToast } from 'primevue/usetoast';
+import {downloadPrivacyPolicy} from "../services/download";
 
 const toast = useToast();
 const settings = ref({
@@ -22,10 +23,6 @@ const settings = ref({
 const loading = ref(true);
 const saving = ref(false);
 const uploading = ref(false);
-
-const privacyPolicyDownloadUrl = computed(() => {
-  return `${api.defaults.baseURL}/admin-settings/privacy-policy/download`;
-});
 
 async function fetchSettings() {
     loading.value = true;
@@ -125,11 +122,6 @@ onMounted(fetchSettings);
           </div>
 
           <div class="field">
-            <label class="secondary-text" for="companyName">Company Name / Name</label>
-            <InputText id="companyName" v-model="settings.legalNoticeCompanyName" placeholder="Max Mustermann" />
-          </div>
-
-          <div class="field">
             <label class="secondary-text" for="representative">Representative</label>
             <InputText id="representative" v-model="settings.legalNoticeRepresentative" placeholder="Max Mustermann" />
           </div>
@@ -219,7 +211,11 @@ onMounted(fetchSettings);
                 <p class="text-xs text-slate-500">{{ settings.privacyPolicyPdfPath }}</p>
               </div>
             </div>
-            <a :href="privacyPolicyDownloadUrl" download="privacyPolicy.pdf" target="_blank" class="p-button p-button-sm p-button-secondary no-underline">
+            <a href="javascript:void(0)"
+               @click="downloadPrivacyPolicy()"
+               class="p-button p-button-sm p-button-secondary no-underline"
+               download="privacyPolicy.pdf"
+              >
               View Current
             </a>
           </div>

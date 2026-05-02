@@ -46,34 +46,7 @@ class AdminSettingsController extends AbstractController
         }
 
         $data = json_decode($request->getContent(), true);
-        $settings = $user->getCompany()->getAdminSettings();
-        
-        $fields = [
-            'legalNoticeRepresentative',
-            'legalNoticeStreet',
-            'legalNoticeHouseNumber',
-            'legalNoticeZipCode',
-            'legalNoticeCity',
-            'legalNoticeEmail',
-            'legalNoticePhone',
-            'legalNoticeTaxId',
-            'legalNoticeVatId',
-            'legalNoticeMarkdown',
-            'termsAndConditionsMarkdown'
-        ];
-
-        foreach ($fields as $field) {
-            if (array_key_exists($field, $data)) {
-                $setter = 'set' . ucfirst($field);
-                $settings->$setter($data[$field]);
-            }
-        }
-        
-        if (isset($data['name'])) {
-            $user->getCompany()->setName((string) $data['name']);
-        }
-
-        $this->entityManager->flush();
+        $this->adminSettingsService->updateSettings($user->getCompany(), $data);
 
         return new JsonResponse(['status' => 'Admin settings updated']);
     }
@@ -82,6 +55,10 @@ class AdminSettingsController extends AbstractController
     public function uploadPrivacyPolicy(Request $request): JsonResponse
     {
         $this->denyAccessUnlessGranted('ROLE_ADMIN');
+        $user = $this->getUser();
+        if (!$user instanceof \App\Entity\User || !$user->getCompany()) {
+             return new JsonResponse(['error' => 'Company not found'], Response::HTTP_NOT_FOUND);
+        }
 
         $file = $request->files->get('file');
         if (!$file) {
@@ -89,7 +66,7 @@ class AdminSettingsController extends AbstractController
         }
 
         try {
-            $path = $this->adminSettingsService->uploadPrivacyPolicy($file);
+            $path = $this->adminSettingsService->uploadPrivacyPolicy($user->getCompany(), $file);
             return new JsonResponse(['path' => $path]);
         } catch (\RuntimeException $e) {
             return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
@@ -97,9 +74,26 @@ class AdminSettingsController extends AbstractController
     }
 
     #[Route('/privacy-policy/download', name: 'admin_settings_download_privacy_policy', methods: ['GET'])]
-    public function downloadPrivacyPolicy(): Response
+    public function downloadPrivacyPolicy(Request $request): Response
     {
-        $settings = $this->adminSettingsService->getSettings();
+        $companyName = $request->query->get('companyName');
+        if (!$companyName) {
+            // Fallback to current user's company if authenticated
+            $user = $this->getUser();
+            if ($user instanceof \App\Entity\User && $user->getCompany()) {
+                $companyName = $user->getCompany()->getName();
+            }
+        }
+
+        if (!$companyName) {
+            return new Response('Company name not provided', Response::HTTP_BAD_REQUEST);
+        }
+
+        $settings = $this->adminSettingsService->getSettingsByCompanyName($companyName);
+        if (!$settings) {
+            return new Response('Settings not found for company: ' . $companyName, Response::HTTP_NOT_FOUND);
+        }
+
         $path = $settings->getPrivacyPolicyPdfPath();
 
         if (!$path) {

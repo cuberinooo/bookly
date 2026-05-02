@@ -2,6 +2,7 @@
 
 namespace App\Tests\Service;
 
+use App\Entity\Company;
 use App\Entity\AdminSettings;
 use App\Repository\AdminSettingsRepository;
 use App\Service\AdminSettingsService;
@@ -34,35 +35,44 @@ class AdminSettingsServiceTest extends TestCase
         );
     }
 
-    public function testGetSettings(): void
+    public function testGetSettingsByCompanyName(): void
     {
         $settings = new AdminSettings();
-        $this->repository->expects($this->once())->method('get')->willReturn($settings);
+        $this->repository->expects($this->once())
+            ->method('findOneByCompanyName')
+            ->with('Test Company')
+            ->willReturn($settings);
 
-        $result = $this->service->getSettings();
+        $result = $this->service->getSettingsByCompanyName('Test Company');
         $this->assertSame($settings, $result);
     }
 
     public function testUpdateSettings(): void
     {
-        $settings = new AdminSettings();
-        $this->repository->expects($this->once())->method('get')->willReturn($settings);
+        $company = new Company();
+        $company->setName('Old Name');
+        $settings = $company->getAdminSettings();
+        
         $this->entityManager->expects($this->once())->method('flush');
 
         $data = [
             'legalNoticeRepresentative' => 'John Doe',
-            'legalNoticeMarkdown' => '# Test'
+            'legalNoticeMarkdown' => '# Test',
+            'name' => 'New Company Name'
         ];
 
-        $result = $this->service->updateSettings($data);
+        $result = $this->service->updateSettings($company, $data);
+        $this->assertSame($settings, $result);
         $this->assertEquals('John Doe', $result->getLegalNoticeRepresentative());
         $this->assertEquals('# Test', $result->getLegalNoticeMarkdown());
+        $this->assertEquals('New Company Name', $company->getName());
     }
 
     public function testUploadPrivacyPolicy(): void
     {
-        $settings = new AdminSettings();
-        $this->repository->expects($this->once())->method('get')->willReturn($settings);
+        $company = new Company();
+        $settings = $company->getAdminSettings();
+        
         $this->entityManager->expects($this->once())->method('flush');
 
         $file = $this->createMock(UploadedFile::class);
@@ -78,7 +88,7 @@ class AdminSettingsServiceTest extends TestCase
             })
         );
 
-        $result = $this->service->uploadPrivacyPolicy($file);
+        $result = $this->service->uploadPrivacyPolicy($company, $file);
         $this->assertStringStartsWith('/uploads/legal/test-', $result);
         $this->assertEquals($result, $settings->getPrivacyPolicyPdfPath());
     }

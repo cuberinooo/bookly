@@ -16,15 +16,13 @@ class AdminSettingsRepository extends ServiceEntityRepository
         parent::__construct($registry, AdminSettings::class);
     }
 
-    public function get(): AdminSettings
+    public function findOneByCompanyName(string $name): ?AdminSettings
     {
-        $settings = $this->findOneBy([]);
-        if (!$settings) {
-            $settings = new AdminSettings();
-            $this->getEntityManager()->persist($settings);
-            $this->getEntityManager()->flush();
-        }
-
-        return $settings;
+        return $this->createQueryBuilder('a')
+            ->join('App\Entity\Company', 'c', 'WITH', 'c.adminSettings = a')
+            ->where('c.name = :name')
+            ->setParameter('name', $name)
+            ->getQuery()
+            ->getOneOrNullResult();
     }
 }

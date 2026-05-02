@@ -3,8 +3,6 @@
 namespace App\Tests\Controller;
 
 use App\Entity\Company;
-use App\Entity\AdminSettings;
-use App\Entity\GlobalSettings;
 use App\Entity\User;
 use App\Repository\UserRepository;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
@@ -33,19 +31,11 @@ class AdminSettingsControllerTest extends WebTestCase
         $admin = $this->userRepository->findOneBy(['email' => 'admin_settings@example.com']);
         if (!$admin) {
             $entityManager = static::getContainer()->get('doctrine')->getManager();
-            
+
             $company = new Company();
             $company->setName('Test Company Settings');
-            
-            $adminSettings = new AdminSettings();
-            $company->setAdminSettings($adminSettings);
-            
-            $globalSettings = new GlobalSettings();
-            $company->setGlobalSettings($globalSettings);
-            
+
             $entityManager->persist($company);
-            $entityManager->persist($adminSettings);
-            $entityManager->persist($globalSettings);
 
             $admin = new User();
             $admin->setEmail('admin_settings@example.com');
@@ -55,7 +45,7 @@ class AdminSettingsControllerTest extends WebTestCase
             $admin->setIsVerified(true);
             $admin->setIsActive(true);
             $admin->setCompany($company);
-            
+
             $entityManager->persist($admin);
             $entityManager->flush();
         }
@@ -95,5 +85,23 @@ class AdminSettingsControllerTest extends WebTestCase
         
         $data = json_decode($this->client->getResponse()->getContent(), true);
         $this->assertEquals('Admin settings updated', $data['status']);
+    }
+
+    public function testDownloadPrivacyPolicy(): void
+    {
+        $admin = $this->createAdmin();
+        $companyName = $admin->getCompany()->getName();
+
+        // Settings exist but path is null
+        $this->client->request('GET', '/api/admin-settings/privacy-policy/download?companyName=' . urlencode($companyName));
+        $this->assertResponseStatusCodeSame(Response::HTTP_NOT_FOUND);
+
+        // Non-existent company
+        $this->client->request('GET', '/api/admin-settings/privacy-policy/download?companyName=NonExistent');
+        $this->assertResponseStatusCodeSame(Response::HTTP_NOT_FOUND);
+
+        // Missing company name
+        $this->client->request('GET', '/api/admin-settings/privacy-policy/download');
+        $this->assertResponseStatusCodeSame(Response::HTTP_BAD_REQUEST);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Repository\CompanyRepository;
 use App\Service\RegistrationService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -74,6 +75,30 @@ class RegistrationController extends AbstractController
         return new JsonResponse([
             ['label' => 'Member', 'value' => 'ROLE_MEMBER'],
             ['label' => 'Trainer', 'value' => 'ROLE_TRAINER']
+        ]);
+    }
+
+    #[Route('/api/register/company-legal', name: 'api_register_company_legal', methods: ['GET'])]
+    public function getCompanyLegal(Request $request, CompanyRepository $companyRepository): JsonResponse
+    {
+        $name = $request->query->get('name');
+        if (!$name) {
+            return new JsonResponse(['error' => 'Missing company name'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $company = $companyRepository->findOneBy(['name' => $name]);
+        if (!$company) {
+            return new JsonResponse(['found' => false]);
+        }
+
+        $settings = $company->getAdminSettings();
+
+        return new JsonResponse([
+            'found' => true,
+            'companyName' => $company->getName(),
+            'legalNoticeMarkdown' => $settings?->getLegalNoticeMarkdown(),
+            'termsAndConditionsMarkdown' => $settings?->getTermsAndConditionsMarkdown(),
+            'privacyPolicyPdfPath' => $settings?->getPrivacyPolicyPdfPath(),
         ]);
     }
 }

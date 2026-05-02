@@ -54,8 +54,7 @@ security:
         - { path: ^/api/register, roles: PUBLIC_ACCESS }
         - { path: ^/api/verify-email, roles: PUBLIC_ACCESS }
         - { path: ^/api/resend-verification, roles: PUBLIC_ACCESS }
-        - { path: ^/api/courses, roles: PUBLIC_ACCESS, methods: [GET] }
-        - { path: ^/api/legal-settings, roles: PUBLIC_ACCESS, methods: [GET] }
+        - { path: ^/api/admin-settings/privacy-policy/download, roles: PUBLIC_ACCESS }
         - { path: ^/api,       roles: IS_AUTHENTICATED_FULLY }
 
 when@test:

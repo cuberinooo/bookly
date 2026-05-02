@@ -21,10 +21,12 @@ class Company
     #[Groups(['company:read', 'user:read', 'admin:read', 'admin:write'])]
     private ?string $name = null;
 
-    #[ORM\OneToOne(cascade: ['persist', 'remove'])]
+    #[ORM\OneToOne(inversedBy: 'company', cascade: ['persist', 'remove'])]
+    #[ORM\JoinColumn(nullable: false)]
     private ?AdminSettings $adminSettings = null;
 
-    #[ORM\OneToOne(cascade: ['persist', 'remove'])]
+    #[ORM\OneToOne(inversedBy: 'company', cascade: ['persist', 'remove'])]
+    #[ORM\JoinColumn(nullable: false)]
     private ?GlobalSettings $globalSettings = null;
 
     /**
@@ -36,6 +38,12 @@ class Company
     public function __construct()
     {
         $this->users = new ArrayCollection();
+        $this->adminSettings = new AdminSettings();
+        $this->globalSettings = new GlobalSettings();
+        
+        // Synchronize the inverse side
+        $this->adminSettings->setCompany($this);
+        $this->globalSettings->setCompany($this);
     }
 
     public function getId(): ?int
