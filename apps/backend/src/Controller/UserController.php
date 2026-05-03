@@ -81,12 +81,23 @@ class UserController extends AbstractController
             $user->setName($data['name']);
         }
 
-        if (isset($data['courseStartNotificationHours'])) {
-            $user->setCourseStartNotificationHours((int) $data['courseStartNotificationHours']);
-        }
+        if (isset($data['courseStartNotificationHours']) || isset($data['courseStartNotificationMinutes'])) {
+            $hours = (int) ($data['courseStartNotificationHours'] ?? $user->getCourseStartNotificationHours());
+            $minutes = (int) ($data['courseStartNotificationMinutes'] ?? $user->getCourseStartNotificationMinutes());
 
-        if (isset($data['courseStartNotificationMinutes'])) {
-            $user->setCourseStartNotificationMinutes((int) $data['courseStartNotificationMinutes']);
+            $totalMinutes = ($hours * 60) + $minutes;
+
+            if ($totalMinutes !== 0) {
+                if ($totalMinutes < 5) {
+                    return new JsonResponse(['error' => 'Notification must be at least 5 minutes.'], 400);
+                }
+                if ($totalMinutes % 5 !== 0) {
+                    return new JsonResponse(['error' => 'Notification must be in 5-minute increments.'], 400);
+                }
+            }
+
+            $user->setCourseStartNotificationHours($hours);
+            $user->setCourseStartNotificationMinutes($minutes);
         }
 
         if (isset($data['roles']) && is_array($data['roles']) && $this->isGranted('ROLE_ADMIN')) {

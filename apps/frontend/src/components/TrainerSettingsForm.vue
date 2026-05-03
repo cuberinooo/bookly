@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import api from '../services/api';
 import { authStore } from '../store/auth';
 import { useToast } from 'primevue/usetoast';
@@ -16,6 +16,14 @@ const settings = ref({
 });
 const loading = ref(true);
 const saving = ref(false);
+
+const notificationError = computed(() => {
+    const totalMinutes = (settings.value.courseStartNotificationHours * 60) + settings.value.courseStartNotificationMinutes;
+    if (totalMinutes === 0) return null;
+    if (totalMinutes < 5) return 'Minimum notification time is 5 minutes';
+    if (totalMinutes % 5 !== 0) return 'Notification must be in 5-minute increments';
+    return null;
+});
 
 const windowOptions = [
     { label: 'Anytime (No Restriction)', value: BookingWindow.OFF },
@@ -202,26 +210,37 @@ onMounted(fetchSettings);
                 Receive an email with the participant list before your class starts.
               </p>
             </div>
-            <div class="flex items-center gap-4">
-              <div class="flex flex-col gap-1">
-                <label class="text-[10px] font-bold text-slate-400 uppercase">Hours</label>
-                <InputNumber
-                  v-model="settings.courseStartNotificationHours"
-                  :min="0"
-                  :max="23"
-                  show-buttons
-                  class="w-24"
-                />
+            <div class="flex flex-col items-end gap-2">
+              <div class="flex items-center gap-4">
+                <div class="flex flex-col gap-1">
+                  <label class="text-[10px] font-bold text-slate-400 uppercase">Hours</label>
+                  <InputNumber
+                    v-model="settings.courseStartNotificationHours"
+                    :min="0"
+                    :max="23"
+                    show-buttons
+                    class="w-24"
+                  />
+                </div>
+                <div class="flex flex-col gap-1">
+                  <label class="text-[10px] font-bold text-slate-400 uppercase">Minutes</label>
+                  <InputNumber
+                    v-model="settings.courseStartNotificationMinutes"
+                    :min="0"
+                    :max="55"
+                    :step="5"
+                    show-buttons
+                    class="w-24"
+                  />
+                </div>
               </div>
-              <div class="flex flex-col gap-1">
-                <label class="text-[10px] font-bold text-slate-400 uppercase">Minutes</label>
-                <InputNumber
-                  v-model="settings.courseStartNotificationMinutes"
-                  :min="0"
-                  :max="59"
-                  show-buttons
-                  class="w-24"
-                />
+              <div class="w-full text-right min-h-[1rem]">
+                <p v-if="notificationError" class="text-[10px] text-red-500 font-bold uppercase tracking-tight">
+                  {{ notificationError }}
+                </p>
+                <p v-else class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                  Min. 5m / 5m steps (0 = disabled)
+                </p>
               </div>
             </div>
           </div>
@@ -231,6 +250,7 @@ onMounted(fetchSettings);
                 icon="pi pi-check"
                 severity="primary"
                 :loading="saving"
+                :disabled="!!notificationError"
                 @click="updatePersonalSettings"
             />
           </div>
