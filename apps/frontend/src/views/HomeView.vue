@@ -64,7 +64,12 @@ const isOutsideBookingWindow = computed(() => {
     return start > deadline;
 });
 
+const isTrialRestricted = computed(() => {
+    return authStore.isTrial() && selectedCourse.value && selectedCourse.value.allowTrial === false;
+});
+
 const bookingWindowMessage = computed(() => {
+    if (isTrialRestricted.value) return 'This course is not available for trial members.';
     if (!isOutsideBookingWindow.value) return '';
     
     switch (settings.value?.bookingWindow) {
@@ -393,7 +398,7 @@ onUnmounted(() => {
           class="action-footer"
         >
           <template v-if="selectedCourse.user?.id !== authStore.user?.id">
-            <template v-if="!isOutsideBookingWindow">
+            <template v-if="!isOutsideBookingWindow && !isTrialRestricted">
               <Button
                 v-if="!selectedCourse.bookings.some((b: any) => b.user?.id === authStore.user?.id)"
                 :label="selectedCourse.bookings.filter(b => !b.isWaitlist).length < selectedCourse.capacity ? 'RESERVE SPOT' : 'JOIN WAITLIST'"

@@ -40,6 +40,11 @@ class BookingService
         // Validate booking window
         $this->validateBookingWindow($course);
 
+        // Check if trial members are allowed
+        if (in_array('ROLE_TRIAL', $user->getRoles()) && !$course->isAllowTrial()) {
+            throw new \Exception('This course is not available for trial members.');
+        }
+
         // Check if the user is the trainer of the course
         if ($course->getUser()->getId() === $user->getId()) {
             throw new \Exception('As a trainer, you cannot book your own course');

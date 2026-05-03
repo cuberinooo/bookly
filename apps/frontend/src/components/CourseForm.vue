@@ -20,6 +20,7 @@ const form = ref({
     customTitle: '',
     description: '',
     capacity: 10,
+    allowTrial: true,
     startTime: new Date(),
     durationMinutes: 60,
     recurrence: CourseFrequency.ONCE,
@@ -58,6 +59,7 @@ watch(() => props.course, (newVal) => {
             capacity: newVal.capacity,
             startTime: new Date(newVal.startTime),
             durationMinutes: newVal.durationMinutes,
+            allowTrial: newVal.allowTrial ?? true,
             recurrence: newVal.frequency || CourseFrequency.ONCE,
             trainerId: newVal.user?.id || null,
             transferAll: false
@@ -78,8 +80,9 @@ const isChanged = computed(() => {
     const descriptionChanged = form.value.description !== (props.course.description || '');
     const capacityChanged = form.value.capacity !== props.course.capacity;
     const durationChanged = form.value.durationMinutes !== props.course.durationMinutes;
+    const allowTrialChanged = form.value.allowTrial !== (props.course.allowTrial ?? true);
 
-    return timeChanged || trainerChanged || titleChanged || descriptionChanged || capacityChanged || durationChanged;
+    return timeChanged || trainerChanged || titleChanged || descriptionChanged || capacityChanged || durationChanged || allowTrialChanged;
 });
 
 function handleSubmit() {
@@ -216,7 +219,21 @@ function handleSubmit() {
           class="athletic-input"
         />
       </div>
-      <div class="form-group flex-1 empty-spacer"></div>
+      <div class="form-group flex-1 self-end">
+        <div class="flex items-center gap-3 p-2 bg-slate-50 border border-slate-200 rounded-lg">
+          <Checkbox
+            v-model="form.allowTrial"
+            :binary="true"
+            input-id="allowTrial"
+          />
+          <label
+            for="allowTrial"
+            class="text-sm font-bold text-slate-700 cursor-pointer uppercase tracking-tight"
+          >
+            Allow Trial Athletes
+          </label>
+        </div>
+      </div>
     </div>
     <div
       v-if="course?.id && course.seriesId && isChanged"

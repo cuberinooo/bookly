@@ -153,4 +153,62 @@ class BookingTrialTest extends WebTestCase
         $response = json_decode($client->getResponse()->getContent(), true);
         $this->assertStringContainsString('Trial limit reached', $response['error']);
     }
+
+    public function testTrialBookingRestrictionEnforcement(): void
+    {
+        $client = static::createClient();
+        $container = $client->getContainer();
+        $entityManager = $container->get('doctrine.orm.entity_manager');
+        $hasher = $container->get('security.user_password_hasher');
+
+        $suffix = uniqid();
+
+        // Create Company
+        $company = new Company();
+        $company->setName('Restricted Test Company ' . $suffix);
+        $entityManager->persist($company);
+
+        // Create Trainer
+        $trainer = new User();
+        $trainer->setEmail('trainer_restricted_' . $suffix . '@example.com');
+        $trainer->setRoles(['ROLE_TRAINER']);
+        $trainer->setPassword($hasher->hashPassword($trainer, 'password'));
+        $trainer->setName('Trainer');
+        $trainer->setIsVerified(true);
+        $trainer->setCompany($company);
+        $entityManager->persist($trainer);
+
+        // Create Trial User
+        $trialUser = new User();
+        $trialUser->setEmail('trial_restricted_' . $suffix . '@example.com');
+        $trialUser->setName('Trial Athlete');
+        $trialUser->setRoles(['ROLE_TRIAL']);
+        $trialUser->setPassword($hasher->hashPassword($trialUser, 'password'));
+        $trialUser->setIsVerified(true);
+        $trialUser->setCompany($company);
+        $entityManager->persist($trialUser);
+
+        // Create RESTRICTED Course (allowTrial = false)
+        $course = new Course();
+        $course->setTitle('Restricted Course');
+        $course->setCapacity(10);
+        $course->setAllowTrial(false);
+        $course->setStartTime(new \DateTime('+1 day'));
+        $course->setEndTime(new \DateTime('+1 day 1 hour'));
+        $course->setUser($trainer);
+        $course->setCompany($company);
+        $entityManager->persist($course);
+
+        $entityManager->flush();
+
+        // Attempt to book
+        $client->request('POST', sprintf('/api/courses/%d/book', $course->getId()), [], [], [
+            'PHP_AUTH_USER' => $trialUser->getEmail(),
+            'PHP_AUTH_PW' => 'password',
+        ]);
+
+        $this->assertEquals(Response::HTTP_BAD_REQUEST, $client->getResponse()->getStatusCode(), 'Restricted course should return 400 for trial user');
+        $response = json_decode($client->getResponse()->getContent(), true);
+        $this->assertStringContainsString('not available for trial members', $response['error']);
+    }
 }

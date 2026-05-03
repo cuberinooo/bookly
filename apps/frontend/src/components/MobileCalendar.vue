@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import { formatDate, formatTime } from '../services/date-utils';
+import { authStore } from '../store/auth';
 
 const props = defineProps<{
     courses: any[];
@@ -97,6 +98,10 @@ function isBookedByUser(course: any) {
     return course.bookings?.some((b: any) => b.user?.id === props.userId);
 }
 
+function isRestrictedForTrial(course: any) {
+    return authStore.isTrial() && course.allowTrial === false;
+}
+
 function formatDayName(date: Date) {
     return date.toLocaleDateString('de-DE', { weekday: 'long' });
 }
@@ -158,7 +163,10 @@ function formatDayName(date: Date) {
             v-for="course in getCoursesForDay(date)"
             :key="course.id" 
             class="mobile-course-card"
-            :class="{ 'is-booked': isBookedByUser(course) }"
+            :class="{ 
+              'is-booked': isBookedByUser(course),
+              'is-restricted': isRestrictedForTrial(course)
+            }"
             @click="$emit('course-click', course)"
           >
             <div class="card-left">
@@ -173,6 +181,9 @@ function formatDayName(date: Date) {
             <div class="card-main">
               <div class="course-title">
                 {{ course.title }}
+                <span v-if="isRestrictedForTrial(course)" class="ml-2 text-[10px] text-slate-500 font-black">
+                  <i class="pi pi-lock" /> RESTRICTED
+                </span>
               </div>
               <div class="course-coach">
                 Coach: {{ course.user?.name }}
@@ -322,6 +333,16 @@ function formatDayName(date: Date) {
     &.is-booked {
         border-left: 6px solid #ffc107;
         background: #fffbeb;
+    }
+
+    &.is-restricted {
+        background: #f1f5f9;
+        border-color: #cbd5e1;
+        opacity: 0.8;
+
+        .card-left .course-time, .card-main .course-title {
+            color: #64748b;
+        }
     }
 
     .card-left {

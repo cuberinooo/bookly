@@ -39,6 +39,7 @@ class CourseService
             $course->setTitle($data['title']);
             $course->setDescription($data['description'] ?? '');
             $course->setCapacity((int) $data['capacity']);
+            $course->setAllowTrial($data['allowTrial'] ?? true);
             $course->setStartTime($startTime);
             $course->setDurationMinutes($duration);
             $course->setEndTime((clone $startTime)->modify("+$duration minutes"));
@@ -58,6 +59,7 @@ class CourseService
         $series->setTitle($data['title']);
         $series->setDescription($data['description'] ?? '');
         $series->setCapacity((int) $data['capacity']);
+        $series->setAllowTrial($data['allowTrial'] ?? true);
         $series->setScheduleStartTime($startTime);
         $series->setDurationMinutes($duration);
         $series->setFrequency($recurrence);
@@ -98,6 +100,7 @@ class CourseService
                     $course->setTitle($series->getTitle());
                     $course->setDescription($series->getDescription());
                     $course->setCapacity($series->getCapacity());
+                    $course->setAllowTrial($series->isAllowTrial());
                     $course->setStartTime($courseStartTime);
                     $course->setDurationMinutes($duration);
                     $course->setEndTime($courseEndTime);
@@ -195,6 +198,9 @@ class CourseService
             if (isset($updates['capacity'])) {
                 $course->setCapacity($updates['capacity']);
             }
+            if (isset($updates['allowTrial'])) {
+                $course->setAllowTrial($updates['allowTrial']);
+            }
             if (isset($updates['trainer'])) {
                 $course->setUser($updates['trainer']);
                 $this->bookingService->removeBookingIfExists($course, $updates['trainer']);
@@ -233,6 +239,7 @@ class CourseService
             if (isset($updates['title'])) $series->setTitle($updates['title']);
             if (isset($updates['description'])) $series->setDescription($updates['description']);
             if (isset($updates['capacity'])) $series->setCapacity($updates['capacity']);
+            if (isset($updates['allowTrial'])) $series->setAllowTrial($updates['allowTrial']);
             if (isset($updates['trainer'])) $series->setUser($updates['trainer']);
             if (isset($updates['durationMinutes'])) $series->setDurationMinutes($updates['durationMinutes']);
             if (isset($updates['startTime'])) {

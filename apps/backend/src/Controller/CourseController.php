@@ -166,6 +166,9 @@ class CourseController extends AbstractController
         if (isset($data['capacity']) && (int)$data['capacity'] !== $course->getCapacity()) {
             $updates['capacity'] = (int)$data['capacity'];
         }
+        if (isset($data['allowTrial']) && (bool)$data['allowTrial'] !== $course->isAllowTrial()) {
+            $updates['allowTrial'] = (bool)$data['allowTrial'];
+        }
 
         if ($updateSeries && $seriesId) {
             try {
@@ -204,6 +207,7 @@ class CourseController extends AbstractController
             if (isset($data['title'])) $course->setTitle($data['title']);
             if (isset($data['description'])) $course->setDescription($data['description']);
             if (isset($data['capacity'])) $course->setCapacity((int) $data['capacity']);
+            if (isset($data['allowTrial'])) $course->setAllowTrial((bool) $data['allowTrial']);
         }
 
         $entityManager->flush();

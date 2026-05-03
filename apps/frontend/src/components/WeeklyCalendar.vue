@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import { formatDate, formatTime } from '../services/date-utils';
+import { authStore } from '../store/auth';
 
 const props = withDefaults(defineProps<{
     courses: any[];
@@ -89,6 +90,11 @@ function isToday(date: Date) {
 function isBookedByUser(course: any) {
     if (!props.userId) return false;
     return course.bookings?.some((b: any) => b.user?.id === props.userId);
+}
+
+function isRestrictedForTrial(course: any) {
+    const isTrial = authStore.isTrial();
+    return isTrial && course.allowTrial === false;
 }
 
 function onSlotClick(day: Date, hour: number) {
@@ -197,15 +203,27 @@ function onSlotClick(day: Date, hour: number) {
                 v-for="course in getCoursesForDay(date)"
                 :key="course.id"
                 class="course-card"
-                :class="{ 'is-booked': isBookedByUser(course) }"
+                :class="{ 
+                  'is-booked': isBookedByUser(course),
+                  'is-restricted': isRestrictedForTrial(course)
+                }"
                 :style="!isCompactView ? { gridRow: getGridRow(course.startTime, course.durationMinutes) } : {}"
                 @click.stop="$emit('course-click', course)"
               >
-                <div
-                  v-if="isBookedByUser(course)"
-                  class="booked-badge"
-                >
-                  <i class="pi pi-check" /> BOOKED
+                <div class="flex justify-between items-start w-full">
+                  <div
+                    v-if="isBookedByUser(course)"
+                    class="booked-badge"
+                  >
+                    <i class="pi pi-check" /> BOOKED
+                  </div>
+                  <div
+                    v-if="isRestrictedForTrial(course)"
+                    class="restricted-badge"
+                    title="Restricted for Trial Members"
+                  >
+                    <i class="pi pi-lock" /> TRIAL RESTRICTED
+                  </div>
                 </div>
                 <div class="course-time">
                   {{ formatTime(course.startTime) }}
@@ -465,12 +483,39 @@ $border-color: #e2e8f0;
         }
     }
 
+    &.is-restricted {
+        background: #f1f5f9;
+        border-color: #94a3b8;
+        border-left: 4px solid #94a3b8;
+        opacity: 0.8;
+
+        .course-title {
+            color: #475569;
+        }
+    }
+
     .booked-badge {
         font-family: 'Barlow Condensed', sans-serif;
         font-weight: 800;
         font-size: 0.55rem;
         color: $brand-amber;
         background: #0f172a;
+        padding: 1px 4px;
+        border-radius: 3px;
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        z-index: 2;
+
+        i { font-size: 0.5rem; }
+    }
+
+    .restricted-badge {
+        font-family: 'Barlow Condensed', sans-serif;
+        font-weight: 800;
+        font-size: 0.55rem;
+        color: #f8fafc;
+        background: #64748b;
         padding: 1px 4px;
         border-radius: 3px;
         display: flex;

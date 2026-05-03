@@ -74,6 +74,10 @@ class Course implements CompanyAwareInterface
     #[Groups(['course:read'])]
     private bool $reminderSent = false;
 
+    #[ORM\Column(options: ['default' => true])]
+    #[Groups(['course:read', 'course:write'])]
+    private bool $allowTrial = true;
+
     public function __construct()
     {
         $this->bookings = new ArrayCollection();
@@ -214,6 +218,18 @@ class Course implements CompanyAwareInterface
     public function setReminderSent(bool $reminderSent): static
     {
         $this->reminderSent = $reminderSent;
+
+        return $this;
+    }
+
+    public function isAllowTrial(): bool
+    {
+        return $this->allowTrial;
+    }
+
+    public function setAllowTrial(bool $allowTrial): static
+    {
+        $this->allowTrial = $allowTrial;
 
         return $this;
     }

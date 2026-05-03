@@ -78,6 +78,10 @@ export const authStore = reactive({
     return this.user?.roles.includes('ROLE_TRAINER');
   },
 
+  isTrial() {
+    return this.user?.roles.includes('ROLE_TRIAL');
+  },
+
   isAdmin() {
     return this.user?.roles.includes('ROLE_ADMIN');
   },

@@ -61,6 +61,10 @@ class CourseSeries implements CompanyAwareInterface
     #[ORM\Column]
     private bool $active = true;
 
+    #[ORM\Column(options: ['default' => true])]
+    #[Groups(['course:read'])]
+    private bool $allowTrial = true;
+
     /**
      * @var Collection<int, Course>
      */
@@ -179,6 +183,17 @@ class CourseSeries implements CompanyAwareInterface
     public function setActive(bool $active): static
     {
         $this->active = $active;
+        return $this;
+    }
+
+    public function isAllowTrial(): bool
+    {
+        return $this->allowTrial;
+    }
+
+    public function setAllowTrial(bool $allowTrial): static
+    {
+        $this->allowTrial = $allowTrial;
         return $this;
     }
 
