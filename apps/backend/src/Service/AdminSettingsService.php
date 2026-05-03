@@ -49,10 +49,6 @@ class AdminSettingsService
             }
         }
 
-        if (isset($data['name'])) {
-            $company->setName((string) $data['name']);
-        }
-
         $this->entityManager->flush();
 
         return $settings;

@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
-import { settingsStore } from '../store/settings';
 import api from '../services/api';
 import { useToast } from 'primevue/usetoast';
 
@@ -9,8 +8,6 @@ const settings = ref({
     name: ''
 });
 const loading = ref(true);
-const saving = ref(false);
-
 const registrationLink = computed(() => {
     const origin = window.location.origin;
     return `${origin}/register?companyName=${encodeURIComponent(settings.value.name)}`;
@@ -35,19 +32,6 @@ async function fetchSettings() {
     }
 }
 
-async function updateSettings() {
-    saving.value = true;
-    try {
-        await api.patch('/admin-settings', { name: settings.value.name });
-        settingsStore.companyName = settings.value.name;
-        toast.add({ severity: 'success', summary: 'Updated', detail: 'Company settings saved successfully', life: 5000 });
-    } catch (e: any) {
-        toast.add({ severity: 'error', summary: 'Error', detail: e.response?.data?.error || 'Failed to update company settings', life: 5000 });
-    } finally {
-        saving.value = false;
-    }
-}
-
 onMounted(fetchSettings);
 </script>
 
@@ -62,15 +46,12 @@ onMounted(fetchSettings);
         <h3 class="settings-title">Company Identity</h3>
         <div class="flex flex-col gap-4">
           <p class="text-sm text-slate-600">
-            Customize your company name as it appears in the navigation, emails, and throughout the system.
-            Note: Company names must be unique.
+            This is your registered company identity used throughout the system.
+            <span class="block mt-1 font-bold text-amber-600">Note: The company name is locked and cannot be changed by administrators.</span>
           </p>
           <div class="field flex flex-col gap-2">
             <label class="font-bold uppercase text-xs" for="companyName">Company Name</label>
-            <InputText id="companyName" v-model="settings.name" placeholder="e.g. Foo GmbH" class="w-full max-w-md" />
-          </div>
-          <div class="mt-4 flex justify-end">
-            <Button severity="primary" label="Save Company Settings" icon="pi pi-save" :loading="saving" @click="updateSettings" />
+            <InputText id="companyName" :model-value="settings.name" disabled class="w-full max-w-md bg-slate-50" />
           </div>
         </div>
 

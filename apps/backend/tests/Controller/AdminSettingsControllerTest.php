@@ -87,6 +87,27 @@ class AdminSettingsControllerTest extends WebTestCase
         $this->assertEquals('Admin settings updated', $data['status']);
     }
 
+    public function testAdminCannotUpdateCompanyName(): void
+    {
+        $admin = $this->createAdmin();
+        $token = $this->getToken($admin);
+        $originalName = $admin->getCompany()->getName();
+        $newName = 'Hacker Company';
+
+        $this->client->request('PATCH', '/api/admin-settings', [], [], [
+            'HTTP_AUTHORIZATION' => 'Bearer ' . $token,
+            'CONTENT_TYPE' => 'application/json'
+        ], json_encode(['name' => $newName]));
+
+        $this->assertResponseIsSuccessful();
+
+        $entityManager = static::getContainer()->get('doctrine')->getManager();
+        $entityManager->clear();
+        $company = $entityManager->getRepository(Company::class)->find($admin->getCompany()->getId());
+        
+        $this->assertEquals($originalName, $company->getName(), 'Admin should not be able to change company name');
+    }
+
     public function testDownloadPrivacyPolicy(): void
     {
         $admin = $this->createAdmin();
