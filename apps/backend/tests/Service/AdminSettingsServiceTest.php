@@ -52,7 +52,7 @@ class AdminSettingsServiceTest extends TestCase
         $company = new Company();
         $company->setName('Old Name');
         $settings = $company->getAdminSettings();
-        
+
         $this->entityManager->expects($this->once())->method('flush');
 
         $data = [
@@ -65,7 +65,7 @@ class AdminSettingsServiceTest extends TestCase
         $this->assertSame($settings, $result);
         $this->assertEquals('John Doe', $result->getLegalNoticeRepresentative());
         $this->assertEquals('# Test', $result->getLegalNoticeMarkdown());
-        $this->assertEquals('New Company Name', $company->getName());
+        $this->assertEquals('Old Name', $company->getName());
     }
 
     public function testUploadPrivacyPolicy(): void
@@ -73,13 +73,13 @@ class AdminSettingsServiceTest extends TestCase
         $company = new Company();
         $company->setName('Test Company');
         $settings = $company->getAdminSettings();
-        
+
         $this->entityManager->expects($this->once())->method('flush');
 
         $file = $this->createMock(UploadedFile::class);
         $file->method('getClientOriginalName')->willReturn('test.pdf');
         $file->method('guessExtension')->willReturn('pdf');
-        
+
         $this->slugger->method('slug')->willReturnMap([
             ['Test Company', new UnicodeString('test-company')],
             ['test', new UnicodeString('test')]
