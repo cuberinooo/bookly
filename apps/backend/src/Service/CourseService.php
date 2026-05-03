@@ -78,9 +78,35 @@ class CourseService
     public function generateCoursesForSeries(\App\Entity\CourseSeries $series, \DateTimeInterface $start, \DateTimeInterface $end): array
     {
         $courses = [];
-        $currentDate = clone $start;
         $trainer = $series->getUser();
         $duration = $series->getDurationMinutes();
+        $frequency = $series->getFrequency();
+        
+        // Calculate the first valid occurrence date >= $start based on $series->getScheduleStartTime()
+        $scheduleStart = $series->getScheduleStartTime();
+        $currentDate = clone $scheduleStart;
+        
+        // Advance $currentDate until it is >= $start
+        while ($currentDate < $start) {
+            switch ($frequency) {
+                case CourseFrequency::DAILY:
+                    $currentDate->modify('+1 day');
+                    break;
+                case CourseFrequency::WEEKLY:
+                    $currentDate->modify('+1 week');
+                    break;
+                case CourseFrequency::MONTHLY:
+                    $currentDate->modify('+1 month');
+                    break;
+                case CourseFrequency::WEEKDAYS:
+                    do {
+                        $currentDate->modify('+1 day');
+                    } while ($currentDate->format('N') >= 6);
+                    break;
+                default:
+                    break 2;
+            }
+        }
 
         while ($currentDate <= $end) {
             $courseStartTime = clone $currentDate;

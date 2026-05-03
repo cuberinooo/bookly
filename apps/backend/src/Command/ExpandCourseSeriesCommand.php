@@ -38,15 +38,20 @@ class ExpandCourseSeriesCommand extends Command
         foreach ($activeSeries as $series) {
             $io->text(sprintf('Processing series: %s (ID: %d)', $series->getTitle(), $series->getId()));
             
-            // Start from the last generated date or from now
-            $startDate = $series->getLastGeneratedDate() ?? new \DateTime();
-            
-            // Safety: if lastGeneratedDate is in the past, start from now to avoid re-scanning old dates
-            if ($startDate < new \DateTime()) {
+            // The generation logic in CourseService now correctly aligns with the schedule.
+            // We start from the day AFTER the last generated date, or from now if never generated.
+            $startDate = $series->getLastGeneratedDate();
+            if ($startDate) {
+                $startDate = (clone $startDate)->modify('+1 day');
+            } else {
                 $startDate = new \DateTime();
             }
 
             $newCourses = $this->courseService->generateCoursesForSeries($series, $startDate, $endLimit);
+            
+            // Update the series' last generated date to the actual end of the range we just processed
+            $series->setLastGeneratedDate($endLimit);
+            
             $totalCreated += count($newCourses);
             
             if (count($newCourses) > 0) {

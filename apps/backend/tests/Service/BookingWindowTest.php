@@ -96,16 +96,19 @@ class BookingWindowTest extends TestCase
 
         $this->settingsRepository->method('find')->willReturn($settings);
 
-        // Course starts this Friday (or Sunday if today is Friday/Saturday)
+        // Course starts at the end of this week (Sunday 23:00)
+        // Ensure it is in the future relative to "now"
         $courseDate = new \DateTime();
         $day = (int) $courseDate->format('w');
-        if ($day === 0) {
-            // Already Sunday, keep today
-        } else {
-            $daysToSunday = 7 - $day;
-            $courseDate->modify("+$daysToSunday days");
+        $daysToSunday = $day === 0 ? 0 : 7 - $day;
+        $courseDate->modify("+$daysToSunday days");
+        $courseDate->setTime(23, 0);
+
+        // If today is Sunday and 23:00 has passed, we need a better way to test "current week"
+        // but for unit tests, we can just ensure it's in the future.
+        if ($courseDate <= new \DateTime()) {
+            $courseDate->modify('+1 hour');
         }
-        $courseDate->setTime(10, 0);
 
         $course = new Course();
         $course->setTitle('This Week Course');
