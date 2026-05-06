@@ -26,23 +26,23 @@ const activeTabs = computed(() => {
 </script>
 
 <template>
-  <div class="settings-view max-w-6xl mx-auto py-12 px-4">
-    <div class="mb-10">
-      <h1 class="text-4xl font-extrabold tracking-tight">
+  <div class="settings-view max-w-6xl mx-auto py-6 md:py-12 px-4">
+    <div class="mb-6 md:mb-10">
+      <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight">
         System Settings
       </h1>
-      <p class="text-slate-600 mt-2 font-medium">
+      <p class="text-sm md:text-base text-slate-600 mt-2 font-medium">
         Configure your athletic workspace and system preferences
       </p>
     </div>
 
-    <Tabs :value="activeTabs[0]?.id">
-      <TabList>
+    <Tabs :value="activeTabs[0]?.id" class="settings-tabs">
+      <TabList class="overflow-x-auto whitespace-nowrap scrollbar-hide">
         <Tab
           v-for="tab in activeTabs"
           :key="tab.id"
           :value="tab.id"
-          class="font-barlow font-bold"
+          class="font-barlow font-bold text-xs md:text-sm"
         >
           {{ tab.label }}
         </Tab>
@@ -52,23 +52,24 @@ const activeTabs = computed(() => {
           v-for="tab in activeTabs"
           :key="tab.id"
           :value="tab.id"
+          class="px-0"
         >
           <div
             v-if="tab.component"
-            :class="tab.id === 'users' ? '' : 'max-w-4xl mt-6'"
+            :class="tab.id === 'users' ? '' : 'max-w-4xl mt-4 md:mt-6'"
           >
             <component :is="tab.component" />
           </div>
 
           <div
             v-else-if="tab.id === 'privacy'"
-            class="phoenix-card p-10 text-center mt-6"
+            class="phoenix-card p-6 md:p-10 text-center mt-6"
           >
             <i class="pi pi-shield text-4xl text-slate-300 mb-4" />
-            <h2 class="text-xl font-bold text-slate-900 mb-2">
+            <h2 class="text-lg md:text-xl font-bold text-slate-900 mb-2">
               Member Privacy
             </h2>
-            <p class="text-slate-600">
+            <p class="text-sm md:text-base text-slate-600">
               Your privacy is managed by the course trainers. You can update your personal profile information in the Profile section.
             </p>
             <Button
@@ -89,5 +90,17 @@ const activeTabs = computed(() => {
 .settings-view {
     h1 { font-family: 'Barlow Condensed', sans-serif; }
     .font-barlow { font-family: 'Barlow Condensed', sans-serif; }
+    
+    :deep(.p-tablist-content) {
+      border-bottom: 2px solid var(--border-color);
+    }
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }
 </style>

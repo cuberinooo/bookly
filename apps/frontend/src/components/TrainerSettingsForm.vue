@@ -266,6 +266,10 @@ onMounted(fetchSettings);
     padding: 2.5rem;
     border-radius: 16px;
     border: 1px solid var(--border-color);
+
+    @media (max-width: 640px) {
+      padding: 1.5rem;
+    }
 }
 
 .settings-title {
@@ -278,6 +282,20 @@ onMounted(fetchSettings);
     justify-content: space-between;
     align-items: center;
     gap: 2rem;
+
+    @media (max-width: 640px) {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1rem;
+
+      :deep(.p-select), :deep(.p-inputnumber) {
+        width: 100% !important;
+      }
+
+      :deep(.p-toggleswitch) {
+        align-self: flex-end;
+      }
+    }
 }
 
 .setting-info {

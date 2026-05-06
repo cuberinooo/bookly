@@ -87,10 +87,42 @@ onMounted(fetchSettings);
     padding: 2.5rem;
     border-radius: 16px;
     border: 1px solid var(--border-color);
+
+    @media (max-width: 640px) {
+      padding: 1.5rem;
+    }
 }
 
 .settings-title {
     @apply text-lg font-black uppercase tracking-tighter text-slate-900 mb-8 pb-4 border-b border-slate-100;
     font-family: 'Barlow Condensed', sans-serif;
+}
+
+.field {
+  :deep(.p-inputtext) {
+    @media (max-width: 640px) {
+      max-width: 100% !important;
+    }
+  }
+}
+
+.registration-link-section {
+  .flex {
+    @media (max-width: 640px) {
+      flex-direction: column;
+      align-items: stretch;
+      
+      code {
+        padding: 0.75rem;
+        border-bottom: 1px solid var(--border-color);
+      }
+      
+      :deep(.p-button) {
+        width: 100%;
+        justify-content: center;
+        padding: 0.75rem;
+      }
+    }
+  }
 }
 </style>

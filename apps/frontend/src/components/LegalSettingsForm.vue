@@ -246,6 +246,10 @@ onMounted(fetchSettings);
     padding: 2.5rem;
     border-radius: 16px;
     border: 1px solid var(--border-color);
+
+    @media (max-width: 640px) {
+      padding: 1.5rem;
+    }
 }
 
 .settings-title {
@@ -261,6 +265,10 @@ onMounted(fetchSettings);
     label {
         @apply font-bold uppercase text-xs;
         font-family: 'Barlow Condensed', sans-serif;
+    }
+
+    :deep(.p-inputtext) {
+      width: 100%;
     }
 }
 

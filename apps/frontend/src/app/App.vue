@@ -142,21 +142,25 @@ onMounted(async () => {
         </div>
         <div class="nav-links">
           <template v-if="authStore.isTrainer()">
-            <div
-              v-tooltip.bottom="authStore.viewMode === 'trainer' ? 'Switch to Member View' : 'Switch to Trainer View'"
-              class="mode-switcher"
-            >
-              <span :class="{ active: authStore.viewMode === 'trainer' }">{{
-                 'TRAINER'
-                }}</span>
-              <ToggleSwitch
-                :model-value="authStore.viewMode === 'member'"
-                @update:model-value="authStore.toggleViewMode()"
-              />
-              <span :class="{ active: authStore.viewMode === 'member' }">MEMBER</span>
+            <div class="role-switcher-modern" v-tooltip.bottom="'Toggle View Mode'">
+              <button 
+                class="role-btn trainer" 
+                :class="{ active: authStore.viewMode === 'trainer' }"
+                @click="authStore.viewMode !== 'trainer' && authStore.toggleViewMode()"
+              >
+                <i class="pi pi-bolt mr-1"></i>
+                <span>Trainer</span>
+              </button>
+              <button 
+                class="role-btn member" 
+                :class="{ active: authStore.viewMode === 'member' }"
+                @click="authStore.viewMode !== 'member' && authStore.toggleViewMode()"
+              >
+                <i class="pi pi-user mr-1"></i>
+                <span>Member</span>
+              </button>
             </div>
-          </template>
-          <RouterLink
+          </template>          <RouterLink
             v-if="authStore.isLoggedIn()"
             to="/"
           >
@@ -358,49 +362,52 @@ onMounted(async () => {
   gap: 2rem;
   align-items: center;
 
-  .mode-switcher {
+  .role-switcher-modern {
     display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.4rem 1rem;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 50px;
+    background: rgba(255, 255, 255, 0.08);
+    padding: 3px;
+    border-radius: 12px;
     border: 1px solid rgba(255, 255, 255, 0.1);
-    margin-right: 1rem;
-
-    span {
+    
+    .role-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 9px;
       font-family: 'Barlow Condensed', sans-serif;
-      font-size: 0.75rem;
+      font-size: 0.85rem;
       font-weight: 800;
-      color: rgba(255, 255, 255, 0.4);
+      color: rgba(255, 255, 255, 0.5);
+      text-transform: uppercase;
       letter-spacing: 0.05em;
-      transition: all 0.2s;
-
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      
+      i {
+        font-size: 0.8rem;
+        opacity: 0.7;
+      }
+      
       &.active {
-        color: var(--primary-color);
+        background: var(--primary-color);
+        color: #000;
+        box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
+        
+        i { opacity: 1; }
+      }
+      
+      &:not(.active):hover {
+        background: rgba(255, 255, 255, 0.05);
+        color: white;
       }
     }
 
-    :deep(.p-toggleswitch) {
-      width: 2.5rem;
-      height: 1.25rem;
-
-      .p-toggleswitch-slider {
-        background: rgba(255, 255, 255, 0.2);
-
-        &:before {
-          width: 0.85rem;
-          height: 0.85rem;
-          margin-top: -0.425rem;
-        }
-      }
-
-      &.p-toggleswitch-checked .p-toggleswitch-slider {
-        background: var(--primary-color);
-
-        &:before {
-          background: #000;
-        }
+    @media (max-width: 768px) {
+      padding: 2px;
+      .role-btn {
+        padding: 6px 10px;
+        span { display: none; }
+        i { font-size: 1rem; margin: 0; }
       }
     }
   }
