@@ -270,7 +270,7 @@ onMounted(fetchData);
       />
 
       <TrialStatusCard
-        v-if="isTrialMember && !isTrainerMode"
+        v-if="isTrialMember && !isTrainerMode && trialInfo.limit > 0"
         :count="trialInfo.count"
         :limit="trialInfo.limit"
         class="md:w-80"

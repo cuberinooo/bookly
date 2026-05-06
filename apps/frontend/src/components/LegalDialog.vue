@@ -139,7 +139,6 @@ const renderedMarkdown = computed(() => {
       font-size: 1.5rem;
       font-weight: 800;
       margin-bottom: 1rem;
-      color: var(--text-primary-color);
       border-bottom: 2px solid #f1f5f9;
       padding-bottom: 0.5rem;
     }
@@ -149,7 +148,6 @@ const renderedMarkdown = computed(() => {
       font-weight: 700;
       margin-top: 1.5rem;
       margin-bottom: 0.75rem;
-      color: var(--text-primary-color);
     }
 
     :deep(p) {
@@ -171,5 +169,10 @@ const renderedMarkdown = computed(() => {
       font-weight: 700;
     }
   }
+}
+
+:deep(h1), :deep(h2), :deep(h3),
+:deep(h4), :deep(h5), :deep(h6) {
+  color: var(--primary-color) !important;
 }
 </style>
