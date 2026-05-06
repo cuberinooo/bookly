@@ -15,6 +15,62 @@ const trainers = ref<any[]>([]);
 const toast = useToast();
 const workoutTypes = ['Functional Training', 'Run Training', 'Team WOD', 'Other'];
 
+const timeOptions = ref<string[]>([]);
+
+onMounted(async () => {
+    try {
+        const response = await api.get('/user/trainers');
+        trainers.value = response.data;
+    } catch (e) {
+        console.error('Failed to fetch trainers', e);
+    }
+
+    // Generate time options from 05:00 to 22:00 every 15 mins
+    const options = [];
+    for (let h = 5; h <= 22; h++) {
+        for (let m of ['00', '15', '30', '45']) {
+            options.push(`${h.toString().padStart(2, '0')}:${m}`);
+        }
+    }
+    timeOptions.value = options;
+});
+
+const selectedDate = computed({
+    get: () => form.value.startTime,
+    set: (val: Date | null) => {
+        if (!val) return;
+        const h = form.value.startTime.getHours();
+        const m = form.value.startTime.getMinutes();
+        const newDate = new Date(val);
+        newDate.setHours(h);
+        newDate.setMinutes(m);
+        newDate.setSeconds(0);
+        form.value.startTime = newDate;
+    }
+});
+
+const selectedTime = computed({
+    get: () => {
+        const h = form.value.startTime.getHours().toString().padStart(2, '0');
+        const m = form.value.startTime.getMinutes().toString().padStart(2, '0');
+        return `${h}:${m}`;
+    },
+    set: (val: string) => {
+        if (!val || typeof val !== 'string') return;
+        const parts = val.split(':');
+        if (parts.length !== 2) return;
+        const h = parseInt(parts[0], 10);
+        const m = parseInt(parts[1], 10);
+        if (!isNaN(h) && h >= 0 && h < 24 && !isNaN(m) && m >= 0 && m < 60) {
+            const newDate = new Date(form.value.startTime);
+            newDate.setHours(h);
+            newDate.setMinutes(m);
+            newDate.setSeconds(0);
+            form.value.startTime = newDate;
+        }
+    }
+});
+
 const form = ref({
     title: '',
     customTitle: '',
@@ -128,17 +184,29 @@ function handleSubmit() {
     <div class="schedule-accent-box">
       <div class="form-row">
         <div class="form-group flex-2">
-          <label for="startTime">Date & Time</label>
+          <label for="startDate">Date</label>
           <DatePicker
-            id="startTime"
-            v-model="form.startTime"
-            show-time
-            hour-format="24"
+            id="startDate"
+            v-model="selectedDate"
             date-format="dd.mm.yy"
             fluid
             class="athletic-input"
+            :show-icon="true"
           />
         </div>
+        <div class="form-group flex-1">
+          <label for="startTime">Time</label>
+          <Select
+            id="startTime"
+            v-model="selectedTime"
+            :options="timeOptions"
+            fluid
+            class="athletic-input"
+            editable
+          />
+        </div>
+      </div>
+      <div class="form-row">
         <div class="form-group flex-1">
           <label for="duration">Duration (Min)</label>
           <InputNumber
