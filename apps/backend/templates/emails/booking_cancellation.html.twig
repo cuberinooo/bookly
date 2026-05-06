@@ -1,0 +1,44 @@
+{% extends 'emails/base.html.twig' %}
+
+{% block title %}Booking Cancelled: {{ courseName }}{% endblock %}
+
+{% block extra_head %}
+<script type="application/ld+json">
+{
+  "@context": "http://schema.org",
+  "@type": "EventReservation",
+  "reservationNumber": "{{ uid }}",
+  "reservationStatus": "http://schema.org/Cancelled",
+  "underName": {
+    "@type": "Person",
+    "name": "{{ userName }}"
+  },
+  "reservationFor": {
+    "@type": "Event",
+    "name": "{{ courseName }}",
+    "startDate": "{{ startTime|date('c') }}",
+    "location": {
+      "@type": "Place",
+      "name": "{{ location }}"
+    }
+  }
+}
+</script>
+{% endblock %}
+
+{% block body %}
+    <h2>Booking Cancelled</h2>
+    <p>Hello <strong>{{ userName }}</strong>,</p>
+    <p>We are confirming that your booking for <strong>{{ courseName }}</strong> on <strong>{{ startTime|date('d.m.Y H:i') }}</strong> has been cancelled.</p>
+
+    <div style="background-color: #fef2f2; padding: 20px; border-radius: 8px; border-left: 4px solid #ef4444; margin-bottom: 30px;">
+        <h3 style="margin-top: 0; font-family: 'Barlow Condensed', sans-serif; font-size: 16px; color: #991b1b;">CANCELLATION DETAILS</h3>
+        <p style="margin-bottom: 5px; color: #991b1b;"><strong>Course:</strong> {{ courseName }}</p>
+        <p style="margin-bottom: 5px; color: #991b1b;"><strong>Original Time:</strong> {{ startTime|date('d.m.Y H:i') }}</p>
+    </div>
+
+    <p>If this was a mistake, you can always head back to the app and book another session.</p>
+    
+    <p>Best regards,</p>
+    <p>The {{ siteName }} Team</p>
+{% endblock %}
