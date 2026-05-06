@@ -439,6 +439,7 @@ onMounted(loadLazyData);
             <div class="flex gap-2">
               <Button
                 icon="pi pi-users"
+                severity="secondary"
                 rounded
                 outlined
                 class="!h-10 !w-10 !p-0"
@@ -446,6 +447,7 @@ onMounted(loadLazyData);
               />
               <Button
                 icon="pi pi-pencil"
+                severity="secondary"
                 rounded
                 outlined
                 class="!h-10 !w-10 !p-0"

@@ -89,10 +89,10 @@ td {
 
     &.p-button-secondary {
         background-color: transparent !important;
-        border: 2px solid var(--text-header) !important;
+        border: 2px solid var(--primary-color) !important;
         color: var(--primary-color) !important;
         &:hover {
-            background-color: var(--text-header) !important;
+            background-color: var(--primary-color) !important;
             color: white !important;
         }
     }

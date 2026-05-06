@@ -140,79 +140,140 @@ onMounted(fetchUsers);
       />
     </div>
 
-    <DataTable
-      :value="users"
-      :loading="loading"
-      class="athletic-table"
-      responsive-layout="stack"
-    >
-      <Column
-        field="name"
-        header="ATHLETE NAME"
-        sortable
+    <div class="hidden md:block">
+      <DataTable
+        :value="users"
+        :loading="loading"
+        class="athletic-table"
       >
-        <template #body="{ data }">
-          <div class="font-bold text-slate-900">
-            {{ data.name }}
-          </div>
-          <div class="text-xs text-slate-500">
-            {{ data.email }}
-          </div>
-        </template>
-      </Column>
-      <Column header="ROLES">
-        <template #body="{ data }">
-          <div class="flex flex-wrap gap-1">
-            <Tag
-              v-for="role in data.roles.filter(r => r !== 'ROLE_USER')"
-              :key="role"
-              :value="role.replace('ROLE_', '')"
-              :severity="role === 'ROLE_ADMIN' ? 'danger' : (role === 'ROLE_TRAINER' ? 'warn' : (role === 'ROLE_TRIAL' ? 'secondary' : 'info'))"
+        <Column
+          field="name"
+          header="ATHLETE NAME"
+          sortable
+        >
+          <template #body="{ data }">
+            <div class="font-bold text-slate-900">
+              {{ data.name }}
+            </div>
+            <div class="text-xs text-slate-500">
+              {{ data.email }}
+            </div>
+          </template>
+        </Column>
+        <Column header="ROLES">
+          <template #body="{ data }">
+            <div class="flex flex-wrap gap-1">
+              <Tag
+                v-for="role in data.roles.filter(r => r !== 'ROLE_USER')"
+                :key="role"
+                :value="role.replace('ROLE_', '')"
+                :severity="role === 'ROLE_ADMIN' ? 'danger' : (role === 'ROLE_TRAINER' ? 'warn' : (role === 'ROLE_TRIAL' ? 'secondary' : 'info'))"
+              />
+            </div>
+          </template>
+        </Column>
+        <Column header="STATUS">
+          <template #body="{ data }">
+            <div class="flex items-center gap-2">
+              <ToggleSwitch
+                :model-value="data.isActive"
+                @update:model-value="toggleActive(data)"
+              />
+            </div>
+          </template>
+        </Column>
+        <Column header="VERIFIED">
+          <template #body="{ data }">
+            <i
+              class="pi"
+              :class="data.isVerified ? 'pi-check-circle text-green-500' : 'pi-times-circle text-slate-300'"
             />
+          </template>
+        </Column>
+        <Column
+          header="ACTIONS"
+          class="w-32"
+        >
+          <template #body="{ data }">
+            <div class="flex gap-2">
+              <Button
+                icon="pi pi-pencil"
+                variant="text"
+                rounded
+                @click="editUser(data)"
+              />
+              <Button
+                icon="pi pi-trash"
+                variant="text"
+                severity="danger"
+                rounded
+                @click="deleteUser(data)"
+              />
+            </div>
+          </template>
+        </Column>
+      </DataTable>
+    </div>
+
+    <!-- Mobile Card Layout -->
+    <div class="md:hidden flex flex-col gap-4">
+      <div v-if="loading" class="flex justify-center py-8">
+        <i class="pi pi-spin pi-spinner text-3xl text-amber-400" />
+      </div>
+      <template v-else>
+        <div v-for="user in users" :key="user.id" class="phoenix-card p-5 border border-slate-200">
+          <div class="flex justify-between items-start mb-4">
+            <div>
+              <h3 class="font-black text-lg text-slate-900 leading-tight">{{ user.name }}</h3>
+              <p class="text-xs text-slate-500 font-medium mb-2">{{ user.email }}</p>
+              
+              <div class="flex flex-wrap gap-1 mb-2">
+                <Tag
+                  v-for="role in user.roles.filter(r => r !== 'ROLE_USER')"
+                  :key="role"
+                  :value="role.replace('ROLE_', '')"
+                  :severity="role === 'ROLE_ADMIN' ? 'danger' : (role === 'ROLE_TRAINER' ? 'warn' : (role === 'ROLE_TRIAL' ? 'secondary' : 'info'))"
+                  class="text-[10px] uppercase font-black"
+                />
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <i
+                class="pi"
+                :class="user.isVerified ? 'pi-check-circle text-green-500' : 'pi-times-circle text-slate-300'"
+                v-tooltip.left="user.isVerified ? 'Verified' : 'Unverified'"
+              />
+            </div>
           </div>
-        </template>
-      </Column>
-      <Column header="STATUS">
-        <template #body="{ data }">
-          <div class="flex items-center gap-2">
-            <ToggleSwitch
-              :model-value="data.isActive"
-              @update:model-value="toggleActive(data)"
-            />
+
+          <div class="flex items-center justify-between pt-4 border-t border-slate-100 mt-2">
+            <div class="flex items-center gap-3">
+              <span class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Active Status</span>
+              <ToggleSwitch
+                :model-value="user.isActive"
+                @update:model-value="toggleActive(user)"
+              />
+            </div>
+            <div class="flex gap-1">
+              <Button
+                icon="pi pi-pencil"
+                severity="secondary"
+                variant="text"
+                rounded
+                @click="editUser(user)"
+              />
+              <Button
+                icon="pi pi-trash"
+                severity="danger"
+                variant="text"
+                rounded
+                @click="deleteUser(user)"
+              />
+            </div>
           </div>
-        </template>
-      </Column>
-      <Column header="VERIFIED">
-        <template #body="{ data }">
-          <i
-            class="pi"
-            :class="data.isVerified ? 'pi-check-circle text-green-500' : 'pi-times-circle text-slate-300'"
-          />
-        </template>
-      </Column>
-      <Column
-        header="ACTIONS"
-        class="w-32"
-      >
-        <template #body="{ data }">
-          <div class="flex gap-2">
-            <Button
-              icon="pi pi-pencil"
-              variant="text"
-              rounded
-              @click="editUser(data)"
-            />
-            <Button
-              icon="pi pi-trash"
-              variant="text"
-              severity="danger"
-              rounded
-              @click="deleteUser(data)"
-            />
-          </div>
-        </template>
-      </Column>
-    </DataTable>
+        </div>
+      </template>
+    </div>
 
     <Dialog
       v-model:visible="userDialog"
