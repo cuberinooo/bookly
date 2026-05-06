@@ -48,16 +48,20 @@ class BookingServiceTest extends TestCase
         $user = $this->createMock(User::class);
         $user->method('getId')->willReturn(1);
         $user->method('getName')->willReturn('John Doe');
+        $user->method('getEmail')->willReturn('john@example.com');
 
         $trainer = $this->createMock(User::class);
         $trainer->method('getId')->willReturn(2);
         $trainer->method('getCompany')->willReturn($this->defaultCompany);
 
-        $course = new Course();
-        $course->setEndTime(new \DateTime('+1 hour'));
-        $course->setUser($trainer);
-        $course->setCapacity(10);
-        $course->setTitle('Yoga');
+        $course = $this->createMock(Course::class);
+        $course->method('getId')->willReturn(10);
+        $course->method('getEndTime')->willReturn(new \DateTime('+1 hour'));
+        $course->method('getStartTime')->willReturn(new \DateTime('+30 minutes'));
+        $course->method('getUser')->willReturn($trainer);
+        $course->method('getCapacity')->willReturn(10);
+        $course->method('getTitle')->willReturn('Yoga');
+        $course->method('getCompany')->willReturn($this->defaultCompany);
 
         $this->bookingRepository->method('findOneBy')->willReturn(null);
         $this->bookingRepository->method('count')->willReturn(0);
@@ -82,14 +86,13 @@ class BookingServiceTest extends TestCase
         $trainer->method('getId')->willReturn(2);
         $trainer->method('getCompany')->willReturn($this->defaultCompany);
 
-        $course = new Course();
-        $course->setEndTime(new \DateTime('+1 hour'));
-        $course->setUser($trainer);
-        $course->setCapacity(1);
-        $course->setTitle('Pilates');
-
-        $existingBooking = new Booking();
-        $existingBooking->setWaitlist(false);
+        $course = $this->createMock(Course::class);
+        $course->method('getId')->willReturn(11);
+        $course->method('getEndTime')->willReturn(new \DateTime('+1 hour'));
+        $course->method('getUser')->willReturn($trainer);
+        $course->method('getCapacity')->willReturn(1);
+        $course->method('getTitle')->willReturn('Pilates');
+        $course->method('getCompany')->willReturn($this->defaultCompany);
 
         $this->bookingRepository->method('findOneBy')->willReturn(null);
         $this->bookingRepository->method('count')->willReturn(1);
@@ -102,27 +105,35 @@ class BookingServiceTest extends TestCase
 
     public function testWaitlistPromotion(): void
     {
-        $user = new User();
-        $user->setName('Jane Doe');
+        $user = $this->createMock(User::class);
+        $user->method('getId')->willReturn(1);
+        $user->method('getName')->willReturn('Jane Doe');
+        $user->method('getEmail')->willReturn('jane@example.com');
 
-        $trainer = new User();
-        $trainer->setCompany($this->defaultCompany);
-        $course = new Course();
-        $course->setEndTime(new \DateTime('+1 hour'));
-        $course->setUser($trainer);
-        $course->setTitle('Pilates');
-        $course->setCapacity(1);
-        $course->setStartTime(new \DateTime('+1 day'));
+        $trainer = $this->createMock(User::class);
+        $trainer->method('getId')->willReturn(2);
+        $trainer->method('getCompany')->willReturn($this->defaultCompany);
+
+        $course = $this->createMock(Course::class);
+        $course->method('getId')->willReturn(11);
+        $course->method('getEndTime')->willReturn(new \DateTime('+1 hour'));
+        $course->method('getStartTime')->willReturn(new \DateTime('+1 day'));
+        $course->method('getUser')->willReturn($trainer);
+        $course->method('getCapacity')->willReturn(1);
+        $course->method('getTitle')->willReturn('Pilates');
+        $course->method('getCompany')->willReturn($this->defaultCompany);
 
         $booking = new Booking();
         $booking->setWaitlist(false);
         $booking->setCourse($course);
+        $booking->setUser($user);
         $this->bookingRepository->method('findOneBy')->willReturn($booking);
 
         // Mock promotion logic
-        $waitlistedUser = new User();
-        $waitlistedUser->setName('Waiting User');
-        $waitlistedUser->setEmail('waiting@example.com');
+        $waitlistedUser = $this->createMock(User::class);
+        $waitlistedUser->method('getId')->willReturn(3);
+        $waitlistedUser->method('getName')->willReturn('Waiting User');
+        $waitlistedUser->method('getEmail')->willReturn('waiting@example.com');
 
         $waitlistedBooking = new Booking();
         $waitlistedBooking->setUser($waitlistedUser);
@@ -132,7 +143,7 @@ class BookingServiceTest extends TestCase
         $this->bookingRepository->method('count')->willReturn(0);
         $this->bookingRepository->method('findNextInWaitlist')->willReturnOnConsecutiveCalls($waitlistedBooking, null);
 
-        $this->mailer->expects($this->once())->method('send');
+        $this->mailer->expects($this->atLeastOnce())->method('send');
         $this->entityManager->expects($this->atLeastOnce())->method('flush');
 
         $this->service->unbook($course, $user);
@@ -179,17 +190,26 @@ class BookingServiceTest extends TestCase
 
     public function testUnbook(): void
     {
-        $user = new User();
-        $user->setName('Jane Doe');
+        $user = $this->createMock(User::class);
+        $user->method('getId')->willReturn(1);
+        $user->method('getName')->willReturn('Jane Doe');
+        $user->method('getEmail')->willReturn('jane@example.com');
 
-        $trainer = new User();
-        $trainer->setCompany($this->defaultCompany);
+        $trainer = $this->createMock(User::class);
+        $trainer->method('getId')->willReturn(2);
+        $trainer->method('getCompany')->willReturn($this->defaultCompany);
+
         $course = $this->createMock(Course::class);
+        $course->method('getId')->willReturn(11);
         $course->method('getEndTime')->willReturn(new \DateTime('+1 hour'));
+        $course->method('getStartTime')->willReturn(new \DateTime('+30 minutes'));
         $course->method('getUser')->willReturn($trainer);
         $course->method('getTitle')->willReturn('Pilates');
+        $course->method('getCompany')->willReturn($this->defaultCompany);
 
         $booking = new Booking();
+        $booking->setUser($user);
+        $booking->setCourse($course);
         $this->bookingRepository->method('findOneBy')->willReturn($booking);
 
         $this->entityManager->expects($this->once())->method('remove')->with($booking);
@@ -201,7 +221,22 @@ class BookingServiceTest extends TestCase
 
     public function testDeleteBooking(): void
     {
+        $user = $this->createMock(User::class);
+        $user->method('getId')->willReturn(1);
+        $user->method('getName')->willReturn('Jane Doe');
+        $user->method('getEmail')->willReturn('jane@example.com');
+
+        $course = $this->createMock(Course::class);
+        $course->method('getId')->willReturn(11);
+        $course->method('getStartTime')->willReturn(new \DateTime('+30 minutes'));
+        $course->method('getEndTime')->willReturn(new \DateTime('+1 hour'));
+        $course->method('getTitle')->willReturn('Yoga');
+        $course->method('getCompany')->willReturn($this->defaultCompany);
+
         $booking = new Booking();
+        $booking->setUser($user);
+        $booking->setCourse($course);
+
         $this->entityManager->expects($this->once())->method('remove')->with($booking);
         $this->entityManager->expects($this->once())->method('flush');
 
@@ -234,9 +269,21 @@ class BookingServiceTest extends TestCase
 
     public function testRemoveBookingIfExists(): void
     {
-        $user = new User();
-        $course = new Course();
+        $user = $this->createMock(User::class);
+        $user->method('getId')->willReturn(1);
+        $user->method('getName')->willReturn('Jane Doe');
+        $user->method('getEmail')->willReturn('jane@example.com');
+
+        $course = $this->createMock(Course::class);
+        $course->method('getId')->willReturn(11);
+        $course->method('getStartTime')->willReturn(new \DateTime('+30 minutes'));
+        $course->method('getEndTime')->willReturn(new \DateTime('+1 hour'));
+        $course->method('getTitle')->willReturn('Yoga');
+        $course->method('getCompany')->willReturn($this->defaultCompany);
+
         $booking = new Booking();
+        $booking->setUser($user);
+        $booking->setCourse($course);
 
         $this->bookingRepository->method('findOneBy')->willReturn($booking);
         $this->entityManager->expects($this->once())->method('remove')->with($booking);

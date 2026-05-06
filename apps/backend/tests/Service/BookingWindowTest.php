@@ -84,6 +84,7 @@ class BookingWindowTest extends TestCase
         $user = $this->createMock(User::class);
         $user->method('getId')->willReturn(2);
         $user->method('getName')->willReturn('Member');
+        $user->method('getEmail')->willReturn('member@example.com');
 
         $company = new \App\Entity\Company();
         $globalSettings = new GlobalSettings();
@@ -110,12 +111,14 @@ class BookingWindowTest extends TestCase
             $courseDate->modify('+1 hour');
         }
 
-        $course = new Course();
-        $course->setTitle('This Week Course');
-        $course->setUser($trainer);
-        $course->setStartTime($courseDate);
-        $course->setEndTime((clone $courseDate)->modify('+1 hour'));
-        $course->setCapacity(10);
+        $course = $this->createMock(Course::class);
+        $course->method('getId')->willReturn(10);
+        $course->method('getTitle')->willReturn('This Week Course');
+        $course->method('getUser')->willReturn($trainer);
+        $course->method('getStartTime')->willReturn($courseDate);
+        $course->method('getEndTime')->willReturn((clone $courseDate)->modify('+1 hour'));
+        $course->method('getCapacity')->willReturn(10);
+        $course->method('getCompany')->willReturn($company);
 
         $this->bookingRepository->method('findOneBy')->willReturn(null);
         $this->bookingRepository->method('count')->willReturn(0);
