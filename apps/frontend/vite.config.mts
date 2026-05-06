@@ -22,7 +22,36 @@ export default defineConfig(() => ({
       '@': fileURLToPath(new URL('./src', import.meta.url))
     }
   },
-  plugins: [vue(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+  plugins: [vue(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md']), VitePWA({
+    registerType: 'autoUpdate',
+    includeAssets: ['logo.png', 'manifest.json'], // These are in your public folder
+    manifest: {
+      name: 'Bookly',
+      short_name: 'Bookly',
+      description: 'Book your fitness courses at Bookly',
+      theme_color: '#0f172a',
+      background_color: '#0f172a',
+      display: 'standalone',
+      icons: [
+        {
+          src: 'logo.png',
+          sizes: '192x192',
+          type: 'image/png'
+        },
+        {
+          src: 'logo.png',
+          sizes: '512x512',
+          type: 'image/png'
+        }
+      ]
+    },
+    workbox: {
+      // This is the magic: it tells workbox to cache everything Vite builds
+      globPatterns: ['**/*.{js,css,html,png,svg,ico}'],
+      // Ensures that navigation (reloads) always fall back to index.html
+      navigateFallback: 'index.html'
+    }
+  })],
   // Uncomment this if you are using workers.
   // worker: {
   //   plugins: () => [ nxViteTsPaths() ],
