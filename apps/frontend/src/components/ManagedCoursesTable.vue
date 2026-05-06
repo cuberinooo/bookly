@@ -234,7 +234,7 @@ onMounted(loadLazyData);
     <div class="hidden md:block">
       <DataTable
         v-model:first="lazyParams.first"
-        :value="loading ? Array(5).fill({}) : courses"
+        :value="loading ? Array(10).fill({}) : courses"
         lazy
         paginator
         :rows="lazyParams.rows"
@@ -291,7 +291,7 @@ onMounted(loadLazyData);
             <Skeleton
               v-if="loading"
               width="4rem"
-              height="1.5rem"
+              height="2.5rem"
             />
             <div
               v-else

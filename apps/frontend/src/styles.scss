@@ -98,8 +98,9 @@ td {
     }
 
     &.p-confirmdialog-reject-button {
-      background-color: var(--primary-color) !important;
+      //background-color: var(--primary-color) !important;
     }
+
 }
 
 .p-select-option.p-select-option-selected {
@@ -228,6 +229,10 @@ td {
 
 .p-datatable-tbody > tr {
   background: #6E7887FF !important;
+
+  & > td {
+    padding: 0.5rem !important;
+  }
 }
 
 .p-paginator {
@@ -250,7 +255,7 @@ td {
 }
 
 .p-tag-info {
-  background-color: var(--primary-color) !important;
+  background-color: var(--bg-primary-color) !important;
 }
 
 .p-tag-warn {

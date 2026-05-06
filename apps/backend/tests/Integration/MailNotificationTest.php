@@ -256,4 +256,64 @@ class MailNotificationTest extends WebTestCase
         $this->assertEquals('Booking Cancelled: Yoga', $messages[0]['Content']['Headers']['Subject'][0]);
         $this->assertStringContainsString($user->getEmail(), $messages[0]['Content']['Headers']['To'][0]);
     }
+
+    public function testAdminResettingPasswordSendsEmail(): void
+    {
+        $client = static::createClient();
+        $this->httpClient = static::getContainer()->get(HttpClientInterface::class);
+        $this->clearMailhogMessages();
+
+        $entityManager = static::getContainer()->get('doctrine.orm.entity_manager');
+        $hasher = static::getContainer()->get('security.password_hasher');
+
+        $suffix = uniqid();
+
+        $company = new Company();
+        $company->setName('Password Reset Company ' . $suffix);
+        $entityManager->persist($company);
+
+        $admin = new User();
+        $admin->setEmail('admin_reset_' . $suffix . '@example.com');
+        $admin->setName('Admin Name');
+        $admin->setRoles(['ROLE_ADMIN']);
+        $admin->setPassword($hasher->hashPassword($admin, 'password'));
+        $admin->setIsVerified(true);
+        $admin->setCompany($company);
+        $entityManager->persist($admin);
+
+        $user = new User();
+        $user->setEmail('athlete_reset_' . $suffix . '@example.com');
+        $user->setRoles(['ROLE_MEMBER']);
+        $user->setPassword($hasher->hashPassword($user, 'old_password'));
+        $user->setName('Athlete Name');
+        $user->setIsVerified(true);
+        $user->setCompany($company);
+        $entityManager->persist($user);
+
+        $entityManager->flush();
+        $initialPasswordHash = $user->getPassword();
+
+        // 1. Admin resets password
+        $client->request('POST', sprintf('/api/admin/users/%d/reset-password', $user->getId()), [], [], [
+            'PHP_AUTH_USER' => $admin->getEmail(),
+            'PHP_AUTH_PW'   => 'password',
+        ]);
+        $this->assertEquals(Response::HTTP_OK, $client->getResponse()->getStatusCode());
+
+        // 2. Check Mailhog
+        $messages = $this->getMailhogMessages();
+        $this->assertCount(1, $messages, 'One email should have been sent for password reset');
+        
+        $message = $messages[0];
+        $this->assertEquals('Account Security: Password Reset by Administrator', $message['Content']['Headers']['Subject'][0]);
+        $this->assertStringContainsString($user->getEmail(), $message['Content']['Headers']['To'][0]);
+        
+        // 3. Verify user state in DB
+        $entityManager->clear(); // Clear cache to get fresh state from DB
+        /** @var User $updatedUser */
+        $updatedUser = $entityManager->getRepository(User::class)->find($user->getId());
+        
+        $this->assertTrue($updatedUser->isMustChangePassword(), 'User should be forced to change password');
+        $this->assertNotEquals($initialPasswordHash, $updatedUser->getPassword(), 'Password hash should have changed in the database');
+    }
 }

@@ -62,6 +62,19 @@ class AdminUserController extends AbstractController
         return new JsonResponse(['status' => 'User status updated', 'isActive' => $user->isActive()]);
     }
 
+    #[Route('/{id}/reset-password', name: 'admin_user_reset_password', methods: ['POST'])]
+    public function resetPassword(User $user, \App\Service\AdminUserService $adminUserService): JsonResponse
+    {
+        if (in_array('ROLE_ADMIN', $user->getRoles())) {
+            // Optional: prevent resetting other admins if you want, or just allow it.
+            // For now, let's just proceed.
+        }
+
+        $adminUserService->resetPassword($user);
+
+        return new JsonResponse(['status' => 'Password has been reset and email sent to the athlete.']);
+    }
+
     #[Route('/{id}', name: 'admin_user_delete', methods: ['DELETE'])]
     public function delete(User $user, EntityManagerInterface $entityManager, \App\Repository\CourseRepository $courseRepository): JsonResponse
     {

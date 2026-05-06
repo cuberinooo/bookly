@@ -13,6 +13,7 @@ const userDialog = ref(false);
 const editingUser = ref<any>({ name: '', email: '', roles: ['ROLE_MEMBER'], password: '' });
 const submitting = ref(false);
 const submitted = ref(false);
+const resettingPassword = ref(false);
 
 const isEmailValid = (email: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -95,6 +96,38 @@ async function saveUser() {
     }
 }
 
+async function resetPassword() {
+    if (!editingUser.value.id) return;
+
+    confirm.require({
+        message: `Are you sure you want to reset the password for ${editingUser.value.name}? A new temporary password will be emailed to them immediately.`,
+        header: 'Reset Password',
+        icon: 'pi pi-exclamation-lock',
+        acceptProps: { severity: 'warn', label: 'Reset Password' },
+        rejectProps: {
+          label: 'Cancel',
+          severity: 'secondary',
+          text: true
+        },
+        accept: async () => {
+            resettingPassword.value = true;
+            try {
+                await api.post(`/admin/users/${editingUser.value.id}/reset-password`);
+                toast.add({
+                    severity: 'success',
+                    summary: 'Password Reset',
+                    detail: 'A temporary password has been sent to the athlete.',
+                    life: 5000
+                });
+            } catch (e) {
+                toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to reset password', life: 5000 });
+            } finally {
+                resettingPassword.value = false;
+            }
+        }
+    });
+}
+
 async function toggleActive(user: any) {
     try {
         await api.patch(`/admin/users/${user.id}/toggle-active`);
@@ -111,6 +144,11 @@ async function deleteUser(user: any) {
         header: 'Delete Confirmation',
         icon: 'pi pi-exclamation-triangle',
         acceptProps: { severity: 'danger', label: 'Delete' },
+        rejectProps: {
+          label: 'Cancel',
+          severity: 'secondary',
+          text: true
+        },
         accept: async () => {
             try {
                 const response = await api.delete(`/admin/users/${user.id}`);
@@ -226,7 +264,7 @@ onMounted(fetchUsers);
             <div>
               <h3 class="font-black text-lg text-slate-900 leading-tight">{{ user.name }}</h3>
               <p class="text-xs text-slate-500 font-medium mb-2">{{ user.email }}</p>
-              
+
               <div class="flex flex-wrap gap-1 mb-2">
                 <Tag
                   v-for="role in user.roles.filter(r => r !== 'ROLE_USER')"
@@ -327,19 +365,33 @@ onMounted(fetchUsers);
         </div>
       </div>
       <template #footer>
-        <div class="flex justify-end gap-2">
-          <Button
-            label="Cancel"
-            severity="secondary"
-            variant="text"
-            @click="userDialog = false"
-          />
-          <Button
-            label="Save User"
-            severity="primary"
-            :loading="submitting"
-            @click="saveUser"
-          />
+        <div class="flex justify-between items-center w-full">
+          <div>
+            <Button
+              v-if="editingUser.id"
+              label="Reset Password"
+              icon="pi pi-key"
+              severity="warn"
+              variant="text"
+              class="text-xs font-bold"
+              :loading="resettingPassword"
+              @click="resetPassword"
+            />
+          </div>
+          <div class="flex gap-2">
+            <Button
+              label="Cancel"
+              severity="secondary"
+              variant="text"
+              @click="userDialog = false"
+            />
+            <Button
+              label="Save User"
+              severity="primary"
+              :loading="submitting"
+              @click="saveUser"
+            />
+          </div>
         </div>
       </template>
     </Dialog>
