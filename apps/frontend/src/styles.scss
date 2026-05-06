@@ -245,12 +245,20 @@ td {
   }
 }
 
+.p-tag-label {
+  color: white;
+}
+
 .p-tag-info {
   background-color: var(--primary-color) !important;
 }
 
 .p-tag-warn {
   background-color: var(--danger-color) !important;
+}
+
+.p-tag-danger {
+  background-color: var(--primary-color) !important;
 }
 
 .p-tab-active {
