@@ -17,8 +17,8 @@ class GlobalSettingsExtension extends AbstractExtension implements GlobalsInterf
     {
         $token = $this->tokenStorage->getToken();
         $user = $token?->getUser();
-        
-        $siteName = 'Phoenix Athletics';
+
+        $siteName = 'Bookly';
         if ($user instanceof User && $user->getCompany()) {
             $siteName = $user->getCompany()->getName();
         }
