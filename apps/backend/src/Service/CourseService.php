@@ -187,10 +187,16 @@ class CourseService
             $this->entityManager->remove($course);
         }
 
-        // Also deactivate the series so no more courses are generated
+        // If fromTime is NOT provided, it means we want to delete the WHOLE series
         $series = $this->seriesRepository->find((int) $seriesId);
         if ($series) {
-            $series->setActive(false);
+            if ($fromTime) {
+                // Future only: deactivate so no more are generated
+                $series->setActive(false);
+            } else {
+                // Whole series: delete the template entity
+                $this->entityManager->remove($series);
+            }
         }
 
         $this->entityManager->flush();

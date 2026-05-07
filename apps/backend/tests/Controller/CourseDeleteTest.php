@@ -116,7 +116,46 @@ class CourseDeleteTest extends WebTestCase
         $this->assertNull($deletedCourse1, 'Current/Target course in series should be deleted');
         
         $updatedSeries = $entityManager->getRepository(CourseSeries::class)->find($seriesId);
-        $this->assertFalse($updatedSeries->isActive(), 'Series should be deactivated');
+        $this->assertNull($updatedSeries, 'Series entity should be deleted when deleteAll is true without time constraint');
+    }
+
+    public function testDeleteWholeSeriesActuallyRemovesSeriesEntity(): void
+    {
+        $client = static::createClient();
+        $entityManager = $client->getContainer()->get('doctrine.orm.entity_manager');
+        $trainer = $this->createTrainer($entityManager);
+
+        $series = $this->createSeries($entityManager, $trainer, 'Series To Remove');
+        
+        $course1 = new Course();
+        $course1->setTitle('Instance 1');
+        $course1->setUser($trainer);
+        $course1->setStartTime(new \DateTime('+1 day'));
+        $course1->setEndTime(new \DateTime('+1 day 1 hour'));
+        $course1->setCapacity(10);
+        $course1->setSeries($series);
+        $entityManager->persist($course1);
+
+        $entityManager->flush();
+
+        $course1Id = $course1->getId();
+        $seriesId = $series->getId();
+
+        $client->loginUser($trainer);
+        
+        // When we delete from the controller without a time, it currently calls deleteCourseSeries(seriesId)
+        // because deleteAll=true is set and no other time context is passed to that specific service method in the simple delete case.
+        $client->request('DELETE', '/api/courses/' . $course1Id . '?deleteAll=true');
+
+        $this->assertEquals(Response::HTTP_OK, $client->getResponse()->getStatusCode());
+        
+        $entityManager->clear();
+        
+        $deletedCourse1 = $entityManager->getRepository(Course::class)->find($course1Id);
+        $this->assertNull($deletedCourse1, 'Course should be deleted');
+        
+        $deletedSeries = $entityManager->getRepository(CourseSeries::class)->find($seriesId);
+        $this->assertNull($deletedSeries, 'CourseSeries entity should be removed from database');
     }
 
     public function testDeleteSingleOccurrenceInSeries(): void

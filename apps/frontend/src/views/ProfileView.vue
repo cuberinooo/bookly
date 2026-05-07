@@ -2,13 +2,18 @@
 import { ref, onMounted, computed } from 'vue';
 import { authStore } from '../store/auth';
 import { useToast } from 'primevue/usetoast';
+import { useConfirm } from 'primevue/useconfirm';
+import { useRouter } from 'vue-router';
 import api from '../services/api';
 
 const toast = useToast();
+const confirm = useConfirm();
+const router = useRouter();
 const user = ref({ name: '', email: '', id: null, roles: [] as string[], profilePicture: null });
 const loading = ref(false);
 const fetching = ref(true);
 const uploading = ref(false);
+const deleting = ref(false);
 const fileInput = ref<HTMLInputElement | null>(null);
 
 const profilePictureUrl = computed(() => {
@@ -34,6 +39,38 @@ async function fetchProfile() {
     }
 }
 
+function confirmDelete() {
+    confirm.require({
+        message: 'Are you sure you want to delete your account? This action is permanent and all your data (including bookings) will be lost.',
+        header: 'Delete Account',
+        icon: 'pi pi-exclamation-triangle',
+        acceptClass: 'p-button-danger',
+        rejectProps: {
+          label: 'Cancel',
+          severity: 'secondary',
+          text: true
+        },
+        accept: () => {
+            deleteAccount();
+        }
+    });
+}
+
+async function deleteAccount() {
+    deleting.value = true;
+    try {
+        await api.delete('/user/me');
+        toast.add({ severity: 'success', summary: 'Deleted', detail: 'Your account has been deleted.', life: 5000 });
+        await authStore.logout();
+        router.push('/login');
+    } catch (e: any) {
+        const message = e.response?.data?.error || 'Failed to delete account';
+        toast.add({ severity: 'error', summary: 'Error', detail: message, life: 7000 });
+    } finally {
+        deleting.value = false;
+    }
+}
+
 function triggerFileUpload() {
   fileInput.value?.click();
 }
@@ -53,13 +90,13 @@ async function handleFileUpload(event: Event) {
         'Content-Type': 'multipart/form-data'
       }
     });
-    
+
     // Update local state and authStore
     user.value.profilePicture = response.data.profilePicture;
     if (authStore.user) {
       authStore.user.profilePicture = response.data.profilePicture;
     }
-    
+
     toast.add({ severity: 'success', summary: 'Success', detail: 'Profile picture updated', life: 5000 });
   } catch (e) {
     toast.add({ severity: 'error', summary: 'Error', detail: 'Upload failed', life: 5000 });
@@ -145,6 +182,21 @@ onMounted(fetchProfile);
             </div>
           </form>
         </div>
+
+        <div class="phoenix-card mt-8 border-red-100 bg-red-50/30">
+          <h3 class="text-red-600 font-bold uppercase tracking-wider text-sm mb-4">Danger Zone</h3>
+          <p class="text-slate-600 text-sm mb-6">
+            Deleting your account will permanently remove all your data, including your profile picture and bookings. This action cannot be undone.
+          </p>
+          <Button
+            label="Delete My Account"
+            severity="danger"
+            outlined
+            icon="pi pi-trash"
+            :loading="deleting"
+            @click="confirmDelete"
+          />
+        </div>
       </div>
 
       <div class="md:col-span-1">
@@ -155,7 +207,7 @@ onMounted(fetchProfile);
               <i class="pi pi-user text-3xl" />
             </div>
           </div>
-          
+
           <input
             ref="fileInput"
             type="file"
@@ -163,7 +215,7 @@ onMounted(fetchProfile);
             class="hidden"
             @change="handleFileUpload"
           >
-          
+
           <Button
             label="Change Picture"
             icon="pi pi-camera"

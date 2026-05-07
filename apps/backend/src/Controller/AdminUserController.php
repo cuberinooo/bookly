@@ -76,25 +76,17 @@ class AdminUserController extends AbstractController
     }
 
     #[Route('/{id}', name: 'admin_user_delete', methods: ['DELETE'])]
-    public function delete(User $user, EntityManagerInterface $entityManager, \App\Repository\CourseRepository $courseRepository): JsonResponse
+    public function delete(User $user, \App\Service\AdminUserService $adminUserService): JsonResponse
     {
         if (in_array('ROLE_ADMIN', $user->getRoles())) {
             return new JsonResponse(['error' => 'Cannot delete admin accounts'], Response::HTTP_FORBIDDEN);
         }
 
-        // If trainer has courses, deactivate instead of delete
-        $isTrainer = in_array('ROLE_TRAINER', $user->getRoles());
-        if ($isTrainer) {
-            $courses = $courseRepository->findBy(['user' => $user]);
-            if (count($courses) > 0) {
-                $user->setIsActive(false);
-                $entityManager->flush();
-                return new JsonResponse(['status' => 'Trainer has existing courses. Account deactivated instead of deleted.']);
-            }
-        }
+        $deleted = $adminUserService->deleteUser($user, true);
 
-        $entityManager->remove($user);
-        $entityManager->flush();
+        if (!$deleted) {
+            return new JsonResponse(['status' => 'Trainer has existing courses. Account deactivated instead of deleted.']);
+        }
 
         return new JsonResponse(['status' => 'User deleted successfully']);
     }

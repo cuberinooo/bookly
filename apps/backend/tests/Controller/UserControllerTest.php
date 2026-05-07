@@ -63,6 +63,69 @@ class UserControllerTest extends WebTestCase
         $this->assertEquals(Response::HTTP_OK, $client->getResponse()->getStatusCode());
     }
 
+    public function testDeleteMe(): void
+    {
+        $client = static::createClient();
+        $container = $client->getContainer();
+        /** @var \Doctrine\ORM\EntityManagerInterface $entityManager */
+        $entityManager = $container->get('doctrine.orm.entity_manager');
+
+        $company = new Company();
+        $company->setName('Delete Test Company ' . uniqid());
+        $entityManager->persist($company);
+
+        // Case 1: User with courses (should be blocked)
+        $trainer = new User();
+        $trainer->setEmail('trainer_delete' . uniqid() . '@example.com');
+        $trainer->setName('Trainer Delete');
+        $trainer->setRoles(['ROLE_TRAINER']);
+        $trainer->setPassword('password');
+        $trainer->setIsVerified(true);
+        $trainer->setCompany($company);
+        $entityManager->persist($trainer);
+
+        $course = new \App\Entity\Course();
+        $course->setTitle('Test Course');
+        $course->setCapacity(10);
+        $course->setStartTime(new \DateTime());
+        $course->setEndTime(new \DateTime('+1 hour'));
+        $course->setCompany($company);
+        $trainer->addCourse($course);
+        $entityManager->persist($course);
+        $entityManager->flush();
+
+        $tokenTrainer = $this->getToken($client, $trainer);
+        $client->request('DELETE', '/api/user/me', [], [], [
+            'HTTP_AUTHORIZATION' => 'Bearer ' . $tokenTrainer
+        ]);
+
+        $this->assertEquals(Response::HTTP_BAD_REQUEST, $client->getResponse()->getStatusCode());
+        $this->assertStringContainsString('active courses', $client->getResponse()->getContent());
+
+        // Case 2: User without courses (should be allowed)
+        $member = new User();
+        $member->setEmail('member_delete' . uniqid() . '@example.com');
+        $member->setName('Member Delete');
+        $member->setRoles(['ROLE_MEMBER']);
+        $member->setPassword('password');
+        $member->setIsVerified(true);
+        $member->setCompany($company);
+        $entityManager->persist($member);
+        $entityManager->flush();
+
+        $tokenMember = $this->getToken($client, $member);
+        $client->request('DELETE', '/api/user/me', [], [], [
+            'HTTP_AUTHORIZATION' => 'Bearer ' . $tokenMember
+        ]);
+
+        $this->assertEquals(Response::HTTP_OK, $client->getResponse()->getStatusCode());
+        
+        // Verify user is gone
+        $entityManager->clear();
+        $deletedUser = $entityManager->getRepository(User::class)->find($member->getId());
+        $this->assertNull($deletedUser);
+    }
+
     public function testUpdateNotificationSettings(): void
     {
         $client = static::createClient();

@@ -15,6 +15,7 @@ use App\Service\PasswordValidator;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
+use App\Service\AdminUserService;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 #[Route('/api/user')]
@@ -25,6 +26,24 @@ class UserController extends AbstractController
     public function __construct(ParameterBagInterface $params)
     {
         $this->uploadDir = $params->get('upload_dir');
+    }
+
+    #[Route('/me', name: 'user_delete', methods: ['DELETE'])]
+    public function deleteMe(AdminUserService $adminUserService): JsonResponse
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+        if (!$user) {
+            return new JsonResponse(['error' => 'User not found'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        try {
+            $adminUserService->deleteUser($user);
+        } catch (\Exception $e) {
+            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
+        }
+
+        return new JsonResponse(['status' => 'Account deleted successfully']);
     }
 
     #[Route('/profile-picture', name: 'user_profile_picture_upload', methods: ['POST'])]
@@ -101,7 +120,7 @@ class UserController extends AbstractController
 
     #[Route('/change-password', name: 'user_change_password', methods: ['POST'])]
     public function changePassword(
-        Request $request, 
+        Request $request,
         EntityManagerInterface $entityManager,
         UserPasswordHasherInterface $passwordHasher,
         PasswordValidator $passwordValidator,
@@ -134,7 +153,7 @@ class UserController extends AbstractController
         $hashedPassword = $passwordHasher->hashPassword($user, $newPassword);
         $user->setPassword($hashedPassword);
         $user->setMustChangePassword(false);
-        
+
         $entityManager->flush();
 
         $token = $jwtManager->create($user);
