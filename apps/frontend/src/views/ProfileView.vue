@@ -1,13 +1,22 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { authStore } from '../store/auth';
 import { useToast } from 'primevue/usetoast';
 import api from '../services/api';
 
 const toast = useToast();
-const user = ref({ name: '', email: '', id: null, roles: [] as string[] });
+const user = ref({ name: '', email: '', id: null, roles: [] as string[], profilePicture: null });
 const loading = ref(false);
 const fetching = ref(true);
+const uploading = ref(false);
+const fileInput = ref<HTMLInputElement | null>(null);
+
+const profilePictureUrl = computed(() => {
+  if (user.value.profilePicture && user.value.id) {
+    return `${import.meta.env.VITE_API_URL}/user/profile-picture/${user.value.id}?t=${user.value.profilePicture}`;
+  }
+  return null;
+});
 
 async function fetchProfile() {
     try {
@@ -23,6 +32,41 @@ async function fetchProfile() {
     } finally {
         fetching.value = false;
     }
+}
+
+function triggerFileUpload() {
+  fileInput.value?.click();
+}
+
+async function handleFileUpload(event: Event) {
+  const target = event.target as HTMLInputElement;
+  const file = target.files?.[0];
+  if (!file) return;
+
+  const formData = new FormData();
+  formData.append('file', file);
+
+  uploading.value = true;
+  try {
+    const response = await api.post('/user/profile-picture', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    
+    // Update local state and authStore
+    user.value.profilePicture = response.data.profilePicture;
+    if (authStore.user) {
+      authStore.user.profilePicture = response.data.profilePicture;
+    }
+    
+    toast.add({ severity: 'success', summary: 'Success', detail: 'Profile picture updated', life: 5000 });
+  } catch (e) {
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Upload failed', life: 5000 });
+  } finally {
+    uploading.value = false;
+    if (target) target.value = ''; // Reset input
+  }
 }
 
 async function updateProfile() {
@@ -105,11 +149,32 @@ onMounted(fetchProfile);
 
       <div class="md:col-span-1">
         <div class="phoenix-card text-center flex flex-col items-center">
-          <div class="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 mb-4 border-2 border-amber-400 p-1">
-            <div class="w-full h-full bg-white rounded-full flex items-center justify-center">
+          <div class="profile-image-container mb-4">
+            <img v-if="profilePictureUrl" :src="profilePictureUrl" alt="Profile" class="profile-image-large" />
+            <div v-else class="profile-image-placeholder">
               <i class="pi pi-user text-3xl" />
             </div>
           </div>
+          
+          <input
+            ref="fileInput"
+            type="file"
+            accept="image/*"
+            class="hidden"
+            @change="handleFileUpload"
+          >
+          
+          <Button
+            label="Change Picture"
+            icon="pi pi-camera"
+            severity="secondary"
+            text
+            size="small"
+            class="mb-4"
+            :loading="uploading"
+            @click="triggerFileUpload"
+          />
+
           <h2 class="text-xl font-bold text-slate-900">
             {{ user.name }}
           </h2>
@@ -136,4 +201,34 @@ onMounted(fetchProfile);
 </template>
 
 <style scoped>
+.profile-image-container {
+  width: 6rem;
+  height: 6rem;
+  background-color: #f1f5f9;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+  border: 2px solid #fbbf24;
+  padding: 0.25rem;
+  overflow: hidden;
+}
+
+.profile-image-large {
+  width: 100%;
+  height: 100%;
+  border-radius: 9999px;
+  object-fit: cover;
+}
+
+.profile-image-placeholder {
+  width: 100%;
+  height: 100%;
+  background-color: white;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 </style>

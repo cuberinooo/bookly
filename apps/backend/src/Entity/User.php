@@ -91,6 +91,22 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, Company
     #[ORM\Column(type: 'datetime', nullable: true)]
     private ?\DateTimeInterface $passwordResetTokenExpiresAt = null;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['user:read'])]
+    private ?string $profilePicture = null;
+
+    public function getProfilePicture(): ?string
+    {
+        return $this->profilePicture;
+    }
+
+    public function setProfilePicture(?string $profilePicture): static
+    {
+        $this->profilePicture = $profilePicture;
+
+        return $this;
+    }
+
     public function __construct()
     {
         $this->courses = new ArrayCollection();

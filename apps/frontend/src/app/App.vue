@@ -99,6 +99,13 @@ function toggleMenu(event: any) {
 }
 const companyName = computed(() => settingsStore.companyName);
 
+const profilePictureUrl = computed(() => {
+  if (authStore.user?.profilePicture) {
+    return `${import.meta.env.VITE_API_URL}/user/profile-picture/${authStore.user.id}?t=${authStore.user.profilePicture}`;
+  }
+  return null;
+});
+
 async function logout() {
   await authStore.logout();
   router.push({name: 'login'});
@@ -143,16 +150,16 @@ onMounted(async () => {
         <div class="nav-links">
           <template v-if="authStore.isTrainer()">
             <div class="role-switcher-modern" v-tooltip.bottom="'Toggle View Mode'">
-              <button 
-                class="role-btn trainer" 
+              <button
+                class="role-btn trainer"
                 :class="{ active: authStore.viewMode === 'trainer' }"
                 @click="authStore.viewMode !== 'trainer' && authStore.toggleViewMode()"
               >
                 <i class="pi pi-bolt mr-1"></i>
                 <span>Trainer</span>
               </button>
-              <button 
-                class="role-btn member" 
+              <button
+                class="role-btn member"
                 :class="{ active: authStore.viewMode === 'member' }"
                 @click="authStore.viewMode !== 'member' && authStore.toggleViewMode()"
               >
@@ -171,23 +178,27 @@ onMounted(async () => {
               {{ dashboardLabel }}
             </RouterLink>
             <div class="profile-dropdown-wrapper">
-            <span
-              v-if="authStore.user"
-              class="user-name"
-            >{{ authStore.user.name }}</span>
               <Button
                 type="button"
-                icon="pi pi-user"
                 severity="secondary"
                 rounded
                 class="profile-btn"
                 @click="toggleMenu"
-              />
+              >
+                <img v-if="profilePictureUrl" :src="profilePictureUrl" alt="Profile" class="profile-image-small" />
+                <i v-else class="pi pi-user" />
+              </Button>
               <Menu
                 ref="menu"
                 :model="menuItems"
                 :popup="true"
-              />
+              >
+                <template #start>
+                  <div v-if="authStore.user" class="menu-user-info">
+                    <span class="p-2 menu-user-name">{{ authStore.user.name }}</span>
+                  </div>
+                </template>
+              </Menu>
             </div>
           </template>
           <template v-else>
@@ -368,7 +379,7 @@ onMounted(async () => {
     padding: 3px;
     border-radius: 12px;
     border: 1px solid rgba(255, 255, 255, 0.1);
-    
+
     .role-btn {
       display: flex;
       align-items: center;
@@ -382,20 +393,20 @@ onMounted(async () => {
       text-transform: uppercase;
       letter-spacing: 0.05em;
       transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-      
+
       i {
         font-size: 0.8rem;
         opacity: 0.7;
       }
-      
+
       &.active {
         background: var(--primary-color);
         color: #000;
         box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
-        
+
         i { opacity: 1; }
       }
-      
+
       &:not(.active):hover {
         background: rgba(255, 255, 255, 0.05);
         color: white;
@@ -454,11 +465,40 @@ onMounted(async () => {
     color: white !important;
     width: 40px;
     height: 40px;
+    padding: 0 !important;
+    overflow: hidden;
 
     &:hover {
       background: var(--primary-color) !important;
       color: #000 !important;
       border-color: var(--primary-color) !important;
+    }
+
+    .profile-image-small {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  .menu-user-info {
+    padding: 1rem;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+
+    .menu-user-name {
+      font-weight: 700;
+      color: #1e293b;
+      font-family: 'Barlow Condensed', sans-serif;
+      text-transform: uppercase;
+      font-size: 1rem;
+    }
+
+    .menu-user-email {
+      font-size: 0.75rem;
+      color: #64748b;
     }
   }
 

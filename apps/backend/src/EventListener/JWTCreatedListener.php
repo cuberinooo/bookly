@@ -22,6 +22,7 @@ class JWTCreatedListener
         $payload['mustChangePassword'] = $user->isMustChangePassword();
         $payload['companyId'] = $user->getCompany() ? $user->getCompany()->getId() : null;
         $payload['companyName'] = $user->getCompany() ? $user->getCompany()->getName() : null;
+        $payload['profilePicture'] = $user->getProfilePicture();
 
         $event->setData($payload);
     }

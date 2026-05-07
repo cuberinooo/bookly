@@ -14,9 +14,83 @@ use Symfony\Component\Serializer\SerializerInterface;
 use App\Service\PasswordValidator;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
+
 #[Route('/api/user')]
 class UserController extends AbstractController
 {
+    private string $uploadDir;
+
+    public function __construct(ParameterBagInterface $params)
+    {
+        $this->uploadDir = $params->get('upload_dir');
+    }
+
+    #[Route('/profile-picture', name: 'user_profile_picture_upload', methods: ['POST'])]
+    public function uploadProfilePicture(Request $request, EntityManagerInterface $entityManager): JsonResponse
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+        if (!$user) {
+            return new JsonResponse(['error' => 'User not found'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        /** @var UploadedFile $file */
+        $file = $request->files->get('file');
+        if (!$file) {
+            return new JsonResponse(['error' => 'No file uploaded'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $company = $user->getCompany();
+        if (!$company) {
+            return new JsonResponse(['error' => 'User has no company'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $companyDir = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $company->getName());
+        $targetDir = $this->uploadDir . '/' . $companyDir . '/' . $user->getId();
+
+        if (!is_dir($targetDir)) {
+            mkdir($targetDir, 0777, true);
+        }
+
+        $extension = $file->guessExtension() ?? 'jpg';
+        $filename = 'profile.' . $extension;
+
+        try {
+            $file->move($targetDir, $filename);
+            $user->setProfilePicture($filename);
+            $entityManager->flush();
+        } catch (\Exception $e) {
+            return new JsonResponse(['error' => 'Failed to save file: ' . $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        return new JsonResponse(['status' => 'Profile picture updated', 'profilePicture' => $filename]);
+    }
+
+    #[Route('/profile-picture/{id}', name: 'user_profile_picture_serve', methods: ['GET'])]
+    public function serveProfilePicture(int $id, UserRepository $userRepository): Response
+    {
+        $user = $userRepository->find($id);
+        if (!$user || !$user->getProfilePicture()) {
+            throw $this->createNotFoundException('Profile picture not found');
+        }
+
+        $company = $user->getCompany();
+        if (!$company) {
+             throw $this->createNotFoundException('Company not found');
+        }
+
+        $companyDir = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $company->getName());
+        $fullPath = $this->uploadDir . '/' . $companyDir . '/' . $user->getId() . '/' . $user->getProfilePicture();
+
+        if (!file_exists($fullPath)) {
+            throw $this->createNotFoundException('File not found');
+        }
+
+        return $this->file($fullPath);
+    }
+
     #[Route('/me', name: 'user_me', methods: ['GET'])]
     public function me(SerializerInterface $serializer): JsonResponse
     {

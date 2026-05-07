@@ -7,6 +7,7 @@ interface User {
   roles: string[];
   isActive?: boolean;
   mustChangePassword?: boolean;
+  profilePicture?: string;
 }
 
 export const authStore = reactive({
@@ -63,7 +64,8 @@ export const authStore = reactive({
         name: payload.name || '',
         roles: payload.roles || [],
         isActive: payload.isActive,
-        mustChangePassword: payload.mustChangePassword
+        mustChangePassword: payload.mustChangePassword,
+        profilePicture: payload.profilePicture
       };
     } catch {
       this.logout();
