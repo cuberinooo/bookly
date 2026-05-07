@@ -225,7 +225,7 @@ class CourseController extends AbstractController
             throw $this->createNotFoundException('Course not found');
         }
 
-        $deleteAll = $request->query->getBoolean('deleteAll', false);
+        $deleteAll = $request->query->getBoolean('deleteAll');
         $seriesId = $course->getSeriesId();
 
         if ($deleteAll && $seriesId) {

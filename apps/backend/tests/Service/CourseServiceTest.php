@@ -119,12 +119,40 @@ class CourseServiceTest extends TestCase
         $series = new CourseSeries();
         $this->seriesRepository->method('find')->with(123)->willReturn($series);
 
-        $this->entityManager->expects($this->exactly(2))->method('remove');
+        $this->entityManager->expects($this->exactly(3))->method('remove');
         $this->entityManager->expects($this->once())->method('flush');
 
         $count = $this->service->deleteCourseSeries($seriesId);
         $this->assertEquals(2, $count);
-        $this->assertFalse($series->isActive(), 'Series should be deactivated after deletion');
+    }
+
+    public function testDeleteCourseSeriesFutureOnly(): void
+    {
+        $seriesId = '123';
+        $fromTime = new \DateTime('+1 day');
+
+        $qb = $this->createMock(QueryBuilder::class);
+        $query = $this->createMock(Query::class);
+
+        $this->courseRepository->method('createQueryBuilder')->willReturn($qb);
+        $qb->method('where')->willReturnSelf();
+        $qb->method('andWhere')->willReturnSelf();
+        $qb->method('setParameter')->willReturnSelf();
+        $qb->method('getQuery')->willReturn($query);
+
+        $course1 = new Course();
+        $query->method('getResult')->willReturn([$course1]);
+
+        $series = new CourseSeries();
+        $series->setActive(true);
+        $this->seriesRepository->method('find')->with(123)->willReturn($series);
+
+        $this->entityManager->expects($this->once())->method('remove')->with($course1);
+        $this->entityManager->expects($this->once())->method('flush');
+
+        $count = $this->service->deleteCourseSeries($seriesId, $fromTime);
+        $this->assertEquals(1, $count);
+        $this->assertFalse($series->isActive(), 'Series should be deactivated (not deleted) when fromTime is provided');
     }
 
     public function testTransferCourseSeries(): void
