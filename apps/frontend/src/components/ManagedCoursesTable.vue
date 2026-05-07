@@ -23,7 +23,7 @@ const lazyParams = ref({
     first: 0,
     rows: 10,
     page: 1,
-    startDate: null as Date | null,
+    startDate: new Date(),
     endDate: null as Date | null
 });
 
@@ -110,8 +110,9 @@ function onFilter() {
 }
 
 function clearFilters() {
-    lazyParams.value.startDate = null;
+    lazyParams.value.startDate = new Date();
     lazyParams.value.endDate = null;
+
     onFilter();
 }
 

@@ -97,6 +97,10 @@ function isRestrictedForTrial(course: any) {
     return isTrial && course.allowTrial === false;
 }
 
+function isPastCourse(course: any) {
+    return new Date(course.endTime) < new Date();
+}
+
 function onSlotClick(day: Date, hour: number) {
     const clickDate = new Date(day);
     clickDate.setHours(hour, 0, 0, 0);
@@ -205,7 +209,8 @@ function onSlotClick(day: Date, hour: number) {
                 class="course-card"
                 :class="{ 
                   'is-booked': isBookedByUser(course),
-                  'is-restricted': isRestrictedForTrial(course)
+                  'is-restricted': isRestrictedForTrial(course),
+                  'is-past': isPastCourse(course)
                 }"
                 :style="!isCompactView ? { gridRow: getGridRow(course.startTime, course.durationMinutes) } : {}"
                 @click.stop="$emit('course-click', course)"
@@ -491,6 +496,18 @@ $border-color: #e2e8f0;
 
         .course-title {
             color: #475569;
+        }
+    }
+
+    &.is-past {
+        opacity: 0.6;
+        border-left-color: #94a3b8;
+        background: #f8fafc;
+        filter: grayscale(0.5);
+
+        &:hover {
+          opacity: 0.9;
+          filter: grayscale(0);
         }
     }
 
