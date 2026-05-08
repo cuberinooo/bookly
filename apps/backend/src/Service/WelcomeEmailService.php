@@ -45,6 +45,7 @@ class WelcomeEmailService
                 'name' => $user->getName(),
                 'siteName' => $siteName,
                 'url' => $this->getVerificationUrl($user),
+                'loginUrl' => $this->getLoginUrl(),
                 'isAdminCreation' => $isAdminCreation,
                 'temporaryPassword' => $temporaryPassword,
             ]);
@@ -72,6 +73,7 @@ class WelcomeEmailService
                 'isAdminCreation' => $isAdminCreation,
                 'temporaryPassword' => $temporaryPassword,
                 'verificationUrl' => $this->getVerificationUrl($user),
+                'loginUrl' => $this->getLoginUrl(),
             ]);
 
         // Attach files
@@ -95,5 +97,11 @@ class WelcomeEmailService
     {
         $frontendUrl = $_ENV['FRONTEND_URL'] ?? 'http://localhost:4200';
         return $frontendUrl . '/verify-email?token=' . $user->getVerificationToken();
+    }
+
+    private function getLoginUrl(): string
+    {
+        $frontendUrl = $_ENV['FRONTEND_URL'] ?? 'http://localhost:4200';
+        return $frontendUrl . '/login';
     }
 }

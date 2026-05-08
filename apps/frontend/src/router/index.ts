@@ -85,4 +85,15 @@ router.beforeEach(async (to, from) => {
   return true;
 });
 
+router.onError((error, to) => {
+  // Check if the error is due to a failed dynamic import
+  const isChunkLoadFailed = error.message.includes('Failed to fetch dynamically imported module') ||
+    error.message.includes('Loading chunk');
+
+  if (isChunkLoadFailed) {
+    // Force a hard reload of the page to fetch the new build assets
+    window.location.reload();
+  }
+});
+
 export default router;
