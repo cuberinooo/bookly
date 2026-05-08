@@ -81,6 +81,18 @@ services:
     volumes:
       - minio_data:/data
 
+  minio-create-buckets:
+    image: minio/mc
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      until (/usr/bin/mc alias set local_minio http://minio:9000 minioadmin minioadmin) do echo 'Waiting for MinIO...' && sleep 1; done;
+      /usr/bin/mc mb --ignore-existing local_minio/booking-app;
+      /usr/bin/mc mb --ignore-existing local_minio/booking-app-test;
+      exit 0;
+      "
+
   mercure:
     image: dunglas/mercure
     restart: unless-stopped

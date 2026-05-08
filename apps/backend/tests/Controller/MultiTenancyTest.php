@@ -114,4 +114,35 @@ class MultiTenancyTest extends WebTestCase
         ]);
         $this->assertEquals(Response::HTTP_NOT_FOUND, $client->getResponse()->getStatusCode(), 'Trainer B should not see Course A');
     }
+
+    public function testTrainerSearchIsolationBetweenCompanies(): void
+    {
+        $client = static::createClient();
+        $entityManager = static::getContainer()->get('doctrine.orm.entity_manager');
+
+        // 1. Setup Company A with Trainer A
+        $companyA = $this->createCompany($entityManager, 'Company A ' . uniqid());
+        $trainerA = $this->createTrainer($entityManager, $companyA, 'trainerA' . uniqid() . '@example.com');
+
+        // 2. Setup Company B with Trainer B
+        $companyB = $this->createCompany($entityManager, 'Company B ' . uniqid());
+        $trainerB = $this->createTrainer($entityManager, $companyB, 'trainerB' . uniqid() . '@example.com');
+
+        $entityManager->flush();
+        $entityManager->clear();
+
+        $tokenA = $this->getToken($client, $trainerA);
+
+        // 3. Login as Trainer A and search for trainers
+        $client->request('GET', '/api/user/trainers', [], [], [
+            'HTTP_AUTHORIZATION' => 'Bearer ' . $tokenA
+        ]);
+        $this->assertEquals(Response::HTTP_OK, $client->getResponse()->getStatusCode());
+
+        $data = json_decode($client->getResponse()->getContent(), true);
+        $emails = array_map(fn($u) => $u['email'], $data);
+
+        $this->assertContains($trainerA->getEmail(), $emails);
+        $this->assertNotContains($trainerB->getEmail(), $emails, 'Trainer B should not be visible to Trainer A');
+    }
 }

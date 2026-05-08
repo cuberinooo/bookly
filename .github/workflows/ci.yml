@@ -36,7 +36,7 @@ jobs:
         uses: docker/setup-buildx-action@v4
 
       - name: Start Services (Docker Compose)
-        run: docker compose up -d backend db mailhog minio mercure
+        run: docker compose up -d backend db mailhog minio mercure minio-create-buckets
         env:
           APP_ENV: test
 

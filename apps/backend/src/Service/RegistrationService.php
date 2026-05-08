@@ -109,7 +109,7 @@ class RegistrationService
 
     private function sendAdminNotificationEmail(User $user): void
     {
-        $admins = $this->entityManager->getRepository(User::class)->findByRole('ROLE_ADMIN');
+        $admins = $this->entityManager->getRepository(User::class)->findByRole('ROLE_ADMIN', $user->getCompany());
         $adminEmails = array_map(fn(User $admin) => $admin->getEmail(), $admins);
 
         if (empty($adminEmails)) {

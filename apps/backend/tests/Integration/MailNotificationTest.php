@@ -316,4 +316,76 @@ class MailNotificationTest extends WebTestCase
         $this->assertTrue($updatedUser->isMustChangePassword(), 'User should be forced to change password');
         $this->assertNotEquals($initialPasswordHash, $updatedUser->getPassword(), 'Password hash should have changed in the database');
     }
+
+    public function testRegistrationNotifiesOnlyOwnCompanyAdmins(): void
+    {
+        $client = static::createClient();
+        $this->httpClient = static::getContainer()->get(HttpClientInterface::class);
+        $this->clearMailhogMessages();
+
+        $entityManager = static::getContainer()->get('doctrine.orm.entity_manager');
+        $hasher = static::getContainer()->get('security.password_hasher');
+
+        $suffix = uniqid();
+
+        // 1. Setup Company A and its Admin
+        $companyA = new Company();
+        $companyA->setName('Company A ' . $suffix);
+        $entityManager->persist($companyA);
+
+        $adminA = new User();
+        $adminA->setEmail('adminA_' . $suffix . '@example.com');
+        $adminA->setName('Admin A');
+        $adminA->setRoles(['ROLE_ADMIN']);
+        $adminA->setPassword($hasher->hashPassword($adminA, 'password'));
+        $adminA->setIsVerified(true);
+        $adminA->setCompany($companyA);
+        $entityManager->persist($adminA);
+
+        // 2. Setup Company B and its Admin
+        $companyB = new Company();
+        $companyB->setName('Company B ' . $suffix);
+        $entityManager->persist($companyB);
+
+        $adminB = new User();
+        $adminB->setEmail('adminB_' . $suffix . '@example.com');
+        $adminB->setName('Admin B');
+        $adminB->setRoles(['ROLE_ADMIN']);
+        $adminB->setPassword($hasher->hashPassword($adminB, 'password'));
+        $adminB->setIsVerified(true);
+        $adminB->setCompany($companyB);
+        $entityManager->persist($adminB);
+
+        $entityManager->flush();
+
+        // 3. Register a new user for Company A
+        $registrationData = [
+            'email' => 'newuser_' . $suffix . '@example.com',
+            'password' => 'SecurePassword123!',
+            'name' => 'New User',
+            'companyName' => $companyA->getName()
+        ];
+
+        $client->request('POST', '/api/register', [], [], [], json_encode($registrationData));
+        $this->assertEquals(Response::HTTP_CREATED, $client->getResponse()->getStatusCode());
+
+        // 4. Verify Mailhog messages
+        $messages = $this->getMailhogMessages();
+        
+        // We expect at least:
+        // 1. Welcome email to the new user
+        // 2. Admin notification email
+        
+        $adminNotificationFound = false;
+        foreach ($messages as $message) {
+            if ($message['Content']['Headers']['Subject'][0] === 'New User Registration: New User') {
+                $recipients = $message['Content']['Headers']['To'][0];
+                $this->assertStringContainsString($adminA->getEmail(), $recipients, 'Admin A should be notified');
+                $this->assertStringNotContainsString($adminB->getEmail(), $recipients, 'Admin B should NOT be notified');
+                $adminNotificationFound = true;
+            }
+        }
+        
+        $this->assertTrue($adminNotificationFound, 'Admin notification email was not found');
+    }
 }

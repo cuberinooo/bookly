@@ -2,6 +2,7 @@
 
 namespace App\Repository;
 
+use App\Entity\Company;
 use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -36,13 +37,27 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
     /**
      * @return User[]
      */
-    public function findByRole(string $role): array
+    public function findByRole(string $role, ?Company $company = null): array
     {
         $entityManager = $this->getEntityManager();
+        $filters = $entityManager->getFilters();
 
         // We explicitly cast roles to jsonb and the parameter to jsonb
         // This bypasses all Doctrine 'unknown type' errors
-        $sql = 'SELECT * FROM "user" WHERE roles::jsonb @> :role::jsonb';
+        $sql = 'SELECT u.* FROM "user" u WHERE u.roles::jsonb @> :role::jsonb';
+
+        if ($company) {
+            $sql .= ' AND u.company_id = :companyId';
+        } elseif ($filters->isEnabled('company_filter')) {
+            try {
+                $companyId = $filters->getFilter('company_filter')->getParameter('company_id');
+                if ($companyId) {
+                    $sql .= ' AND u.company_id = ' . trim($companyId, "\'");
+                }
+            } catch (\InvalidArgumentException $e) {
+                // Parameter not set, skip filtering
+            }
+        }
 
         $rsm = new \Doctrine\ORM\Query\ResultSetMappingBuilder($entityManager);
         $rsm->addRootEntityFromClassMetadata(\App\Entity\User::class, 'u');
@@ -51,6 +66,10 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
 
         // We pass the role as a JSON array string: ["ROLE_TRAINER"]
         $query->setParameter('role', json_encode([$role]));
+        
+        if ($company) {
+            $query->setParameter('companyId', $company->getId());
+        }
 
         return $query->getResult();
     }
