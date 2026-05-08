@@ -30,8 +30,8 @@ services:
       - "443:443"
       - "443:443/udp"
     depends_on:
-      db:
-        condition: service_healthy # Wait for Postgres to be ready
+      - db
+      - mercure
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/api/health"]
       interval: 10s
@@ -41,8 +41,12 @@ services:
     environment:
       TZ: Europe/Berlin
       SERVER_NAME: :80
-      # This URL matches the DB service name and credentials above
       DATABASE_URL: "postgresql://user:password@db:5432/booking_db?serverVersion=16&charset=utf8"
+      MERCURE_URL: "http://mercure/.well-known/mercure"
+      MERCURE_PUBLIC_URL: "http://localhost:3000/.well-known/mercure"
+      MERCURE_JWT_SECRET: "!ChangeThisMercureHubJWTSecretKey!"
+      MERCURE_PUBLISHER_JWT_KEY: "!ChangeThisMercureHubJWTSecretKey!"
+      MERCURE_SUBSCRIBER_JWT_KEY: "!ChangeThisMercureHubJWTSecretKey!"
 
   frontend:
     build:
@@ -57,12 +61,27 @@ services:
       - backend
     environment:
       - VITE_API_URL=http://localhost:8000/api
+      - VITE_MERCURE_URL=http://localhost:3000/.well-known/mercure
 
   mailhog:
     image: mailhog/mailhog:latest
     ports:
       - "1025:1025" # SMTP port
       - "8025:8025" # Web UI port
+
+  mercure:
+    image: dunglas/mercure
+    restart: unless-stopped
+    environment:
+      SERVER_NAME: ':80'
+      MERCURE_PUBLISHER_JWT_KEY: '!ChangeThisMercureHubJWTSecretKey!'
+      MERCURE_SUBSCRIBER_JWT_KEY: '!ChangeThisMercureHubJWTSecretKey!'
+      MERCURE_EXTRA_DIRECTIVES: |
+        cors_origins *
+        anonymous
+        subscriptions
+    ports:
+      - "3000:80"
 
 volumes:
   db_data:

@@ -8,6 +8,7 @@ import api from '../services/api';
 import {useToast} from 'primevue/usetoast';
 import TheFooter from '../components/TheFooter.vue';
 import PullToRefresh from 'pulltorefreshjs';
+import mercureService from '../services/mercure';
 
 const router = useRouter();
 const menu = ref();
@@ -117,8 +118,10 @@ watch(
   (isLoggedIn) => {
     if (!isLoggedIn) {
       settingsStore.reset();
+      mercureService.stop();
     } else {
       settingsStore.fetchSettings();
+      mercureService.init();
     }
   }
 );
@@ -127,6 +130,7 @@ onMounted(async () => {
   // If we found a user, go get their specific company settings
   if (authStore.isLoggedIn()) {
     await settingsStore.fetchSettings();
+    mercureService.init();
   }
 
   // Check if the app is launched as an installed PWA

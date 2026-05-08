@@ -1,0 +1,12 @@
+mercure {
+    # Publisher JWT key
+    publisher_jwt {env.MERCURE_PUBLISHER_JWT_KEY}
+    # Subscriber JWT key
+    subscriber_jwt {env.MERCURE_SUBSCRIBER_JWT_KEY}
+    # Allow anonymous subscribers
+    anonymous
+    # Enable the subscription API
+    subscriptions
+    # Allow CORS
+    cors_origins *
+}

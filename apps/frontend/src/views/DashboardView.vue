@@ -11,6 +11,7 @@ import ParticipantsDialog from '../components/ParticipantsDialog.vue';
 import NotificationItem from '../components/NotificationItem.vue';
 import TrialStatusCard from '../components/TrialStatusCard.vue';
 import { useRoute } from 'vue-router';
+import { eventsStore } from '../store/events';
 
 import { formatDateTime } from '../services/date-utils';
 
@@ -129,6 +130,15 @@ async function fetchData() {
 watch(() => authStore.viewMode, () => {
     fetchData();
 });
+
+watch(
+  () => eventsStore.lastEvent,
+  (event) => {
+    if (event && ['Course', 'CourseSeries', 'Booking', 'Notification'].includes(event.entity)) {
+      fetchData();
+    }
+  }
+);
 
 async function fetchNotifications() {
     try {

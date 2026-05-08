@@ -9,6 +9,7 @@ import { BookingWindow } from '../app/enums/BookingWindow';
 import WeeklyCalendar from '../components/WeeklyCalendar.vue';
 import MobileCalendar from '../components/MobileCalendar.vue';
 import CourseForm from '../components/CourseForm.vue';
+import { eventsStore } from '../store/events';
 
 const toast = useToast();
 const confirm = useConfirm();
@@ -110,6 +111,15 @@ watch(baseDate, (newDate) => {
         fetchCourses();
     }
 });
+
+watch(
+  () => eventsStore.lastEvent,
+  (event) => {
+    if (event && ['Course', 'CourseSeries', 'Booking'].includes(event.entity)) {
+      fetchCourses();
+    }
+  }
+);
 
 async function fetchCourses() {
   loading.value = true;

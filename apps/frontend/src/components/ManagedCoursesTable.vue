@@ -5,6 +5,7 @@ import { useToast } from 'primevue/usetoast';
 import api from '../services/api';
 import { authStore } from '../store/auth';
 import ParticipantsDialog from './ParticipantsDialog.vue';
+import { eventsStore } from '../store/events';
 
 import { formatDate, formatTime } from '../services/date-utils';
 
@@ -26,6 +27,15 @@ const lazyParams = ref({
     startDate: new Date(),
     endDate: null as Date | null
 });
+
+watch(
+  () => eventsStore.lastEvent,
+  (event) => {
+    if (event && ['Course', 'CourseSeries', 'Booking'].includes(event.entity)) {
+      loadLazyData();
+    }
+  }
+);
 
 async function loadLazyData() {
     loading.value = true;
