@@ -3,10 +3,11 @@ import {RouterLink, RouterView} from 'vue-router';
 import {authStore} from '../store/auth';
 import {settingsStore} from '../store/settings';
 import {useRouter} from 'vue-router';
-import {ref, computed, onMounted, watch} from 'vue';
+import {ref, computed, onMounted, watch, onUnmounted} from 'vue';
 import api from '../services/api';
 import {useToast} from 'primevue/usetoast';
 import TheFooter from '../components/TheFooter.vue';
+import PullToRefresh from 'pulltorefreshjs';
 
 const router = useRouter();
 const menu = ref();
@@ -127,7 +128,30 @@ onMounted(async () => {
   if (authStore.isLoggedIn()) {
     await settingsStore.fetchSettings();
   }
+
+  // Check if the app is launched as an installed PWA
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+    || window.navigator.standalone;
+
+  if (isStandalone) {
+    PullToRefresh.init({
+      mainElement: '#app', // Binds directly to Vue's root wrapper
+      onRefresh() {
+        window.location.reload()
+      },
+      distThreshold: 60,
+      distMax: 80,
+      instructionsPullToRefresh: 'Pull down to update app...',
+      instructionsReleaseToRefresh: 'Release to refresh'
+    });
+  }
 });
+
+onUnmounted(() => {
+  // Clean up the pull-to-refresh instance when the component unmounts
+  PullToRefresh.destroyAll();
+});
+
 </script>
 
 <template>
@@ -336,6 +360,11 @@ onMounted(async () => {
 </template>
 
 <style scoped lang="scss">
+/* Essential: Prevents browser bounce physics from fighting your pull-to-refresh */
+html, body, #app {
+  overscroll-behavior-y: contain;
+}
+
 .main-header {
   // background-color: #0F172A; // Now handled by global .main-header in styles.scss
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
