@@ -6,6 +6,9 @@ use App\Entity\Company;
 use App\Entity\AdminSettings;
 use App\Repository\AdminSettingsRepository;
 use App\Service\AdminSettingsService;
+use Aws\MockHandler;
+use Aws\Result;
+use Aws\S3\S3Client;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
@@ -17,7 +20,9 @@ class AdminSettingsServiceTest extends TestCase
     private $repository;
     private $entityManager;
     private $slugger;
-    private $uploadDir;
+    private $s3Client;
+    private $mockHandler;
+    private $s3Bucket;
     private $service;
 
     protected function setUp(): void
@@ -25,13 +30,25 @@ class AdminSettingsServiceTest extends TestCase
         $this->repository = $this->createMock(AdminSettingsRepository::class);
         $this->entityManager = $this->createMock(EntityManagerInterface::class);
         $this->slugger = $this->createMock(SluggerInterface::class);
-        $this->uploadDir = '/tmp/uploads';
+        
+        $this->mockHandler = new MockHandler();
+        $this->s3Client = new S3Client([
+            'region'  => 'us-east-1',
+            'version' => 'latest',
+            'handler' => $this->mockHandler,
+            'credentials' => [
+                'key'    => 'test-key',
+                'secret' => 'test-secret',
+            ],
+        ]);
+        $this->s3Bucket = 'test-bucket';
 
         $this->service = new AdminSettingsService(
             $this->repository,
             $this->entityManager,
             $this->slugger,
-            $this->uploadDir
+            $this->s3Client,
+            $this->s3Bucket
         );
     }
 
@@ -76,24 +93,34 @@ class AdminSettingsServiceTest extends TestCase
 
         $this->entityManager->expects($this->once())->method('flush');
 
+        $tmpFile = tempnam(sys_get_temp_dir(), 'test');
+        file_put_contents($tmpFile, 'test content');
+
         $file = $this->createMock(UploadedFile::class);
         $file->method('getClientOriginalName')->willReturn('test.pdf');
         $file->method('guessExtension')->willReturn('pdf');
+        $file->method('getRealPath')->willReturn($tmpFile);
 
         $this->slugger->method('slug')->willReturnMap([
             ['Test Company', new UnicodeString('test-company')],
             ['test', new UnicodeString('test')]
         ]);
 
-        $file->expects($this->once())->method('move')->with(
-            $this->uploadDir . '/test-company/legal',
-            $this->callback(function($filename) {
-                return str_starts_with($filename, 'test-');
-            })
-        );
+        $this->mockHandler->append(new Result(['ObjectURL' => 'https://example.com/test-bucket/test-company/legal/test-123.pdf']));
 
-        $result = $this->service->uploadPrivacyPolicy($company, $file);
-        $this->assertStringStartsWith('/uploads/test-company/legal/test-', $result);
-        $this->assertEquals($result, $settings->getPrivacyPolicyPdfPath());
+        try {
+            $result = $this->service->uploadPrivacyPolicy($company, $file);
+            
+            $this->assertStringStartsWith('/uploads/test-company/legal/test-', $result);
+            $this->assertEquals($result, $settings->getPrivacyPolicyPdfPath());
+            
+            $lastCommand = $this->mockHandler->getLastCommand();
+            $this->assertEquals('PutObject', $lastCommand->getName());
+            $this->assertEquals('test-bucket', $lastCommand['Bucket']);
+        } finally {
+            if (file_exists($tmpFile)) {
+                unlink($tmpFile);
+            }
+        }
     }
 }

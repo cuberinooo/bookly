@@ -16,17 +16,18 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use App\Service\AdminUserService;
+use Aws\S3\S3ClientInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\String\Slugger\SluggerInterface;
 
 #[Route('/api/user')]
 class UserController extends AbstractController
 {
-    private string $uploadDir;
-
-    public function __construct(ParameterBagInterface $params)
-    {
-        $this->uploadDir = $params->get('upload_dir');
-    }
+    public function __construct(
+        private S3ClientInterface $s3Client,
+        private string $s3Bucket,
+        private SluggerInterface $slugger,
+    ) {}
 
     #[Route('/me', name: 'user_delete', methods: ['DELETE'])]
     public function deleteMe(AdminUserService $adminUserService): JsonResponse
@@ -66,22 +67,25 @@ class UserController extends AbstractController
             return new JsonResponse(['error' => 'User has no company'], Response::HTTP_BAD_REQUEST);
         }
 
-        $companyDir = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $company->getName());
-        $targetDir = $this->uploadDir . '/' . $companyDir . '/' . $user->getId();
-
-        if (!is_dir($targetDir)) {
-            mkdir($targetDir, 0777, true);
-        }
-
+        $companySlug = $this->slugger->slug($company->getName())->lower();
         $extension = $file->guessExtension() ?? 'jpg';
-        $filename = 'profile.' . $extension;
+        $filename = sprintf('profile_%s.%s', uniqid('', true), $extension);
+        $key = $companySlug . '/' . $user->getId() . '/' . $filename;
 
         try {
-            $file->move($targetDir, $filename);
+            $prefix = $companySlug . '/' . $user->getId() . '/';
+            $this->s3Client->deleteMatchingObjects($this->s3Bucket, $prefix);
+
+            $this->s3Client->putObject([
+                'Bucket' => $this->s3Bucket,
+                'Key'    => $key,
+                'Body'   => fopen($file->getRealPath(), 'r'),
+            ]);
+
             $user->setProfilePicture($filename);
             $entityManager->flush();
         } catch (\Exception $e) {
-            return new JsonResponse(['error' => 'Failed to save file: ' . $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+            return new JsonResponse(['error' => 'Failed to save file to S3: ' . $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
         return new JsonResponse(['status' => 'Profile picture updated', 'profilePicture' => $filename]);
@@ -100,14 +104,26 @@ class UserController extends AbstractController
              throw $this->createNotFoundException('Company not found');
         }
 
-        $companyDir = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $company->getName());
-        $fullPath = $this->uploadDir . '/' . $companyDir . '/' . $user->getId() . '/' . $user->getProfilePicture();
+        $companySlug = $this->slugger->slug($company->getName())->lower();
+        $key = $companySlug . '/' . $user->getId() . '/' . $user->getProfilePicture();
 
-        if (!file_exists($fullPath)) {
-            throw $this->createNotFoundException('File not found');
+        try {
+            $result = $this->s3Client->getObject([
+                'Bucket' => $this->s3Bucket,
+                'Key' => $key,
+            ]);
+        } catch (\Aws\S3\Exception\S3Exception $e) {
+            // If the file doesn't exist in the bucket, gracefully throw a 404
+            throw $this->createNotFoundException('Profile picture not found in storage.', $e);
         }
 
-        return $this->file($fullPath);
+        $content = $result['Body']->getContents();
+        $contentType = $result['ContentType'] ?? 'application/octet-stream';
+
+        return new Response($content, 200, [
+            'Content-Type' => $contentType,
+            'Content-Disposition' => 'inline; filename="' . basename($key) . '"',
+        ]);
     }
 
     #[Route('/me', name: 'user_me', methods: ['GET'])]

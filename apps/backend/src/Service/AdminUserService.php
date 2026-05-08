@@ -3,28 +3,24 @@
 namespace App\Service;
 
 use App\Entity\User;
+use Aws\S3\S3ClientInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\Mailer\MailerInterface;
-use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Mime\Address;
-
-use Symfony\Component\Filesystem\Filesystem;
-use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Symfony\Component\String\Slugger\SluggerInterface;
 
 class AdminUserService
 {
-    private string $uploadDir;
-
     public function __construct(
         private EntityManagerInterface $entityManager,
         private UserPasswordHasherInterface $passwordHasher,
         private MailerInterface $mailer,
-        private Filesystem $filesystem,
-        ParameterBagInterface $params
-    ) {
-        $this->uploadDir = $params->get('upload_dir');
-    }
+        private S3ClientInterface $s3Client,
+        private SluggerInterface $slugger,
+        private string $s3Bucket
+    ) {}
 
     /**
      * @param bool $deactivateIfHasCourses If true, deactivate the user if they have courses. If false, throw an exception.
@@ -42,13 +38,16 @@ class AdminUserService
             throw new \Exception('Cannot delete account. You still have active courses. Please transfer your courses to another trainer first.');
         }
 
-        // Cleanup profile picture directory
+        // Cleanup profile picture directory in S3
         $company = $user->getCompany();
         if ($company) {
-            $companyDir = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $company->getName());
-            $targetDir = $this->uploadDir . '/' . $companyDir . '/' . $user->getId();
-            if ($this->filesystem->exists($targetDir)) {
-                $this->filesystem->remove($targetDir);
+            $companySlug = $this->slugger->slug($company->getName())->lower();
+            $prefix = $companySlug . '/' . $user->getId() . '/';
+
+            try {
+                $this->s3Client->deleteMatchingObjects($this->s3Bucket, $prefix);
+            } catch (\Exception $e) {
+                // Log error but continue
             }
         }
 

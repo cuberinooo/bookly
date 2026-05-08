@@ -2,22 +2,41 @@
 
 namespace App\Controller;
 
+use Aws\S3\S3ClientInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
 class FileController extends AbstractController
 {
+    public function __construct(
+        private S3ClientInterface $s3Client,
+        private string            $s3Bucket
+    )
+    {
+    }
+
     #[Route('/uploads/{path}', name: 'uploads_serve', requirements: ['path' => '.+'], methods: ['GET'])]
     public function serve(string $path): Response
     {
-        $uploadDir = $this->getParameter('upload_dir');
-        $fullPath = $uploadDir . '/' . $path;
-
-        if (!file_exists($fullPath)) {
-            throw $this->createNotFoundException('File not found');
+        try {
+            $result = $this->s3Client->getObject([
+                'Bucket' => $this->s3Bucket,
+                'Key' => $path,
+            ]);
+        } catch (\Aws\S3\Exception\S3Exception $e) {
+            // If the file doesn't exist in the bucket, gracefully throw a 404
+            throw $this->createNotFoundException('File not found in storage.', $e);
         }
 
-        return $this->file($fullPath);
+        // 2. Read the body content
+        $content = $result['Body']->getContents();
+        $contentType = $result['ContentType'] ?? 'application/octet-stream';
+
+        // 3. Return a standard response with the file content and correct mime type
+        return new Response($content, 200, [
+            'Content-Type' => $contentType,
+            'Content-Disposition' => 'inline; filename="' . basename($path) . '"',
+        ]);
     }
 }

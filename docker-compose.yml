@@ -69,6 +69,18 @@ services:
       - "1025:1025" # SMTP port
       - "8025:8025" # Web UI port
 
+  minio:
+    image: minio/minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+
   mercure:
     image: dunglas/mercure
     restart: unless-stopped
@@ -85,3 +97,4 @@ services:
 
 volumes:
   db_data:
+  minio_data:

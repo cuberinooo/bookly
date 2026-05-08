@@ -4,8 +4,8 @@ namespace App\Service;
 
 use App\Entity\AdminSettings;
 use App\Repository\AdminSettingsRepository;
+use Aws\S3\S3ClientInterface;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\String\Slugger\SluggerInterface;
 
@@ -15,7 +15,8 @@ class AdminSettingsService
         private AdminSettingsRepository $repository,
         private EntityManagerInterface $entityManager,
         private SluggerInterface $slugger,
-        private string $uploadDir
+        private S3ClientInterface $s3Client,
+        private string $s3Bucket
     ) {}
 
     public function getSettingsByCompanyName(string $companyName): ?AdminSettings
@@ -57,20 +58,20 @@ class AdminSettingsService
     public function uploadPrivacyPolicy(\App\Entity\Company $company, UploadedFile $file): string
     {
         $companySlug = $this->slugger->slug($company->getName())->lower();
-        $uploadDir = $this->uploadDir . '/' . $companySlug . '/legal';
-
-        $originalFilename = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-        $safeFilename = $this->slugger->slug($originalFilename);
-        $newFilename = $safeFilename . '-' . uniqid('legal', true) . '.' . $file->guessExtension();
+        $key = $companySlug . '/legal/' . $this->slugger->slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME)) . '-' . uniqid('legal', true) . '.' . $file->guessExtension();
 
         try {
-            $file->move($uploadDir, $newFilename);
-        } catch (FileException $e) {
-            throw new \RuntimeException('Failed to upload file');
+            $this->s3Client->putObject([
+                'Bucket' => $this->s3Bucket,
+                'Key'    => $key,
+                'Body'   => fopen($file->getRealPath(), 'r'),
+            ]);
+        } catch (\Exception $e) {
+            throw new \RuntimeException('Failed to upload file to S3: ' . $e->getMessage());
         }
 
         $settings = $company->getAdminSettings();
-        $settings->setPrivacyPolicyPdfPath('/uploads/' . $companySlug . '/legal/' . $newFilename);
+        $settings->setPrivacyPolicyPdfPath($key);
         $this->entityManager->flush();
 
         return $settings->getPrivacyPolicyPdfPath();
@@ -79,23 +80,23 @@ class AdminSettingsService
     public function uploadWelcomeMailAttachment(\App\Entity\Company $company, UploadedFile $file): array
     {
         $companySlug = $this->slugger->slug($company->getName())->lower();
-        $uploadDir = $this->uploadDir . '/' . $companySlug . '/company_assets';
-
-        $originalFilename = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-        $safeFilename = $this->slugger->slug($originalFilename);
-        $newFilename = $safeFilename . '-' . uniqid('asset', true) . '.' . $file->guessExtension();
+        $key = $companySlug . '/company_assets/' . $this->slugger->slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME)) . '-' . uniqid('asset', true) . '.' . $file->guessExtension();
 
         try {
-            $file->move($uploadDir, $newFilename);
-        } catch (FileException $e) {
-            throw new \RuntimeException('Failed to upload file');
+            $this->s3Client->putObject([
+                'Bucket' => $this->s3Bucket,
+                'Key'    => $key,
+                'Body'   => fopen($file->getRealPath(), 'r'),
+            ]);
+        } catch (\Exception $e) {
+            throw new \RuntimeException('Failed to upload file to S3: ' . $e->getMessage());
         }
 
         $settings = $company->getAdminSettings();
         $attachments = $settings->getWelcomeMailAttachments() ?? [];
         $attachment = [
             'name' => $file->getClientOriginalName(),
-            'path' => '/uploads/' . $companySlug . '/company_assets/' . $newFilename
+            'path' => $key
         ];
         $attachments[] = $attachment;
         $settings->setWelcomeMailAttachments($attachments);
@@ -108,21 +109,23 @@ class AdminSettingsService
     {
         $settings = $company->getAdminSettings();
         $attachments = $settings->getWelcomeMailAttachments() ?? [];
-        
+
         $newAttachments = [];
         foreach ($attachments as $att) {
             if ($att['path'] === $path) {
-                // Remove /uploads/ prefix from path when using uploadDir
-                $relativePaths = str_replace('/uploads/', '', $att['path']);
-                $fullPath = $this->uploadDir . '/' . $relativePaths;
-                if (file_exists($fullPath)) {
-                    unlink($fullPath);
+                try {
+                    $this->s3Client->deleteObject([
+                        'Bucket' => $this->s3Bucket,
+                        'Key'    => $att['path'],
+                    ]);
+                } catch (\Exception $e) {
+                    // Log error but continue
                 }
             } else {
                 $newAttachments[] = $att;
             }
         }
-        
+
         $settings->setWelcomeMailAttachments($newAttachments);
         $this->entityManager->flush();
     }

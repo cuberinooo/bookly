@@ -4,6 +4,7 @@ namespace App\Service;
 
 use App\Entity\User;
 use App\Entity\AdminSettings;
+use Aws\S3\S3ClientInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Address;
@@ -12,7 +13,8 @@ class WelcomeEmailService
 {
     public function __construct(
         private MailerInterface $mailer,
-        private string $uploadDir
+        private S3ClientInterface $s3Client,
+        private string $s3Bucket
     ) {}
 
     public function sendWelcomeEmail(User $user, bool $isNewCompanyCreator = false, ?string $temporaryPassword = null, bool $isAdminCreation = false): void
@@ -75,11 +77,14 @@ class WelcomeEmailService
         // Attach files
         $attachments = $settings->getWelcomeMailAttachments() ?? [];
         foreach ($attachments as $att) {
-            // Remove /uploads/ prefix from path when using uploadDir
-            $relativePaths = str_replace('/uploads/', '', $att['path']);
-            $fullPath = $this->uploadDir . '/' . $relativePaths;
-            if (file_exists($fullPath)) {
-                $email->attachFromPath($fullPath, $att['name']);
+            try {
+                $result = $this->s3Client->getObject([
+                    'Bucket' => $this->s3Bucket,
+                    'Key'    => $att['path'],
+                ]);
+                $email->attach($result['Body']->getContents(), $att['name']);
+            } catch (\Exception $e) {
+                // Log error but continue sending email without this attachment
             }
         }
 

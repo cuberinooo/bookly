@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Service\AdminSettingsService;
+use Aws\S3\S3ClientInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -16,7 +17,9 @@ class AdminSettingsController extends AbstractController
     public function __construct(
         private AdminSettingsService $adminSettingsService,
         private SerializerInterface $serializer,
-        private \Doctrine\ORM\EntityManagerInterface $entityManager
+        private \Doctrine\ORM\EntityManagerInterface $entityManager,
+        private S3ClientInterface $s3Client,
+        private string $s3Bucket
     ) {}
 
     #[Route('', name: 'admin_settings_get', methods: ['GET'])]
@@ -29,10 +32,10 @@ class AdminSettingsController extends AbstractController
 
         $company = $user->getCompany();
         $settings = $company->getAdminSettings();
-        
+
         $data = json_decode($this->serializer->serialize($settings, 'json', ['groups' => 'admin:read']), true);
         $data['name'] = $company->getName();
-        
+
         return new JsonResponse($data);
     }
 
@@ -140,15 +143,25 @@ class AdminSettingsController extends AbstractController
         if (!$path) {
             return new Response('Privacy policy not found', Response::HTTP_NOT_FOUND);
         }
+        try {
+            // 1. Fetch the file directly from S3/MinIO
+            $result = $this->s3Client->getObject([
+                'Bucket' => $this->s3Bucket,
+                'Key'    => $path,
+            ]);
 
-        // Remove /uploads/ prefix from path when using upload_dir
-        $relativePaths = str_replace('/uploads/', '', $path);
-        $fullPath = $this->getParameter('upload_dir') . '/' . $relativePaths;
+            // 2. Extract the file content and mime-type
+            $content = $result['Body']->getContents();
+            $contentType = $result['ContentType'] ?? 'application/pdf';
 
-        if (!file_exists($fullPath)) {
-            return new Response('File not found', Response::HTTP_NOT_FOUND);
+            // 3. Return the PDF directly in the response
+            return new Response($content, 200, [
+                'Content-Type' => $contentType,
+                'Content-Disposition' => 'attachment; filename="privacy-policy.pdf"',
+            ]);
+
+        } catch (S3Exception $e) {
+            return new Response('Privacy policy file could not be retrieved from storage.', Response::HTTP_NOT_FOUND);
         }
-
-        return $this->file($fullPath, 'privacy-policy.pdf');
     }
 }

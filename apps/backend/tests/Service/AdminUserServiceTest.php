@@ -6,10 +6,11 @@ use App\Entity\Company;
 use App\Entity\Course;
 use App\Entity\User;
 use App\Service\AdminUserService;
+use Aws\MockHandler;
+use Aws\Result;
+use Aws\S3\S3Client;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
-use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -19,8 +20,9 @@ class AdminUserServiceTest extends TestCase
     private $entityManager;
     private $passwordHasher;
     private $mailer;
-    private $filesystem;
-    private $params;
+    private $s3Client;
+    private $mockHandler;
+    private $s3Bucket;
     private $service;
 
     protected function setUp(): void
@@ -28,16 +30,25 @@ class AdminUserServiceTest extends TestCase
         $this->entityManager = $this->createMock(EntityManagerInterface::class);
         $this->passwordHasher = $this->createMock(UserPasswordHasherInterface::class);
         $this->mailer = $this->createMock(MailerInterface::class);
-        $this->filesystem = $this->createMock(Filesystem::class);
-        $this->params = $this->createMock(ParameterBagInterface::class);
-        $this->params->method('get')->with('upload_dir')->willReturn('/tmp/uploads');
+        
+        $this->mockHandler = new MockHandler();
+        $this->s3Client = new S3Client([
+            'region'  => 'us-east-1',
+            'version' => 'latest',
+            'handler' => $this->mockHandler,
+            'credentials' => [
+                'key'    => 'test-key',
+                'secret' => 'test-secret',
+            ],
+        ]);
+        $this->s3Bucket = 'test-bucket';
 
         $this->service = new AdminUserService(
             $this->entityManager,
             $this->passwordHasher,
             $this->mailer,
-            $this->filesystem,
-            $this->params
+            $this->s3Client,
+            $this->s3Bucket
         );
     }
 
@@ -51,11 +62,22 @@ class AdminUserServiceTest extends TestCase
         $company->method('getName')->willReturn('Test Company');
         $user->method('getCompany')->willReturn($company);
 
+        // Mock ListObjectsV2 to return 0 objects
+        $this->mockHandler->append(new Result([
+            'IsTruncated' => false,
+            'Contents' => []
+        ]));
+
         $this->entityManager->expects($this->once())->method('remove')->with($user);
         $this->entityManager->expects($this->once())->method('flush');
 
         $result = $this->service->deleteUser($user);
         $this->assertTrue($result);
+        
+        $lastCommand = $this->mockHandler->getLastCommand();
+        $this->assertStringContainsString('ListObjects', $lastCommand->getName());
+        $this->assertEquals('test-bucket', $lastCommand['Bucket']);
+        $this->assertEquals('Test_Company/1/', $lastCommand['Prefix']);
     }
 
     public function testDeleteUserBlocksIfHasCourses(): void
