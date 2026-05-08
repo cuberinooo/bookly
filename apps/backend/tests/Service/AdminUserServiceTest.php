@@ -15,11 +15,15 @@ use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 
+use Symfony\Component\String\Slugger\SluggerInterface;
+use Symfony\Component\String\UnicodeString;
+
 class AdminUserServiceTest extends TestCase
 {
     private $entityManager;
     private $passwordHasher;
     private $mailer;
+    private $slugger;
     private $s3Client;
     private $mockHandler;
     private $s3Bucket;
@@ -30,6 +34,7 @@ class AdminUserServiceTest extends TestCase
         $this->entityManager = $this->createMock(EntityManagerInterface::class);
         $this->passwordHasher = $this->createMock(UserPasswordHasherInterface::class);
         $this->mailer = $this->createMock(MailerInterface::class);
+        $this->slugger = $this->createMock(SluggerInterface::class);
         
         $this->mockHandler = new MockHandler();
         $this->s3Client = new S3Client([
@@ -48,6 +53,7 @@ class AdminUserServiceTest extends TestCase
             $this->passwordHasher,
             $this->mailer,
             $this->s3Client,
+            $this->slugger,
             $this->s3Bucket
         );
     }
@@ -61,6 +67,8 @@ class AdminUserServiceTest extends TestCase
         $company = $this->createMock(Company::class);
         $company->method('getName')->willReturn('Test Company');
         $user->method('getCompany')->willReturn($company);
+
+        $this->slugger->method('slug')->with('Test Company')->willReturn(new UnicodeString('test-company'));
 
         // Mock ListObjectsV2 to return 0 objects
         $this->mockHandler->append(new Result([
@@ -77,7 +85,7 @@ class AdminUserServiceTest extends TestCase
         $lastCommand = $this->mockHandler->getLastCommand();
         $this->assertStringContainsString('ListObjects', $lastCommand->getName());
         $this->assertEquals('test-bucket', $lastCommand['Bucket']);
-        $this->assertEquals('Test_Company/1/', $lastCommand['Prefix']);
+        $this->assertEquals('test-company/1/', $lastCommand['Prefix']);
     }
 
     public function testDeleteUserBlocksIfHasCourses(): void

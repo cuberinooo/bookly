@@ -111,7 +111,7 @@ class AdminSettingsServiceTest extends TestCase
         try {
             $result = $this->service->uploadPrivacyPolicy($company, $file);
             
-            $this->assertStringStartsWith('/uploads/test-company/legal/test-', $result);
+            $this->assertStringStartsWith('test-company/legal/test-legal', $result);
             $this->assertEquals($result, $settings->getPrivacyPolicyPdfPath());
             
             $lastCommand = $this->mockHandler->getLastCommand();
