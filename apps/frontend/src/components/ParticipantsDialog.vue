@@ -84,15 +84,15 @@ function close() {
           <Column header="Athlete">
             <template #body="slotProps">
               <div class="flex items-center gap-3">
-                <div class="participant-avatar">
-                  <img
-                    v-if="getProfilePictureUrl(slotProps.data.user)"
-                    :src="getProfilePictureUrl(slotProps.data.user)"
-                    alt="Profile"
-                    class="avatar-img"
+                <div class="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 border border-slate-200 transition-transform duration-200 ease-out hover:scale-125 hover:z-10 hover:shadow-lg hover:border-amber-400 cursor-pointer group relative">
+                  <img 
+                    v-if="getProfilePictureUrl(slotProps.data.user)" 
+                    :src="getProfilePictureUrl(slotProps.data.user)" 
+                    alt="Profile" 
+                    class="w-full h-full object-cover" 
                   />
-                  <div v-else class="avatar-fallback">
-                    <i class="pi pi-user text-slate-400" />
+                  <div v-else class="w-full h-full bg-slate-50 flex items-center justify-center">
+                    <i class="pi pi-user text-slate-400 text-base" />
                   </div>
                 </div>
                 <div class="flex flex-col">
@@ -103,8 +103,7 @@ function close() {
                 </div>
               </div>
             </template>
-          </Column>
-          <Column
+          </Column>          <Column
             v-if="$attrs['onRemoveParticipant']"
             header="Actions"
             class="text-right"
@@ -137,15 +136,15 @@ function close() {
           <Column header="Athlete">
             <template #body="slotProps">
               <div class="flex items-center gap-3">
-                <div class="participant-avatar">
+                <div class="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 border border-slate-200 transition-transform duration-200 ease-out hover:scale-125 hover:z-10 hover:shadow-lg hover:border-amber-400 cursor-pointer group relative">
                   <img
                     v-if="getProfilePictureUrl(slotProps.data.user)"
                     :src="getProfilePictureUrl(slotProps.data.user)"
                     alt="Profile"
-                    class="avatar-img"
+                    class="w-full h-full object-cover"
                   />
-                  <div v-else class="avatar-fallback">
-                    <i class="pi pi-user text-slate-400" />
+                  <div v-else class="w-full h-full bg-slate-50 flex items-center justify-center">
+                    <i class="pi pi-user text-slate-400 text-base" />
                   </div>
                 </div>
                 <div class="flex flex-col">
@@ -195,50 +194,81 @@ function close() {
 </template>
 
 <style lang="scss" scoped>
-.participant-avatar {
-    @apply w-8 h-8 rounded-full overflow-hidden flex-shrink-0 border border-slate-200 transition-transform duration-200 ease-out;
-    
-    &:hover {
-        @apply scale-125 z-10 shadow-lg border-amber-400;
-    }
-    
-    .avatar-img {
-        @apply w-full h-full object-cover;
-    }
-    
-    .avatar-fallback {
-        @apply w-full h-full bg-slate-50 flex items-center justify-center;
-        i { @apply text-base; }
-    }
-}
-
 .section-title {
-    @apply flex items-center text-sm font-black uppercase tracking-tighter text-slate-700 mb-4;
+    display: flex;
+    align-items: center;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: -0.05em;
+    color: #334155;
+    margin-bottom: 1rem;
     font-family: 'Barlow Condensed', sans-serif;
 }
 
 .participants-table {
-    @apply border border-slate-200 rounded-lg overflow-hidden;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+    overflow: hidden;
 
     :deep(.p-datatable-thead > tr > th) {
-        @apply bg-slate-50 text-slate-600 font-bold text-xs uppercase tracking-widest p-4;
+        background-color: #f8fafc;
+        color: #475569;
+        font-weight: 700;
+        font-size: 0.75rem;
+        line-height: 1rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        padding: 1rem;
     }
 }
 
 .waitlist-badge {
-    @apply px-2 py-1 bg-amber-100 text-amber-700 rounded text-xs font-black;
+    padding: 0.25rem 0.5rem;
+    background-color: #fef3c7;
+    color: #b45309;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    line-height: 1rem;
+    font-weight: 900;
     font-family: 'Barlow Condensed', sans-serif;
 }
 
 .empty-squad {
-    @apply py-12 text-center text-slate-400 flex flex-col items-center;
-    p { @apply font-bold uppercase text-sm tracking-tight; font-family: 'Barlow Condensed', sans-serif; }
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+    text-align: center;
+    color: #94a3b8;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    
+    p { 
+      font-weight: 700; 
+      text-transform: uppercase; 
+      font-size: 0.875rem; 
+      line-height: 1.25rem; 
+      letter-spacing: -0.025em; 
+      font-family: 'Barlow Condensed', sans-serif; 
+    }
 }
 
 .action-btn {
-    @apply text-slate-500 transition-colors duration-200;
-    &:hover { @apply text-amber-500 bg-amber-50; }
-    &.delete-btn:hover { @apply text-red-500 bg-red-50; }
+    color: #64748b;
+    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 200ms;
+    
+    &:hover { 
+      color: #f59e0b; 
+      background-color: #fffbeb; 
+    }
+    
+    &.delete-btn:hover { 
+      color: #ef4444; 
+      background-color: #fef2f2; 
+    }
 }
 
 h3 {
