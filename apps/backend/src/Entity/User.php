@@ -18,7 +18,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, Company
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['course:read', 'booking:read', 'user:read'])]
+    #[Groups(['course:read', 'booking:read', 'user:read', 'meetup:read'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 180)]
@@ -30,7 +30,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, Company
     #[Groups(['user:read'])]
     private ?Company $company = null;
 
-    #[Groups(['course:read', 'booking:read', 'user:read'])]
+    #[Groups(['course:read', 'booking:read', 'user:read', 'meetup:read'])]
     #[ORM\Column(length: 255)]
     private ?string $name = null;
 
@@ -58,6 +58,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, Company
      */
     #[ORM\OneToMany(targetEntity: Booking::class, mappedBy: 'user', cascade: ['remove'])]
     private Collection $bookings;
+
+    /**
+     * @var Collection<int, Meetup>
+     */
+    #[ORM\OneToMany(targetEntity: Meetup::class, mappedBy: 'creator', cascade: ['remove'])]
+    private Collection $meetups;
 
     #[ORM\Column(options: ['default' => false])]
     #[Groups(['user:read'])]
@@ -92,7 +98,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, Company
     private ?\DateTimeInterface $passwordResetTokenExpiresAt = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(['user:read'])]
+    #[Groups(['user:read', 'meetup:read'])]
     private ?string $profilePicture = null;
 
     public function getProfilePicture(): ?string
@@ -127,6 +133,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, Company
     {
         $this->courses = new ArrayCollection();
         $this->bookings = new ArrayCollection();
+        $this->meetups = new ArrayCollection();
     }
 
     public function isVerified(): ?bool

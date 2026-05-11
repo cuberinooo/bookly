@@ -1,0 +1,11 @@
+{% extends 'emails/base.html.twig' %}
+
+{% block body %}
+    <h1>Meetup Cancelled: {{ meetup.title }}</h1>
+    <p>Hi {{ user.name }},</p>
+    <p>We're sorry to inform you that the meetup <strong>{{ meetup.title }}</strong> has been cancelled.</p>
+    <p>This usually happens if the minimum number of participants was not met or the organizer cancelled the event manually.</p>
+    <p>
+        <a href="{{ loginUrl }}" class="button">Browse other Meetups</a>
+    </p>
+{% endblock %}

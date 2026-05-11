@@ -30,6 +30,9 @@ import TabPanels from 'primevue/tabpanels';
 import TabPanel from 'primevue/tabpanel';
 import Menu from 'primevue/menu';
 import Skeleton from 'primevue/skeleton';
+import Avatar from 'primevue/avatar';
+import AvatarGroup from 'primevue/avatargroup';
+import ProgressSpinner from 'primevue/progressspinner';
 import {Checkbox, Divider, FileUpload, Paginator, Panel, Password, Tag, Tooltip} from "primevue";
 
 const app = createApp(App);
@@ -89,5 +92,8 @@ app.component('TabPanel', TabPanel);
 app.component('Menu', Menu);
 app.component('Skeleton', Skeleton);
 app.component('Panel', Panel);
+app.component('Avatar', Avatar);
+app.component('AvatarGroup', AvatarGroup);
+app.component('ProgressSpinner', ProgressSpinner);
 
 app.mount('#root');

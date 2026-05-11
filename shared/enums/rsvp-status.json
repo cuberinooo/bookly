@@ -1,0 +1,7 @@
+{
+  "name": "RsvpStatus",
+  "values": {
+    "GOING": "going",
+    "NOT_GOING": "not_going"
+  }
+}

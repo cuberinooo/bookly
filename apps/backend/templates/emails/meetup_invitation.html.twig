@@ -1,0 +1,17 @@
+{% extends 'emails/base.html.twig' %}
+
+{% block body %}
+    <h1>New Meetup: {{ meetup.title }}</h1>
+    <p>Hi {{ user.name }},</p>
+    <p>A new community meetup has been organized!</p>
+    <p>
+        <strong>What:</strong> {{ meetup.title }}<br>
+        <strong>When:</strong> {{ meetup.meetupDate|date('d.m.Y H:i') }}<br>
+        <strong>Where:</strong> {{ meetup.location }}
+    </p>
+    <p>{{ meetup.description }}</p>
+    <p>RSVP Deadline: {{ meetup.rsvpDeadline|date('d.m.Y H:i') }}</p>
+    <p>
+        <a href="{{ loginUrl }}" class="button">View and RSVP</a>
+    </p>
+{% endblock %}

@@ -1,0 +1,8 @@
+{
+  "name": "MeetupStatus",
+  "values": {
+    "OPEN": "open",
+    "CONFIRMED": "confirmed",
+    "CANCELLED": "cancelled"
+  }
+}
