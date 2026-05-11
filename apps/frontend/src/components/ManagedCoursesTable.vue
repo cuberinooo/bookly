@@ -249,135 +249,127 @@ onMounted(loadLazyData);
 
     <!-- Desktop Table View (Hidden on mobile) -->
     <div class="hidden md:block">
-      <div class="calendar-content-wrapper">
-        <Transition
-          :name="transitionName"
-          mode="out-in"
+      <DataTable
+        v-model:first="lazyParams.first"
+        :value="loading ? Array(10).fill({}) : courses"
+        lazy
+        paginator
+        :rows="lazyParams.rows"
+        :total-records="totalRecords"
+        class="managed-table"
+        @page="onPage"
+      >
+        <Column
+          field="title"
+          header="Course"
         >
-          <DataTable
-            :key="lazyParams.page"
-            v-model:first="lazyParams.first"
-            :value="loading ? Array(10).fill({}) : courses"
-            lazy
-            paginator
-            :rows="lazyParams.rows"
-            :total-records="totalRecords"
-            class="managed-table"
-            @page="onPage"
-          >
-            <Column
-              field="title"
-              header="Course"
+          <template #body="slotProps">
+            <Skeleton
+              v-if="loading"
+              width="60%"
+            />
+            <span
+              v-else
+              class="course-title-cell"
+            >{{ slotProps.data.title }}</span>
+          </template>
+        </Column>
+        <Column header="Schedule">
+          <template #body="slotProps">
+            <div
+              v-if="loading"
+              class="flex flex-col gap-1"
             >
-              <template #body="slotProps">
-                <Skeleton
-                  v-if="loading"
-                  width="60%"
-                />
-                <span
-                  v-else
-                  class="course-title-cell"
-                >{{ slotProps.data.title }}</span>
-              </template>
-            </Column>
-            <Column header="Schedule">
-              <template #body="slotProps">
-                <div
-                  v-if="loading"
-                  class="flex flex-col gap-1"
-                >
-                  <Skeleton width="40%" />
-                  <Skeleton width="30%" />
-                </div>
-                <div
-                  v-else
-                  class="flex flex-col"
-                >
-                  <span class="font-bold text-sm">{{ formatDate(slotProps.data.startTime) }}</span>
-                  <span class="text-xs">{{ formatTime(slotProps.data.startTime) }}</span>
-                </div>
-              </template>
-            </Column>
-            <Column header="Duration">
-              <template #body="slotProps">
-                <Skeleton
-                  v-if="loading"
-                  width="3rem"
-                />
-                <span v-else>
-                  {{ formatDuration(slotProps.data.durationMinutes) }}
-                </span>
-              </template>
-            </Column>
-            <Column header="Slots">
-              <template #body="slotProps">
-                <Skeleton
-                  v-if="loading"
-                  width="4rem"
-                  height="2.5rem"
-                />
-                <div
-                  v-else
-                  class="flex items-center gap-2"
-                >
-                  <span :class="['slot-badge', { 'is-full': slotProps.data.bookings.length >= slotProps.data.capacity }]">
-                    {{ slotProps.data.bookings.length }} / {{ slotProps.data.capacity }}
-                  </span>
-                </div>
-              </template>
-            </Column>
-            <Column
-              header="Actions"
-              class="text-right"
+              <Skeleton width="40%" />
+              <Skeleton width="30%" />
+            </div>
+            <div
+              v-else
+              class="flex flex-col"
             >
-              <template #body="slotProps">
-                <div
-                  v-if="loading"
-                  class="flex justify-end gap-2"
-                >
-                  <Skeleton
-                    shape="circle"
-                    size="2rem"
-                  />
-                  <Skeleton
-                    shape="circle"
-                    size="2rem"
-                  />
-                  <Skeleton
-                    shape="circle"
-                    size="2rem"
-                  />
-                </div>
-                <div
-                  v-else
-                  class="flex justify-end gap-2"
-                >
-                  <Button
-                    v-tooltip="'Participants'"
-                    icon="pi pi-users"
-                    variant="text"
-                    class="action-btn"
-                    @click="selectedCourse = slotProps.data; participantsDialog = true"
-                  />
-                  <Button
-                    icon="pi pi-pencil"
-                    variant="text"
-                    class="action-btn"
-                    @click="$emit('edit', slotProps.data)"
-                  />
-                  <Button
-                    icon="pi pi-trash"
-                    variant="text"
-                    severity="danger"
-                    class="action-btn delete-btn"
-                    @click="confirmDeleteCourse(slotProps.data)"
-                  />
-                </div>
-              </template>
-            </Column>
-          </DataTable>
-        </Transition>
-      </div>
+              <span class="font-bold text-sm">{{ formatDate(slotProps.data.startTime) }}</span>
+              <span class="text-xs">{{ formatTime(slotProps.data.startTime) }}</span>
+            </div>
+          </template>
+        </Column>
+        <Column header="Duration">
+          <template #body="slotProps">
+            <Skeleton
+              v-if="loading"
+              width="3rem"
+            />
+            <span v-else>
+              {{ formatDuration(slotProps.data.durationMinutes) }}
+            </span>
+          </template>
+        </Column>
+        <Column header="Slots">
+          <template #body="slotProps">
+            <Skeleton
+              v-if="loading"
+              width="4rem"
+              height="2.5rem"
+            />
+            <div
+              v-else
+              class="flex items-center gap-2"
+            >
+              <span :class="['slot-badge', { 'is-full': slotProps.data.bookings.length >= slotProps.data.capacity }]">
+                {{ slotProps.data.bookings.length }} / {{ slotProps.data.capacity }}
+              </span>
+            </div>
+          </template>
+        </Column>
+        <Column
+          header="Actions"
+          class="text-right"
+        >
+          <template #body="slotProps">
+            <div
+              v-if="loading"
+              class="flex justify-end gap-2"
+            >
+              <Skeleton
+                shape="circle"
+                size="2rem"
+              />
+              <Skeleton
+                shape="circle"
+                size="2rem"
+              />
+              <Skeleton
+                shape="circle"
+                size="2rem"
+              />
+            </div>
+            <div
+              v-else
+              class="flex justify-end gap-2"
+            >
+              <Button
+                v-tooltip="'Participants'"
+                icon="pi pi-users"
+                variant="text"
+                class="action-btn"
+                @click="selectedCourse = slotProps.data; participantsDialog = true"
+              />
+              <Button
+                icon="pi pi-pencil"
+                variant="text"
+                class="action-btn"
+                @click="$emit('edit', slotProps.data)"
+              />
+              <Button
+                icon="pi pi-trash"
+                variant="text"
+                severity="danger"
+                class="action-btn delete-btn"
+                @click="confirmDeleteCourse(slotProps.data)"
+              />
+            </div>
+          </template>
+        </Column>
+      </DataTable>
     </div>
 
     <!-- Mobile Card View (Hidden on desktop) -->
