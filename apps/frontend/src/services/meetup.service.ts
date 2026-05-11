@@ -9,6 +9,7 @@ export interface Meetup {
   meetupDate: string;
   location: string;
   imageUrl: string | null;
+  link: string | null;
   minParticipants: number | null;
   maxParticipants: number | null;
   rsvpDeadline: string;
@@ -35,7 +36,7 @@ export interface MeetupRsvp {
 }
 
 export interface MeetupFilters {
-  filter?: 'active' | 'past' | 'joined';
+  filter?: 'active' | 'past' | 'joined' | 'cancelled';
 }
 
 const meetupService = {

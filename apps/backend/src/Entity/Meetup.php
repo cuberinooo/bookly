@@ -76,6 +76,10 @@ class Meetup implements CompanyAwareInterface
     #[Groups(['meetup:read'])]
     private Collection $rsvps;
 
+    #[ORM\Column(length: 1000, nullable: true)]
+    #[Groups(['meetup:read', 'meetup:write'])]
+    private ?string $link = null;
+
     public function __construct()
     {
         $this->createdAt = new \DateTimeImmutable();
@@ -258,5 +262,17 @@ class Meetup implements CompanyAwareInterface
     public function getGoingCount(): int
     {
         return $this->rsvps->filter(fn(MeetupRsvp $rsvp) => $rsvp->getStatus() === \App\Enum\RsvpStatus::GOING)->count();
+    }
+
+    public function getLink(): ?string
+    {
+        return $this->link;
+    }
+
+    public function setLink(?string $link): static
+    {
+        $this->link = $link;
+
+        return $this;
     }
 }

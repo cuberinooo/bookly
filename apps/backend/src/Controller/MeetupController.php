@@ -70,10 +70,17 @@ class MeetupController extends AbstractController
 
         if ($filter === 'active') {
             $qb->andWhere('m.meetupDate >= :now')
-               ->setParameter('now', new \DateTime());
+               ->andWhere('m.status != :cancelled')
+               ->setParameter('now', new \DateTime())
+               ->setParameter('cancelled', \App\Enum\MeetupStatus::CANCELLED);
         } elseif ($filter === 'past') {
             $qb->andWhere('m.meetupDate < :now')
-               ->setParameter('now', new \DateTime());
+               ->andWhere('m.status != :cancelled')
+               ->setParameter('now', new \DateTime())
+               ->setParameter('cancelled', \App\Enum\MeetupStatus::CANCELLED);
+        } elseif ($filter === 'cancelled') {
+            $qb->andWhere('m.status = :cancelled')
+               ->setParameter('cancelled', \App\Enum\MeetupStatus::CANCELLED);
         } elseif ($filter === 'joined') {
             $qb->join('m.rsvps', 'r')
                ->andWhere('r.user = :user')

@@ -30,6 +30,7 @@ class MeetupService
         $meetup->setMeetupDate(new \DateTime($data['meetupDate']));
         $meetup->setLocation($data['location']);
         $meetup->setImageUrl($data['imageUrl'] ?? null);
+        $meetup->setLink($data['link'] ?? null);
         $meetup->setMinParticipants($data['minParticipants'] ?? null);
         $meetup->setMaxParticipants($data['maxParticipants'] ?? null);
         $meetup->setRsvpDeadline(new \DateTime($data['rsvpDeadline']));
@@ -69,9 +70,10 @@ class MeetupService
         if (isset($data['imageUrl'])) $meetup->setImageUrl($data['imageUrl']);
         if (isset($data['meetupDate'])) $meetup->setMeetupDate(new \DateTime($data['meetupDate']));
         if (isset($data['rsvpDeadline'])) $meetup->setRsvpDeadline(new \DateTime($data['rsvpDeadline']));
+        if (isset($data['link'])) $meetup->setLink($data['link']);
         if (isset($data['minParticipants'])) $meetup->setMinParticipants($data['minParticipants']);
         if (isset($data['maxParticipants'])) $meetup->setMaxParticipants($data['maxParticipants']);
-        
+
         $this->entityManager->flush();
 
         return $meetup;
@@ -118,7 +120,7 @@ class MeetupService
         if ($meetup->getStatus() !== MeetupStatus::OPEN) return;
 
         $goingCount = $meetup->getGoingCount();
-        
+
         if ($meetup->getMinParticipants() && $goingCount < $meetup->getMinParticipants()) {
             $meetup->setStatus(MeetupStatus::CANCELLED);
             $this->declineAllParticipants($meetup);
@@ -185,7 +187,7 @@ class MeetupService
     {
         foreach ($meetup->getRsvps() as $rsvp) {
             if ($rsvp->getStatus() !== RsvpStatus::GOING) continue;
-            
+
             $email = (new TemplatedEmail())
                 ->from(new Address($_ENV['NO_REPLY_MAIL'] ?? 'noreply@example.com', $meetup->getCompany()->getName()))
                 ->to($rsvp->getUser()->getEmail())
@@ -206,7 +208,7 @@ class MeetupService
     {
         foreach ($meetup->getRsvps() as $rsvp) {
             if ($rsvp->getStatus() !== RsvpStatus::GOING) continue;
-            
+
             $email = (new TemplatedEmail())
                 ->from(new Address($_ENV['NO_REPLY_MAIL'] ?? 'noreply@example.com', $meetup->getCompany()->getName()))
                 ->to($rsvp->getUser()->getEmail())

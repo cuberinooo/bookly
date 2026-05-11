@@ -66,7 +66,7 @@ const participants = computed(() => {
 });
 
 const handleRsvp = (status: RsvpStatus) => {
-  if (isLocked.value) return;
+  if (isRsvpLocked.value) return;
   emit('rsvp', status);
 };
 </script>
@@ -113,6 +113,21 @@ const handleRsvp = (status: RsvpStatus) => {
     </template>
 
     <template #content>
+      <div
+        v-if="meetup.link"
+        class="mb-3"
+      >
+        <Button
+          as="a"
+          :href="meetup.link"
+          target="_blank"
+          rel="noopener noreferrer"
+          icon="pi pi-external-link"
+          label="More Info"
+          class="p-button-link p-0 font-bold"
+        />
+      </div>
+
       <p class="text-sm line-clamp-3 mb-4">
         {{ meetup.description }}
       </p>

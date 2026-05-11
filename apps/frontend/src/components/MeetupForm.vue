@@ -27,6 +27,7 @@ const formData = ref({
   meetupDate: null as Date | null,
   location: '',
   imageUrl: '',
+  link: '',
   minParticipants: null as number | null,
   maxParticipants: null as number | null,
   rsvpDeadline: null as Date | null,
@@ -73,6 +74,7 @@ onMounted(() => {
       meetupDate: new Date(props.meetup.meetupDate),
       location: props.meetup.location,
       imageUrl: props.meetup.imageUrl || '',
+      link: props.meetup.link || '',
       minParticipants: props.meetup.minParticipants,
       maxParticipants: props.meetup.maxParticipants,
       rsvpDeadline: new Date(props.meetup.rsvpDeadline),
@@ -165,6 +167,15 @@ const handleSubmit = async () => {
         v-model="formData.location"
         required
         placeholder="Physical address"
+      />
+    </div>
+
+    <div class="field">
+      <label for="link">External Link (Optional)</label>
+      <InputText
+        id="link"
+        v-model="formData.link"
+        placeholder="e.g. https://hotel.com or Google Maps link"
       />
     </div>
 

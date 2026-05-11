@@ -140,15 +140,10 @@ const handleSubmit = async (data: any) => {
       @update:value="handleTabChange"
     >
       <TabList>
-        <Tab value="active">
-          Upcoming
-        </Tab>
-        <Tab value="joined">
-          I'm Going
-        </Tab>
-        <Tab value="past">
-          Past Events
-        </Tab>
+        <Tab value="active">Upcoming</Tab>
+        <Tab value="joined">I'm Going</Tab>
+        <Tab value="past">Past Events</Tab>
+        <Tab value="cancelled">Cancelled</Tab>
       </TabList>
 
       <TabPanels>
