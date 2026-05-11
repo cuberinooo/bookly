@@ -238,8 +238,19 @@ onMounted(fetchUsers);
           <template #body="{ data }">
             <i
               class="pi"
-              :class="data.isVerified ? 'pi-check-circle text-green-500' : 'pi-times-circle text-slate-300'"
+              :class="data.isVerified ? 'pi-check-circle text-accent' : 'pi-times-circle text-slate-300'"
             />
+          </template>
+        </Column>
+        <Column header="WELCOME">
+          <template #body="{ data }">
+            <div v-if="data.roles.includes('ROLE_TRIAL')">
+              <i
+                class="pi"
+                :class="data.welcomeMailSent ? 'pi-send text-accent' : 'pi-minus text-slate-300'"
+                v-tooltip.top="data.welcomeMailSent ? 'Welcome Mail Sent' : 'Not Sent'"
+              />
+            </div>
           </template>
         </Column>
         <Column
@@ -296,12 +307,19 @@ onMounted(fetchUsers);
                   :severity="role === 'ROLE_ADMIN' ? 'danger' : (role === 'ROLE_TRAINER' ? 'warn' : (role === 'ROLE_TRIAL' ? 'secondary' : 'info'))"
                   class="text-[10px] uppercase font-black"
                 />
+                <Tag
+                  v-if="user.roles.includes('ROLE_TRIAL') && user.welcomeMailSent"
+                  value="Welcome Sent"
+                  severity="success"
+                  class="text-[10px] uppercase font-black"
+                  icon="pi pi-send"
+                />
               </div>
             </div>
             <div class="flex items-center gap-2">
               <i
                 class="pi"
-                :class="user.isVerified ? 'pi-check-circle text-green-500' : 'pi-times-circle text-slate-300'"
+                :class="user.isVerified ? 'pi-check-circle text-accent' : 'pi-times-circle text-slate-300'"
                 v-tooltip.left="user.isVerified ? 'Verified' : 'Unverified'"
               />
             </div>

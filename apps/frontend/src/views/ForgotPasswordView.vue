@@ -34,7 +34,7 @@ async function submit() {
           v-if="submitted"
           class="text-center py-4"
         >
-          <i class="pi pi-check-circle text-4xl text-green-500 mb-4 block" />
+          <i class="pi pi-check-circle text-4xl text-accent mb-4 block" />
           <p class="font-bold">
             Request received!
           </p>

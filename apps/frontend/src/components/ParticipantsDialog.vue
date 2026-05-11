@@ -39,7 +39,7 @@ function close() {
         class="participant-section"
       >
         <h3 class="section-title">
-          <i class="pi pi-check-circle text-green-500 mr-2" />Confirmed Athletes
+          <i class="pi pi-check-circle text-accent mr-2" />Confirmed Athletes
         </h3>
         <DataTable
           :value="confirmedParticipants"
