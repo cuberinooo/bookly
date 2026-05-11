@@ -7,6 +7,7 @@ import {ref, computed, onMounted, watch, onUnmounted} from 'vue';
 import api from '../services/api';
 import {useToast} from 'primevue/usetoast';
 import TheFooter from '../components/TheFooter.vue';
+import VersionUpdateToast from '../components/VersionUpdateToast.vue';
 import PullToRefresh from 'pulltorefreshjs';
 import mercureService from '../services/mercure';
 
@@ -368,6 +369,7 @@ onUnmounted(() => {
         />
       </template>
     </Dialog>
+    <VersionUpdateToast />
   </div>
 </template>
 
