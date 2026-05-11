@@ -104,11 +104,13 @@ const renderedMarkdown = computed(() => {
         </div>
       </template>
 
+      <!-- eslint-disable vue/no-v-html -->
       <div
         v-if="renderedMarkdown"
         class="markdown-content mt-6"
         v-html="renderedMarkdown"
       />
+      <!-- eslint-enable vue/no-v-html -->
       <div
         v-else-if="type === 'terms' && !renderedMarkdown"
         class="text-center py-8"

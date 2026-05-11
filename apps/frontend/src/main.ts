@@ -31,7 +31,6 @@ import TabPanel from 'primevue/tabpanel';
 import Menu from 'primevue/menu';
 import Skeleton from 'primevue/skeleton';
 import {Checkbox, Divider, FileUpload, Paginator, Panel, Password, Tag, Tooltip} from "primevue";
-import { authStore } from './store/auth';
 
 const app = createApp(App);
 

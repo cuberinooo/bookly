@@ -7,7 +7,7 @@ import { ref, onMounted, onUnmounted } from 'vue';
 export function useVersionPolling(intervalMs = 30000) {
   const isNewVersionAvailable = ref(false);
   const currentVersion = ref<string | null>(null);
-  let intervalId: any = null;
+  let intervalId: ReturnType<typeof setInterval> | null = null;
 
   const fetchVersion = async () => {
     try {
@@ -71,7 +71,7 @@ export function useVersionPolling(intervalMs = 30000) {
 
   const refreshApp = () => {
     // Force reload from server to get new chunks
-    // @ts-ignore - reload(true) is non-standard but supported by some browsers for force-reload
+    // @ts-expect-error - reload(true) is non-standard but supported by some browsers for force-reload
     window.location.reload(true);
   };
 

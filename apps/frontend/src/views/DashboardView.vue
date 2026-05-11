@@ -264,7 +264,9 @@ onMounted(fetchData);
   <div class="dashboard-container px-4 md:px-0">
     <div class="header-with-action flex flex-col md:flex-row md:justify-between md:items-center gap-6 mb-8 md:mb-16">
       <div>
-        <h1 class="text-4xl md:text-[3.5rem]">{{ dashboardLabel }}</h1>
+        <h1 class="text-4xl md:text-[3.5rem]">
+          {{ dashboardLabel }}
+        </h1>
         <p class="text-muted text-sm md:text-lg">
           Manage your athletic journey
         </p>
@@ -300,7 +302,12 @@ onMounted(fetchData);
 
       <aside class="notifications-panel order-1 lg:order-2">
         <div class="panel-header mb-4">
-          <h2 class="text-xl md:text-2xl font-black uppercase tracking-tight" style="font-family: 'Barlow Condensed', sans-serif;">Live Feed</h2>
+          <h2
+            class="text-xl md:text-2xl font-black uppercase tracking-tight"
+            style="font-family: 'Barlow Condensed', sans-serif;"
+          >
+            Live Feed
+          </h2>
         </div>
         <div class="notif-list">
           <NotificationItem

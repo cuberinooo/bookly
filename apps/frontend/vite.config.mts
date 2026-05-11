@@ -62,7 +62,7 @@ export default defineConfig(() => ({
     {
       name: 'generate-version-json',
       apply: 'build',
-      writeBundle(options, bundle) {
+      writeBundle(options) {
         const outDir = options.dir || '../../dist/apps/frontend';
         const version = { version: Date.now().toString() };
         writeFileSync(join(outDir, 'version.json'), JSON.stringify(version, null, 2));

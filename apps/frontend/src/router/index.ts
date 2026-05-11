@@ -62,7 +62,7 @@ const router = createRouter({
   ],
 });
 
-router.beforeEach(async (to, from) => {
+router.beforeEach(async (to) => {
   // 1. Wait for authStore to be initialized
   if (!authStore.initialized) {
     await authStore.init();
@@ -85,7 +85,7 @@ router.beforeEach(async (to, from) => {
   return true;
 });
 
-router.onError((error, to) => {
+router.onError((error) => {
   // Check if the error is due to a failed dynamic import
   const isChunkLoadFailed = error.message.includes('Failed to fetch dynamically imported module') ||
     error.message.includes('Loading chunk');

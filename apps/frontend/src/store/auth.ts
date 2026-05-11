@@ -40,7 +40,7 @@ export const authStore = reactive({
       const { default: api } = await import('../services/api');
       const response = await api.post('/token/refresh');
       this.setToken(response.data.token);
-    } catch (e) {
+    } catch {
       if(this.isLoggedIn()) {
         this.logout();
       }

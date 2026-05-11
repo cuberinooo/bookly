@@ -51,11 +51,13 @@ onMounted(fetchLegalSettings);
           <i class="pi pi-spin pi-spinner text-4xl text-primary" />
         </div>
 
+        <!-- eslint-disable vue/no-v-html -->
         <div
           v-else-if="renderedTerms"
           class="markdown-content"
           v-html="renderedTerms"
         />
+        <!-- eslint-enable vue/no-v-html -->
 
         <div
           v-else

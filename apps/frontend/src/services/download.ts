@@ -5,7 +5,7 @@ export async function downloadPrivacyPolicy(companyName?: string) {
   try {
     const urlParams = companyName ? `?companyName=${encodeURIComponent(companyName)}` : '';
     
-    const headers: any = {};
+    const headers: Record<string, string> = {};
     if (authStore.token) {
         headers.Authorization = `Bearer ${authStore.token}`;
     }
@@ -31,7 +31,7 @@ export async function downloadPrivacyPolicy(companyName?: string) {
 
 export async function downloadWelcomeAttachment(path: string, fileName: string) {
   try {
-    const headers: any = {};
+    const headers: Record<string, string> = {};
     if (authStore.token) {
         headers.Authorization = `Bearer ${authStore.token}`;
     }

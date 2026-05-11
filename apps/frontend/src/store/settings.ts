@@ -8,7 +8,7 @@ const defaults = {
   isWaitlistVisible: true,
   bookingWindow: 'OFF',
   welcomeMailMarkdown: '',
-  welcomeMailAttachments: [] as any[],
+  welcomeMailAttachments: [] as { path: string; fileName: string }[],
   initialized: false,
 };
 

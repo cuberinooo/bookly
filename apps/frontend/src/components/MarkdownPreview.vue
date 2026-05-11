@@ -28,11 +28,13 @@ function toggleExpand() {
     :collapsed="true"
   >
     <div class="preview-content phoenix-card">
+      <!-- eslint-disable vue/no-v-html -->
       <div
         v-if="renderedMarkdown"
         class="markdown-body"
         v-html="renderedMarkdown"
       />
+      <!-- eslint-enable vue/no-v-html -->
       <div
         v-else
         class="preview-empty"
