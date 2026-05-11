@@ -382,7 +382,7 @@ onMounted(loadLazyData);
 
     <!-- Mobile Card View (Hidden on desktop) -->
     <div
-      class="md:hidden flex flex-col gap-4 min-h-[500px]"
+      class="md:hidden flex flex-col gap-4 min-h-[500px] touch-pan-y"
       @touchstart="handleTouchStart"
       @touchend="handleTouchEnd"
     >
