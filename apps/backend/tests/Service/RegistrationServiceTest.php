@@ -73,7 +73,7 @@ class RegistrationServiceTest extends TestCase
 
         $this->entityManager->expects($this->atLeastOnce())->method('persist');
         $this->entityManager->expects($this->once())->method('flush');
-        $this->welcomeEmailService->expects($this->once())->method('sendWelcomeEmail');
+        $this->welcomeEmailService->expects($this->once())->method('sendVerificationEmail');
 
         $user = $this->service->register($data);
 
@@ -103,7 +103,7 @@ class RegistrationServiceTest extends TestCase
         $this->companyRepository->method('findOneBy')->willReturn($existingCompany);
         $this->passwordHasher->method('hashPassword')->willReturn('hashed_password');
 
-        $this->welcomeEmailService->expects($this->once())->method('sendWelcomeEmail');
+        $this->welcomeEmailService->expects($this->once())->method('sendVerificationEmail');
         $this->mailer->expects($this->once())->method('send'); // Admin notification
 
         $user = $this->service->register($data);
@@ -126,7 +126,7 @@ class RegistrationServiceTest extends TestCase
 
         $this->entityManager->expects($this->atLeastOnce())->method('persist');
         $this->entityManager->expects($this->once())->method('flush');
-        $this->welcomeEmailService->expects($this->once())->method('sendWelcomeEmail');
+        $this->welcomeEmailService->expects($this->once())->method('sendVerificationEmail');
 
         $user = $this->service->register($data, true);
 

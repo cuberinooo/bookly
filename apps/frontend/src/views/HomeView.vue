@@ -282,6 +282,7 @@ onMounted(() => {
 onUnmounted(() => {
     window.removeEventListener('resize', handleResize);
 });
+
 </script>
 
 <template>
