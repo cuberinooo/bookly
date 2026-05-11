@@ -2,6 +2,8 @@
 import { ref, onMounted } from 'vue';
 import api from '../services/api';
 import { useToast } from 'primevue/usetoast';
+import MarkdownPreview from './MarkdownPreview.vue';
+import { downloadWelcomeAttachment } from '../services/download';
 
 const toast = useToast();
 const settings = ref({
@@ -96,13 +98,20 @@ onMounted(fetchSettings);
 
         <div class="field">
           <label class="secondary-text" for="welcomeMarkdown">Email Body (Markdown)</label>
-          <Textarea
-            id="welcomeMarkdown"
-            v-model="settings.welcomeMailMarkdown"
-            rows="20"
-            placeholder="Dear {user_name},&#10;&#10;Welcome to {company_name}!..."
-            class="w-full font-mono text-sm"
-          />
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Textarea
+              id="welcomeMarkdown"
+              v-model="settings.welcomeMailMarkdown"
+              rows="20"
+              placeholder="Dear {user_name},&#10;&#10;Welcome to {company_name}!..."
+              class="w-full font-mono text-sm"
+            />
+            <MarkdownPreview 
+              :content="settings.welcomeMailMarkdown" 
+              title="Email Preview"
+              placeholder="Your welcome email content will appear here..."
+            />
+          </div>
         </div>
 
         <div class="mt-6 flex justify-end">
@@ -129,13 +138,22 @@ onMounted(fetchSettings);
                 <p class="text-xs text-slate-500">{{ att.path }}</p>
               </div>
             </div>
-            <Button 
-                icon="pi pi-trash" 
-                severity="danger" 
-                variant="text" 
-                rounded
-                @click="deleteAttachment(att.path)" 
-            />
+            <div class="flex items-center gap-2">
+              <Button 
+                  icon="pi pi-download" 
+                  severity="secondary" 
+                  variant="text" 
+                  rounded
+                  @click="downloadWelcomeAttachment(att.path, att.name)" 
+              />
+              <Button 
+                  icon="pi pi-trash" 
+                  severity="danger" 
+                  variant="text" 
+                  rounded
+                  @click="deleteAttachment(att.path)" 
+              />
+            </div>
           </div>
 
           <div v-if="settings.welcomeMailAttachments.length === 0" class="text-center py-6 border-2 border-dashed border-slate-200 rounded-xl">

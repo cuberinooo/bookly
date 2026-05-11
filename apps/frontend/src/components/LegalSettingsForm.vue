@@ -4,6 +4,7 @@ import { settingsStore } from '../store/settings';
 import api from '../services/api';
 import { useToast } from 'primevue/usetoast';
 import {downloadPrivacyPolicy} from "../services/download";
+import MarkdownPreview from './MarkdownPreview.vue';
 
 const toast = useToast();
 const settings = ref({
@@ -105,13 +106,20 @@ onMounted(fetchSettings);
             </div>
             <div class="field">
               <label class="secondary-text" for="markdown">Content (Markdown)</label>
-              <Textarea
-                id="markdown"
-                v-model="settings.legalNoticeMarkdown"
-                rows="10"
-                placeholder="# Impressum&#10;&#10;Angaben gemäß § 5 TMG..."
-                class="w-full font-mono text-sm"
-              />
+              <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Textarea
+                  id="markdown"
+                  v-model="settings.legalNoticeMarkdown"
+                  rows="15"
+                  placeholder="# Impressum&#10;&#10;Angaben gemäß § 5 TMG..."
+                  class="w-full font-mono text-sm"
+                />
+                <MarkdownPreview 
+                  :content="settings.legalNoticeMarkdown" 
+                  title="Legal Notice Preview"
+                  placeholder="Your legal notice will appear here..."
+                />
+              </div>
             </div>
           </div>
 
@@ -182,13 +190,20 @@ onMounted(fetchSettings);
           </p>
           <div class="field">
             <label class="secondary-text" for="termsMarkdown">Content (Markdown)</label>
-            <Textarea
-              id="termsMarkdown"
-              v-model="settings.termsAndConditionsMarkdown"
-              rows="15"
-              placeholder="# Allgemeine Geschäftsbedingungen (AGB)&#10;&#10;1. Geltungsbereich..."
-              class="w-full font-mono text-sm"
-            />
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Textarea
+                id="termsMarkdown"
+                v-model="settings.termsAndConditionsMarkdown"
+                rows="15"
+                placeholder="# Allgemeine Geschäftsbedingungen (AGB)&#10;&#10;1. Geltungsbereich..."
+                class="w-full font-mono text-sm"
+              />
+              <MarkdownPreview 
+                :content="settings.termsAndConditionsMarkdown" 
+                title="T&C Preview"
+                placeholder="Your terms and conditions will appear here..."
+              />
+            </div>
           </div>
           <div class="mt-4 flex justify-end">
             <Button severity="primary" label="Save AGB" icon="pi pi-save" :loading="saving" @click="updateSettings" />
@@ -210,16 +225,15 @@ onMounted(fetchSettings);
                 <span class="font-bold text-slate-700">Current Document</span>
                 <p class="text-xs text-slate-500">{{ settings.privacyPolicyPdfPath }}</p>
               </div>
-            </div>
-            <a href="javascript:void(0)"
-               @click="downloadPrivacyPolicy()"
-               class="p-button p-button-sm p-button-secondary no-underline"
-               download="privacyPolicy.pdf"
-              >
-              View Current
-            </a>
-          </div>
-
+              </div>
+              <Button 
+              icon="pi pi-download" 
+              severity="secondary" 
+              variant="text" 
+              rounded
+              @click="downloadPrivacyPolicy()" 
+              />
+              </div>
           <FileUpload
             mode="basic"
             name="file"

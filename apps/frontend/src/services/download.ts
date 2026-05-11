@@ -28,3 +28,30 @@ export async function downloadPrivacyPolicy(companyName?: string) {
     console.error('Download failed', e);
   }
 }
+
+export async function downloadWelcomeAttachment(path: string, fileName: string) {
+  try {
+    const headers: any = {};
+    if (authStore.token) {
+        headers.Authorization = `Bearer ${authStore.token}`;
+    }
+
+    const response = await api.get(`/admin-settings/welcome-attachment/download`, {
+      params: { path },
+      responseType: 'blob',
+      headers
+    });
+
+    const blob = new Blob([response.data], { type: response.headers['content-type'] });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', fileName);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  } catch (e) {
+    console.error('Download failed', e);
+  }
+}

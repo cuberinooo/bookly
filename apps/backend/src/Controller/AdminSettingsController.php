@@ -164,4 +164,54 @@ class AdminSettingsController extends AbstractController
             return new Response('Privacy policy file could not be retrieved from storage.', Response::HTTP_NOT_FOUND);
         }
     }
+
+    #[Route('/welcome-attachment/download', name: 'admin_settings_download_welcome_attachment', methods: ['GET'])]
+    public function downloadWelcomeMailAttachment(Request $request): Response
+    {
+        $this->denyAccessUnlessGranted('ROLE_ADMIN');
+        $user = $this->getUser();
+        if (!$user instanceof \App\Entity\User || !$user->getCompany()) {
+             return new Response('Company not found', Response::HTTP_NOT_FOUND);
+        }
+
+        $path = $request->query->get('path');
+        if (!$path) {
+            return new Response('No path provided', Response::HTTP_BAD_REQUEST);
+        }
+
+        $settings = $user->getCompany()->getAdminSettings();
+        $attachments = $settings->getWelcomeMailAttachments() ?? [];
+        
+        $found = false;
+        $fileName = 'attachment';
+        foreach ($attachments as $att) {
+            if ($att['path'] === $path) {
+                $found = true;
+                $fileName = $att['name'];
+                break;
+            }
+        }
+
+        if (!$found) {
+            return new Response('Attachment not found', Response::HTTP_NOT_FOUND);
+        }
+
+        try {
+            $result = $this->s3Client->getObject([
+                'Bucket' => $this->s3Bucket,
+                'Key'    => $path,
+            ]);
+
+            $content = $result['Body']->getContents();
+            $contentType = $result['ContentType'] ?? 'application/octet-stream';
+
+            return new Response($content, 200, [
+                'Content-Type' => $contentType,
+                'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+            ]);
+
+        } catch (\Exception $e) {
+            return new Response('Attachment file could not be retrieved from storage.', Response::HTTP_NOT_FOUND);
+        }
+    }
 }
