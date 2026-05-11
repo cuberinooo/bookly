@@ -90,8 +90,11 @@ function close() {
                     :src="getProfilePictureUrl(slotProps.data.user)" 
                     alt="Profile" 
                     class="w-full h-full object-cover" 
-                  />
-                  <div v-else class="w-full h-full bg-slate-50 flex items-center justify-center">
+                  >
+                  <div
+                    v-else
+                    class="w-full h-full bg-slate-50 flex items-center justify-center"
+                  >
                     <i class="pi pi-user text-slate-400 text-base" />
                   </div>
                 </div>
@@ -142,8 +145,11 @@ function close() {
                     :src="getProfilePictureUrl(slotProps.data.user)"
                     alt="Profile"
                     class="w-full h-full object-cover"
-                  />
-                  <div v-else class="w-full h-full bg-slate-50 flex items-center justify-center">
+                  >
+                  <div
+                    v-else
+                    class="w-full h-full bg-slate-50 flex items-center justify-center"
+                  >
                     <i class="pi pi-user text-slate-400 text-base" />
                   </div>
                 </div>

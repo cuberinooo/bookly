@@ -162,7 +162,10 @@ async function register() {
                 :class="{ 'p-invalid': nameTouched && !name }"
                 @blur="nameTouched = true"
               />
-              <small v-if="nameTouched && !name" class="text-red-500 text-xs mt-1">Full name is required.</small>
+              <small
+                v-if="nameTouched && !name"
+                class="text-red-500 text-xs mt-1"
+              >Full name is required.</small>
             </div>
 
             <div class="flex flex-col">
@@ -179,8 +182,14 @@ async function register() {
                 :class="{ 'p-invalid': emailTouched && (!email || !isEmailValid) }"
                 @blur="emailTouched = true"
               />
-              <small v-if="emailTouched && !email" class="text-red-500 text-xs mt-1">Email is required.</small>
-              <small v-else-if="emailTouched && !isEmailValid" class="text-red-500 text-xs mt-1">Please enter a valid email address.</small>
+              <small
+                v-if="emailTouched && !email"
+                class="text-red-500 text-xs mt-1"
+              >Email is required.</small>
+              <small
+                v-else-if="emailTouched && !isEmailValid"
+                class="text-red-500 text-xs mt-1"
+              >Please enter a valid email address.</small>
             </div>
 
             <div class="flex flex-col">
@@ -197,7 +206,10 @@ async function register() {
                 :disabled="!!route.query.companyName"
                 @blur="companyNameTouched = true"
               />
-              <small v-if="companyNameTouched && !companyName" class="text-red-500 text-xs mt-1">Company name is required.</small>
+              <small
+                v-if="companyNameTouched && !companyName"
+                class="text-red-500 text-xs mt-1"
+              >Company name is required.</small>
             </div>
 
             <div class="flex flex-col">
@@ -239,7 +251,10 @@ async function register() {
                   </ul>
                 </template>
               </Password>
-              <small v-if="passwordTouched && !isPasswordValid" class="text-red-500 text-xs mt-1">Password does not meet requirements.</small>
+              <small
+                v-if="passwordTouched && !isPasswordValid"
+                class="text-red-500 text-xs mt-1"
+              >Password does not meet requirements.</small>
             </div>
 
             <div class="flex flex-col">
@@ -256,7 +271,10 @@ async function register() {
                 :class="{ 'p-invalid': confirmPasswordTouched && !passwordValidation.match }"
                 @blur="confirmPasswordTouched = true"
               />
-              <small v-if="confirmPasswordTouched && !passwordValidation.match" class="text-red-500 text-xs mt-1">Passwords do not match.</small>
+              <small
+                v-if="confirmPasswordTouched && !passwordValidation.match"
+                class="text-red-500 text-xs mt-1"
+              >Passwords do not match.</small>
             </div>
 
             <Button
@@ -285,16 +303,20 @@ async function register() {
                   class="text-sm text-slate-700 font-medium leading-relaxed cursor-pointer"
                 >
                   I agree to the
-                  <a href="javascript:void(0)"
-                     @click="onClickShowTerms"
-                     class="font-bold text-primary hover:underline">
+                  <a
+                    href="javascript:void(0)"
+                    class="font-bold text-primary hover:underline"
+                    @click="onClickShowTerms"
+                  >
                     Terms & Conditions (AGB)
                   </a>
                   of {{ companyLegal.companyName }}
                   and I have read the
-                  <a href="javascript:void(0)"
-                     @click="downloadPrivacyPolicy(companyLegal.companyName)"
-                     class="text-primary font-bold hover:underline">
+                  <a
+                    href="javascript:void(0)"
+                    class="text-primary font-bold hover:underline"
+                    @click="downloadPrivacyPolicy(companyLegal.companyName)"
+                  >
                     Privacy Policy (Datenschutz)
                   </a>
                 </label>
@@ -315,9 +337,9 @@ async function register() {
                 severity="secondary"
                 label="Back"
                 icon="pi pi-arrow-left"
-                @click="step = 1"
                 class="flex-1 py-4 text-lg"
                 outlined
+                @click="step = 1"
               />
               <Button
                 type="button"
@@ -325,8 +347,8 @@ async function register() {
                 label="Accept & Create Account"
                 :loading="loading"
                 :disabled="companyLegal.found ? !acceptedTerms : false"
-                @click="register"
                 class="flex-2 btn-primary py-4 text-lg"
+                @click="register"
               />
             </div>
           </div>

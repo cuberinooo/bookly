@@ -11,7 +11,11 @@ const { isNewVersionAvailable, refreshApp } = useVersionPolling();
 
 <template>
   <Transition name="slide-up">
-    <div v-if="isNewVersionAvailable" class="version-update-toast" role="alert">
+    <div
+      v-if="isNewVersionAvailable"
+      class="version-update-toast"
+      role="alert"
+    >
       <div class="toast-inner">
         <div class="toast-content">
           <i class="pi pi-info-circle toast-icon" />

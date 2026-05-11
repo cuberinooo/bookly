@@ -259,9 +259,9 @@ onMounted(fetchUsers);
           <template #body="{ data }">
             <div v-if="data.roles.includes('ROLE_TRIAL')">
               <i
+                v-tooltip.top="data.welcomeMailSent ? 'Welcome Mail Sent' : 'Not Sent'"
                 class="pi"
                 :class="data.welcomeMailSent ? 'pi-send text-accent' : 'pi-minus text-slate-300'"
-                v-tooltip.top="data.welcomeMailSent ? 'Welcome Mail Sent' : 'Not Sent'"
               />
             </div>
           </template>
@@ -274,8 +274,8 @@ onMounted(fetchUsers);
             <div class="flex gap-2">
               <Button
                 v-if="data.roles.includes('ROLE_TRIAL') && !data.welcomeMailSent"
-                icon="pi pi-envelope"
                 v-tooltip.top="'Send Welcome Mail'"
+                icon="pi pi-envelope"
                 variant="text"
                 rounded
                 :loading="sendingWelcome"
@@ -302,15 +302,26 @@ onMounted(fetchUsers);
 
     <!-- Mobile Card Layout -->
     <div class="md:hidden flex flex-col gap-4">
-      <div v-if="loading" class="flex justify-center py-8">
+      <div
+        v-if="loading"
+        class="flex justify-center py-8"
+      >
         <i class="pi pi-spin pi-spinner text-3xl text-amber-400" />
       </div>
       <template v-else>
-        <div v-for="user in users" :key="user.id" class="phoenix-card p-5 border border-slate-200">
+        <div
+          v-for="user in users"
+          :key="user.id"
+          class="phoenix-card p-5 border border-slate-200"
+        >
           <div class="flex justify-between items-start mb-4">
             <div>
-              <h3 class="font-black text-lg text-slate-900 leading-tight">{{ user.name }}</h3>
-              <p class="text-xs text-slate-500 font-medium mb-2">{{ user.email }}</p>
+              <h3 class="font-black text-lg text-slate-900 leading-tight">
+                {{ user.name }}
+              </h3>
+              <p class="text-xs text-slate-500 font-medium mb-2">
+                {{ user.email }}
+              </p>
 
               <div class="flex flex-wrap gap-1 mb-2">
                 <Tag
@@ -331,9 +342,9 @@ onMounted(fetchUsers);
             </div>
             <div class="flex items-center gap-2">
               <i
+                v-tooltip.left="user.isVerified ? 'Verified' : 'Unverified'"
                 class="pi"
                 :class="user.isVerified ? 'pi-check-circle text-accent' : 'pi-times-circle text-slate-300'"
-                v-tooltip.left="user.isVerified ? 'Verified' : 'Unverified'"
               />
             </div>
           </div>
@@ -390,7 +401,10 @@ onMounted(fetchUsers);
             placeholder="Name"
             :class="{ 'p-invalid': submitted && !editingUser.name }"
           />
-          <small v-if="submitted && !editingUser.name" class="p-error">Name is required.</small>
+          <small
+            v-if="submitted && !editingUser.name"
+            class="p-error"
+          >Name is required.</small>
         </div>
         <div class="flex flex-col gap-2">
           <label class="text-sm uppercase tracking-wider">Email Address</label>
@@ -400,8 +414,14 @@ onMounted(fetchUsers);
             placeholder="email@example.com"
             :class="{ 'p-invalid': submitted && (!editingUser.email || !isEmailValid(editingUser.email)) }"
           />
-          <small v-if="submitted && !editingUser.email" class="p-error">Email is required.</small>
-          <small v-else-if="submitted && !isEmailValid(editingUser.email)" class="p-error">Invalid email format.</small>
+          <small
+            v-if="submitted && !editingUser.email"
+            class="p-error"
+          >Email is required.</small>
+          <small
+            v-else-if="submitted && !isEmailValid(editingUser.email)"
+            class="p-error"
+          >Invalid email format.</small>
         </div>
         <div class="flex flex-col gap-2">
           <label class="text-sm uppercase tracking-wider">Roles</label>

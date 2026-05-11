@@ -36,7 +36,10 @@ const activeTabs = computed(() => {
       </p>
     </div>
 
-    <Tabs :value="activeTabs[0]?.id" class="settings-tabs">
+    <Tabs
+      :value="activeTabs[0]?.id"
+      class="settings-tabs"
+    >
       <TabList class="overflow-x-auto whitespace-nowrap scrollbar-hide">
         <Tab
           v-for="tab in activeTabs"

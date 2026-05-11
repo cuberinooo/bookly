@@ -43,26 +43,38 @@ const renderedMarkdown = computed(() => {
       <template v-if="type === 'legal'">
         <div v-if="data?.legalNoticeRepresentative">
           <section>
-            <h3 class="primary-text">Angaben gemäß § 5 TMG</h3>
+            <h3 class="primary-text">
+              Angaben gemäß § 5 TMG
+            </h3>
             <p>
-              {{ data.legalNoticeRepresentative }}<br v-if="data.legalNoticeRepresentative" />
-              {{ data.legalNoticeStreet }} {{ data.legalNoticeHouseNumber }}<br />
+              {{ data.legalNoticeRepresentative }}<br v-if="data.legalNoticeRepresentative">
+              {{ data.legalNoticeStreet }} {{ data.legalNoticeHouseNumber }}<br>
               {{ data.legalNoticeZipCode }} {{ data.legalNoticeCity }}
             </p>
           </section>
 
-          <section v-if="data.legalNoticeEmail || data.legalNoticePhone" class="mt-4">
-            <h3 class="primary-text">Kontakt</h3>
+          <section
+            v-if="data.legalNoticeEmail || data.legalNoticePhone"
+            class="mt-4"
+          >
+            <h3 class="primary-text">
+              Kontakt
+            </h3>
             <p>
-              <span v-if="data.legalNoticePhone">Telefon: {{ data.legalNoticePhone }}<br /></span>
+              <span v-if="data.legalNoticePhone">Telefon: {{ data.legalNoticePhone }}<br></span>
               <span v-if="data.legalNoticeEmail">E-Mail: <a :href="'mailto:' + data.legalNoticeEmail">{{ data.legalNoticeEmail }}</a></span>
             </p>
           </section>
 
-          <section v-if="data.legalNoticeTaxId || data.legalNoticeVatId" class="mt-4">
-            <h3 class="primary-text">Steuern</h3>
+          <section
+            v-if="data.legalNoticeTaxId || data.legalNoticeVatId"
+            class="mt-4"
+          >
+            <h3 class="primary-text">
+              Steuern
+            </h3>
             <p>
-              <span v-if="data.legalNoticeTaxId">Steuernummer: {{ data.legalNoticeTaxId }}<br /></span>
+              <span v-if="data.legalNoticeTaxId">Steuernummer: {{ data.legalNoticeTaxId }}<br></span>
               <span v-if="data.legalNoticeVatId">Umsatzsteuer-Identifikationsnummer gemäß § 27 a Umsatzsteuergesetz: {{ data.legalNoticeVatId }}</span>
             </p>
           </section>
@@ -70,41 +82,59 @@ const renderedMarkdown = computed(() => {
         <div v-else>
           <!-- Placeholders -->
           <section>
-            <h3 class="primary-text">Angaben gemäß § 5 TMG</h3>
+            <h3 class="primary-text">
+              Angaben gemäß § 5 TMG
+            </h3>
             <p>
-              [Name/Company Name]<br />
-              [Representative]<br />
-              [Street] [Number]<br />
+              [Name/Company Name]<br>
+              [Representative]<br>
+              [Street] [Number]<br>
               [Zip Code] [City]
             </p>
           </section>
           <section class="mt-4">
-            <h3 class="primary-text">Kontakt</h3>
+            <h3 class="primary-text">
+              Kontakt
+            </h3>
             <p>
-              Telefon: [Phone Number]<br />
+              Telefon: [Phone Number]<br>
               E-Mail: [Email Address]
             </p>
           </section>
         </div>
       </template>
 
-      <div v-if="renderedMarkdown" class="markdown-content mt-6" v-html="renderedMarkdown"></div>
-      <div v-else-if="type === 'terms' && !renderedMarkdown" class="text-center py-8">
-        <p class="text-slate-500 italic">No terms and conditions have been defined yet.</p>
+      <div
+        v-if="renderedMarkdown"
+        class="markdown-content mt-6"
+        v-html="renderedMarkdown"
+      />
+      <div
+        v-else-if="type === 'terms' && !renderedMarkdown"
+        class="text-center py-8"
+      >
+        <p class="text-slate-500 italic">
+          No terms and conditions have been defined yet.
+        </p>
       </div>
     </div>
 
     <template #footer>
       <div class="flex justify-between items-center w-full">
-        <p v-if="type === 'terms'" class="text-xs text-slate-500 italic">Please read carefully before accepting.</p>
-        <div v-else></div>
+        <p
+          v-if="type === 'terms'"
+          class="text-xs text-slate-500 italic"
+        >
+          Please read carefully before accepting.
+        </p>
+        <div v-else />
         <Button
           label="Close"
           severity="primary"
           icon="pi pi-check"
-          @click="show = false"
           class="btn-primary"
           autofocus
+          @click="show = false"
         />
       </div>
     </template>

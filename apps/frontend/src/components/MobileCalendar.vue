@@ -181,7 +181,10 @@ function formatDayName(date: Date) {
             <div class="card-main">
               <div class="course-title">
                 {{ course.title }}
-                <span v-if="isRestrictedForTrial(course)" class="ml-2 text-[10px] text-slate-500 font-black">
+                <span
+                  v-if="isRestrictedForTrial(course)"
+                  class="ml-2 text-[10px] text-slate-500 font-black"
+                >
                   <i class="pi pi-lock" /> RESTRICTED
                 </span>
               </div>

@@ -22,11 +22,24 @@ function toggleExpand() {
 </script>
 
 <template>
-  <Panel header="Preview" toggleable :collapsed="true">
-    <div  class="preview-content phoenix-card">
-      <div v-if="renderedMarkdown" class="markdown-body" v-html="renderedMarkdown"></div>
-      <div v-else class="preview-empty">
-        <p class="italic text-slate-400">{{ placeholder || 'Nothing to preview yet...' }}</p>
+  <Panel
+    header="Preview"
+    toggleable
+    :collapsed="true"
+  >
+    <div class="preview-content phoenix-card">
+      <div
+        v-if="renderedMarkdown"
+        class="markdown-body"
+        v-html="renderedMarkdown"
+      />
+      <div
+        v-else
+        class="preview-empty"
+      >
+        <p class="italic text-slate-400">
+          {{ placeholder || 'Nothing to preview yet...' }}
+        </p>
       </div>
     </div>
   </Panel>

@@ -37,38 +37,58 @@ onMounted(fetchSettings);
   <footer class="app-footer">
     <div class="footer-content">
       <div class="footer-section">
-        <h4 class="footer-title">{{ settingsStore.companyName }}</h4>
+        <h4 class="footer-title">
+          {{ settingsStore.companyName }}
+        </h4>
       </div>
 
       <div class="footer-section">
-        <h4 class="footer-title">Legal</h4>
+        <h4 class="footer-title">
+          Legal
+        </h4>
         <ul class="footer-list">
-
           <li v-if="legalSettings?.privacyPolicyPdfPath">
-            <a href="javascript:void(0)"
-               @click="downloadPrivacyPolicy()"
-               class="footer-link">
-              <i class="pi pi-download"></i> Privacy Policy (Datenschutz)
+            <a
+              href="javascript:void(0)"
+              class="footer-link"
+              @click="downloadPrivacyPolicy()"
+            >
+              <i class="pi pi-download" /> Privacy Policy (Datenschutz)
             </a>
           </li>
           <li>
-            <a href="javascript:void(0)" @click="onClickShowLegal" class="footer-link">
-              <i class="pi pi-info-circle"></i> Legal Notice (Impressum)
+            <a
+              href="javascript:void(0)"
+              class="footer-link"
+              @click="onClickShowLegal"
+            >
+              <i class="pi pi-info-circle" /> Legal Notice (Impressum)
             </a>
           </li>
           <li>
-            <a href="javascript:void(0)" @click="onClickShowTerms" class="footer-link">
-              <i class="pi pi-file-text"></i> Terms & Conditions (AGB)
+            <a
+              href="javascript:void(0)"
+              class="footer-link"
+              @click="onClickShowTerms"
+            >
+              <i class="pi pi-file-text" /> Terms & Conditions (AGB)
             </a>
           </li>
         </ul>
       </div>
 
       <div class="footer-section">
-        <h4 class="footer-title">Hosting</h4>
+        <h4 class="footer-title">
+          Hosting
+        </h4>
         <p class="footer-text">
           This App is hosted by
-          <a href="https://codingcube.de/" target="_blank" rel="noopener" class="footer-link highlight">codingcube</a>
+          <a
+            href="https://codingcube.de/"
+            target="_blank"
+            rel="noopener"
+            class="footer-link highlight"
+          >codingcube</a>
         </p>
       </div>
     </div>

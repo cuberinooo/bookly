@@ -168,12 +168,17 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <Toast position="bottom-right"/>
-  <ConfirmDialog/>
+  <Toast position="bottom-right" />
+  <ConfirmDialog />
 
-  <div v-if="!isAppReady" class="loading-overlay">
-    <div class="spinner"></div>
-    <p class="loading-text">{{ companyName }}</p>
+  <div
+    v-if="!isAppReady"
+    class="loading-overlay"
+  >
+    <div class="spinner" />
+    <p class="loading-text">
+      {{ companyName }}
+    </p>
   </div>
 
   <div v-else>
@@ -186,13 +191,16 @@ onUnmounted(() => {
         </div>
         <div class="nav-links">
           <template v-if="authStore.isTrainer()">
-            <div class="role-switcher-modern" v-tooltip.bottom="'Toggle View Mode'">
+            <div
+              v-tooltip.bottom="'Toggle View Mode'"
+              class="role-switcher-modern"
+            >
               <button
                 class="role-btn trainer"
                 :class="{ active: authStore.viewMode === 'trainer' }"
                 @click="authStore.viewMode !== 'trainer' && authStore.toggleViewMode()"
               >
-                <i class="pi pi-bolt mr-1"></i>
+                <i class="pi pi-bolt mr-1" />
                 <span>Trainer</span>
               </button>
               <button
@@ -200,7 +208,7 @@ onUnmounted(() => {
                 :class="{ active: authStore.viewMode === 'member' }"
                 @click="authStore.viewMode !== 'member' && authStore.toggleViewMode()"
               >
-                <i class="pi pi-user mr-1"></i>
+                <i class="pi pi-user mr-1" />
                 <span>Member</span>
               </button>
             </div>
@@ -222,8 +230,16 @@ onUnmounted(() => {
                 class="profile-btn"
                 @click="toggleMenu"
               >
-                <img v-if="profilePictureUrl" :src="profilePictureUrl" alt="Profile" class="profile-image-small" />
-                <i v-else class="pi pi-user" />
+                <img
+                  v-if="profilePictureUrl"
+                  :src="profilePictureUrl"
+                  alt="Profile"
+                  class="profile-image-small"
+                >
+                <i
+                  v-else
+                  class="pi pi-user"
+                />
               </Button>
               <Menu
                 ref="menu"
@@ -231,7 +247,10 @@ onUnmounted(() => {
                 :popup="true"
               >
                 <template #start>
-                  <div v-if="authStore.user" class="menu-user-info">
+                  <div
+                    v-if="authStore.user"
+                    class="menu-user-info"
+                  >
                     <span class="p-2 menu-user-name">{{ authStore.user.name }}</span>
                   </div>
                 </template>
@@ -251,10 +270,10 @@ onUnmounted(() => {
     </header>
 
     <main class="container">
-      <RouterView/>
+      <RouterView />
     </main>
 
-    <TheFooter v-if="authStore.isLoggedIn()"/>
+    <TheFooter v-if="authStore.isLoggedIn()" />
 
     <Dialog
       v-if="authStore.user"
@@ -284,7 +303,7 @@ onUnmounted(() => {
             @blur="newPasswordTouched = true"
           >
             <template #footer>
-              <Divider/>
+              <Divider />
               <p class="mt-2 font-bold text-xs uppercase tracking-wider">
                 Requirements
               </p>

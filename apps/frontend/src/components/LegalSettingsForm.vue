@@ -90,22 +90,35 @@ onMounted(fetchSettings);
 
 <template>
   <div class="legal-settings-form">
-    <div v-if="loading" class="flex justify-center py-8">
+    <div
+      v-if="loading"
+      class="flex justify-center py-8"
+    >
       <i class="pi pi-spin pi-spinner text-3xl text-amber-400" />
     </div>
 
-    <div v-else class="settings-grid flex flex-col gap-8">
+    <div
+      v-else
+      class="settings-grid flex flex-col gap-8"
+    >
       <div class="settings-card phoenix-card">
-        <h3 class="settings-title">Legal Notice (Impressum)</h3>
+        <h3 class="settings-title">
+          Legal Notice (Impressum)
+        </h3>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div class="md:col-span-2">
             <div class="p-4 bg-amber-50 border-l-4 border-amber-500 text-amber-900 text-sm mb-6">
-              <p class="font-bold mb-1">Markdown Enabled</p>
+              <p class="font-bold mb-1">
+                Markdown Enabled
+              </p>
               <p>You can use Markdown to format your Legal Notice. This will replace the structured fields in the footer if provided.</p>
             </div>
             <div class="field">
-              <label class="secondary-text" for="markdown">Content (Markdown)</label>
+              <label
+                class="secondary-text"
+                for="markdown"
+              >Content (Markdown)</label>
               <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <Textarea
                   id="markdown"
@@ -126,70 +139,145 @@ onMounted(fetchSettings);
           <Divider class="md:col-span-2" />
 
           <div class="md:col-span-2">
-             <h4 class="text-sm font-bold uppercase tracking-wider text-slate-400 mb-4">Structured Data (Fallback)</h4>
+            <h4 class="text-sm font-bold uppercase tracking-wider text-slate-400 mb-4">
+              Structured Data (Fallback)
+            </h4>
           </div>
 
           <div class="field">
-            <label class="secondary-text" for="representative">Representative</label>
-            <InputText id="representative" v-model="settings.legalNoticeRepresentative" placeholder="Max Mustermann" />
+            <label
+              class="secondary-text"
+              for="representative"
+            >Representative</label>
+            <InputText
+              id="representative"
+              v-model="settings.legalNoticeRepresentative"
+              placeholder="Max Mustermann"
+            />
           </div>
 
           <div class="md:col-span-2 grid grid-cols-4 gap-4">
             <div class="field col-span-3">
-              <label class="secondary-text" for="street">Street</label>
-              <InputText id="street" v-model="settings.legalNoticeStreet" placeholder="Heideweg" />
+              <label
+                class="secondary-text"
+                for="street"
+              >Street</label>
+              <InputText
+                id="street"
+                v-model="settings.legalNoticeStreet"
+                placeholder="Heideweg"
+              />
             </div>
             <div class="field col-span-1">
-              <label class="secondary-text" for="houseNumber">Number</label>
-              <InputText id="houseNumber" v-model="settings.legalNoticeHouseNumber" placeholder="13" />
+              <label
+                class="secondary-text"
+                for="houseNumber"
+              >Number</label>
+              <InputText
+                id="houseNumber"
+                v-model="settings.legalNoticeHouseNumber"
+                placeholder="13"
+              />
             </div>
           </div>
 
           <div class="md:col-span-2 grid grid-cols-4 gap-4">
             <div class="field col-span-1">
-              <label class="secondary-text" for="zipCode">Zip Code (PLZ)</label>
-              <InputText id="zipCode" v-model="settings.legalNoticeZipCode" placeholder="33659" />
+              <label
+                class="secondary-text"
+                for="zipCode"
+              >Zip Code (PLZ)</label>
+              <InputText
+                id="zipCode"
+                v-model="settings.legalNoticeZipCode"
+                placeholder="33659"
+              />
             </div>
             <div class="field col-span-3">
-              <label class="secondary-text" for="city">Location (City)</label>
-              <InputText id="city" v-model="settings.legalNoticeCity" placeholder="Bielefeld" />
+              <label
+                class="secondary-text"
+                for="city"
+              >Location (City)</label>
+              <InputText
+                id="city"
+                v-model="settings.legalNoticeCity"
+                placeholder="Bielefeld"
+              />
             </div>
           </div>
 
           <div class="field">
-            <label class="secondary-text" for="email">Email</label>
-            <InputText id="email" v-model="settings.legalNoticeEmail" placeholder="hello@codingcube.de" />
+            <label
+              class="secondary-text"
+              for="email"
+            >Email</label>
+            <InputText
+              id="email"
+              v-model="settings.legalNoticeEmail"
+              placeholder="hello@codingcube.de"
+            />
           </div>
 
           <div class="field">
-            <label class="secondary-text" for="phone">Phone</label>
-            <InputText id="phone" v-model="settings.legalNoticePhone" placeholder="+49 (0) 176 47325434" />
+            <label
+              class="secondary-text"
+              for="phone"
+            >Phone</label>
+            <InputText
+              id="phone"
+              v-model="settings.legalNoticePhone"
+              placeholder="+49 (0) 176 47325434"
+            />
           </div>
 
           <div class="field">
-            <label class="secondary-text" for="taxId">Tax ID (Steuernummer) <span class="text-xs text-slate-400 normal-case font-normal">(Optional)</span></label>
-            <InputText id="taxId" v-model="settings.legalNoticeTaxId" />
+            <label
+              class="secondary-text"
+              for="taxId"
+            >Tax ID (Steuernummer) <span class="text-xs text-slate-400 normal-case font-normal">(Optional)</span></label>
+            <InputText
+              id="taxId"
+              v-model="settings.legalNoticeTaxId"
+            />
           </div>
 
           <div class="field">
-            <label class="secondary-text" for="vatId">VAT ID (USt-IdNr.) <span class="text-xs text-slate-400 normal-case font-normal">(Optional)</span></label>
-            <InputText id="vatId" v-model="settings.legalNoticeVatId" placeholder="DE365333557" />
+            <label
+              class="secondary-text"
+              for="vatId"
+            >VAT ID (USt-IdNr.) <span class="text-xs text-slate-400 normal-case font-normal">(Optional)</span></label>
+            <InputText
+              id="vatId"
+              v-model="settings.legalNoticeVatId"
+              placeholder="DE365333557"
+            />
           </div>
         </div>
 
         <div class="mt-6 flex justify-end">
-          <Button severity="primary" label="Save Legal Notice" icon="pi pi-save" :loading="saving" @click="updateSettings" />
+          <Button
+            severity="primary"
+            label="Save Legal Notice"
+            icon="pi pi-save"
+            :loading="saving"
+            @click="updateSettings"
+          />
         </div>
       </div>
 
       <div class="settings-card phoenix-card">
-        <h3 class="settings-title">Terms & Conditions (AGB)</h3>
+        <h3 class="settings-title">
+          Terms & Conditions (AGB)
+        </h3>
         <div class="flex flex-col gap-4">
           <p class="text-sm text-slate-600">
             Define the general terms and conditions for your athletes. These will be linked during registration.
           </p>
           <div class="field">
-            <label class="secondary-text" for="termsMarkdown">Content (Markdown)</label>
+            <label
+              class="secondary-text"
+              for="termsMarkdown"
+            >Content (Markdown)</label>
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Textarea
                 id="termsMarkdown"
@@ -206,47 +294,63 @@ onMounted(fetchSettings);
             </div>
           </div>
           <div class="mt-4 flex justify-end">
-            <Button severity="primary" label="Save AGB" icon="pi pi-save" :loading="saving" @click="updateSettings" />
+            <Button
+              severity="primary"
+              label="Save AGB"
+              icon="pi pi-save"
+              :loading="saving"
+              @click="updateSettings"
+            />
           </div>
         </div>
       </div>
 
       <div class="settings-card phoenix-card">
-        <h3 class="settings-title">Privacy Policy (Datenschutz)</h3>
+        <h3 class="settings-title">
+          Privacy Policy (Datenschutz)
+        </h3>
         <div class="flex flex-col gap-4">
           <p class="text-sm text-slate-600">
             Upload the official Privacy Policy PDF that users can download from the footer.
           </p>
 
-          <div v-if="settings.privacyPolicyPdfPath" class="p-4 bg-slate-50 border border-slate-200 rounded-lg flex items-center justify-between">
+          <div
+            v-if="settings.privacyPolicyPdfPath"
+            class="p-4 bg-slate-50 border border-slate-200 rounded-lg flex items-center justify-between"
+          >
             <div class="flex items-center gap-3">
-              <i class="pi pi-file-pdf text-red-500 text-2xl"></i>
+              <i class="pi pi-file-pdf text-red-500 text-2xl" />
               <div>
                 <span class="font-bold text-slate-700">Current Document</span>
-                <p class="text-xs text-slate-500">{{ settings.privacyPolicyPdfPath }}</p>
+                <p class="text-xs text-slate-500">
+                  {{ settings.privacyPolicyPdfPath }}
+                </p>
               </div>
-              </div>
-              <Button 
+            </div>
+            <Button 
               icon="pi pi-download" 
               severity="secondary" 
               variant="text" 
               rounded
               @click="downloadPrivacyPolicy()" 
-              />
-              </div>
+            />
+          </div>
           <FileUpload
             mode="basic"
             name="file"
             accept="application/pdf"
             :auto="true"
             custom-upload
-            @uploader="onUpload"
             :choose-label="settings.privacyPolicyPdfPath ? 'Replace PDF' : 'Upload PDF'"
             :disabled="uploading"
             class="w-full"
+            @uploader="onUpload"
           />
-          <div v-if="uploading" class="text-center mt-2">
-            <i class="pi pi-spin pi-spinner mr-2"></i> Uploading...
+          <div
+            v-if="uploading"
+            class="text-center mt-2"
+          >
+            <i class="pi pi-spin pi-spinner mr-2" /> Uploading...
           </div>
         </div>
       </div>

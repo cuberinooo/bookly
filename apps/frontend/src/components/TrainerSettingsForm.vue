@@ -103,8 +103,12 @@ onMounted(fetchSettings);
       <!-- GLOBAL SETTINGS SECTION -->
       <section class="settings-section">
         <div class="section-header mb-6">
-          <h2 class="text-2xl font-black text-slate-900 tracking-tight font-barlow uppercase">Global Operations</h2>
-          <p class="text-sm text-slate-500 font-medium">Configure organization-wide rules for bookings and privacy.</p>
+          <h2 class="text-2xl font-black text-slate-900 tracking-tight font-barlow uppercase">
+            Global Operations
+          </h2>
+          <p class="text-sm text-slate-500 font-medium">
+            Configure organization-wide rules for bookings and privacy.
+          </p>
         </div>
 
         <div class="flex flex-col gap-6">
@@ -193,10 +197,17 @@ onMounted(fetchSettings);
       </section>
 
       <!-- PERSONAL SETTINGS SECTION -->
-      <section v-if="authStore.isTrainer()" class="settings-section">
+      <section
+        v-if="authStore.isTrainer()"
+        class="settings-section"
+      >
         <div class="section-header mb-6">
-          <h2 class="text-2xl font-black text-slate-900 tracking-tight font-barlow uppercase">Trainer Alerts</h2>
-          <p class="text-sm text-slate-500 font-medium">Individual settings specific to your account.</p>
+          <h2 class="text-2xl font-black text-slate-900 tracking-tight font-barlow uppercase">
+            Trainer Alerts
+          </h2>
+          <p class="text-sm text-slate-500 font-medium">
+            Individual settings specific to your account.
+          </p>
         </div>
 
         <div class="settings-card phoenix-card">
@@ -235,10 +246,16 @@ onMounted(fetchSettings);
                 </div>
               </div>
               <div class="w-full text-right min-h-[1rem]">
-                <p v-if="notificationError" class="text-[10px] text-red-500 font-bold uppercase tracking-tight">
+                <p
+                  v-if="notificationError"
+                  class="text-[10px] text-red-500 font-bold uppercase tracking-tight"
+                >
                   {{ notificationError }}
                 </p>
-                <p v-else class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                <p
+                  v-else
+                  class="text-[10px] text-slate-400 font-bold uppercase tracking-widest"
+                >
                   Min. 5m / 5m steps (0 = disabled)
                 </p>
               </div>
@@ -246,12 +263,12 @@ onMounted(fetchSettings);
           </div>
           <div class="flex justify-end pt-4 border-t border-slate-100">
             <Button
-                label="Save Notification Settings"
-                icon="pi pi-check"
-                severity="primary"
-                :loading="saving"
-                :disabled="!!notificationError"
-                @click="updatePersonalSettings"
+              label="Save Notification Settings"
+              icon="pi pi-check"
+              severity="primary"
+              :loading="saving"
+              :disabled="!!notificationError"
+              @click="updatePersonalSettings"
             />
           </div>
         </div>

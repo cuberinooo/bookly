@@ -37,28 +37,46 @@ onMounted(fetchSettings);
 
 <template>
   <div class="company-settings-form">
-    <div v-if="loading" class="flex justify-center py-8">
+    <div
+      v-if="loading"
+      class="flex justify-center py-8"
+    >
       <i class="pi pi-spin pi-spinner text-3xl text-amber-400" />
     </div>
 
-    <div v-else class="settings-grid flex flex-col gap-8">
+    <div
+      v-else
+      class="settings-grid flex flex-col gap-8"
+    >
       <div class="settings-card phoenix-card">
-        <h3 class="settings-title">Company Identity</h3>
+        <h3 class="settings-title">
+          Company Identity
+        </h3>
         <div class="flex flex-col gap-4">
           <p class="text-sm text-slate-600">
             This is your registered company identity used throughout the system.
             <span class="block mt-1 font-bold text-amber-600">Note: The company name is locked and cannot be changed by administrators.</span>
           </p>
           <div class="field flex flex-col gap-2">
-            <label class="font-bold uppercase text-xs" for="companyName">Company Name</label>
-            <InputText id="companyName" :model-value="settings.name" disabled class="w-full max-w-md bg-slate-50" />
+            <label
+              class="font-bold uppercase text-xs"
+              for="companyName"
+            >Company Name</label>
+            <InputText
+              id="companyName"
+              :model-value="settings.name"
+              disabled
+              class="w-full max-w-md bg-slate-50"
+            />
           </div>
         </div>
 
         <Divider class="my-8" />
 
         <div class="registration-link-section">
-          <h4 class="text-sm font-bold uppercase tracking-wider text-slate-900 mb-2">Member Registration Link</h4>
+          <h4 class="text-sm font-bold uppercase tracking-wider text-slate-900 mb-2">
+            Member Registration Link
+          </h4>
           <p class="text-sm text-slate-600 mb-4">
             Share this link with new members to make their registration easier. The company name will be pre-filled and locked.
           </p>
@@ -67,12 +85,12 @@ onMounted(fetchSettings);
               {{ registrationLink }}
             </code>
             <Button
-                icon="pi pi-copy"
-                severity="secondary"
-                text
-                size="small"
-                v-tooltip.top="'Copy Link'"
-                @click="copyLink"
+              v-tooltip.top="'Copy Link'"
+              icon="pi pi-copy"
+              severity="secondary"
+              text
+              size="small"
+              @click="copyLink"
             />
           </div>
         </div>

@@ -373,7 +373,7 @@ onUnmounted(() => {
               <span class="value">{{ formatDuration(selectedCourse.durationMinutes) }}</span>
             </div>
           </div>
-          <div class="detail-accent-line"></div>
+          <div class="detail-accent-line" />
         </div>
 
         <div class="field">

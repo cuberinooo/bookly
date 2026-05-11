@@ -184,7 +184,9 @@ onMounted(fetchProfile);
         </div>
 
         <div class="phoenix-card mt-8 border-red-100 bg-red-50/30">
-          <h3 class="text-red-600 font-bold uppercase tracking-wider text-sm mb-4">Danger Zone</h3>
+          <h3 class="text-red-600 font-bold uppercase tracking-wider text-sm mb-4">
+            Danger Zone
+          </h3>
           <p class="text-slate-600 text-sm mb-6">
             Deleting your account will permanently remove all your data, including your profile picture and bookings. This action cannot be undone.
           </p>
@@ -202,8 +204,16 @@ onMounted(fetchProfile);
       <div class="md:col-span-1">
         <div class="phoenix-card text-center flex flex-col items-center">
           <div class="profile-image-container mb-4">
-            <img v-if="profilePictureUrl" :src="profilePictureUrl" alt="Profile" class="profile-image-large" />
-            <div v-else class="profile-image-placeholder">
+            <img
+              v-if="profilePictureUrl"
+              :src="profilePictureUrl"
+              alt="Profile"
+              class="profile-image-large"
+            >
+            <div
+              v-else
+              class="profile-image-placeholder"
+            >
               <i class="pi pi-user text-3xl" />
             </div>
           </div>

@@ -411,7 +411,7 @@ onMounted(fetchData);
             <template #footer>
               <div class="flex flex-col gap-2 w-full">
                 <Button
-                  v-if="settings.showParticipantNames"
+                  v-if="settings.isWaitlistVisible"
                   label="SHOW PARTICIPANTS"
                   icon="pi pi-users"
                   variant="outlined"

@@ -83,21 +83,34 @@ onMounted(fetchSettings);
 
 <template>
   <div class="welcome-mail-settings">
-    <div v-if="loading" class="flex justify-center py-8">
+    <div
+      v-if="loading"
+      class="flex justify-center py-8"
+    >
       <i class="pi pi-spin pi-spinner text-3xl text-amber-400" />
     </div>
 
-    <div v-else class="settings-grid flex flex-col gap-8">
+    <div
+      v-else
+      class="settings-grid flex flex-col gap-8"
+    >
       <div class="settings-card phoenix-card">
-        <h3 class="settings-title">Welcome Email Template</h3>
+        <h3 class="settings-title">
+          Welcome Email Template
+        </h3>
         
         <div class="p-4 bg-blue-50 border-l-4 border-blue-500 text-blue-900 text-sm mb-6">
-          <p class="font-bold mb-1">Dynamic Placeholders</p>
+          <p class="font-bold mb-1">
+            Dynamic Placeholders
+          </p>
           <p>Use <code>{user_name}</code> for the athlete's name and <code>{company_name}</code> for your company name.</p>
         </div>
 
         <div class="field">
-          <label class="secondary-text" for="welcomeMarkdown">Email Body (Markdown)</label>
+          <label
+            class="secondary-text"
+            for="welcomeMarkdown"
+          >Email Body (Markdown)</label>
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Textarea
               id="welcomeMarkdown"
@@ -115,12 +128,20 @@ onMounted(fetchSettings);
         </div>
 
         <div class="mt-6 flex justify-end">
-          <Button severity="primary" label="Save Template" icon="pi pi-save" :loading="saving" @click="updateSettings" />
+          <Button
+            severity="primary"
+            label="Save Template"
+            icon="pi pi-save"
+            :loading="saving"
+            @click="updateSettings"
+          />
         </div>
       </div>
 
       <div class="settings-card phoenix-card">
-        <h3 class="settings-title">Attachments (Contracts, Onboarding Docs)</h3>
+        <h3 class="settings-title">
+          Attachments (Contracts, Onboarding Docs)
+        </h3>
         <p class="text-sm text-slate-600 mb-6">
           These files will be automatically attached to the welcome email sent to new members.
         </p>
@@ -132,32 +153,39 @@ onMounted(fetchSettings);
             class="p-4 bg-slate-50 border border-slate-200 rounded-lg flex items-center justify-between"
           >
             <div class="flex items-center gap-3">
-              <i class="pi pi-file text-slate-400 text-xl"></i>
+              <i class="pi pi-file text-slate-400 text-xl" />
               <div>
                 <span class="font-bold text-slate-700">{{ att.name }}</span>
-                <p class="text-xs text-slate-500">{{ att.path }}</p>
+                <p class="text-xs text-slate-500">
+                  {{ att.path }}
+                </p>
               </div>
             </div>
             <div class="flex items-center gap-2">
               <Button 
-                  icon="pi pi-download" 
-                  severity="secondary" 
-                  variant="text" 
-                  rounded
-                  @click="downloadWelcomeAttachment(att.path, att.name)" 
+                icon="pi pi-download" 
+                severity="secondary" 
+                variant="text" 
+                rounded
+                @click="downloadWelcomeAttachment(att.path, att.name)" 
               />
               <Button 
-                  icon="pi pi-trash" 
-                  severity="danger" 
-                  variant="text" 
-                  rounded
-                  @click="deleteAttachment(att.path)" 
+                icon="pi pi-trash" 
+                severity="danger" 
+                variant="text" 
+                rounded
+                @click="deleteAttachment(att.path)" 
               />
             </div>
           </div>
 
-          <div v-if="settings.welcomeMailAttachments.length === 0" class="text-center py-6 border-2 border-dashed border-slate-200 rounded-xl">
-            <p class="text-slate-400 italic">No attachments configured.</p>
+          <div
+            v-if="settings.welcomeMailAttachments.length === 0"
+            class="text-center py-6 border-2 border-dashed border-slate-200 rounded-xl"
+          >
+            <p class="text-slate-400 italic">
+              No attachments configured.
+            </p>
           </div>
         </div>
 
@@ -166,13 +194,16 @@ onMounted(fetchSettings);
           name="file"
           :auto="true"
           custom-upload
-          @uploader="onUpload"
           choose-label="Upload New Attachment"
           :disabled="uploading"
           class="w-full"
+          @uploader="onUpload"
         />
-        <div v-if="uploading" class="text-center mt-2">
-          <i class="pi pi-spin pi-spinner mr-2"></i> Uploading...
+        <div
+          v-if="uploading"
+          class="text-center mt-2"
+        >
+          <i class="pi pi-spin pi-spinner mr-2" /> Uploading...
         </div>
       </div>
     </div>

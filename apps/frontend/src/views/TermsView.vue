@@ -44,15 +44,27 @@ onMounted(fetchLegalSettings);
       </div>
 
       <div class="phoenix-card p-8 md:p-12 bg-white">
-        <div v-if="loading" class="flex justify-center py-12">
+        <div
+          v-if="loading"
+          class="flex justify-center py-12"
+        >
           <i class="pi pi-spin pi-spinner text-4xl text-primary" />
         </div>
 
-        <div v-else-if="renderedTerms" class="markdown-content" v-html="renderedTerms"></div>
+        <div
+          v-else-if="renderedTerms"
+          class="markdown-content"
+          v-html="renderedTerms"
+        />
 
-        <div v-else class="text-center py-12">
+        <div
+          v-else
+          class="text-center py-12"
+        >
           <i class="pi pi-info-circle text-4xl text-slate-300 mb-4" />
-          <p class="text-slate-500 italic">No terms and conditions have been defined yet.</p>
+          <p class="text-slate-500 italic">
+            No terms and conditions have been defined yet.
+          </p>
         </div>
       </div>
     </div>

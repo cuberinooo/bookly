@@ -17,8 +17,12 @@ const progressWidth = computed(() => Math.max(0, Math.min(100, (props.count / pr
         <i class="pi pi-bolt" />
       </div>
       <div>
-        <h3 class="text-lg font-black uppercase tracking-tighter leading-tight">Trial Progress</h3>
-        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Workout Credits</p>
+        <h3 class="text-lg font-black uppercase tracking-tighter leading-tight">
+          Trial Progress
+        </h3>
+        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+          Workout Credits
+        </p>
       </div>
     </div>
 

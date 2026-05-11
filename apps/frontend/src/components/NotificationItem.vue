@@ -42,7 +42,7 @@ function formatTime(dateStr: string) {
 <template>
   <div :class="['notif-item', typeClass, { unread: !notification.isRead }]">
     <div class="notif-icon">
-        <i :class="iconClass"></i>
+      <i :class="iconClass" />
     </div>
     <div class="notif-content">
       <p>{{ notification.message }}</p>
