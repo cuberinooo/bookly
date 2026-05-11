@@ -128,7 +128,7 @@ onMounted(fetchProfile);
 </script>
 
 <template>
-  <div class="max-w-4xl mx-auto py-12 px-4">
+  <div class="max-w-4xl mx-auto py-12 px-2 md:px-4">
     <div class="mb-10">
       <h1 class="text-4xl font-extrabold tracking-tight">
         Athlete Profile

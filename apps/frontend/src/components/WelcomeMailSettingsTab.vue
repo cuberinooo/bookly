@@ -216,6 +216,10 @@ onMounted(fetchSettings);
     padding: 2.5rem;
     border-radius: 16px;
     border: 1px solid var(--border-color);
+
+    @media (max-width: 640px) {
+      padding: 1rem;
+    }
 }
 
 .settings-title {

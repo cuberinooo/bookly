@@ -312,7 +312,7 @@ onMounted(fetchUsers);
         <div
           v-for="user in users"
           :key="user.id"
-          class="phoenix-card p-5 border border-slate-200"
+          class="phoenix-card p-4 border border-slate-200"
         >
           <div class="flex justify-between items-start mb-4">
             <div>

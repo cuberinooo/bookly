@@ -285,7 +285,7 @@ onMounted(fetchSettings);
     border: 1px solid var(--border-color);
 
     @media (max-width: 640px) {
-      padding: 1.5rem;
+      padding: 1rem;
     }
 }
 

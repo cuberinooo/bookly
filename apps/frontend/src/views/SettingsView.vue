@@ -26,7 +26,7 @@ const activeTabs = computed(() => {
 </script>
 
 <template>
-  <div class="settings-view max-w-6xl mx-auto py-6 md:py-12 px-4">
+  <div class="settings-view max-w-6xl mx-auto py-6 md:py-12 px-2 md:px-4">
     <div class="mb-6 md:mb-10">
       <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight">
         System Settings
