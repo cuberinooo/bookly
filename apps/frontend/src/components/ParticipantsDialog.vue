@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref, watch } from 'vue';
+import { settingsStore } from '../store/settings';
+import { authStore } from '../store/auth';
+import api from '../services/api';
 
 const props = defineProps<{
     visible: boolean;
@@ -7,6 +10,8 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits(['update:visible', 'remove-participant']);
+
+const profileHashes = ref<Record<number, string>>({});
 
 const confirmedParticipants = computed(() => {
     return props.course?.bookings.filter((b: any) => !b.isWaitlist) || [];
@@ -16,15 +21,46 @@ const waitlistParticipants = computed(() => {
     return props.course?.bookings.filter((b: any) => b.isWaitlist).sort((a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()) || [];
 });
 
+watch(() => props.visible, (isVisible) => {
+    if (isVisible && props.course?.bookings) {
+        fetchProfilePictures();
+    }
+});
+
+async function fetchProfilePictures() {
+    const userIds = props.course.bookings.map((b: any) => b.user.id);
+    if (userIds.length === 0) return;
+
+    try {
+        const response = await api.get('/user/profile-pictures', {
+            params: { ids: userIds.join(',') }
+        });
+        profileHashes.value = response.data;
+    } catch (e) {
+        console.error('Failed to fetch profile pictures', e);
+    }
+}
+
 function isAnonymized(name: string) {
     return name?.startsWith('Athlete #');
+}
+
+function getProfilePictureUrl(user: any) {
+    if (isAnonymized(user.name)) {
+        return null;
+    }
+
+    const hash = profileHashes.value[user.id];
+    if (hash) {
+        return `${import.meta.env.VITE_API_URL}/user/profile-picture/${user.id}?t=${hash}`;
+    }
+    return null;
 }
 
 function close() {
     emit('update:visible', false);
 }
 </script>
-
 <template>
   <Dialog
     :visible="visible"
@@ -47,11 +83,24 @@ function close() {
         >
           <Column header="Athlete">
             <template #body="slotProps">
-              <div class="flex flex-col">
-                <span :class="['font-bold', isAnonymized(slotProps.data.user.name) ? 'text-slate-400' : 'text-slate-900']">
-                  {{ slotProps.data.user.name }}
-                </span>
-                <small v-if="slotProps.data.user.email">{{ slotProps.data.user.email }}</small>
+              <div class="flex items-center gap-3">
+                <div class="participant-avatar">
+                  <img
+                    v-if="getProfilePictureUrl(slotProps.data.user)"
+                    :src="getProfilePictureUrl(slotProps.data.user)"
+                    alt="Profile"
+                    class="avatar-img"
+                  />
+                  <div v-else class="avatar-fallback">
+                    <i class="pi pi-user text-slate-400" />
+                  </div>
+                </div>
+                <div class="flex flex-col">
+                  <span :class="['font-bold', isAnonymized(slotProps.data.user.name) ? 'text-slate-400' : 'text-slate-900']">
+                    {{ slotProps.data.user.name }}
+                  </span>
+                  <small v-if="slotProps.data.user.email">{{ slotProps.data.user.email }}</small>
+                </div>
               </div>
             </template>
           </Column>
@@ -87,13 +136,26 @@ function close() {
         >
           <Column header="Athlete">
             <template #body="slotProps">
-              <div class="flex flex-col">
-                <span :class="['font-bold', isAnonymized(slotProps.data.user.name) ? 'text-slate-400' : 'text-slate-900']">
-                  {{ slotProps.data.user.name }}
-                </span>
-                <small
-                  v-if="slotProps.data.user.email"
-                >{{ slotProps.data.user.email }}</small>
+              <div class="flex items-center gap-3">
+                <div class="participant-avatar">
+                  <img
+                    v-if="getProfilePictureUrl(slotProps.data.user)"
+                    :src="getProfilePictureUrl(slotProps.data.user)"
+                    alt="Profile"
+                    class="avatar-img"
+                  />
+                  <div v-else class="avatar-fallback">
+                    <i class="pi pi-user text-slate-400" />
+                  </div>
+                </div>
+                <div class="flex flex-col">
+                  <span :class="['font-bold', isAnonymized(slotProps.data.user.name) ? 'text-slate-400' : 'text-slate-900']">
+                    {{ slotProps.data.user.name }}
+                  </span>
+                  <small
+                    v-if="slotProps.data.user.email"
+                  >{{ slotProps.data.user.email }}</small>
+                </div>
               </div>
             </template>
           </Column>
@@ -133,6 +195,23 @@ function close() {
 </template>
 
 <style lang="scss" scoped>
+.participant-avatar {
+    @apply w-8 h-8 rounded-full overflow-hidden flex-shrink-0 border border-slate-200 transition-transform duration-200 ease-out;
+    
+    &:hover {
+        @apply scale-125 z-10 shadow-lg border-amber-400;
+    }
+    
+    .avatar-img {
+        @apply w-full h-full object-cover;
+    }
+    
+    .avatar-fallback {
+        @apply w-full h-full bg-slate-50 flex items-center justify-center;
+        i { @apply text-base; }
+    }
+}
+
 .section-title {
     @apply flex items-center text-sm font-black uppercase tracking-tighter text-slate-700 mb-4;
     font-family: 'Barlow Condensed', sans-serif;
@@ -160,5 +239,9 @@ function close() {
     @apply text-slate-500 transition-colors duration-200;
     &:hover { @apply text-amber-500 bg-amber-50; }
     &.delete-btn:hover { @apply text-red-500 bg-red-50; }
+}
+
+h3 {
+  color: var(--primary-color) !important;
 }
 </style>

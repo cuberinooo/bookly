@@ -229,4 +229,25 @@ class UserController extends AbstractController
         $json = $serializer->serialize($trainers, 'json', ['groups' => 'user:read']);
         return new JsonResponse($json, 200, [], true);
     }
+
+    #[Route('/profile-pictures', name: 'user_profile_pictures_batch', methods: ['GET'])]
+    public function batchProfilePictures(Request $request, UserRepository $userRepository): JsonResponse
+    {
+        $ids = $request->query->get('ids');
+        if (!$ids) {
+            return new JsonResponse([]);
+        }
+
+        $idArray = array_map('intval', explode(',', $ids));
+        $users = $userRepository->findBy(['id' => $idArray]);
+
+        $data = [];
+        foreach ($users as $user) {
+            if ($user->getProfilePicture()) {
+                $data[$user->getId()] = $user->getProfilePicture();
+            }
+        }
+
+        return new JsonResponse($data);
+    }
 }

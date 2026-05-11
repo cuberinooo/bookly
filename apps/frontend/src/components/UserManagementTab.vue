@@ -16,6 +16,19 @@ const submitted = ref(false);
 const resettingPassword = ref(false);
 const sendingWelcome = ref(false);
 
+const getSortedRoles = (roles: string[]) => {
+  const roleOrder = ['ROLE_ADMIN', 'ROLE_TRAINER', 'ROLE_MEMBER', 'ROLE_TRIAL'];
+  return [...roles]
+    .filter((r) => r !== 'ROLE_USER')
+    .sort((a, b) => {
+      const indexA = roleOrder.indexOf(a);
+      const indexB = roleOrder.indexOf(b);
+      const posA = indexA === -1 ? 99 : indexA;
+      const posB = indexB === -1 ? 99 : indexB;
+      return posA - posB;
+    });
+};
+
 const isEmailValid = (email: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 };
@@ -216,7 +229,7 @@ onMounted(fetchUsers);
           <template #body="{ data }">
             <div class="flex flex-wrap gap-1">
               <Tag
-                v-for="role in data.roles.filter(r => r !== 'ROLE_USER')"
+                v-for="role in getSortedRoles(data.roles)"
                 :key="role"
                 :value="role.replace('ROLE_', '')"
                 :severity="role === 'ROLE_ADMIN' ? 'danger' : (role === 'ROLE_TRAINER' ? 'warn' : (role === 'ROLE_TRIAL' ? 'secondary' : 'info'))"
@@ -301,7 +314,7 @@ onMounted(fetchUsers);
 
               <div class="flex flex-wrap gap-1 mb-2">
                 <Tag
-                  v-for="role in user.roles.filter(r => r !== 'ROLE_USER')"
+                  v-for="role in getSortedRoles(user.roles)"
                   :key="role"
                   :value="role.replace('ROLE_', '')"
                   :severity="role === 'ROLE_ADMIN' ? 'danger' : (role === 'ROLE_TRAINER' ? 'warn' : (role === 'ROLE_TRIAL' ? 'secondary' : 'info'))"
