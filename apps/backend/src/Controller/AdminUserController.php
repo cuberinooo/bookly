@@ -75,6 +75,25 @@ class AdminUserController extends AbstractController
         return new JsonResponse(['status' => 'Password has been reset and email sent to the athlete.']);
     }
 
+    #[Route('/{id}/send-welcome', name: 'admin_user_send_welcome', methods: ['POST'])]
+    public function sendWelcomeMail(User $user, \App\Service\WelcomeEmailService $welcomeEmailService, EntityManagerInterface $entityManager): JsonResponse
+    {
+        if (!in_array('ROLE_TRIAL', $user->getRoles())) {
+            return new JsonResponse(['error' => 'Welcome mail can only be sent to trial members.'], Response::HTTP_BAD_REQUEST);
+        }
+
+        if ($user->isWelcomeMailSent()) {
+            return new JsonResponse(['error' => 'Welcome mail has already been sent to this user.'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $welcomeEmailService->sendWelcomeEmail($user);
+
+        $user->setWelcomeMailSent(true);
+        $entityManager->flush();
+
+        return new JsonResponse(['status' => 'Welcome mail sent successfully.']);
+    }
+
     #[Route('/{id}', name: 'admin_user_delete', methods: ['DELETE'])]
     public function delete(User $user, \App\Service\AdminUserService $adminUserService): JsonResponse
     {
@@ -90,29 +109,29 @@ class AdminUserController extends AbstractController
 
         return new JsonResponse(['status' => 'User deleted successfully']);
     }
-    
+
     #[Route('/{id}', name: 'admin_user_update', methods: ['PATCH'])]
     public function update(User $user, Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
-        // Prevent editing OTHER admin accounts if desired, but here we just check if it's an admin 
+        // Prevent editing OTHER admin accounts if desired, but here we just check if it's an admin
         // to maybe restrict some fields. For now, let's allow editing if the requester is ROLE_ADMIN.
-        
+
         $data = json_decode($request->getContent(), true);
-        
+
         if (isset($data['name'])) $user->setName($data['name']);
-        
+
         // Handle multiple roles
         if (isset($data['roles']) && is_array($data['roles'])) {
             $allowedRoles = ['ROLE_MEMBER', 'ROLE_TRAINER', 'ROLE_ADMIN', 'ROLE_TRIAL'];
             $newRoles = array_intersect($data['roles'], $allowedRoles);
-            
-            // Basic safety: Don't allow removing own ROLE_ADMIN if we implemented it, 
+
+            // Basic safety: Don't allow removing own ROLE_ADMIN if we implemented it,
             // but for now we follow simple logic.
             if (!empty($newRoles)) {
                 $user->setRoles(array_values($newRoles));
             }
         }
-        
+
         $entityManager->flush();
         return new JsonResponse(['status' => 'User updated']);
     }

@@ -19,6 +19,14 @@ const newPasswordTouched = ref(false);
 const confirmNewPassword = ref('');
 const changingPassword = ref(false);
 
+window.addEventListener('vite:preloadError', (event) => {
+  // Prevent the error from crashing the app completely in the console
+  event.preventDefault();
+
+  // Reload the page automatically to fetch the new assets
+  window.location.reload();
+});
+
 const passwordValidation = computed(() => {
   return {
     minLength: newPassword.value.length >= 8,

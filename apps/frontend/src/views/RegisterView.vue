@@ -20,6 +20,7 @@ const confirmPassword = ref('');
 const confirmPasswordTouched = ref(false);
 const acceptedTerms = ref(false);
 const loading = ref(false);
+const isRegistered = ref(false);
 const router = useRouter();
 const route = useRoute();
 const toast = useToast();
@@ -115,8 +116,8 @@ async function register() {
       companyName: companyName.value,
       password: password.value
     });
-    toast.add({ severity: 'success', summary: 'Check your email', detail: 'Account created! Please verify your email before logging in.', life: 5000 });
-    router.push({ name: 'login' });
+    isRegistered.value = true;
+    window.scrollTo(0, 0);
   } catch (err: any) {
     let detail = err.response?.data?.error || 'Registration failed';
     if (err.response?.status === 409 || detail === 'Email already registered') {
@@ -133,213 +134,241 @@ async function register() {
 <template>
   <div class="min-h-[80vh] flex items-center justify-center bg-white px-4 py-12">
     <div class="phoenix-card w-full max-w-2xl">
-      <div class="text-center mb-10">
-        <h1 class="text-3xl font-extrabold tracking-tight">
-          {{ step === 1 ? 'Join ' + companyName : (companyLegal.found ? 'Legal Agreement' : 'Create New Company') }}
-        </h1>
-        <p class="text-slate-600 mt-2 font-medium">
-          {{ step === 1 ? 'Start your athletic transformation' : (companyLegal.found ? 'Please review and accept the following terms' : 'Confirm your registration details') }}
-        </p>
-      </div>
+      <div v-if="!isRegistered">
+        <div class="text-center mb-10">
+          <h1 class="text-3xl font-extrabold tracking-tight">
+            {{ step === 1 ? 'Join ' + companyName : (companyLegal.found ? 'Legal Agreement' : 'Create New Company') }}
+          </h1>
+          <p class="text-slate-600 mt-2 font-medium">
+            {{ step === 1 ? 'Start your athletic transformation' : (companyLegal.found ? 'Please review and accept the following terms' : 'Confirm your registration details') }}
+          </p>
+        </div>
 
-      <div v-if="step === 1">
-        <form
-          class="flex flex-col gap-6"
-          @submit.prevent="goToStep2"
-        >
-          <div class="flex flex-col">
-            <label
-              for="name"
-              class="form-label-base"
-            >Full Name</label>
-            <InputText
-              id="name"
-              v-model="name"
-              required
-              placeholder="Coach Carter"
-              :class="{ 'p-invalid': nameTouched && !name }"
-              @blur="nameTouched = true"
-            />
-            <small v-if="nameTouched && !name" class="text-red-500 text-xs mt-1">Full name is required.</small>
-          </div>
-
-          <div class="flex flex-col">
-            <label
-              for="email"
-              class="form-label-base"
-            >Email Address</label>
-            <InputText
-              id="email"
-              v-model="email"
-              type="email"
-              required
-              :placeholder="'athlete@' + settingsStore.companyName.toLowerCase().replace(/[^a-z0-9]/g, '-') + '.com'"
-              :class="{ 'p-invalid': emailTouched && (!email || !isEmailValid) }"
-              @blur="emailTouched = true"
-            />
-            <small v-if="emailTouched && !email" class="text-red-500 text-xs mt-1">Email is required.</small>
-            <small v-else-if="emailTouched && !isEmailValid" class="text-red-500 text-xs mt-1">Please enter a valid email address.</small>
-          </div>
-
-          <div class="flex flex-col">
-            <label
-              for="companyName"
-              class="form-label-base"
-            >Company Name</label>
-            <InputText
-              id="companyName"
-              v-model="companyName"
-              required
-              placeholder="Foo GmbH"
-              :class="{ 'p-invalid': companyNameTouched && !companyName }"
-              :disabled="!!route.query.companyName"
-              @blur="companyNameTouched = true"
-            />
-            <small v-if="companyNameTouched && !companyName" class="text-red-500 text-xs mt-1">Company name is required.</small>
-          </div>
-
-          <div class="flex flex-col">
-            <label
-              for="password"
-              class="form-label-base"
-            >Password</label>
-            <Password
-              id="password"
-              v-model="password"
-              toggle-mask
-              required
-              placeholder="••••••••"
-              class="w-full"
-              :input-class="{ 'w-full': true, 'p-invalid': passwordTouched && !isPasswordValid }"
-              @blur="passwordTouched = true"
-            >
-              <template #footer>
-                <Divider />
-                <p class="mt-2 font-bold text-xs uppercase tracking-wider">
-                  Requirements
-                </p>
-                <ul class="pl-2 ml-2 mt-2 list-disc flex flex-col gap-1 text-xs">
-                  <li :class="passwordValidation.minLength ? 'text-green-600' : 'text-slate-400'">
-                    At least 8 characters
-                  </li>
-                  <li :class="passwordValidation.uppercase ? 'text-green-600' : 'text-slate-400'">
-                    At least one uppercase
-                  </li>
-                  <li :class="passwordValidation.lowercase ? 'text-green-600' : 'text-slate-400'">
-                    At least one lowercase
-                  </li>
-                  <li :class="passwordValidation.number ? 'text-green-600' : 'text-slate-400'">
-                    At least one number
-                  </li>
-                  <li :class="passwordValidation.special ? 'text-green-600' : 'text-slate-400'">
-                    At least one special character
-                  </li>
-                </ul>
-              </template>
-            </Password>
-            <small v-if="passwordTouched && !isPasswordValid" class="text-red-500 text-xs mt-1">Password does not meet requirements.</small>
-          </div>
-
-          <div class="flex flex-col">
-            <label
-              for="confirmPassword"
-              class="form-label-base"
-            >Confirm Password</label>
-            <InputText
-              id="confirmPassword"
-              v-model="confirmPassword"
-              type="password"
-              required
-              placeholder="••••••••"
-              :class="{ 'p-invalid': confirmPasswordTouched && !passwordValidation.match }"
-              @blur="confirmPasswordTouched = true"
-            />
-            <small v-if="confirmPasswordTouched && !passwordValidation.match" class="text-red-500 text-xs mt-1">Passwords do not match.</small>
-          </div>
-
-          <Button
-            type="submit"
-            severity="primary"
-            label="Continue"
-            :loading="loading"
-            class="btn-primary w-full py-4 text-lg"
-          />
-        </form>
-      </div>
-
-      <div v-else-if="step === 2">
-        <div class="space-y-8">
-          <div class="flex items-start gap-4 p-5 bg-primary/5 rounded-2xl border border-primary/10">
-            <div v-if="companyLegal.found">
-              <Checkbox
-                id="terms"
-                v-model="acceptedTerms"
-                :binary="true"
-                class="mt-1"
+        <div v-if="step === 1">
+          <form
+            class="flex flex-col gap-6"
+            @submit.prevent="goToStep2"
+          >
+            <div class="flex flex-col">
+              <label
+                for="name"
+                class="form-label-base"
+              >Full Name</label>
+              <InputText
+                id="name"
+                v-model="name"
+                required
+                placeholder="Coach Carter"
+                :class="{ 'p-invalid': nameTouched && !name }"
+                @blur="nameTouched = true"
               />
-              <label
+              <small v-if="nameTouched && !name" class="text-red-500 text-xs mt-1">Full name is required.</small>
+            </div>
 
-                for="terms"
-                class="text-sm text-slate-700 font-medium leading-relaxed cursor-pointer"
-              >
-                I agree to the
-                <a href="javascript:void(0)"
-                   @click="onClickShowTerms"
-                   class="font-bold text-primary hover:underline">
-                  Terms & Conditions (AGB)
-                </a>
-                of {{ companyLegal.companyName }}
-                and I have read the
-                <a href="javascript:void(0)"
-                   @click="downloadPrivacyPolicy(companyLegal.companyName)"
-                   class="text-primary font-bold hover:underline">
-                  Privacy Policy (Datenschutz)
-                </a>
-              </label>
-            </div>
-            <div v-else>
+            <div class="flex flex-col">
               <label
-                for="terms"
-                class="text-sm text-slate-700 font-medium leading-relaxed cursor-pointer"
+                for="email"
+                class="form-label-base"
+              >Email Address</label>
+              <InputText
+                id="email"
+                v-model="email"
+                type="email"
+                required
+                :placeholder="'athlete@' + settingsStore.companyName.toLowerCase().replace(/[^a-z0-9]/g, '-') + '.com'"
+                :class="{ 'p-invalid': emailTouched && (!email || !isEmailValid) }"
+                @blur="emailTouched = true"
+              />
+              <small v-if="emailTouched && !email" class="text-red-500 text-xs mt-1">Email is required.</small>
+              <small v-else-if="emailTouched && !isEmailValid" class="text-red-500 text-xs mt-1">Please enter a valid email address.</small>
+            </div>
+
+            <div class="flex flex-col">
+              <label
+                for="companyName"
+                class="form-label-base"
+              >Company Name</label>
+              <InputText
+                id="companyName"
+                v-model="companyName"
+                required
+                placeholder="Foo GmbH"
+                :class="{ 'p-invalid': companyNameTouched && !companyName }"
+                :disabled="!!route.query.companyName"
+                @blur="companyNameTouched = true"
+              />
+              <small v-if="companyNameTouched && !companyName" class="text-red-500 text-xs mt-1">Company name is required.</small>
+            </div>
+
+            <div class="flex flex-col">
+              <label
+                for="password"
+                class="form-label-base"
+              >Password</label>
+              <Password
+                id="password"
+                v-model="password"
+                toggle-mask
+                required
+                placeholder="••••••••"
+                class="w-full"
+                :input-class="{ 'w-full': true, 'p-invalid': passwordTouched && !isPasswordValid }"
+                @blur="passwordTouched = true"
               >
-                The company <strong>{{ companyName }}</strong> could not be found.
-                You can continue and a new company will be created.
-              </label>
+                <template #footer>
+                  <Divider />
+                  <p class="mt-2 font-bold text-xs uppercase tracking-wider">
+                    Requirements
+                  </p>
+                  <ul class="pl-2 ml-2 mt-2 list-disc flex flex-col gap-1 text-xs">
+                    <li :class="passwordValidation.minLength ? 'text-green-600' : 'text-slate-400'">
+                      At least 8 characters
+                    </li>
+                    <li :class="passwordValidation.uppercase ? 'text-green-600' : 'text-slate-400'">
+                      At least one uppercase
+                    </li>
+                    <li :class="passwordValidation.lowercase ? 'text-green-600' : 'text-slate-400'">
+                      At least one lowercase
+                    </li>
+                    <li :class="passwordValidation.number ? 'text-green-600' : 'text-slate-400'">
+                      At least one number
+                    </li>
+                    <li :class="passwordValidation.special ? 'text-green-600' : 'text-slate-400'">
+                      At least one special character
+                    </li>
+                  </ul>
+                </template>
+              </Password>
+              <small v-if="passwordTouched && !isPasswordValid" class="text-red-500 text-xs mt-1">Password does not meet requirements.</small>
+            </div>
+
+            <div class="flex flex-col">
+              <label
+                for="confirmPassword"
+                class="form-label-base"
+              >Confirm Password</label>
+              <InputText
+                id="confirmPassword"
+                v-model="confirmPassword"
+                type="password"
+                required
+                placeholder="••••••••"
+                :class="{ 'p-invalid': confirmPasswordTouched && !passwordValidation.match }"
+                @blur="confirmPasswordTouched = true"
+              />
+              <small v-if="confirmPasswordTouched && !passwordValidation.match" class="text-red-500 text-xs mt-1">Passwords do not match.</small>
+            </div>
+
+            <Button
+              type="submit"
+              severity="primary"
+              label="Continue"
+              :loading="loading"
+              class="btn-primary w-full py-4 text-lg"
+            />
+          </form>
+        </div>
+
+        <div v-else-if="step === 2">
+          <div class="space-y-8">
+            <div class="flex items-start gap-4 p-5 bg-primary/5 rounded-2xl border border-primary/10">
+              <div v-if="companyLegal.found">
+                <Checkbox
+                  id="terms"
+                  v-model="acceptedTerms"
+                  :binary="true"
+                  class="mt-1"
+                />
+                <label
+
+                  for="terms"
+                  class="text-sm text-slate-700 font-medium leading-relaxed cursor-pointer"
+                >
+                  I agree to the
+                  <a href="javascript:void(0)"
+                     @click="onClickShowTerms"
+                     class="font-bold text-primary hover:underline">
+                    Terms & Conditions (AGB)
+                  </a>
+                  of {{ companyLegal.companyName }}
+                  and I have read the
+                  <a href="javascript:void(0)"
+                     @click="downloadPrivacyPolicy(companyLegal.companyName)"
+                     class="text-primary font-bold hover:underline">
+                    Privacy Policy (Datenschutz)
+                  </a>
+                </label>
+              </div>
+              <div v-else>
+                <label
+                  for="terms"
+                  class="text-sm text-slate-700 font-medium leading-relaxed cursor-pointer"
+                >
+                  The company <strong>{{ companyName }}</strong> could not be found.
+                  You can continue and a new company will be created.
+                </label>
+              </div>
+            </div>
+            <div class="flex gap-4">
+              <Button
+                type="button"
+                severity="secondary"
+                label="Back"
+                icon="pi pi-arrow-left"
+                @click="step = 1"
+                class="flex-1 py-4 text-lg"
+                outlined
+              />
+              <Button
+                type="button"
+                severity="primary"
+                label="Accept & Create Account"
+                :loading="loading"
+                :disabled="companyLegal.found ? !acceptedTerms : false"
+                @click="register"
+                class="flex-2 btn-primary py-4 text-lg"
+              />
             </div>
           </div>
-          <div class="flex gap-4">
-            <Button
-              type="button"
-              severity="secondary"
-              label="Back"
-              icon="pi pi-arrow-left"
-              @click="step = 1"
-              class="flex-1 py-4 text-lg"
-              outlined
-            />
-            <Button
-              type="button"
-              severity="primary"
-              label="Accept & Create Account"
-              :loading="loading"
-              :disabled="companyLegal.found ? !acceptedTerms : false"
-              @click="register"
-              class="flex-2 btn-primary py-4 text-lg"
-            />
-          </div>
+        </div>
+
+        <div class="mt-8 pt-6 border-t border-slate-50 text-center">
+          <p class="font-medium text-slate-600">
+            Already an athlete?
+            <RouterLink
+              to="/login"
+              class="text-accent hover:brightness-90 font-bold underline-offset-4 hover:underline transition-all"
+            >
+              Login here
+            </RouterLink>
+          </p>
         </div>
       </div>
 
-      <div class="mt-8 pt-6 border-t border-slate-50 text-center">
-        <p class="font-medium text-slate-600">
-          Already an athlete?
-          <RouterLink
-            to="/login"
-            class="text-accent hover:brightness-90 font-bold underline-offset-4 hover:underline transition-all"
-          >
-            Login here
-          </RouterLink>
+      <div
+        v-else
+        class="text-center py-8"
+      >
+        <div class="mb-6 flex justify-center">
+          <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
+            <i class="pi pi-check text-4xl text-green-600" />
+          </div>
+        </div>
+        <h2 class="text-3xl font-extrabold text-slate-900 mb-4">
+          Check Your Email
+        </h2>
+        <p class="text-lg text-slate-600 mb-8 leading-relaxed">
+          Account created! We've sent a verification link to <strong>{{ email }}</strong>.<br>
+          Please verify your email address to activate your account. Then you can sign in.
         </p>
+        <div class="flex flex-col gap-4">
+          <Button
+            label="Go to Login"
+            severity="primary"
+            class="w-full py-4 text-lg"
+            @click="router.push('/login')"
+          />
+        </div>
       </div>
     </div>
 

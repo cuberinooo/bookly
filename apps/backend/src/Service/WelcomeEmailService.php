@@ -17,29 +17,15 @@ class WelcomeEmailService
         private string $s3Bucket
     ) {}
 
-    public function sendWelcomeEmail(User $user, bool $isNewCompanyCreator = false, ?string $temporaryPassword = null, bool $isAdminCreation = false): void
+    public function sendVerificationEmail(User $user, bool $isAdminCreation = false, ?string $temporaryPassword = null): void
     {
         $company = $user->getCompany();
-        $settings = $company ? $company->getAdminSettings() : null;
+        $siteName = $company ? $company->getName() : 'Phoenix Athletics';
 
         $email = (new TemplatedEmail())
-            ->from(new Address($_ENV['NO_REPLY_MAIL'] ?? 'noreply@example.com', $company->getName()))
-            ->to($user->getEmail());
-
-        if ($isNewCompanyCreator || !$settings || !$settings->getWelcomeMailMarkdown()) {
-            // System Default Welcome Mail
-            $this->sendSystemDefaultWelcomeEmail($email, $user, $temporaryPassword, $isAdminCreation);
-        } else {
-            // Company-Specific Welcome Mail
-            $this->sendCompanySpecificWelcomeEmail($email, $user, $settings, $isAdminCreation, $temporaryPassword);
-        }
-    }
-
-    private function sendSystemDefaultWelcomeEmail(TemplatedEmail $email, User $user, ?string $temporaryPassword, bool $isAdminCreation): void
-    {
-        $siteName = $user->getCompany() ? $user->getCompany()->getName() : 'Phoenix Athletics';
-
-        $email->subject(sprintf('Welcome to %s - Your Account is Ready', $siteName))
+            ->from(new Address($_ENV['NO_REPLY_MAIL'] ?? 'noreply@example.com', $siteName))
+            ->to($user->getEmail())
+            ->subject(sprintf('Welcome to %s - Your Account is Ready', $siteName))
             ->htmlTemplate('emails/verify_email.html.twig')
             ->context([
                 'name' => $user->getName(),
@@ -48,12 +34,26 @@ class WelcomeEmailService
                 'loginUrl' => $this->getLoginUrl(),
                 'isAdminCreation' => $isAdminCreation,
                 'temporaryPassword' => $temporaryPassword,
+                'isVerified' => $user->isVerified(),
             ]);
 
         $this->mailer->send($email);
     }
 
-    private function sendCompanySpecificWelcomeEmail(TemplatedEmail $email, User $user, AdminSettings $settings, bool $isAdminCreation, ?string $temporaryPassword): void
+    public function sendWelcomeEmail(User $user): void
+    {
+        $company = $user->getCompany();
+        $settings = $company ? $company->getAdminSettings() : null;
+
+        $email = (new TemplatedEmail())
+            ->from(new Address($_ENV['NO_REPLY_MAIL'] ?? 'noreply@example.com', $company->getName()))
+            ->to($user->getEmail());
+
+        // Company-Specific Welcome Mail
+        $this->sendCompanySpecificWelcomeEmail($email, $user, $settings);
+    }
+
+    private function sendCompanySpecificWelcomeEmail(TemplatedEmail $email, User $user, AdminSettings $settings): void
     {
         $markdown = $settings->getWelcomeMailMarkdown();
         $siteName = $user->getCompany()->getName();
@@ -70,9 +70,6 @@ class WelcomeEmailService
                 'content' => $content,
                 'name' => $user->getName(),
                 'siteName' => $siteName,
-                'isAdminCreation' => $isAdminCreation,
-                'temporaryPassword' => $temporaryPassword,
-                'verificationUrl' => $this->getVerificationUrl($user),
                 'loginUrl' => $this->getLoginUrl(),
             ]);
 

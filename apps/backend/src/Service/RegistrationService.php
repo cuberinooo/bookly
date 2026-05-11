@@ -98,7 +98,7 @@ class RegistrationService
         $this->entityManager->persist($user);
         $this->entityManager->flush();
 
-        $this->welcomeEmailService->sendWelcomeEmail($user, $isNewCompany, $password, $isAdminCreation);
+        $this->welcomeEmailService->sendVerificationEmail($user, $isAdminCreation, $password);
 
         if (!$isAdminCreation && !$isNewCompany) {
             $this->sendAdminNotificationEmail($user);
@@ -162,7 +162,7 @@ class RegistrationService
         $this->generateVerificationToken($user);
         $this->entityManager->flush();
 
-        $this->welcomeEmailService->sendWelcomeEmail($user);
+        $this->welcomeEmailService->sendVerificationEmail($user);
     }
 
     private function generateVerificationToken(User $user): void

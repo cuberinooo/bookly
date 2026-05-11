@@ -107,6 +107,22 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, Company
         return $this;
     }
 
+    #[ORM\Column(options: ['default' => false])]
+    #[Groups(['user:read'])]
+    private bool $welcomeMailSent = false;
+
+    public function isWelcomeMailSent(): bool
+    {
+        return $this->welcomeMailSent;
+    }
+
+    public function setWelcomeMailSent(bool $welcomeMailSent): static
+    {
+        $this->welcomeMailSent = $welcomeMailSent;
+
+        return $this;
+    }
+
     public function __construct()
     {
         $this->courses = new ArrayCollection();

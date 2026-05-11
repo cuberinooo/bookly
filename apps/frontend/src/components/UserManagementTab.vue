@@ -14,6 +14,7 @@ const editingUser = ref<any>({ name: '', email: '', roles: ['ROLE_MEMBER'], pass
 const submitting = ref(false);
 const submitted = ref(false);
 const resettingPassword = ref(false);
+const sendingWelcome = ref(false);
 
 const isEmailValid = (email: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -128,6 +129,19 @@ async function resetPassword() {
     });
 }
 
+async function sendWelcomeMail(user: any) {
+    sendingWelcome.value = true;
+    try {
+        await api.post(`/admin/users/${user.id}/send-welcome`);
+        user.welcomeMailSent = true;
+        toast.add({ severity: 'success', summary: 'Success', detail: 'Welcome mail sent successfully', life: 5000 });
+    } catch (e: any) {
+        toast.add({ severity: 'error', summary: 'Error', detail: e.response?.data?.error || 'Failed to send welcome mail', life: 5000 });
+    } finally {
+        sendingWelcome.value = false;
+    }
+}
+
 async function toggleActive(user: any) {
     try {
         await api.patch(`/admin/users/${user.id}/toggle-active`);
@@ -230,10 +244,19 @@ onMounted(fetchUsers);
         </Column>
         <Column
           header="ACTIONS"
-          class="w-32"
+          class="w-48"
         >
           <template #body="{ data }">
             <div class="flex gap-2">
+              <Button
+                v-if="data.roles.includes('ROLE_TRIAL') && !data.welcomeMailSent"
+                icon="pi pi-envelope"
+                v-tooltip.top="'Send Welcome Mail'"
+                variant="text"
+                rounded
+                :loading="sendingWelcome"
+                @click="sendWelcomeMail(data)"
+              />
               <Button
                 icon="pi pi-pencil"
                 variant="text"
@@ -293,6 +316,15 @@ onMounted(fetchUsers);
               />
             </div>
             <div class="flex gap-1">
+              <Button
+                v-if="user.roles.includes('ROLE_TRIAL') && !user.welcomeMailSent"
+                icon="pi pi-envelope"
+                severity="secondary"
+                variant="text"
+                rounded
+                :loading="sendingWelcome"
+                @click="sendWelcomeMail(user)"
+              />
               <Button
                 icon="pi pi-pencil"
                 severity="secondary"
