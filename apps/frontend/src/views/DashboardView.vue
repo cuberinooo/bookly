@@ -86,9 +86,9 @@ function getBookingWindowMessage() {
 
 async function fetchData() {
     try {
-        let url = '/courses?all=true';
+        let url = '/courses?all=true&futureOnly=true';
         if (isTrainerMode.value) {
-            url += `&futureOnly=true&trainerId=${authStore.user?.id}`;
+            url += `&trainerId=${authStore.user?.id}`;
         } else {
             url += `&memberId=${authStore.user?.id}`;
         }
