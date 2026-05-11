@@ -211,22 +211,21 @@ async function register() {
                 class="text-red-500 text-xs mt-1"
               >Company name is required.</small>
             </div>
-
-            <div class="flex flex-col">
-              <label
-                for="password"
-                class="form-label-base"
-              >Password</label>
-              <Password
-                id="password"
-                v-model="password"
-                toggle-mask
-                required
-                placeholder="••••••••"
-                class="w-full"
-                :input-class="{ 'w-full': true, 'p-invalid': passwordTouched && !isPasswordValid }"
-                @blur="passwordTouched = true"
-              >
+<div class="flex flex-col">
+  <label
+    for="password"
+    class="form-label-base"
+  >Password</label>
+  <Password
+    input-id="password"
+    v-model="password"
+    toggle-mask
+    required
+    placeholder="••••••••"
+    class="w-full"
+    :input-class="{ 'w-full': true, 'p-invalid': passwordTouched && !isPasswordValid }"
+    @blur="passwordTouched = true"
+  >
                 <template #footer>
                   <Divider />
                   <p class="mt-2 font-bold text-xs uppercase tracking-wider">
@@ -292,13 +291,12 @@ async function register() {
             <div class="flex items-start gap-4 p-5 bg-primary/5 rounded-2xl border border-primary/10">
               <div v-if="companyLegal.found">
                 <Checkbox
-                  id="terms"
+                  input-id="terms"
                   v-model="acceptedTerms"
                   :binary="true"
                   class="mt-1"
                 />
                 <label
-
                   for="terms"
                   class="text-sm text-slate-700 font-medium leading-relaxed cursor-pointer"
                 >
@@ -323,7 +321,6 @@ async function register() {
               </div>
               <div v-else>
                 <label
-                  for="terms"
                   class="text-sm text-slate-700 font-medium leading-relaxed cursor-pointer"
                 >
                   The company <strong>{{ companyName }}</strong> could not be found.

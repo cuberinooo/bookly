@@ -215,8 +215,12 @@ onMounted(loadLazyData);
         <h2>Managed Courses</h2>
         <div class="flex flex-wrap items-end gap-3 md:gap-4">
           <div class="flex flex-col gap-1 flex-1 min-w-[120px]">
-            <label class="text-[10px] md:text-xs font-bold uppercase text-slate-500">From</label>
+            <label
+              for="filterFrom"
+              class="text-[10px] md:text-xs font-bold uppercase text-slate-500"
+            >From</label>
             <DatePicker
+              input-id="filterFrom"
               v-model="lazyParams.startDate"
               placeholder="Start"
               size="small"
@@ -226,8 +230,12 @@ onMounted(loadLazyData);
             />
           </div>
           <div class="flex flex-col gap-1 flex-1 min-w-[120px]">
-            <label class="text-[10px] md:text-xs font-bold uppercase text-slate-500">To</label>
+            <label
+              for="filterTo"
+              class="text-[10px] md:text-xs font-bold uppercase text-slate-500"
+            >To</label>
             <DatePicker
+              input-id="filterTo"
               v-model="lazyParams.endDate"
               placeholder="End"
               size="small"

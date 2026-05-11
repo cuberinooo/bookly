@@ -156,13 +156,23 @@ onMounted(fetchProfile);
             @submit.prevent="updateProfile"
           >
             <div class="flex flex-col">
-              <label class="form-label-base">Full Name</label>
-              <InputText v-model="user.name" />
+              <label
+                for="profileName"
+                class="form-label-base"
+              >Full Name</label>
+              <InputText
+                id="profileName"
+                v-model="user.name"
+              />
             </div>
 
             <div class="flex flex-col">
-              <label class="form-label-base">Email Address</label>
+              <label
+                for="profileEmail"
+                class="form-label-base"
+              >Email Address</label>
               <InputText
+                id="profileEmail"
                 v-model="user.email"
                 type="email"
                 disabled

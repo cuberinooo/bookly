@@ -159,7 +159,7 @@ function handleSubmit() {
     <div class="form-group">
       <label for="workoutType">Workout Type</label>
       <Select
-        id="workoutType"
+        input-id="workoutType"
         v-model="form.title"
         :options="workoutTypes"
         fluid
@@ -186,7 +186,7 @@ function handleSubmit() {
         <div class="form-group flex-2">
           <label for="startDate">Date</label>
           <DatePicker
-            id="startDate"
+            input-id="startDate"
             v-model="selectedDate"
             date-format="dd.mm.yy"
             fluid
@@ -197,7 +197,7 @@ function handleSubmit() {
         <div class="form-group flex-1">
           <label for="startTime">Time</label>
           <Select
-            id="startTime"
+            input-id="startTime"
             v-model="selectedTime"
             :options="timeOptions"
             fluid
@@ -210,7 +210,7 @@ function handleSubmit() {
         <div class="form-group flex-1">
           <label for="duration">Duration (Min)</label>
           <InputNumber
-            id="duration"
+            input-id="duration"
             v-model="form.durationMinutes"
             show-buttons
             :min="15"
@@ -229,7 +229,7 @@ function handleSubmit() {
       <div class="form-group flex-1">
         <label for="recurrence">Recurrence</label>
         <Select
-          id="recurrence"
+          input-id="recurrence"
           v-model="form.recurrence"
           :options="recurrenceOptions"
           option-label="label"
@@ -252,7 +252,7 @@ function handleSubmit() {
       >
         <label for="trainer">Head Coach (Transfer)</label>
         <Select
-          id="trainer"
+          input-id="trainer"
           v-model="form.trainerId"
           :options="trainers"
           option-label="name"
@@ -279,7 +279,7 @@ function handleSubmit() {
       <div class="form-group flex-1">
         <label for="capacity">Max Capacity</label>
         <InputNumber
-          id="capacity"
+          input-id="capacity"
           v-model="form.capacity"
           show-buttons
           :min="1"

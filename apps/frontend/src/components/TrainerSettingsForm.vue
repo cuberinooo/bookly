@@ -118,12 +118,16 @@ onMounted(fetchSettings);
             </h3>
             <div class="setting-row">
               <div class="setting-info">
-                <label class="form-label">Show Confirmed Participant Names</label>
+                <label
+                  for="showNames"
+                  class="form-label"
+                >Show Confirmed Participant Names</label>
                 <p class="text-xs text-slate-500">
                   If disabled, members see "Athlete #ID" instead of names.
                 </p>
               </div>
               <ToggleSwitch
+                input-id="showNames"
                 v-model="settings.showParticipantNames"
                 :disabled="saving"
                 @change="updateGlobalSettings"
@@ -137,12 +141,16 @@ onMounted(fetchSettings);
             </h3>
             <div class="setting-row">
               <div class="setting-info">
-                <label class="form-label">Make Waitlist Visible to Members</label>
+                <label
+                  for="waitlistVisible"
+                  class="form-label"
+                >Make Waitlist Visible to Members</label>
                 <p class="text-xs text-slate-500">
                   Enable if you want members to see how many people are waiting.
                 </p>
               </div>
               <ToggleSwitch
+                input-id="waitlistVisible"
                 v-model="settings.isWaitlistVisible"
                 :disabled="saving"
                 @change="updateGlobalSettings"
@@ -156,12 +164,16 @@ onMounted(fetchSettings);
             </h3>
             <div class="setting-row">
               <div class="setting-info">
-                <label class="form-label">Member Booking Window</label>
+                <label
+                  for="bookingWindow"
+                  class="form-label"
+                >Member Booking Window</label>
                 <p class="text-xs text-slate-500">
                   Restrict how far in advance members can book their workouts.
                 </p>
               </div>
               <Select
+                input-id="bookingWindow"
                 v-model="settings.bookingWindow"
                 :options="windowOptions"
                 option-label="label"
@@ -179,12 +191,16 @@ onMounted(fetchSettings);
             </h3>
             <div class="setting-row">
               <div class="setting-info">
-                <label class="form-label">Trial Booking Limit</label>
+                <label
+                  for="trialLimit"
+                  class="form-label"
+                >Trial Booking Limit</label>
                 <p class="text-xs text-slate-500">
                   How many total classes a trial member can book before needing an upgrade.
                 </p>
               </div>
               <InputNumber
+                input-id="trialLimit"
                 v-model="settings.trialBookingLimit"
                 show-buttons
                 :min="0"
@@ -224,8 +240,12 @@ onMounted(fetchSettings);
             <div class="flex flex-col items-end gap-2">
               <div class="flex items-center gap-4">
                 <div class="flex flex-col gap-1">
-                  <label class="text-[10px] font-bold text-slate-400 uppercase">Hours</label>
+                  <label
+                    for="notifyHours"
+                    class="text-[10px] font-bold text-slate-400 uppercase"
+                  >Hours</label>
                   <InputNumber
+                    input-id="notifyHours"
                     v-model="settings.courseStartNotificationHours"
                     :min="0"
                     :max="23"
@@ -234,8 +254,12 @@ onMounted(fetchSettings);
                   />
                 </div>
                 <div class="flex flex-col gap-1">
-                  <label class="text-[10px] font-bold text-slate-400 uppercase">Minutes</label>
+                  <label
+                    for="notifyMinutes"
+                    class="text-[10px] font-bold text-slate-400 uppercase"
+                  >Minutes</label>
                   <InputNumber
+                    input-id="notifyMinutes"
                     v-model="settings.courseStartNotificationMinutes"
                     :min="0"
                     :max="55"

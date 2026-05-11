@@ -81,7 +81,7 @@ async function submit() {
               class="font-bold text-sm mb-2"
             >New Password</label>
             <Password
-              id="password"
+              input-id="password"
               v-model="password"
               toggle-mask
               required

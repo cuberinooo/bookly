@@ -269,8 +269,12 @@ onMounted(async () => {
         </div>
 
         <div class="flex flex-col gap-2">
-          <label class="font-bold text-sm uppercase tracking-wider text-slate-500">New Password</label>
+          <label
+            for="newPassword"
+            class="font-bold text-sm uppercase tracking-wider text-slate-500"
+          >New Password</label>
           <Password
+            input-id="newPassword"
             v-model="newPassword"
             toggle-mask
             placeholder="••••••••"
@@ -341,8 +345,12 @@ onMounted(async () => {
         </div>
 
         <div class="flex flex-col gap-2">
-          <label class="font-bold text-sm uppercase tracking-wider text-slate-500">Confirm New Password</label>
+          <label
+            for="confirmNewPassword"
+            class="font-bold text-sm uppercase tracking-wider text-slate-500"
+          >Confirm New Password</label>
           <InputText
+            id="confirmNewPassword"
             v-model="confirmNewPassword"
             type="password"
             placeholder="••••••••"

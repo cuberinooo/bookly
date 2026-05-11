@@ -395,8 +395,12 @@ onMounted(fetchUsers);
     >
       <div class="flex flex-col gap-6 py-4">
         <div class="flex flex-col gap-2">
-          <label class="text-sm uppercase tracking-wider">Full Name</label>
+          <label
+            for="userName"
+            class="text-sm uppercase tracking-wider"
+          >Full Name</label>
           <InputText
+            id="userName"
             v-model="editingUser.name"
             placeholder="Name"
             :class="{ 'p-invalid': submitted && !editingUser.name }"
@@ -407,8 +411,12 @@ onMounted(fetchUsers);
           >Name is required.</small>
         </div>
         <div class="flex flex-col gap-2">
-          <label class="text-sm uppercase tracking-wider">Email Address</label>
+          <label
+            for="userEmail"
+            class="text-sm uppercase tracking-wider"
+          >Email Address</label>
           <InputText
+            id="userEmail"
             v-model="editingUser.email"
             :disabled="!!editingUser.id"
             placeholder="email@example.com"
@@ -424,8 +432,12 @@ onMounted(fetchUsers);
           >Invalid email format.</small>
         </div>
         <div class="flex flex-col gap-2">
-          <label class="text-sm uppercase tracking-wider">Roles</label>
+          <label
+            for="userRoles"
+            class="text-sm uppercase tracking-wider"
+          >Roles</label>
           <MultiSelect
+            input-id="userRoles"
             v-model="editingUser.roles"
             :options="roleOptions"
             option-label="label"
@@ -439,8 +451,12 @@ onMounted(fetchUsers);
           v-if="!editingUser.id"
           class="flex flex-col gap-2"
         >
-          <label class="text-sm uppercase tracking-wider">Temporary Password</label>
+          <label
+            for="userPassword"
+            class="text-sm uppercase tracking-wider"
+          >Temporary Password</label>
           <InputText
+            id="userPassword"
             v-model="editingUser.password"
             placeholder="Temporary password"
           />
