@@ -24,7 +24,7 @@ services:
       context: .
       dockerfile: docker/php/Dockerfile
     volumes:
-      - ./apps/backend:/var/www/backend
+      - ./apps/backend:/app
     ports:
       - "8000:80" # Map host 8000 to container 80 (FrankenPHP default)
       - "443:443"

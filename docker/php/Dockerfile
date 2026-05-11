@@ -8,7 +8,7 @@ RUN apt-get update && apt-get install -y \
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-WORKDIR /var/www/backend
+WORKDIR /app
 
 # Custom entrypoint to install vendors on start
 COPY docker/php/entrypoint.sh /usr/local/bin/entrypoint

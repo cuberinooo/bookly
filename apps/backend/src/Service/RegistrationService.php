@@ -126,6 +126,7 @@ class RegistrationService
             ->context([
                 'name' => $user->getName(),
                 'userEmail' => $user->getEmail(),
+                'siteName' =>$user->getCompany()->getName(),
                 'role' => implode(', ', array_map(fn($r) => str_replace('ROLE_', '', $r), $user->getRoles())),
             ]);
 

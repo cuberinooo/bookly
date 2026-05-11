@@ -5,10 +5,10 @@
 {% block body %}
     <h2>Welcome to {{ siteName }}!</h2>
     <p>Hello {{ name }},</p>
-    
+
     {% if isAdminCreation %}
         <p>An administrator has created an account for you in our booking system.</p>
-        
+
         <div style="background-color: #f1f5f9; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center; border: 1px dashed #cbd5e1;">
             <p style="margin: 0 0 10px 0; font-size: 14px; color: #64748b; font-weight: 600;">TEMPORARY PASSWORD</p>
             <code style="font-family: 'Courier New', Courier, monospace; font-size: 24px; color: #0f172a; font-weight: 700; letter-spacing: 0.1em; display: block; margin: 10px 0;">{{ temporaryPassword }}</code>
@@ -16,7 +16,7 @@
         </div>
 
         <p>For security reasons, you will be required to change this password upon your first login.</p>
-        
+
         <p style="text-align: center;">
             <a href="{{ loginUrl }}" class="button">Login Now</a>
         </p>
@@ -27,10 +27,6 @@
             <a href="{{ url }}" class="button">Verify Account</a>
         </p>
     {% endif %}
-    
-    {% if not isAdminCreation %}
-        <p>If you did not create an account, no further action is required.</p>
-    {% endif %}
-    
+
     <p>See you on the mats!</p>
 {% endblock %}
