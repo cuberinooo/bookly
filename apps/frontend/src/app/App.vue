@@ -8,7 +8,6 @@ import api from '../services/api';
 import {useToast} from 'primevue/usetoast';
 import TheFooter from '../components/TheFooter.vue';
 import VersionUpdateToast from '../components/VersionUpdateToast.vue';
-import PullToRefresh from 'pulltorefreshjs';
 import mercureService from '../services/mercure';
 
 const router = useRouter();
@@ -141,28 +140,6 @@ onMounted(async () => {
     await settingsStore.fetchSettings();
     mercureService.init();
   }
-
-  // Check if the app is launched as an installed PWA
-  const isStandalone = window.matchMedia('(display-mode: standalone)').matches
-    || window.navigator.standalone;
-
-  if (isStandalone) {
-    PullToRefresh.init({
-      mainElement: '#app', // Binds directly to Vue's root wrapper
-      onRefresh() {
-        window.location.reload()
-      },
-      distThreshold: 60,
-      distMax: 80,
-      instructionsPullToRefresh: 'Pull down to update app...',
-      instructionsReleaseToRefresh: 'Release to refresh'
-    });
-  }
-});
-
-onUnmounted(() => {
-  // Clean up the pull-to-refresh instance when the component unmounts
-  PullToRefresh.destroyAll();
 });
 
 </script>
