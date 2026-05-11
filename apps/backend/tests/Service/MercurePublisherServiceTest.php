@@ -3,6 +3,9 @@
 namespace App\Tests\Service;
 
 use App\Entity\Booking;
+use App\Entity\Company;
+use App\Entity\Meetup;
+use App\Entity\MeetupRsvp;
 use App\Service\MercurePublisherService;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Mercure\HubInterface;
@@ -19,13 +22,18 @@ class MercurePublisherServiceTest extends TestCase
         $topicPrefix = 'http://localhost:8000/api';
         $service = new MercurePublisherService($hub, $serializer, $topicPrefix);
 
+        $company = $this->createMock(Company::class);
+        $company->method('getId')->willReturn(1);
+
         $booking = $this->createMock(Booking::class);
         $booking->method('getId')->willReturn(123);
+        $booking->method('getCompany')->willReturn($company);
 
         $expectedData = [
             'entity' => 'Booking',
             'action' => 'updated',
             'id' => 123,
+            'companyId' => 1,
         ];
 
         $serializer->expects($this->once())
@@ -35,15 +43,43 @@ class MercurePublisherServiceTest extends TestCase
 
         $hub->expects($this->once())
             ->method('publish')
-            ->with($this->callback(function (Update $update) use ($topicPrefix) {
+            ->with($this->callback(function (Update $update) use ($topicPrefix, $expectedData) {
                 return $update->getTopics() === [$topicPrefix . '/booking']
-                    && $update->getData() === json_encode([
-                        'entity' => 'Booking',
-                        'action' => 'updated',
-                        'id' => 123,
-                    ]);
+                    && $update->getData() === json_encode($expectedData);
             }));
 
         $service->publishEntityUpdate($booking, 'updated');
+    }
+
+    public function testPublishEntityUpdateForMeetupRsvp(): void
+    {
+        $hub = $this->createMock(HubInterface::class);
+        $serializer = $this->createMock(SerializerInterface::class);
+        
+        $topicPrefix = 'http://localhost:8000/api';
+        $service = new MercurePublisherService($hub, $serializer, $topicPrefix);
+
+        $rsvp = $this->createMock(MeetupRsvp::class);
+        $rsvp->method('getId')->willReturn(456);
+
+        $expectedData = [
+            'entity' => 'MeetupRsvp',
+            'action' => 'created',
+            'id' => 456,
+        ];
+
+        $serializer->expects($this->once())
+            ->method('serialize')
+            ->with($expectedData, 'json')
+            ->willReturn(json_encode($expectedData));
+
+        $hub->expects($this->once())
+            ->method('publish')
+            ->with($this->callback(function (Update $update) use ($topicPrefix, $expectedData) {
+                return $update->getTopics() === [$topicPrefix . '/meetuprsvp']
+                    && $update->getData() === json_encode($expectedData);
+            }));
+
+        $service->publishEntityUpdate($rsvp, 'created');
     }
 }

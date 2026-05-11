@@ -437,8 +437,8 @@ onMounted(fetchUsers);
             class="text-sm uppercase tracking-wider"
           >Roles</label>
           <MultiSelect
-            input-id="userRoles"
             v-model="editingUser.roles"
+            input-id="userRoles"
             :options="roleOptions"
             option-label="label"
             option-value="value"

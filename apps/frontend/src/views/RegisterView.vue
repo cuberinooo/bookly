@@ -211,21 +211,21 @@ async function register() {
                 class="text-red-500 text-xs mt-1"
               >Company name is required.</small>
             </div>
-<div class="flex flex-col">
-  <label
-    for="password"
-    class="form-label-base"
-  >Password</label>
-  <Password
-    input-id="password"
-    v-model="password"
-    toggle-mask
-    required
-    placeholder="••••••••"
-    class="w-full"
-    :input-class="{ 'w-full': true, 'p-invalid': passwordTouched && !isPasswordValid }"
-    @blur="passwordTouched = true"
-  >
+            <div class="flex flex-col">
+              <label
+                for="password"
+                class="form-label-base"
+              >Password</label>
+              <Password
+                v-model="password"
+                input-id="password"
+                toggle-mask
+                required
+                placeholder="••••••••"
+                class="w-full"
+                :input-class="{ 'w-full': true, 'p-invalid': passwordTouched && !isPasswordValid }"
+                @blur="passwordTouched = true"
+              >
                 <template #footer>
                   <Divider />
                   <p class="mt-2 font-bold text-xs uppercase tracking-wider">
@@ -291,8 +291,8 @@ async function register() {
             <div class="flex items-start gap-4 p-5 bg-primary/5 rounded-2xl border border-primary/10">
               <div v-if="companyLegal.found">
                 <Checkbox
-                  input-id="terms"
                   v-model="acceptedTerms"
+                  input-id="terms"
                   :binary="true"
                   class="mt-1"
                 />

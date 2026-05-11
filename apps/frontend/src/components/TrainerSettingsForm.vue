@@ -127,8 +127,8 @@ onMounted(fetchSettings);
                 </p>
               </div>
               <ToggleSwitch
-                input-id="showNames"
                 v-model="settings.showParticipantNames"
+                input-id="showNames"
                 :disabled="saving"
                 @change="updateGlobalSettings"
               />
@@ -150,8 +150,8 @@ onMounted(fetchSettings);
                 </p>
               </div>
               <ToggleSwitch
-                input-id="waitlistVisible"
                 v-model="settings.isWaitlistVisible"
+                input-id="waitlistVisible"
                 :disabled="saving"
                 @change="updateGlobalSettings"
               />
@@ -173,8 +173,8 @@ onMounted(fetchSettings);
                 </p>
               </div>
               <Select
-                input-id="bookingWindow"
                 v-model="settings.bookingWindow"
+                input-id="bookingWindow"
                 :options="windowOptions"
                 option-label="label"
                 option-value="value"
@@ -200,8 +200,8 @@ onMounted(fetchSettings);
                 </p>
               </div>
               <InputNumber
-                input-id="trialLimit"
                 v-model="settings.trialBookingLimit"
+                input-id="trialLimit"
                 show-buttons
                 :min="0"
                 class="w-32"
@@ -245,8 +245,8 @@ onMounted(fetchSettings);
                     class="text-[10px] font-bold text-slate-400 uppercase"
                   >Hours</label>
                   <InputNumber
-                    input-id="notifyHours"
                     v-model="settings.courseStartNotificationHours"
+                    input-id="notifyHours"
                     :min="0"
                     :max="23"
                     show-buttons
@@ -259,8 +259,8 @@ onMounted(fetchSettings);
                     class="text-[10px] font-bold text-slate-400 uppercase"
                   >Minutes</label>
                   <InputNumber
-                    input-id="notifyMinutes"
                     v-model="settings.courseStartNotificationMinutes"
+                    input-id="notifyMinutes"
                     :min="0"
                     :max="55"
                     :step="5"

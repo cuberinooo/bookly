@@ -111,31 +111,61 @@ const handleSubmit = async () => {
 </script>
 
 <template>
-  <form @submit.prevent="handleSubmit" class="meetup-form p-fluid">
+  <form
+    class="meetup-form p-fluid"
+    @submit.prevent="handleSubmit"
+  >
     <div class="field">
       <label for="title">Title *</label>
-      <InputText id="title" v-model="formData.title" required placeholder="Who wants to go hiking?" />
+      <InputText
+        id="title"
+        v-model="formData.title"
+        required
+        placeholder="Who wants to go hiking?"
+      />
     </div>
 
     <div class="field">
       <label for="description">Description</label>
-      <Textarea id="description" v-model="formData.description" rows="3" placeholder="Tell us more about the activity..." />
+      <Textarea
+        id="description"
+        v-model="formData.description"
+        rows="3"
+        placeholder="Tell us more about the activity..."
+      />
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="field">
-          <label for="meetupDate">Event Date & Time *</label>
-          <DatePicker id="meetupDate" v-model="formData.meetupDate" showTime hourFormat="24" required />
-        </div>
-        <div class="field">
-          <label for="rsvpDeadline">RSVP Deadline *</label>
-          <DatePicker id="rsvpDeadline" v-model="formData.rsvpDeadline" showTime hourFormat="24" required />
-        </div>
+      <div class="field">
+        <label for="meetupDate">Event Date & Time *</label>
+        <DatePicker
+          id="meetupDate"
+          v-model="formData.meetupDate"
+          show-time
+          hour-format="24"
+          required
+        />
+      </div>
+      <div class="field">
+        <label for="rsvpDeadline">RSVP Deadline *</label>
+        <DatePicker
+          id="rsvpDeadline"
+          v-model="formData.rsvpDeadline"
+          show-time
+          hour-format="24"
+          required
+        />
+      </div>
     </div>
 
     <div class="field">
       <label for="location">Location *</label>
-      <InputText id="location" v-model="formData.location" required placeholder="Physical address" />
+      <InputText
+        id="location"
+        v-model="formData.location"
+        required
+        placeholder="Physical address"
+      />
     </div>
 
     <div class="field">
@@ -145,16 +175,32 @@ const handleSubmit = async () => {
         mode="basic"
         name="file"
         accept="image/*"
-        :maxFileSize="5000000"
-        @select="onFileSelect"
+        :max-file-size="5000000"
         class="hidden"
+        @select="onFileSelect"
       />
 
-      <div v-if="displayImageUrl" class="relative group">
-        <img :src="displayImageUrl" class="w-full h-48 object-cover rounded-lg shadow-md border border-slate-200" />
+      <div
+        v-if="displayImageUrl"
+        class="relative group"
+      >
+        <img
+          :src="displayImageUrl"
+          class="w-full h-48 object-cover rounded-lg shadow-md border border-slate-200"
+        >
         <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 rounded-lg">
-            <Button icon="pi pi-refresh" label="Change" class="p-button-sm p-button-secondary" @click="triggerUpload" />
-            <Button icon="pi pi-trash" label="Remove" class="p-button-sm p-button-danger" @click="removeImage" />
+          <Button
+            icon="pi pi-refresh"
+            label="Change"
+            class="p-button-sm p-button-secondary"
+            @click="triggerUpload"
+          />
+          <Button
+            icon="pi pi-trash"
+            label="Remove"
+            class="p-button-sm p-button-danger"
+            @click="removeImage"
+          />
         </div>
       </div>
       <div
@@ -162,32 +208,67 @@ const handleSubmit = async () => {
         class="flex flex-col items-center justify-center py-10 border-2 border-dashed border-slate-300 rounded-xl bg-slate-50 hover:bg-slate-100 hover:border-primary transition-all cursor-pointer"
         @click="triggerUpload"
       >
-          <i class="pi pi-cloud-upload text-5xl text-slate-400 mb-3"></i>
-          <p class="text-slate-600 font-bold text-lg">Drag and drop image here</p>
-          <p class="text-slate-400 text-sm mt-1">or click to browse files</p>
-          <p class="text-slate-400 text-xs mt-4 uppercase tracking-widest font-semibold">Max size: 5MB</p>
+        <i class="pi pi-cloud-upload text-5xl text-slate-400 mb-3" />
+        <p class="text-slate-600 font-bold text-lg">
+          Drag and drop image here
+        </p>
+        <p class="text-slate-400 text-sm mt-1">
+          or click to browse files
+        </p>
+        <p class="text-slate-400 text-xs mt-4 uppercase tracking-widest font-semibold">
+          Max size: 5MB
+        </p>
       </div>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="field">
-          <label for="minParticipants">Min Participants</label>
-          <InputNumber id="minParticipants" v-model="formData.minParticipants" :min="0" />
-        </div>
-        <div class="field">
-          <label for="maxParticipants">Max Participants</label>
-          <InputNumber id="maxParticipants" v-model="formData.maxParticipants" :min="1" />
-        </div>
+      <div class="field">
+        <label for="minParticipants">Min Participants</label>
+        <InputNumber
+          id="minParticipants"
+          v-model="formData.minParticipants"
+          :min="0"
+        />
+      </div>
+      <div class="field">
+        <label for="maxParticipants">Max Participants</label>
+        <InputNumber
+          id="maxParticipants"
+          v-model="formData.maxParticipants"
+          :min="1"
+        />
+      </div>
     </div>
 
-    <div class="field flex items-center gap-2 mb-6" v-if="!meetup">
-      <Checkbox v-model="formData.sendNotification" :binary="true" inputId="sendNotification" />
-      <label for="sendNotification" class="mb-0">Notify all community members via email</label>
+    <div
+      v-if="!meetup"
+      class="field flex items-center gap-2 mb-6"
+    >
+      <Checkbox
+        v-model="formData.sendNotification"
+        :binary="true"
+        input-id="sendNotification"
+      />
+      <label
+        for="sendNotification"
+        class="mb-0"
+      >Notify all community members via email</label>
     </div>
 
     <div class="flex justify-end gap-2 mt-4">
-      <Button type="button" label="Cancel" class="p-button-text" @click="emit('cancel')" :disabled="loading || isUploading" />
-      <Button type="submit" :label="meetup ? 'Update Meetup' : 'Create Meetup'" :loading="loading || isUploading" class="p-button-primary" />
+      <Button
+        type="button"
+        label="Cancel"
+        class="p-button-text"
+        :disabled="loading || isUploading"
+        @click="emit('cancel')"
+      />
+      <Button
+        type="submit"
+        :label="meetup ? 'Update Meetup' : 'Create Meetup'"
+        :loading="loading || isUploading"
+        class="p-button-primary"
+      />
     </div>
   </form>
 </template>

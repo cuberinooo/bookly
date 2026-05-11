@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed } from 'vue';
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue';
 import { meetupStore } from '../store/meetups';
 import { timeStore } from '../store/time';
+import { eventsStore } from '../store/events';
 import { RsvpStatus } from '../app/enums/RsvpStatus';
 import MeetupCard from '../components/MeetupCard.vue';
 import MeetupForm from '../components/MeetupForm.vue';
@@ -39,6 +40,16 @@ onMounted(() => {
 
 onUnmounted(() => {
   timeStore.destroy();
+});
+
+// Watch for Mercure events
+watch(() => eventsStore.lastEvent, (event) => {
+  if (!event) return;
+  
+  // If a meetup or RSVP was updated, created or deleted, refresh the list
+  if (['Meetup', 'MeetupRsvp'].includes(event.entity)) {
+    loadMeetups();
+  }
 });
 
 const handleTabChange = () => {
@@ -96,7 +107,6 @@ const handleSubmit = async (data: any) => {
       toast.add({ severity: 'success', summary: 'Created', detail: 'Meetup created successfully', life: 3000 });
     }
     showCreateDialog.value = false;
-    loadMeetups();
   } catch (e: any) {
     toast.add({ severity: 'error', summary: 'Error', detail: e, life: 5000 });
   } finally {
@@ -109,33 +119,70 @@ const handleSubmit = async (data: any) => {
   <div class="container mx-auto px-4 py-8">
     <div class="flex justify-between items-center mb-8">
       <div>
-        <h1 class="text-3xl font-black mb-2">Community Meetups</h1>
-        <p class="text-slate-500">Discover and organize casual gatherings with your community.</p>
+        <h1 class="text-3xl font-black mb-2">
+          Community Meetups
+        </h1>
+        <p class="text-slate-500">
+          Discover and organize casual gatherings with your community.
+        </p>
       </div>
-      <Button icon="pi pi-plus" label="Organize Meetup" @click="openCreate" class="p-button-primary" />
+      <Button
+        icon="pi pi-plus"
+        label="Organize Meetup"
+        class="p-button-primary"
+        @click="openCreate"
+      />
     </div>
 
-    <Tabs v-model:value="activeTab" @update:value="handleTabChange" class="mb-6">
+    <Tabs
+      v-model:value="activeTab"
+      class="mb-6"
+      @update:value="handleTabChange"
+    >
       <TabList>
-        <Tab value="active">Upcoming</Tab>
-        <Tab value="joined">I'm Going</Tab>
-        <Tab value="past">Past Events</Tab>
+        <Tab value="active">
+          Upcoming
+        </Tab>
+        <Tab value="joined">
+          I'm Going
+        </Tab>
+        <Tab value="past">
+          Past Events
+        </Tab>
       </TabList>
 
       <TabPanels>
         <TabPanel :value="activeTab">
-          <div v-if="meetupStore.loading" class="flex justify-center py-12">
+          <div
+            v-if="meetupStore.loading"
+            class="flex justify-center py-12"
+          >
             <ProgressSpinner />
           </div>
 
-          <div v-else-if="meetupStore.meetups.length === 0" class="text-center py-12 bg-slate-50 rounded-xl border-2 border-dashed border-slate-200">
-            <i class="pi pi-calendar-minus text-4xl text-slate-300 mb-4"></i>
-            <h3 class="text-xl font-bold text-slate-400">No meetups found</h3>
-            <p class="text-slate-400">Why not organize one yourself?</p>
-            <Button label="Start Something" icon="pi pi-plus" class="p-button-text mt-4" @click="openCreate" />
+          <div
+            v-else-if="meetupStore.meetups.length === 0"
+            class="text-center py-12 bg-slate-50 rounded-xl border-2 border-dashed border-slate-200"
+          >
+            <i class="pi pi-calendar-minus text-4xl text-slate-300 mb-4" />
+            <h3 class="text-xl font-bold text-slate-400">
+              No meetups found
+            </h3>
+            <p class="text-slate-400">
+              Why not organize one yourself?
+            </p>
+            <Button
+              label="Start Something"
+              icon="pi pi-plus"
+              class="p-button-text mt-4"
+              @click="openCreate"
+            />
           </div>
 
-          <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div
+            v-else
+            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+          >
             <MeetupCard
               v-for="meetup in meetupStore.meetups"
               :key="meetup.id"
@@ -149,7 +196,13 @@ const handleSubmit = async (data: any) => {
       </TabPanels>
     </Tabs>
 
-    <Dialog v-model:visible="showCreateDialog" :header="editingMeetup ? 'Edit Meetup' : 'Organize a Meetup'" :modal="true" :style="{ width: '500px' }" class="p-fluid">
+    <Dialog
+      v-model:visible="showCreateDialog"
+      :header="editingMeetup ? 'Edit Meetup' : 'Organize a Meetup'"
+      :modal="true"
+      :style="{ width: '500px' }"
+      class="p-fluid"
+    >
       <MeetupForm
         :meetup="editingMeetup || undefined"
         :loading="submitting"

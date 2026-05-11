@@ -5,6 +5,8 @@ namespace App\EventListener;
 use App\Entity\Booking;
 use App\Entity\Course;
 use App\Entity\CourseSeries;
+use App\Entity\Meetup;
+use App\Entity\MeetupRsvp;
 use App\Entity\Notification;
 use App\Service\MercurePublisherService;
 use Doctrine\Bundle\DoctrineBundle\Attribute\AsDoctrineListener;
@@ -21,6 +23,8 @@ class MercureEntityListener
         Course::class,
         CourseSeries::class,
         Notification::class,
+        Meetup::class,
+        MeetupRsvp::class,
     ];
 
     public function __construct(
@@ -49,6 +53,11 @@ class MercureEntityListener
 
         if ($this->isSupported($entity)) {
             $this->mercurePublisher->publishEntityUpdate($entity, $action);
+
+            // If an RSVP changes, also notify the meetup topic so counts can be updated
+            if ($entity instanceof MeetupRsvp && $entity->getMeetup()) {
+                $this->mercurePublisher->publishEntityUpdate($entity->getMeetup(), 'updated');
+            }
         }
     }
 

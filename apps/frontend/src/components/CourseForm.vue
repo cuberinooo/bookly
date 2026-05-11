@@ -159,8 +159,8 @@ function handleSubmit() {
     <div class="form-group">
       <label for="workoutType">Workout Type</label>
       <Select
-        input-id="workoutType"
         v-model="form.title"
+        input-id="workoutType"
         :options="workoutTypes"
         fluid
         class="athletic-input"
@@ -186,8 +186,8 @@ function handleSubmit() {
         <div class="form-group flex-2">
           <label for="startDate">Date</label>
           <DatePicker
-            input-id="startDate"
             v-model="selectedDate"
+            input-id="startDate"
             date-format="dd.mm.yy"
             fluid
             class="athletic-input"
@@ -197,8 +197,8 @@ function handleSubmit() {
         <div class="form-group flex-1">
           <label for="startTime">Time</label>
           <Select
-            input-id="startTime"
             v-model="selectedTime"
+            input-id="startTime"
             :options="timeOptions"
             fluid
             class="athletic-input"
@@ -210,8 +210,8 @@ function handleSubmit() {
         <div class="form-group flex-1">
           <label for="duration">Duration (Min)</label>
           <InputNumber
-            input-id="duration"
             v-model="form.durationMinutes"
+            input-id="duration"
             show-buttons
             :min="15"
             fluid
@@ -229,8 +229,8 @@ function handleSubmit() {
       <div class="form-group flex-1">
         <label for="recurrence">Recurrence</label>
         <Select
-          input-id="recurrence"
           v-model="form.recurrence"
+          input-id="recurrence"
           :options="recurrenceOptions"
           option-label="label"
           option-value="value"
@@ -252,8 +252,8 @@ function handleSubmit() {
       >
         <label for="trainer">Head Coach (Transfer)</label>
         <Select
-          input-id="trainer"
           v-model="form.trainerId"
+          input-id="trainer"
           :options="trainers"
           option-label="name"
           option-value="id"
@@ -279,8 +279,8 @@ function handleSubmit() {
       <div class="form-group flex-1">
         <label for="capacity">Max Capacity</label>
         <InputNumber
-          input-id="capacity"
           v-model="form.capacity"
+          input-id="capacity"
           show-buttons
           :min="1"
           fluid

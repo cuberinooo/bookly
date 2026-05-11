@@ -275,8 +275,8 @@ onMounted(async () => {
             class="font-bold text-sm uppercase tracking-wider text-slate-500"
           >New Password</label>
           <Password
-            input-id="newPassword"
             v-model="newPassword"
+            input-id="newPassword"
             toggle-mask
             placeholder="••••••••"
             class="w-full"

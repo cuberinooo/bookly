@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use App\Entity\CompanyAwareInterface;
 use Symfony\Component\Mercure\HubInterface;
 use Symfony\Component\Mercure\Update;
 use Symfony\Component\Serializer\SerializerInterface;
@@ -41,10 +42,16 @@ class MercurePublisherService
         
         $topic = sprintf('%s/%s', $this->topicPrefix, strtolower($className));
         
-        $this->publishUpdate($topic, [
+        $data = [
             'entity' => $className,
             'action' => $action,
             'id' => method_exists($entity, 'getId') ? $entity->getId() : null,
-        ]);
+        ];
+
+        if ($entity instanceof CompanyAwareInterface && $entity->getCompany()) {
+            $data['companyId'] = $entity->getCompany()->getId();
+        }
+
+        $this->publishUpdate($topic, $data);
     }
 }

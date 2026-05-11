@@ -220,8 +220,8 @@ onMounted(loadLazyData);
               class="text-[10px] md:text-xs font-bold uppercase text-slate-500"
             >From</label>
             <DatePicker
-              input-id="filterFrom"
               v-model="lazyParams.startDate"
+              input-id="filterFrom"
               placeholder="Start"
               size="small"
               date-format="dd.mm.yy"
@@ -235,8 +235,8 @@ onMounted(loadLazyData);
               class="text-[10px] md:text-xs font-bold uppercase text-slate-500"
             >To</label>
             <DatePicker
-              input-id="filterTo"
               v-model="lazyParams.endDate"
+              input-id="filterTo"
               placeholder="End"
               size="small"
               date-format="dd.mm.yy"
