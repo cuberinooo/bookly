@@ -12,12 +12,14 @@ const props = defineProps<{
 const emit = defineEmits(['course-click', 'update:baseDate']);
 
 const internalBaseDate = ref(new Date(props.baseDate || new Date()));
+const transitionName = ref('slide-left');
 const touchStartX = ref(0);
 const touchStartY = ref(0);
 const swipeThreshold = 50;
 
 watch(() => props.baseDate, (newVal) => {
     if (newVal && newVal.getTime() !== internalBaseDate.value.getTime()) {
+        transitionName.value = newVal.getTime() > internalBaseDate.value.getTime() ? 'slide-left' : 'slide-right';
         internalBaseDate.value = new Date(newVal);
     }
 });
@@ -58,15 +60,20 @@ function handleTouchEnd(e: TouchEvent) {
     if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > swipeThreshold) {
         if (deltaX > 0) {
             // Swipe Right -> Previous Week
+            transitionName.value = 'slide-right';
             navigate(-1);
         } else {
             // Swipe Left -> Next Week
+            transitionName.value = 'slide-left';
             navigate(1);
         }
     }
 }
 
 function navigate(direction: number) {
+    if (direction > 0) transitionName.value = 'slide-left';
+    else transitionName.value = 'slide-right';
+
     const newDate = new Date(internalBaseDate.value);
     newDate.setDate(newDate.getDate() + (direction * 7));
     internalBaseDate.value = newDate;
@@ -74,9 +81,10 @@ function navigate(direction: number) {
 }
 
 function resetToToday() {
-    const newDate = new Date();
-    internalBaseDate.value = newDate;
-    emit('update:baseDate', newDate);
+    const today = new Date();
+    transitionName.value = today.getTime() > internalBaseDate.value.getTime() ? 'slide-left' : 'slide-right';
+    internalBaseDate.value = today;
+    emit('update:baseDate', today);
 }
 
 function getCoursesForDay(day: Date) {
@@ -109,7 +117,7 @@ function formatDayName(date: Date) {
 
 <template>
   <div
-    class="mobile-calendar animate-fadein"
+    class="mobile-calendar"
     @touchstart="handleTouchStart"
     @touchend="handleTouchEnd"
   >
@@ -140,78 +148,88 @@ function formatDayName(date: Date) {
       </div>
     </div>
 
-    <div class="mobile-days-list">
-      <div
-        v-for="date in currentWeek"
-        :key="date.toISOString()"
-        class="day-group"
-        :class="{ 'is-today': isToday(date) }"
+    <div class="calendar-content-wrapper">
+      <Transition
+        :name="transitionName"
+        mode="out-in"
       >
-        <div class="day-header-sticky">
-          <span class="day-name">{{ formatDayName(date) }}</span>
-          <span class="day-date">{{ date.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' }) }}</span>
-        </div>
-
-        <div class="courses-stack">
+        <div
+          :key="currentWeek[0].toISOString()"
+          class="mobile-days-list"
+        >
           <div
-            v-if="getCoursesForDay(date).length === 0"
-            class="empty-day"
+            v-for="date in currentWeek"
+            :key="date.toISOString()"
+            class="day-group"
+            :class="{ 'is-today': isToday(date) }"
           >
-            No sessions scheduled
-          </div>
-          <div
-            v-for="course in getCoursesForDay(date)"
-            :key="course.id" 
-            class="mobile-course-card"
-            :class="{ 
-              'is-booked': isBookedByUser(course),
-              'is-restricted': isRestrictedForTrial(course)
-            }"
-            @click="$emit('course-click', course)"
-          >
-            <div class="card-left">
-              <div class="course-time">
-                {{ formatTime(course.startTime) }}
-              </div>
-              <div class="course-duration">
-                {{ course.durationMinutes }} MIN
-              </div>
+            <div class="day-header-sticky">
+              <span class="day-name">{{ formatDayName(date) }}</span>
+              <span class="day-date">{{ date.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' }) }}</span>
             </div>
 
-            <div class="card-main">
-              <div class="course-title">
-                {{ course.title }}
-                <span
-                  v-if="isRestrictedForTrial(course)"
-                  class="ml-2 text-[10px] text-slate-500 font-black"
-                >
-                  <i class="pi pi-lock" /> RESTRICTED
-                </span>
-              </div>
-              <div class="course-coach">
-                Coach: {{ course.user?.name }}
-              </div>
-            </div>
-
-            <div class="card-right">
+            <div class="courses-stack">
               <div
-                v-if="isBookedByUser(course)"
-                class="booked-indicator"
+                v-if="getCoursesForDay(date).length === 0"
+                class="empty-day"
               >
-                <i class="pi pi-check-circle" />
+                No sessions scheduled
               </div>
               <div
-                v-else
-                class="spots-pill"
-                :class="{ 'is-full': course.bookings.filter(b => !b.isWaitlist).length >= course.capacity }"
+                v-for="course in getCoursesForDay(date)"
+                :key="course.id" 
+                class="mobile-course-card"
+                :class="{ 
+                  'is-booked': isBookedByUser(course),
+                  'is-restricted': isRestrictedForTrial(course)
+                }"
+                @click="$emit('course-click', course)"
               >
-                {{ course.capacity - course.bookings.filter(b => !b.isWaitlist).length }} 
-                <i class="pi pi-users" />
+                <div class="card-left">
+                  <div class="course-time">
+                    {{ formatTime(course.startTime) }}
+                  </div>
+                  <div class="course-duration">
+                    {{ course.durationMinutes }} MIN
+                  </div>
+                </div>
+
+                <div class="card-main">
+                  <div class="course-title">
+                    {{ course.title }}
+                    <span
+                      v-if="isRestrictedForTrial(course)"
+                      class="ml-2 text-[10px] text-slate-500 font-black"
+                    >
+                      <i class="pi pi-lock" /> RESTRICTED
+                    </span>
+                  </div>
+                  <div class="course-coach">
+                    Coach: {{ course.user?.name }}
+                  </div>
+                </div>
+
+                <div class="card-right">
+                  <div
+                    v-if="isBookedByUser(course)"
+                    class="booked-indicator"
+                  >
+                    <i class="pi pi-check-circle" />
+                  </div>
+                  <div
+                    v-else
+                    class="spots-pill"
+                    :class="{ 'is-full': course.bookings.filter(b => !b.isWaitlist).length >= course.capacity }"
+                  >
+                    {{ course.capacity - course.bookings.filter(b => !b.isWaitlist).length }} 
+                    <i class="pi pi-users" />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      </Transition>
     </div>
   </div>
 </template>
@@ -222,6 +240,38 @@ function formatDayName(date: Date) {
     flex-direction: column;
     background: #f8fafc;
     touch-action: pan-y; /* Allow vertical scrolling but let us handle horizontal swipes */
+    overflow-x: hidden;
+}
+
+.calendar-content-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+/* Slide Transitions */
+.slide-left-enter-active,
+.slide-left-leave-active,
+.slide-right-enter-active,
+.slide-right-leave-active {
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.slide-left-enter-from {
+  opacity: 0;
+  transform: translateX(30px);
+}
+.slide-left-leave-to {
+  opacity: 0;
+  transform: translateX(-30px);
+}
+
+.slide-right-enter-from {
+  opacity: 0;
+  transform: translateX(-30px);
+}
+.slide-right-leave-to {
+  opacity: 0;
+  transform: translateX(30px);
 }
 
 .mobile-nav {

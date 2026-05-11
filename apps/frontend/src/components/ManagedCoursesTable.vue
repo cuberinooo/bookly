@@ -17,6 +17,7 @@ const toast = useToast();
 const courses = ref<any[]>([]);
 const totalRecords = ref(0);
 const loading = ref(false);
+const transitionName = ref('slide-left');
 const participantsDialog = ref(false);
 const selectedCourse = ref<any>(null);
 
@@ -68,6 +69,9 @@ async function loadLazyData() {
 }
 
 function onPage(event: any) {
+    const direction = event.page + 1 > lazyParams.value.page ? 1 : -1;
+    transitionName.value = direction > 0 ? 'slide-left' : 'slide-right';
+
     lazyParams.value.first = event.first;
     lazyParams.value.rows = event.rows;
     lazyParams.value.page = event.page + 1;
@@ -93,6 +97,7 @@ function handleTouchEnd(e: TouchEvent) {
             // Swipe Left -> Next Page
             const nextFirst = lazyParams.value.first + lazyParams.value.rows;
             if (nextFirst < totalRecords.value) {
+                transitionName.value = 'slide-left';
                 onPage({
                     first: nextFirst,
                     rows: lazyParams.value.rows,
@@ -103,6 +108,7 @@ function handleTouchEnd(e: TouchEvent) {
             // Swipe Right -> Prev Page
             const prevFirst = lazyParams.value.first - lazyParams.value.rows;
             if (prevFirst >= 0) {
+                transitionName.value = 'slide-right';
                 onPage({
                     first: prevFirst,
                     rows: lazyParams.value.rows,
@@ -243,127 +249,135 @@ onMounted(loadLazyData);
 
     <!-- Desktop Table View (Hidden on mobile) -->
     <div class="hidden md:block">
-      <DataTable
-        v-model:first="lazyParams.first"
-        :value="loading ? Array(10).fill({}) : courses"
-        lazy
-        paginator
-        :rows="lazyParams.rows"
-        :total-records="totalRecords"
-        class="managed-table"
-        @page="onPage"
-      >
-        <Column
-          field="title"
-          header="Course"
+      <div class="calendar-content-wrapper">
+        <Transition
+          :name="transitionName"
+          mode="out-in"
         >
-          <template #body="slotProps">
-            <Skeleton
-              v-if="loading"
-              width="60%"
-            />
-            <span
-              v-else
-              class="course-title-cell"
-            >{{ slotProps.data.title }}</span>
-          </template>
-        </Column>
-        <Column header="Schedule">
-          <template #body="slotProps">
-            <div
-              v-if="loading"
-              class="flex flex-col gap-1"
+          <DataTable
+            :key="lazyParams.page"
+            v-model:first="lazyParams.first"
+            :value="loading ? Array(10).fill({}) : courses"
+            lazy
+            paginator
+            :rows="lazyParams.rows"
+            :total-records="totalRecords"
+            class="managed-table"
+            @page="onPage"
+          >
+            <Column
+              field="title"
+              header="Course"
             >
-              <Skeleton width="40%" />
-              <Skeleton width="30%" />
-            </div>
-            <div
-              v-else
-              class="flex flex-col"
+              <template #body="slotProps">
+                <Skeleton
+                  v-if="loading"
+                  width="60%"
+                />
+                <span
+                  v-else
+                  class="course-title-cell"
+                >{{ slotProps.data.title }}</span>
+              </template>
+            </Column>
+            <Column header="Schedule">
+              <template #body="slotProps">
+                <div
+                  v-if="loading"
+                  class="flex flex-col gap-1"
+                >
+                  <Skeleton width="40%" />
+                  <Skeleton width="30%" />
+                </div>
+                <div
+                  v-else
+                  class="flex flex-col"
+                >
+                  <span class="font-bold text-sm">{{ formatDate(slotProps.data.startTime) }}</span>
+                  <span class="text-xs">{{ formatTime(slotProps.data.startTime) }}</span>
+                </div>
+              </template>
+            </Column>
+            <Column header="Duration">
+              <template #body="slotProps">
+                <Skeleton
+                  v-if="loading"
+                  width="3rem"
+                />
+                <span v-else>
+                  {{ formatDuration(slotProps.data.durationMinutes) }}
+                </span>
+              </template>
+            </Column>
+            <Column header="Slots">
+              <template #body="slotProps">
+                <Skeleton
+                  v-if="loading"
+                  width="4rem"
+                  height="2.5rem"
+                />
+                <div
+                  v-else
+                  class="flex items-center gap-2"
+                >
+                  <span :class="['slot-badge', { 'is-full': slotProps.data.bookings.length >= slotProps.data.capacity }]">
+                    {{ slotProps.data.bookings.length }} / {{ slotProps.data.capacity }}
+                  </span>
+                </div>
+              </template>
+            </Column>
+            <Column
+              header="Actions"
+              class="text-right"
             >
-              <span class="font-bold text-sm">{{ formatDate(slotProps.data.startTime) }}</span>
-              <span class="text-xs">{{ formatTime(slotProps.data.startTime) }}</span>
-            </div>
-          </template>
-        </Column>
-        <Column header="Duration">
-          <template #body="slotProps">
-            <Skeleton
-              v-if="loading"
-              width="3rem"
-            />
-            <span v-else>
-              {{ formatDuration(slotProps.data.durationMinutes) }}
-            </span>
-          </template>
-        </Column>
-        <Column header="Slots">
-          <template #body="slotProps">
-            <Skeleton
-              v-if="loading"
-              width="4rem"
-              height="2.5rem"
-            />
-            <div
-              v-else
-              class="flex items-center gap-2"
-            >
-              <span :class="['slot-badge', { 'is-full': slotProps.data.bookings.length >= slotProps.data.capacity }]">
-                {{ slotProps.data.bookings.length }} / {{ slotProps.data.capacity }}
-              </span>
-            </div>
-          </template>
-        </Column>
-        <Column
-          header="Actions"
-          class="text-right"
-        >
-          <template #body="slotProps">
-            <div
-              v-if="loading"
-              class="flex justify-end gap-2"
-            >
-              <Skeleton
-                shape="circle"
-                size="2rem"
-              />
-              <Skeleton
-                shape="circle"
-                size="2rem"
-              />
-              <Skeleton
-                shape="circle"
-                size="2rem"
-              />
-            </div>
-            <div
-              v-else
-              class="flex justify-end gap-2"
-            >
-              <Button
-                v-tooltip="'Participants'"
-                icon="pi pi-users"
-                variant="text"
-                class="action-btn"
-                @click="selectedCourse = slotProps.data; participantsDialog = true"
-              />
-              <Button
-                icon="pi pi-pencil"
-                variant="text"
-                class="action-btn"
-                @click="$emit('edit', slotProps.data)"
-              />
-              <Button
-                icon="pi pi-trash"
-                variant="text"
-                severity="danger"
-                class="action-btn delete-btn"
-                @click="confirmDeleteCourse(slotProps.data)"
-              />
-            </div>
-          </template>
-        </Column>
-      </DataTable>
+              <template #body="slotProps">
+                <div
+                  v-if="loading"
+                  class="flex justify-end gap-2"
+                >
+                  <Skeleton
+                    shape="circle"
+                    size="2rem"
+                  />
+                  <Skeleton
+                    shape="circle"
+                    size="2rem"
+                  />
+                  <Skeleton
+                    shape="circle"
+                    size="2rem"
+                  />
+                </div>
+                <div
+                  v-else
+                  class="flex justify-end gap-2"
+                >
+                  <Button
+                    v-tooltip="'Participants'"
+                    icon="pi pi-users"
+                    variant="text"
+                    class="action-btn"
+                    @click="selectedCourse = slotProps.data; participantsDialog = true"
+                  />
+                  <Button
+                    icon="pi pi-pencil"
+                    variant="text"
+                    class="action-btn"
+                    @click="$emit('edit', slotProps.data)"
+                  />
+                  <Button
+                    icon="pi pi-trash"
+                    variant="text"
+                    severity="danger"
+                    class="action-btn delete-btn"
+                    @click="confirmDeleteCourse(slotProps.data)"
+                  />
+                </div>
+              </template>
+            </Column>
+          </DataTable>
+        </Transition>
+      </div>
     </div>
 
     <!-- Mobile Card View (Hidden on desktop) -->
@@ -372,120 +386,132 @@ onMounted(loadLazyData);
       @touchstart="handleTouchStart"
       @touchend="handleTouchEnd"
     >
-      <template v-if="loading">
-        <div
-          v-for="i in 3"
-          :key="i"
-          class="mobile-course-card p-4 bg-slate-50 rounded-xl border border-slate-200"
+      <div class="calendar-content-wrapper min-h-[400px]">
+        <Transition
+          :name="transitionName"
+          mode="out-in"
         >
-          <div class="flex justify-between items-start mb-3">
-            <div class="flex flex-col gap-2">
-              <Skeleton
-                width="140px"
-                height="1.5rem"
-              />
-              <Skeleton
-                width="100px"
-                height="1rem"
-              />
-            </div>
-            <Skeleton
-              width="50px"
-              height="1.5rem"
-            />
-          </div>
-          <div class="flex items-center justify-between mt-4 pt-3 border-t border-slate-200">
-            <Skeleton
-              width="80px"
-              height="1rem"
-            />
-            <div class="flex gap-2">
-              <Skeleton
-                shape="circle"
-                size="2.5rem"
-              />
-              <Skeleton
-                shape="circle"
-                size="2.5rem"
-              />
-              <Skeleton
-                shape="circle"
-                size="2.5rem"
-              />
-            </div>
-          </div>
-        </div>
-      </template>
-      <template v-else>
-        <div
-          v-for="course in courses"
-          :key="course.id"
-          class="mobile-course-card p-4 bg-slate-50 rounded-xl border border-slate-200"
-        >
-          <div class="flex justify-between items-start mb-3">
-            <div class="flex flex-col">
-              <span
-                class="text-lg font-black uppercase tracking-tight leading-tight mb-1"
-                style="font-family: 'Barlow Condensed', sans-serif;"
+          <div
+            :key="lazyParams.page"
+            class="flex flex-col gap-4"
+          >
+            <template v-if="loading">
+              <div
+                v-for="i in 3"
+                :key="i"
+                class="mobile-course-card p-4 bg-slate-50 rounded-xl border border-slate-200"
               >
-                {{ course.title }}
-              </span>
-              <div class="flex items-center gap-2 text-xs font-bold text-slate-500">
-                <i class="pi pi-calendar text-[10px]" />
-                {{ formatDate(course.startTime) }} @ {{ formatTime(course.startTime) }}
+                <div class="flex justify-between items-start mb-3">
+                  <div class="flex flex-col gap-2">
+                    <Skeleton
+                      width="140px"
+                      height="1.5rem"
+                    />
+                    <Skeleton
+                      width="100px"
+                      height="1rem"
+                    />
+                  </div>
+                  <Skeleton
+                    width="50px"
+                    height="1.5rem"
+                  />
+                </div>
+                <div class="flex items-center justify-between mt-4 pt-3 border-t border-slate-200">
+                  <Skeleton
+                    width="80px"
+                    height="1rem"
+                  />
+                  <div class="flex gap-2">
+                    <Skeleton
+                      shape="circle"
+                      size="2.5rem"
+                    />
+                    <Skeleton
+                      shape="circle"
+                      size="2.5rem"
+                    />
+                    <Skeleton
+                      shape="circle"
+                      size="2.5rem"
+                    />
+                  </div>
+                </div>
               </div>
-            </div>
-            <span :class="['slot-badge !py-1 !px-2 !text-[10px]', { 'is-full': course.bookings.length >= course.capacity }]">
-              {{ course.bookings.length }} / {{ course.capacity }}
-            </span>
-          </div>
+            </template>
+            <template v-else>
+              <div
+                v-for="course in courses"
+                :key="course.id"
+                class="mobile-course-card p-4 bg-slate-50 rounded-xl border border-slate-200"
+              >
+                <div class="flex justify-between items-start mb-3">
+                  <div class="flex flex-col">
+                    <span
+                      class="text-lg font-black uppercase tracking-tight leading-tight mb-1"
+                      style="font-family: 'Barlow Condensed', sans-serif;"
+                    >
+                      {{ course.title }}
+                    </span>
+                    <div class="flex items-center gap-2 text-xs font-bold text-slate-500">
+                      <i class="pi pi-calendar text-[10px]" />
+                      {{ formatDate(course.startTime) }} @ {{ formatTime(course.startTime) }}
+                    </div>
+                  </div>
+                  <span :class="['slot-badge !py-1 !px-2 !text-[10px]', { 'is-full': course.bookings.length >= course.capacity }]">
+                    {{ course.bookings.length }} / {{ course.capacity }}
+                  </span>
+                </div>
 
-          <div class="flex items-center justify-between mt-4 pt-3 border-t border-slate-200">
-            <div
-              class="text-[10px] font-black uppercase text-slate-400"
-              style="font-family: 'Barlow Condensed', sans-serif;"
-            >
-              Duration: {{ formatDuration(course.durationMinutes) }}
-            </div>
-            <div class="flex gap-2">
-              <Button
-                icon="pi pi-users"
-                severity="secondary"
-                rounded
-                outlined
-                class="!h-10 !w-10 !p-0"
-                @click="selectedCourse = course; participantsDialog = true"
-              />
-              <Button
-                icon="pi pi-pencil"
-                severity="secondary"
-                rounded
-                outlined
-                class="!h-10 !w-10 !p-0"
-                @click="$emit('edit', course)"
-              />
-              <Button
-                icon="pi pi-trash"
-                rounded
-                outlined
-                severity="danger"
-                class="!h-10 !w-10 !p-0"
-                @click="confirmDeleteCourse(course)"
-              />
-            </div>
-          </div>
-        </div>
+                <div class="flex items-center justify-between mt-4 pt-3 border-t border-slate-200">
+                  <div
+                    class="text-[10px] font-black uppercase text-slate-400"
+                    style="font-family: 'Barlow Condensed', sans-serif;"
+                  >
+                    Duration: {{ formatDuration(course.durationMinutes) }}
+                  </div>
+                  <div class="flex gap-2">
+                    <Button
+                      icon="pi pi-users"
+                      severity="secondary"
+                      rounded
+                      outlined
+                      class="!h-10 !w-10 !p-0"
+                      @click="selectedCourse = course; participantsDialog = true"
+                    />
+                    <Button
+                      icon="pi pi-pencil"
+                      severity="secondary"
+                      rounded
+                      outlined
+                      class="!h-10 !w-10 !p-0"
+                      @click="$emit('edit', course)"
+                    />
+                    <Button
+                      icon="pi pi-trash"
+                      rounded
+                      outlined
+                      severity="danger"
+                      class="!h-10 !w-10 !p-0"
+                      @click="confirmDeleteCourse(course)"
+                    />
+                  </div>
+                </div>
+              </div>
 
-        <div
-          v-if="courses.length === 0"
-          class="text-center py-8 text-slate-400"
-        >
-          <i class="pi pi-calendar-slash text-4xl mb-2" />
-          <p class="font-bold uppercase text-sm">
-            No courses found
-          </p>
-        </div>
-      </template>
+              <div
+                v-if="courses.length === 0"
+                class="text-center py-8 text-slate-400"
+              >
+                <i class="pi pi-calendar-slash text-4xl mb-2" />
+                <p class="font-bold uppercase text-sm">
+                  No courses found
+                </p>
+              </div>
+            </template>
+          </div>
+        </Transition>
+      </div>
 
       <Paginator
         v-model:first="lazyParams.first"
@@ -508,6 +534,38 @@ onMounted(loadLazyData);
 <style lang="scss" scoped>
 .managed-courses-section {
     @apply bg-white p-4 md:p-10 rounded-xl md:rounded-2xl border border-slate-200 shadow-sm;
+    overflow-x: hidden;
+}
+
+.calendar-content-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+/* Slide Transitions */
+.slide-left-enter-active,
+.slide-left-leave-active,
+.slide-right-enter-active,
+.slide-right-leave-active {
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.slide-left-enter-from {
+  opacity: 0;
+  transform: translateX(30px);
+}
+.slide-left-leave-to {
+  opacity: 0;
+  transform: translateX(-30px);
+}
+
+.slide-right-enter-from {
+  opacity: 0;
+  transform: translateX(-30px);
+}
+.slide-right-leave-to {
+  opacity: 0;
+  transform: translateX(30px);
 }
 
 .section-header {
