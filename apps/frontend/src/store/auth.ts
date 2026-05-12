@@ -30,6 +30,7 @@ export const authStore = reactive({
     } finally {
       this.token = null;
       this.user = null;
+      localStorage.removeItem('refresh_token');
     }
   },
 
@@ -38,7 +39,17 @@ export const authStore = reactive({
     try {
       // We import api dynamically to avoid circular dependencies if any
       const { default: api } = await import('../services/api');
-      const response = await api.post('/token/refresh');
+      const localRefreshToken = localStorage.getItem('refresh_token');
+
+      const response = await api.post('/token/refresh', {
+        refresh_token: localRefreshToken // Send explicitly in the body if cookies are blocked
+      });
+
+      // If your backend rotates the refresh token and sends it in the response body:
+      if (response.data.refresh_token) {
+        localStorage.setItem('refresh_token', response.data.refresh_token);
+      }
+
       this.setToken(response.data.token);
     } catch {
       if(this.isLoggedIn()) {
