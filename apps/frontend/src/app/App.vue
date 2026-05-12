@@ -390,8 +390,17 @@ html, body, #app {
 }
 
 .main-header {
-  // background-color: #0F172A; // Now handled by global .main-header in styles.scss
+  position: sticky;
+  top: 0;
+  z-index: 1001;
+  background-color: rgba(15, 23, 42, 0.9) !important; // Semi-transparent slate
+  backdrop-filter: blur(8px);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.container {
+  /* No extra top padding needed if using sticky on the header itself, 
+     but we ensure the header doesn't overlap content in a jarring way */
 }
 
 .nav-container {
