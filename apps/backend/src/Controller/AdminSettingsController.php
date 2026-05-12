@@ -117,6 +117,47 @@ class AdminSettingsController extends AbstractController
         return new JsonResponse(['status' => 'Attachment deleted']);
     }
 
+    #[Route('/join-us-attachment', name: 'admin_settings_upload_join_us_attachment', methods: ['POST'])]
+    public function uploadJoinUsMailAttachment(Request $request): JsonResponse
+    {
+        $this->denyAccessUnlessGranted('ROLE_ADMIN');
+        $user = $this->getUser();
+        if (!$user instanceof \App\Entity\User || !$user->getCompany()) {
+             return new JsonResponse(['error' => 'Company not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        $file = $request->files->get('file');
+        if (!$file) {
+            return new JsonResponse(['error' => 'No file uploaded'], Response::HTTP_BAD_REQUEST);
+        }
+
+        try {
+            $attachment = $this->adminSettingsService->uploadJoinUsMailAttachment($user->getCompany(), $file);
+            return new JsonResponse($attachment);
+        } catch (\RuntimeException $e) {
+            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    #[Route('/join-us-attachment', name: 'admin_settings_delete_join_us_attachment', methods: ['DELETE'])]
+    public function deleteJoinUsMailAttachment(Request $request): JsonResponse
+    {
+        $this->denyAccessUnlessGranted('ROLE_ADMIN');
+        $user = $this->getUser();
+        if (!$user instanceof \App\Entity\User || !$user->getCompany()) {
+             return new JsonResponse(['error' => 'Company not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        $path = $request->query->get('path');
+        if (!$path) {
+            return new JsonResponse(['error' => 'No path provided'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $this->adminSettingsService->deleteJoinUsMailAttachment($user->getCompany(), $path);
+
+        return new JsonResponse(['status' => 'Attachment deleted']);
+    }
+
     #[Route('/privacy-policy/download', name: 'admin_settings_download_privacy_policy', methods: ['GET'])]
     public function downloadPrivacyPolicy(Request $request): Response
     {
@@ -180,7 +221,9 @@ class AdminSettingsController extends AbstractController
         }
 
         $settings = $user->getCompany()->getAdminSettings();
-        $attachments = $settings->getWelcomeMailAttachments() ?? [];
+        $welcomeAttachments = $settings->getWelcomeMailAttachments() ?? [];
+        $joinUsAttachments = $settings->getJoinUsMailAttachments() ?? [];
+        $attachments = array_merge($welcomeAttachments, $joinUsAttachments);
         
         $found = false;
         $fileName = 'attachment';

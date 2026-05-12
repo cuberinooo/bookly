@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\Entity\User;
+use App\Repository\AdminSettingsRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\Mailer\MailerInterface;
@@ -17,9 +18,9 @@ class RegistrationService
         private UserPasswordHasherInterface $passwordHasher,
         private MailerInterface $mailer,
         private PasswordValidator $passwordValidator,
-        private \App\Repository\AdminSettingsRepository $adminSettingsRepository,
+        private AdminSettingsRepository $adminSettingsRepository,
         private Security $security,
-        private WelcomeEmailService $welcomeEmailService
+        private EmailService $emailService
     ) {
     }
 
@@ -98,10 +99,14 @@ class RegistrationService
         $this->entityManager->persist($user);
         $this->entityManager->flush();
 
-        $this->welcomeEmailService->sendVerificationEmail($user, $isAdminCreation, $password);
+        $this->emailService->sendVerificationEmail($user, $isAdminCreation, $password);
 
-        if (!$isAdminCreation && !$isNewCompany) {
-            $this->sendAdminNotificationEmail($user);
+        if(!$isNewCompany) {
+            $this->emailService->sendCompanySpecificWelcomeEmail($user);
+
+            if (!$isAdminCreation) {
+                $this->sendAdminNotificationEmail($user);
+            }
         }
 
         return $user;
@@ -162,7 +167,7 @@ class RegistrationService
         $this->generateVerificationToken($user);
         $this->entityManager->flush();
 
-        $this->welcomeEmailService->sendVerificationEmail($user);
+        $this->emailService->sendVerificationEmail($user);
     }
 
     private function generateVerificationToken(User $user): void

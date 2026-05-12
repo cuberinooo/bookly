@@ -142,14 +142,14 @@ async function resetPassword() {
     });
 }
 
-async function sendWelcomeMail(user: any) {
+async function sendJoinUsMail(user: any) {
     sendingWelcome.value = true;
     try {
-        await api.post(`/admin/users/${user.id}/send-welcome`);
-        user.welcomeMailSent = true;
-        toast.add({ severity: 'success', summary: 'Success', detail: 'Welcome mail sent successfully', life: 5000 });
+        await api.post(`/admin/users/${user.id}/send-join-us`);
+        user.joinUsMailSent = true;
+        toast.add({ severity: 'success', summary: 'Success', detail: 'Join us mail sent successfully', life: 5000 });
     } catch (e: any) {
-        toast.add({ severity: 'error', summary: 'Error', detail: e.response?.data?.error || 'Failed to send welcome mail', life: 5000 });
+        toast.add({ severity: 'error', summary: 'Error', detail: e.response?.data?.error || 'Failed to send join us mail', life: 5000 });
     } finally {
         sendingWelcome.value = false;
     }
@@ -255,13 +255,13 @@ onMounted(fetchUsers);
             />
           </template>
         </Column>
-        <Column header="WELCOME">
+        <Column header="MAIL">
           <template #body="{ data }">
-            <div v-if="data.roles.includes('ROLE_TRIAL')">
+            <div v-if="(data.roles.includes('ROLE_TRIAL'))">
               <i
-                v-tooltip.top="data.welcomeMailSent ? 'Welcome Mail Sent' : 'Not Sent'"
+                v-tooltip.top="data.joinUsMailSent ? 'Join us Mail Sent' : 'Not Sent'"
                 class="pi"
-                :class="data.welcomeMailSent ? 'pi-send text-accent' : 'pi-minus text-slate-300'"
+                :class="data.joinUsMailSent ? 'pi-send text-accent' : 'pi-minus text-slate-300'"
               />
             </div>
           </template>
@@ -273,13 +273,13 @@ onMounted(fetchUsers);
           <template #body="{ data }">
             <div class="flex gap-2">
               <Button
-                v-if="data.roles.includes('ROLE_TRIAL') && !data.welcomeMailSent"
+                v-if="(data.roles.includes('ROLE_TRIAL') || data.roles.includes('ROLE_MEMBER')) && !data.joinUsMailSent"
                 v-tooltip.top="'Send Welcome Mail'"
                 icon="pi pi-envelope"
                 variant="text"
                 rounded
                 :loading="sendingWelcome"
-                @click="sendWelcomeMail(data)"
+                @click="sendJoinUsMail(data)"
               />
               <Button
                 icon="pi pi-pencil"
@@ -332,7 +332,7 @@ onMounted(fetchUsers);
                   class="text-[10px] uppercase font-black"
                 />
                 <Tag
-                  v-if="user.roles.includes('ROLE_TRIAL') && user.welcomeMailSent"
+                  v-if="user.roles.includes('ROLE_TRIAL') && user.joinUsMailSent"
                   value="Welcome Sent"
                   severity="success"
                   class="text-[10px] uppercase font-black"
@@ -359,13 +359,13 @@ onMounted(fetchUsers);
             </div>
             <div class="flex gap-1">
               <Button
-                v-if="user.roles.includes('ROLE_TRIAL') && !user.welcomeMailSent"
+                v-if="user.roles.includes('ROLE_TRIAL') && !user.joinUsMailSent"
                 icon="pi pi-envelope"
                 severity="secondary"
                 variant="text"
                 rounded
                 :loading="sendingWelcome"
-                @click="sendWelcomeMail(user)"
+                @click="sendJoinUsMail(user)"
               />
               <Button
                 icon="pi pi-pencil"

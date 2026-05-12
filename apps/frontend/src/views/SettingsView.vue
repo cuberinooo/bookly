@@ -5,14 +5,14 @@ import TrainerSettingsForm from '../components/TrainerSettingsForm.vue';
 import UserManagementTab from '../components/UserManagementTab.vue';
 import LegalSettingsForm from '../components/LegalSettingsForm.vue';
 import CompanySettingsForm from '../components/CompanySettingsForm.vue';
-import WelcomeMailSettingsTab from '../components/WelcomeMailSettingsTab.vue';
+import MailSettingsTab from '../components/MailSettingsTab.vue';
 
 const activeTabs = computed(() => {
     const tabs = [];
     if (authStore.isAdmin()) {
         tabs.push({ id: 'users', label: 'ATHLETES', component: UserManagementTab });
         tabs.push({ id: 'company', label: 'IDENTITY', component: CompanySettingsForm });
-        tabs.push({ id: 'welcome', label: 'WELCOME MAIL', component: WelcomeMailSettingsTab });
+        tabs.push({ id: 'mail', label: 'EMAIL TEMPLATES', component: MailSettingsTab });
         tabs.push({ id: 'legal', label: 'LEGAL & COMPLIANCE', component: LegalSettingsForm });
     }
     if (authStore.isTrainer()) {

@@ -75,6 +75,14 @@ class AdminSettings
     #[Groups(['admin:read', 'admin:write'])]
     private ?array $welcomeMailAttachments = null;
 
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[Groups(['admin:read', 'admin:write'])]
+    private ?string $joinUsMailMarkdown = null;
+
+    #[ORM\Column(type: Types::JSON, nullable: true)]
+    #[Groups(['admin:read', 'admin:write'])]
+    private ?array $joinUsMailAttachments = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -242,6 +250,28 @@ class AdminSettings
     public function setWelcomeMailAttachments(?array $welcomeMailAttachments): static
     {
         $this->welcomeMailAttachments = $welcomeMailAttachments;
+        return $this;
+    }
+
+    public function getJoinUsMailMarkdown(): ?string
+    {
+        return $this->joinUsMailMarkdown;
+    }
+
+    public function setJoinUsMailMarkdown(?string $joinUsMailMarkdown): static
+    {
+        $this->joinUsMailMarkdown = $joinUsMailMarkdown;
+        return $this;
+    }
+
+    public function getJoinUsMailAttachments(): ?array
+    {
+        return $this->joinUsMailAttachments;
+    }
+
+    public function setJoinUsMailAttachments(?array $joinUsMailAttachments): static
+    {
+        $this->joinUsMailAttachments = $joinUsMailAttachments;
         return $this;
     }
 }

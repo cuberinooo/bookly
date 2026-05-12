@@ -9,7 +9,7 @@ use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Address;
 
-class WelcomeEmailService
+class EmailService
 {
     public function __construct(
         private MailerInterface $mailer,
@@ -40,7 +40,7 @@ class WelcomeEmailService
         $this->mailer->send($email);
     }
 
-    public function sendWelcomeEmail(User $user): void
+    public function sendTrialJoinUsEmail(User $user): void
     {
         $company = $user->getCompany();
         $settings = $company ? $company->getAdminSettings() : null;
@@ -49,13 +49,41 @@ class WelcomeEmailService
             ->from(new Address($_ENV['NO_REPLY_MAIL'] ?? 'noreply@example.com', $company->getName()))
             ->to($user->getEmail());
 
-        // Company-Specific Welcome Mail
-        $this->sendCompanySpecificWelcomeEmail($email, $user, $settings);
+        $markdown = $settings->getJoinUsMailMarkdown() ?? '';
+        $siteName = $user->getCompany()->getName();
+        $placeholders = [
+            '{user_name}' => $user->getName(),
+            '{company_name}' => $siteName,
+        ];
+
+        $content = str_replace(array_keys($placeholders), array_values($placeholders), $markdown);
+
+        $email->subject(sprintf('Join us at %s!', $siteName))
+            ->htmlTemplate('emails/company_welcome.html.twig')
+            ->context([
+                'content' => $content,
+                'name' => $user->getName(),
+                'siteName' => $siteName,
+                'loginUrl' => $this->getLoginUrl(),
+            ]);
+
+        // Attach files
+        $attachments = $settings->getJoinUsMailAttachments() ?? [];
+        $this->attachFiles($email, $attachments);
+
+        $this->mailer->send($email);
     }
 
-    private function sendCompanySpecificWelcomeEmail(TemplatedEmail $email, User $user, AdminSettings $settings): void
+    public function sendCompanySpecificWelcomeEmail(User $user): void
     {
-        $markdown = $settings->getWelcomeMailMarkdown();
+        $company = $user->getCompany();
+        $settings = $company ? $company->getAdminSettings() : null;
+
+        $email = (new TemplatedEmail())
+            ->from(new Address($_ENV['NO_REPLY_MAIL'] ?? 'noreply@example.com', $company->getName()))
+            ->to($user->getEmail());
+
+        $markdown = $settings->getWelcomeMailMarkdown() ?? '';
         $siteName = $user->getCompany()->getName();
         $placeholders = [
             '{user_name}' => $user->getName(),
@@ -75,6 +103,13 @@ class WelcomeEmailService
 
         // Attach files
         $attachments = $settings->getWelcomeMailAttachments() ?? [];
+        $this->attachFiles($email, $attachments);
+
+        $this->mailer->send($email);
+    }
+
+    private function attachFiles(TemplatedEmail $email, array $attachments): void
+    {
         foreach ($attachments as $att) {
             try {
                 $result = $this->s3Client->getObject([
@@ -86,8 +121,6 @@ class WelcomeEmailService
                 // Log error but continue sending email without this attachment
             }
         }
-
-        $this->mailer->send($email);
     }
 
     private function getVerificationUrl(User $user): string

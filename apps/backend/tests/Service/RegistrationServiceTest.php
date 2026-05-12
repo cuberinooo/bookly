@@ -9,7 +9,7 @@ use App\Repository\CompanyRepository;
 use App\Repository\AdminSettingsRepository;
 use App\Service\RegistrationService;
 use App\Service\PasswordValidator;
-use App\Service\WelcomeEmailService;
+use App\Service\EmailService;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Mailer\MailerInterface;
@@ -39,7 +39,7 @@ class RegistrationServiceTest extends TestCase
         $this->passwordValidator = new PasswordValidator();
         $this->adminSettingsRepository = $this->createMock(AdminSettingsRepository::class);
         $this->security = $this->createMock(Security::class);
-        $this->welcomeEmailService = $this->createMock(WelcomeEmailService::class);
+        $this->welcomeEmailService = $this->createMock(EmailService::class);
 
         $this->entityManager->method('getRepository')->willReturnMap([
             [User::class, $this->userRepository],
@@ -47,9 +47,9 @@ class RegistrationServiceTest extends TestCase
         ]);
 
         $this->service = new RegistrationService(
-            $this->entityManager, 
-            $this->passwordHasher, 
-            $this->mailer, 
+            $this->entityManager,
+            $this->passwordHasher,
+            $this->mailer,
             $this->passwordValidator,
             $this->adminSettingsRepository,
             $this->security,
@@ -146,7 +146,7 @@ class RegistrationServiceTest extends TestCase
 
         $existingCompany = new Company();
         $existingCompany->setName('Existing Company');
-        
+
         $admin = new User();
         $admin->setEmail('admin@example.com');
 
@@ -154,7 +154,7 @@ class RegistrationServiceTest extends TestCase
         $this->userRepository->method('findOneBy')->willReturn(null);
         $this->userRepository->method('findByRole')->willReturn([$admin]);
         $this->passwordHasher->method('hashPassword')->willReturn('hashed_password');
-        
+
         $user = $this->service->register($data);
 
         // Should be ROLE_TRIAL, not ROLE_ADMIN

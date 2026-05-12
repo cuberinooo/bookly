@@ -40,7 +40,8 @@ class AdminSettingsService
             'legalNoticeVatId',
             'legalNoticeMarkdown',
             'termsAndConditionsMarkdown',
-            'welcomeMailMarkdown'
+            'welcomeMailMarkdown',
+            'joinUsMailMarkdown'
         ];
 
         foreach ($fields as $field) {
@@ -79,6 +80,16 @@ class AdminSettingsService
 
     public function uploadWelcomeMailAttachment(\App\Entity\Company $company, UploadedFile $file): array
     {
+        return $this->uploadAttachment($company, $file, 'welcome');
+    }
+
+    public function uploadJoinUsMailAttachment(\App\Entity\Company $company, UploadedFile $file): array
+    {
+        return $this->uploadAttachment($company, $file, 'join-us');
+    }
+
+    private function uploadAttachment(\App\Entity\Company $company, UploadedFile $file, string $type): array
+    {
         $companySlug = $this->slugger->slug($company->getName())->lower();
         $key = $companySlug . '/company_assets/' . $this->slugger->slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME)) . '-' . uniqid('asset', true) . '.' . $file->guessExtension();
 
@@ -93,13 +104,25 @@ class AdminSettingsService
         }
 
         $settings = $company->getAdminSettings();
-        $attachments = $settings->getWelcomeMailAttachments() ?? [];
+        
+        if ($type === 'welcome') {
+            $attachments = $settings->getWelcomeMailAttachments() ?? [];
+        } else {
+            $attachments = $settings->getJoinUsMailAttachments() ?? [];
+        }
+
         $attachment = [
             'name' => $file->getClientOriginalName(),
             'path' => $key
         ];
         $attachments[] = $attachment;
-        $settings->setWelcomeMailAttachments($attachments);
+
+        if ($type === 'welcome') {
+            $settings->setWelcomeMailAttachments($attachments);
+        } else {
+            $settings->setJoinUsMailAttachments($attachments);
+        }
+
         $this->entityManager->flush();
 
         return $attachment;
@@ -107,8 +130,22 @@ class AdminSettingsService
 
     public function deleteWelcomeMailAttachment(\App\Entity\Company $company, string $path): void
     {
+        $this->deleteAttachment($company, $path, 'welcome');
+    }
+
+    public function deleteJoinUsMailAttachment(\App\Entity\Company $company, string $path): void
+    {
+        $this->deleteAttachment($company, $path, 'join-us');
+    }
+
+    private function deleteAttachment(\App\Entity\Company $company, string $path, string $type): void
+    {
         $settings = $company->getAdminSettings();
-        $attachments = $settings->getWelcomeMailAttachments() ?? [];
+        if ($type === 'welcome') {
+            $attachments = $settings->getWelcomeMailAttachments() ?? [];
+        } else {
+            $attachments = $settings->getJoinUsMailAttachments() ?? [];
+        }
 
         $newAttachments = [];
         foreach ($attachments as $att) {
@@ -126,7 +163,12 @@ class AdminSettingsService
             }
         }
 
-        $settings->setWelcomeMailAttachments($newAttachments);
+        if ($type === 'welcome') {
+            $settings->setWelcomeMailAttachments($newAttachments);
+        } else {
+            $settings->setJoinUsMailAttachments($newAttachments);
+        }
+
         $this->entityManager->flush();
     }
 }

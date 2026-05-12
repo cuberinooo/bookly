@@ -115,16 +115,16 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, Company
 
     #[ORM\Column(options: ['default' => false])]
     #[Groups(['user:read'])]
-    private bool $welcomeMailSent = false;
+    private bool $joinUsMailSent = false;
 
-    public function isWelcomeMailSent(): bool
+    public function isJoinUsMailSent(): bool
     {
-        return $this->welcomeMailSent;
+        return $this->joinUsMailSent;
     }
 
-    public function setWelcomeMailSent(bool $welcomeMailSent): static
+    public function setJoinUsMailSent(bool $joinUsMailSent): static
     {
-        $this->welcomeMailSent = $welcomeMailSent;
+        $this->joinUsMailSent = $joinUsMailSent;
 
         return $this;
     }

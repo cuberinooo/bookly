@@ -75,23 +75,32 @@ class AdminUserController extends AbstractController
         return new JsonResponse(['status' => 'Password has been reset and email sent to the athlete.']);
     }
 
-    #[Route('/{id}/send-welcome', name: 'admin_user_send_welcome', methods: ['POST'])]
-    public function sendWelcomeMail(User $user, \App\Service\WelcomeEmailService $welcomeEmailService, EntityManagerInterface $entityManager): JsonResponse
+    #[Route('/{id}/send-join-us', name: 'admin_user_send_join_us', methods: ['POST'])]
+    public function sendJoinUsMail(User $user, \App\Service\EmailService $welcomeEmailService, EntityManagerInterface $entityManager): JsonResponse
     {
-        if (!in_array('ROLE_TRIAL', $user->getRoles())) {
-            return new JsonResponse(['error' => 'Welcome mail can only be sent to trial members.'], Response::HTTP_BAD_REQUEST);
+        $allowedRoles = ['ROLE_TRIAL', 'ROLE_MEMBER'];
+        $hasAllowedRole = false;
+        foreach ($allowedRoles as $role) {
+            if (in_array($role, $user->getRoles())) {
+                $hasAllowedRole = true;
+                break;
+            }
         }
 
-        if ($user->isWelcomeMailSent()) {
+        if (!$hasAllowedRole) {
+            return new JsonResponse(['error' => 'Welcome mail can only be sent to trial or regular members.'], Response::HTTP_BAD_REQUEST);
+        }
+
+        if ($user->isJoinUsMailSent()) {
             return new JsonResponse(['error' => 'Welcome mail has already been sent to this user.'], Response::HTTP_BAD_REQUEST);
         }
 
-        $welcomeEmailService->sendWelcomeEmail($user);
+        $welcomeEmailService->sendTrialJoinUsEmail($user);
 
-        $user->setWelcomeMailSent(true);
+        $user->setJoinUsMailSent(true);
         $entityManager->flush();
 
-        return new JsonResponse(['status' => 'Welcome mail sent successfully.']);
+        return new JsonResponse(['status' => 'Join us mail sent successfully.']);
     }
 
     #[Route('/{id}', name: 'admin_user_delete', methods: ['DELETE'])]
