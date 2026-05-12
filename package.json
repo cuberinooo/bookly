@@ -5,7 +5,7 @@
   "scripts": {},
   "private": true,
   "devDependencies": {
-    "@eslint/js": "^9.8.0",
+    "@eslint/js": "^10.0.0",
     "@nx/devkit": "22.7.1",
     "@nx/eslint": "22.7.1",
     "@nx/eslint-plugin": "22.7.1",
@@ -30,7 +30,7 @@
     "@vue/eslint-config-prettier": "^10.2.0",
     "@vue/eslint-config-typescript": "^14.6.0",
     "@vue/test-utils": "^2.4.6",
-    "eslint": "^9.39.4",
+    "eslint": "^10.0.0",
     "eslint-config-prettier": "^10.0.0",
     "eslint-plugin-playwright": "^2.0.0",
     "eslint-plugin-vue": "^10.0.0",
