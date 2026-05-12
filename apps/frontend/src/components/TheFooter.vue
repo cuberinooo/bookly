@@ -9,6 +9,18 @@ const showLegalDialog = ref(false);
 const dialogType = ref<'terms' | 'legal'>('legal');
 const legalSettings = ref<any>(null);
 
+// Mobile accordion state
+const expandedSections = ref<{ [key: string]: boolean }>({
+  legal: false,
+  hosting: false
+});
+
+function toggleSection(section: string) {
+  if (window.innerWidth <= 768) {
+    expandedSections.value[section] = !expandedSections.value[section];
+  }
+}
+
 async function fetchSettings() {
     try {
         const response = await api.get('/admin-settings');
@@ -37,23 +49,20 @@ onMounted(fetchSettings);
   <footer class="app-footer">
     <div class="footer-content">
       <div class="footer-section">
-        <h4 class="footer-title">
-          {{ settingsStore.companyName }}
+        <h4
+          class="footer-title collapsible-trigger"
+          @click="toggleSection('legal')"
+        >          Legal
+          <i :class="['pi', expandedSections.legal ? 'pi-chevron-up' : 'pi-chevron-down', 'mobile-only']" />
         </h4>
-      </div>
-
-      <div class="footer-section">
-        <h4 class="footer-title">
-          Legal
-        </h4>
-        <ul class="footer-list">
+        <ul :class="['footer-list', { 'mobile-hidden': !expandedSections.legal }]">
           <li v-if="legalSettings?.privacyPolicyPdfPath">
             <a
               href="javascript:void(0)"
               class="footer-link"
               @click="downloadPrivacyPolicy()"
             >
-              <i class="pi pi-download" /> Privacy Policy (Datenschutz)
+              <i class="pi pi-download" /> Privacy Policy
             </a>
           </li>
           <li>
@@ -62,7 +71,7 @@ onMounted(fetchSettings);
               class="footer-link"
               @click="onClickShowLegal"
             >
-              <i class="pi pi-info-circle" /> Legal Notice (Impressum)
+              <i class="pi pi-info-circle" /> Legal Notice
             </a>
           </li>
           <li>
@@ -71,30 +80,36 @@ onMounted(fetchSettings);
               class="footer-link"
               @click="onClickShowTerms"
             >
-              <i class="pi pi-file-text" /> Terms & Conditions (AGB)
+              <i class="pi pi-file-text" /> Terms & Conditions
             </a>
           </li>
         </ul>
       </div>
 
       <div class="footer-section">
-        <h4 class="footer-title">
+        <h4
+          class="footer-title collapsible-trigger"
+          @click="toggleSection('hosting')"
+        >
           Hosting
+          <i :class="['pi', expandedSections.hosting ? 'pi-chevron-up' : 'pi-chevron-down', 'mobile-only']" />
         </h4>
-        <p class="footer-text">
-          This App is hosted by
-          <a
-            href="https://codingcube.de/"
-            target="_blank"
-            rel="noopener"
-            class="footer-link highlight"
-          >codingcube</a>
-        </p>
+        <div :class="['hosting-content', { 'mobile-hidden': !expandedSections.hosting }]">
+          <p class="footer-text">
+            This App is hosted by
+            <a
+              href="https://codingcube.de/"
+              target="_blank"
+              rel="noopener"
+              class="footer-link highlight"
+            >codingcube</a>
+          </p>
+        </div>
       </div>
     </div>
 
     <div class="footer-bottom">
-      <p>&copy; {{ new Date().getFullYear() }} {{ settingsStore.companyName }}. All rights reserved.</p>
+      <p>&copy; {{ new Date().getFullYear() }} {{ settingsStore.companyName }}.</p>
     </div>
 
     <LegalDialog
@@ -110,7 +125,7 @@ onMounted(fetchSettings);
 .app-footer {
   background-color: var(--bg-primary-color);
   color: white;
-  padding: 4rem 2rem 2rem;
+  padding: 4rem 4rem 4rem;
   margin-top: 4rem;
   border-top: 4px solid var(--primary-color);
 }
@@ -138,6 +153,29 @@ onMounted(fetchSettings);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.collapsible-trigger {
+  cursor: default;
+}
+
+.mobile-only {
+  display: none;
+}
+
+.desktop-only {
+    @media (max-width: 768px) {
+        display: none !important;
+    }
+}
+
+.footer-tagline {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: -0.5rem;
 }
 
 .footer-text {
@@ -243,11 +281,61 @@ onMounted(fetchSettings);
 
 @media (max-width: 768px) {
   .app-footer {
-    padding: 3rem 1.5rem 5rem; // Increased bottom padding for mobile nav
+    padding: 2rem 1.5rem 5rem;
+    margin-top: 2rem;
   }
 
   .footer-content {
-    gap: 2rem;
+    grid-template-columns: 1fr;
+    gap: 0;
+    margin-bottom: 1.5rem;
+  }
+
+  .footer-section {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 1rem 0;
+    gap: 0;
+
+    &.brand-section {
+      display: none;
+    }
+  }
+
+  .footer-title {
+    font-size: 1.1rem;
+  }
+
+  .collapsible-trigger {
+    cursor: pointer;
+    padding: 0.5rem 0;
+  }
+
+  .mobile-only {
+    display: block;
+    font-size: 0.8rem;
+    opacity: 0.7;
+  }
+
+  .footer-list, .hosting-content {
+    max-height: 500px;
+    overflow: hidden;
+    transition: all 0.3s ease-in-out;
+    padding-top: 0.5rem;
+
+    &.mobile-hidden {
+      max-height: 0;
+      padding-top: 0;
+      opacity: 0;
+      pointer-events: none;
+    }
+  }
+
+  .footer-link {
+    padding: 0.5rem 0;
+  }
+
+  .footer-bottom {
+    padding-top: 1.5rem;
   }
 }
 </style>
