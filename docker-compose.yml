@@ -2,20 +2,19 @@ version: '3.8'
 
 services:
   db:
-    image: postgres:16-alpine
-
+    image: postgres:18-alpine
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-booking_db}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
       POSTGRES_USER: ${POSTGRES_USER:-user}
       TZ: Europe/Berlin
     healthcheck:
-      test: ["CMD", "pg_isready", "-d", "${POSTGRES_DB:-booking_db}", "-U", "${POSTGRES_USER:-user}"]
+      test: ["CMD-SHELL", "pg_isready", "-d", "${POSTGRES_DB:-booking_db}", "-U", "${POSTGRES_USER:-user}"]
       timeout: 5s
       retries: 5
       start_period: 10s
     volumes:
-      - db_data:/var/lib/postgresql/data:rw
+      - db_data:/var/lib/postgresql
     ports:
       - "5432:5432"
 
@@ -41,9 +40,9 @@ services:
     environment:
       TZ: Europe/Berlin
       SERVER_NAME: :80
-      DATABASE_URL: "postgresql://user:password@db:5432/booking_db?serverVersion=16&charset=utf8"
+      DATABASE_URL: "postgresql://user:password@db:5432/booking_db?serverVersion=18&charset=utf8"
       MERCURE_URL: "http://mercure/.well-known/mercure"
-      MERCURE_PUBLIC_URL: "http://localhost:3000/.well-known/mercure"
+      MERCURE_PUBLIC_URL: "http://mercure/.well-known/mercure"
       MERCURE_JWT_SECRET: "!ChangeThisMercureHubJWTSecretKey!"
       MERCURE_PUBLISHER_JWT_KEY: "!ChangeThisMercureHubJWTSecretKey!"
       MERCURE_SUBSCRIBER_JWT_KEY: "!ChangeThisMercureHubJWTSecretKey!"
