@@ -117,8 +117,8 @@ const handleSubmit = async (data: any) => {
 
 <template>
   <div class="container mx-auto px-4 py-8">
-    <div class="flex justify-between items-center mb-8">
-      <div>
+    <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-8">
+      <div class="hidden md:block">
         <h1 class="text-3xl font-black mb-2">
           Community Meetups
         </h1>
@@ -129,7 +129,7 @@ const handleSubmit = async (data: any) => {
       <Button
         icon="pi pi-plus"
         label="Organize Meetup"
-        class="p-button-primary"
+        class="p-button-primary w-full md:w-auto"
         @click="openCreate"
       />
     </div>

@@ -263,7 +263,7 @@ onMounted(fetchData);
 <template>
   <div class="dashboard-container px-2 md:px-0">
     <div class="header-with-action flex flex-col md:flex-row md:justify-between md:items-center gap-6 mb-8 md:mb-16">
-      <div>
+      <div class="hidden md:block">
         <h1 class="text-4xl md:text-[3.5rem]">
           {{ dashboardLabel }}
         </h1>

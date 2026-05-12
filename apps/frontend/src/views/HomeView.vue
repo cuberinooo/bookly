@@ -72,7 +72,7 @@ const isTrialRestricted = computed(() => {
 const bookingWindowMessage = computed(() => {
     if (isTrialRestricted.value) return 'This course is not available for trial members.';
     if (!isOutsideBookingWindow.value) return '';
-    
+
     switch (settings.value?.bookingWindow) {
         case BookingWindow.CURRENT_WEEK: return 'Only current week bookings are allowed.';
         case BookingWindow.TWO_WEEKS: return 'Bookings only allowed for the next 2 weeks.';
@@ -134,7 +134,7 @@ async function fetchCourses() {
     const base = new Date(baseDate.value);
     const day = base.getDay();
     const diff = (day === 0 ? 6 : day - 1);
-    
+
     // Start of the 5-week range (Monday 2 weeks ago)
     const start = new Date(base);
     start.setDate(base.getDate() - diff - 14);
@@ -292,7 +292,10 @@ onUnmounted(() => {
   >
     <div class="container">
       <header class="home-header">
-        <div class="header-left">
+        <div
+          v-if="!isMobile"
+          class="header-left"
+        >
           <h1>Athletic Schedule</h1>
           <p class="text-muted">
             Master your discipline. Book your next session.
@@ -307,14 +310,6 @@ onUnmounted(() => {
             <span :class="{ active: !isCompactView }">STANDARD</span>
             <ToggleSwitch v-model="isCompactView" />
             <span :class="{ active: isCompactView }">COMPACT</span>
-          </div>
-
-          <div
-            v-if="authStore.isTrainer()"
-            class="header-badge"
-          >
-            <span class="pulse" />
-            {{ authStore.viewMode === 'trainer' ? 'TRAINER MODE ACTIVE' : 'MEMBER MODE ACTIVE' }}
           </div>
         </div>
       </header>

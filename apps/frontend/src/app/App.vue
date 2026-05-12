@@ -205,6 +205,15 @@ onMounted(async () => {
                   v-else
                   class="pi pi-user"
                 />
+
+                <!-- Role Indicator Badge -->
+                <div
+                  v-if="authStore.isTrainer()"
+                  class="role-badge"
+                  :class="authStore.viewMode"
+                >
+                  <i :class="authStore.viewMode === 'trainer' ? 'pi pi-star-fill' : 'pi pi-user'" />
+                </div>
               </Button>
               <Menu
                 ref="menu"
@@ -224,6 +233,8 @@ onMounted(async () => {
                       <ToggleButton
                         onLabel="Trainer Mode"
                         offLabel="Member Mode"
+                        onIcon="pi pi-star-fill"
+                        offIcon="pi pi-user"
                         :model-value="authStore.viewMode === 'trainer'"
                         @update:model-value="authStore.toggleViewMode()"
                       />
@@ -399,7 +410,7 @@ html, body, #app {
 }
 
 .container {
-  /* No extra top padding needed if using sticky on the header itself, 
+  /* No extra top padding needed if using sticky on the header itself,
      but we ensure the header doesn't overlap content in a jarring way */
 }
 
@@ -473,6 +484,7 @@ html, body, #app {
   .profile-btn {
     background: rgba(255, 255, 255, 0.1) !important;
     border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 16px 16px 0px 16px !important;
     color: white !important;
     width: 40px;
     height: 40px;
@@ -489,6 +501,37 @@ html, body, #app {
       width: 100%;
       height: 100%;
       object-fit: cover;
+    }
+
+    .role-badge {
+      position: absolute;
+      bottom: -2px;
+      right: -2px;
+      width: 16px;
+      height: 16px;
+      background: #475569; // Neutral slate
+      border: 2px solid #0f172a; // Match header bg
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+      i {
+        font-size: 8px;
+        color: white;
+      }
+
+      &.trainer {
+        background: var(--bg-primary-color);
+        i { color: white; }
+        box-shadow: 0 0 8px rgba(255, 193, 7, 0.4);
+      }
+
+      &.member {
+        background: var(--bg-primary-color);
+        i { color: white; }
+      }
     }
   }
 
