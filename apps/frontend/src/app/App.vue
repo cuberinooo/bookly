@@ -92,8 +92,6 @@ const menuItems = computed(() => [
     label: 'My Account',
     items: [
       {label: 'Profile', icon: 'pi pi-user', command: () => router.push('/profile')},
-      {label: dashboardLabel.value, icon: 'pi pi-th-large', command: () => router.push('/dashboard')},
-      {label: 'Meetups', icon: 'pi pi-users', command: () => router.push('/meetups')},
       {label: 'Settings', icon: 'pi pi-cog', command: () => router.push('/settings')}
     ]
   },
@@ -177,6 +175,9 @@ onMounted(async () => {
           <template v-if="authStore.isLoggedIn()">
             <RouterLink to="/dashboard">
               {{ dashboardLabel }}
+            </RouterLink>
+            <RouterLink to="/meetups">
+              Meetups
             </RouterLink>
             <div class="profile-dropdown-wrapper">
               <Button
