@@ -33,7 +33,7 @@ import Skeleton from 'primevue/skeleton';
 import Avatar from 'primevue/avatar';
 import AvatarGroup from 'primevue/avatargroup';
 import ProgressSpinner from 'primevue/progressspinner';
-import {Checkbox, Divider, FileUpload, Paginator, Panel, Password, Tag, Tooltip} from "primevue";
+import {Checkbox, Divider, FileUpload, Paginator, Panel, Password, Tag, ToggleButton, Tooltip} from "primevue";
 
 const app = createApp(App);
 
@@ -82,6 +82,7 @@ app.component('Tag', Tag);
 app.directive('tooltip', Tooltip);
 app.component('InputNumber', InputNumber);
 app.component('ToggleSwitch', ToggleSwitch);
+app.component('ToggleButton', ToggleButton);
 app.component('Tabs', Tabs);
 app.component('TabList', TabList);
 app.component('Tab', Tab);

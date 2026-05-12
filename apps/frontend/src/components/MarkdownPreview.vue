@@ -25,7 +25,6 @@ function toggleExpand() {
   <Panel
     header="Preview"
     toggleable
-    :collapsed="true"
   >
     <div class="preview-content phoenix-card">
       <!-- eslint-disable vue/no-v-html -->

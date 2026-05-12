@@ -59,7 +59,7 @@ const activeTabs = computed(() => {
         >
           <div
             v-if="tab.component"
-            :class="tab.id === 'users' ? '' : 'max-w-4xl mt-4 md:mt-6'"
+            :class="tab.id === 'users' ? '' : 'mt-4 md:mt-6'"
           >
             <component :is="tab.component" />
           </div>
@@ -93,7 +93,7 @@ const activeTabs = computed(() => {
 .settings-view {
     h1 { font-family: 'Barlow Condensed', sans-serif; }
     .font-barlow { font-family: 'Barlow Condensed', sans-serif; }
-    
+
     :deep(.p-tablist-content) {
       border-bottom: 2px solid var(--border-color);
     }

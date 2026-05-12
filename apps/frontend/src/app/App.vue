@@ -168,29 +168,7 @@ onMounted(async () => {
           </RouterLink>
         </div>
         <div class="nav-links">
-          <template v-if="authStore.isTrainer()">
-            <div
-              v-tooltip.bottom="'Toggle View Mode'"
-              class="role-switcher-modern"
-            >
-              <button
-                class="role-btn trainer"
-                :class="{ active: authStore.viewMode === 'trainer' }"
-                @click="authStore.viewMode !== 'trainer' && authStore.toggleViewMode()"
-              >
-                <i class="pi pi-bolt mr-1" />
-                <span>Trainer</span>
-              </button>
-              <button
-                class="role-btn member"
-                :class="{ active: authStore.viewMode === 'member' }"
-                @click="authStore.viewMode !== 'member' && authStore.toggleViewMode()"
-              >
-                <i class="pi pi-user mr-1" />
-                <span>Member</span>
-              </button>
-            </div>
-          </template>          <RouterLink
+          <RouterLink
             v-if="authStore.isLoggedIn()"
             to="/"
           >
@@ -230,6 +208,17 @@ onMounted(async () => {
                     class="menu-user-info"
                   >
                     <span class="p-2 menu-user-name">{{ authStore.user.name }}</span>
+                    <div
+                      v-if="authStore.isTrainer()"
+                      class="toggle-container"
+                    >
+                      <ToggleButton
+                        onLabel="Trainer Mode"
+                        offLabel="Member Mode"
+                        :model-value="authStore.viewMode === 'trainer'"
+                        @update:model-value="authStore.toggleViewMode()"
+                      />
+                    </div>
                   </div>
                 </template>
               </Menu>
@@ -397,6 +386,33 @@ html, body, #app {
   margin: 0 auto;
 }
 
+:deep(.p-togglebutton) {
+  color: var(--primary-color) !important; /* This should match #ffc107 */
+  border-width: 1px !important; /* Make the border slightly thicker to highlight the animation */
+  animation: borderGlow 2s infinite ease-in-out !important; /* Smooth, slow infinite loop */
+}
+
+@keyframes borderGlow {
+  0% {
+    border-color: #ffc107; /* Starting color (amber/gold) */
+    box-shadow: 0 0 5px rgba(255, 193, 7, 0.5); /* Subtle inner glow */
+  }
+  50% {
+    border-color: #ff9800; /* Midpoint: a warm, deep orange, which complements amber perfectly */
+    box-shadow: 0 0 10px rgba(255, 152, 0, 0.7); /* Slightly stronger glow at the peak */
+  }
+  100% {
+    border-color: #ffc107; /* Return to start */
+    box-shadow: 0 0 5px rgba(255, 193, 7, 0.5); /* Back to subtle glow */
+  }
+}
+.toggle-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
 .brand a {
   font-family: 'Barlow Condensed', sans-serif;
   font-size: 1.75rem;
@@ -421,86 +437,8 @@ html, body, #app {
   gap: 2rem;
   align-items: center;
 
-  .role-switcher-modern {
-    display: flex;
-    background: rgba(255, 255, 255, 0.08);
-    padding: 3px;
-    border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-
-    .role-btn {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 6px 14px;
-      border-radius: 9px;
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: 0.85rem;
-      font-weight: 800;
-      color: rgba(255, 255, 255, 0.5);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-
-      i {
-        font-size: 0.8rem;
-        opacity: 0.7;
-      }
-
-      &.active {
-        background: var(--primary-color);
-        color: #000;
-        box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
-
-        i { opacity: 1; }
-      }
-
-      &:not(.active):hover {
-        background: rgba(255, 255, 255, 0.05);
-        color: white;
-      }
-    }
-
-    @media (max-width: 768px) {
-      padding: 2px;
-      .role-btn {
-        padding: 6px 10px;
-        span { display: none; }
-        i { font-size: 1rem; margin: 0; }
-      }
-    }
-  }
-
-  .profile-dropdown-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-
-    .user-name {
-      color: white;
-      font-family: 'Barlow Condensed', sans-serif;
-      font-weight: 700;
-      font-size: 0.9rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-
-      @media (max-width: 768px) {
-        display: none;
-      }
-    }
-  }
-
   @media (max-width: 768px) {
     gap: 1rem;
-
-    .mode-switcher {
-      margin-right: 0;
-      padding: 0.4rem 0.75rem;
-
-      span {
-        display: none;
-      }
-    }
 
     a {
       font-size: 0.85rem;
@@ -526,27 +464,6 @@ html, body, #app {
       width: 100%;
       height: 100%;
       object-fit: cover;
-    }
-  }
-
-  .menu-user-info {
-    padding: 1rem;
-    border-bottom: 1px solid #e2e8f0;
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-
-    .menu-user-name {
-      font-weight: 700;
-      color: #1e293b;
-      font-family: 'Barlow Condensed', sans-serif;
-      text-transform: uppercase;
-      font-size: 1rem;
-    }
-
-    .menu-user-email {
-      font-size: 0.75rem;
-      color: #64748b;
     }
   }
 
@@ -580,6 +497,21 @@ html, body, #app {
     &:hover {
       color: #ef4444 !important;
     }
+  }
+}
+
+.menu-user-info {
+  padding: 0.5rem;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+
+  .menu-user-name {
+    text-align: center;
+    color: #64748b;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 1rem;
   }
 }
 
