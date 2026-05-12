@@ -285,11 +285,11 @@ td {
   padding: 3rem 2rem;
 
   @media (max-width: 768px) {
-    padding: 1.5rem 1rem;
+    padding: 1.5rem 1rem 80px; // Extra bottom padding for mobile nav
   }
 
   @media (max-width: 480px) {
-    padding: 1rem 0.5rem;
+    padding: 1rem 0.5rem 80px; // Extra bottom padding for mobile nav
   }
 }
 

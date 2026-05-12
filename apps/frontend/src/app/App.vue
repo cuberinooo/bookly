@@ -7,6 +7,7 @@ import {ref, computed, onMounted, watch, onUnmounted} from 'vue';
 import api from '../services/api';
 import {useToast} from 'primevue/usetoast';
 import TheFooter from '../components/TheFooter.vue';
+import TheMobileNav from '../components/TheMobileNav.vue';
 import VersionUpdateToast from '../components/VersionUpdateToast.vue';
 import mercureService from '../services/mercure';
 
@@ -169,14 +170,21 @@ onMounted(async () => {
           <RouterLink
             v-if="authStore.isLoggedIn()"
             to="/"
+            class="desktop-only"
           >
             Courses
           </RouterLink>
           <template v-if="authStore.isLoggedIn()">
-            <RouterLink to="/dashboard">
+            <RouterLink
+              to="/dashboard"
+              class="desktop-only"
+            >
               {{ dashboardLabel }}
             </RouterLink>
-            <RouterLink to="/meetups">
+            <RouterLink
+              to="/meetups"
+              class="desktop-only"
+            >
               Meetups
             </RouterLink>
             <div class="profile-dropdown-wrapper">
@@ -365,6 +373,7 @@ onMounted(async () => {
       </template>
     </Dialog>
     <VersionUpdateToast />
+    <TheMobileNav />
   </div>
 </template>
 
@@ -372,6 +381,12 @@ onMounted(async () => {
 /* Essential: Prevents browser bounce physics from fighting your pull-to-refresh */
 html, body, #app {
   overscroll-behavior-y: contain;
+}
+
+.desktop-only {
+  @media (max-width: 768px) {
+    display: none !important;
+  }
 }
 
 .main-header {

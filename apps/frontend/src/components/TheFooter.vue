@@ -243,7 +243,7 @@ onMounted(fetchSettings);
 
 @media (max-width: 768px) {
   .app-footer {
-    padding: 3rem 1.5rem 1.5rem;
+    padding: 3rem 1.5rem 5rem; // Increased bottom padding for mobile nav
   }
 
   .footer-content {
