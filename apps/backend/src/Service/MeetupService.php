@@ -22,18 +22,25 @@ class MeetupService
 
     public function createMeetup(array $data, User $creator): Meetup
     {
+        $meetupDate = new \DateTime($data['meetupDate']);
+        $rsvpDeadline = new \DateTime($data['rsvpDeadline']);
+
+        if ($rsvpDeadline > $meetupDate) {
+            throw new \LogicException("The RSVP deadline cannot be after the meetup date.");
+        }
+
         $meetup = new Meetup();
         $meetup->setCompany($creator->getCompany());
         $meetup->setCreator($creator);
         $meetup->setTitle($data['title']);
         $meetup->setDescription($data['description'] ?? null);
-        $meetup->setMeetupDate(new \DateTime($data['meetupDate']));
+        $meetup->setMeetupDate($meetupDate);
         $meetup->setLocation($data['location']);
         $meetup->setImageUrl($data['imageUrl'] ?? null);
         $meetup->setLink($data['link'] ?? null);
         $meetup->setMinParticipants($data['minParticipants'] ?? null);
         $meetup->setMaxParticipants($data['maxParticipants'] ?? null);
-        $meetup->setRsvpDeadline(new \DateTime($data['rsvpDeadline']));
+        $meetup->setRsvpDeadline($rsvpDeadline);
 
         $this->entityManager->persist($meetup);
 
@@ -68,8 +75,23 @@ class MeetupService
         if (isset($data['description'])) $meetup->setDescription($data['description']);
         if (isset($data['location'])) $meetup->setLocation($data['location']);
         if (isset($data['imageUrl'])) $meetup->setImageUrl($data['imageUrl']);
-        if (isset($data['meetupDate'])) $meetup->setMeetupDate(new \DateTime($data['meetupDate']));
-        if (isset($data['rsvpDeadline'])) $meetup->setRsvpDeadline(new \DateTime($data['rsvpDeadline']));
+        if (isset($data['meetupDate'])) {
+            $newMeetupDate = new \DateTime($data['meetupDate']);
+            $currentDeadline = isset($data['rsvpDeadline']) ? new \DateTime($data['rsvpDeadline']) : $meetup->getRsvpDeadline();
+            if ($currentDeadline > $newMeetupDate) {
+                throw new \LogicException("The RSVP deadline cannot be after the meetup date.");
+            }
+            $meetup->setMeetupDate($newMeetupDate);
+        }
+
+        if (isset($data['rsvpDeadline'])) {
+            $newDeadline = new \DateTime($data['rsvpDeadline']);
+            $currentMeetupDate = $meetup->getMeetupDate();
+            if ($newDeadline > $currentMeetupDate) {
+                throw new \LogicException("The RSVP deadline cannot be after the meetup date.");
+            }
+            $meetup->setRsvpDeadline($newDeadline);
+        }
         if (isset($data['link'])) $meetup->setLink($data['link']);
         if (isset($data['minParticipants'])) $meetup->setMinParticipants($data['minParticipants']);
         if (isset($data['maxParticipants'])) $meetup->setMaxParticipants($data['maxParticipants']);

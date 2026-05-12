@@ -84,6 +84,9 @@ onMounted(() => {
 });
 
 const handleSubmit = async () => {
+  if (formData.value.rsvpDeadline && formData.value.meetupDate && formData.value.rsvpDeadline > formData.value.meetupDate) {
+    return;
+  }
   isUploading.value = true;
   try {
     let finalImageUrl = formData.value.imageUrl;
@@ -139,7 +142,9 @@ const handleSubmit = async () => {
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div class="field">
-        <label for="meetupDate">Event Date & Time *</label>
+        <label
+          for="meetupDate"
+        >Event Date & Time *</label>
         <DatePicker
           id="meetupDate"
           v-model="formData.meetupDate"
@@ -149,14 +154,28 @@ const handleSubmit = async () => {
         />
       </div>
       <div class="field">
-        <label for="rsvpDeadline">RSVP Deadline *</label>
+        <label
+          for="rsvpDeadline"
+          v-tooltip.top="'Répondez s\'il vous plaît - Please respond by this date to help the organizer plan better.'"
+        >
+          RSVP Deadline *
+          <i class="pi pi-info-circle text-xs text-slate-400" />
+        </label>
         <DatePicker
           id="rsvpDeadline"
           v-model="formData.rsvpDeadline"
           show-time
           hour-format="24"
+          :max-date="formData.meetupDate || undefined"
+          :class="{ 'p-invalid': formData.rsvpDeadline && formData.meetupDate && formData.rsvpDeadline > formData.meetupDate }"
           required
         />
+        <small
+          v-if="formData.rsvpDeadline && formData.meetupDate && formData.rsvpDeadline > formData.meetupDate"
+          class="p-error"
+        >
+          Deadline must be before the event.
+        </small>
       </div>
     </div>
 

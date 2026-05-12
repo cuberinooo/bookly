@@ -53,6 +53,43 @@ class MeetupServiceTest extends TestCase
         $this->assertEquals(MeetupStatus::OPEN, $meetup->getStatus());
     }
 
+    public function testCreateMeetupWithInvalidDeadline(): void
+    {
+        $creator = new User();
+        $company = new Company();
+        $creator->setCompany($company);
+
+        $data = [
+            'title' => 'Invalid Deadline',
+            'meetupDate' => '2026-06-01 10:00:00',
+            'location' => 'Innsbruck',
+            'rsvpDeadline' => '2026-06-01 11:00:00', // After meetupDate
+        ];
+
+        $this->expectException(\LogicException::class);
+        $this->expectExceptionMessage("The RSVP deadline cannot be after the meetup date.");
+
+        $this->service->createMeetup($data, $creator);
+    }
+
+    public function testUpdateMeetupWithInvalidDeadline(): void
+    {
+        $creator = new User();
+        $meetup = new Meetup();
+        $meetup->setCreator($creator);
+        $meetup->setMeetupDate(new \DateTime('2026-06-01 10:00:00'));
+        $meetup->setRsvpDeadline(new \DateTime('2026-05-30 10:00:00'));
+
+        $data = [
+            'rsvpDeadline' => '2026-06-02 10:00:00', // After meetupDate
+        ];
+
+        $this->expectException(\LogicException::class);
+        $this->expectExceptionMessage("The RSVP deadline cannot be after the meetup date.");
+
+        $this->service->updateMeetup($meetup, $data, $creator);
+    }
+
     public function testRsvpFreezeLogic(): void
     {
         $meetup = new Meetup();
