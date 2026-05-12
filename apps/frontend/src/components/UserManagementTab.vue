@@ -273,7 +273,7 @@ onMounted(fetchUsers);
           <template #body="{ data }">
             <div class="flex gap-2">
               <Button
-                v-if="(data.roles.includes('ROLE_TRIAL') || data.roles.includes('ROLE_MEMBER')) && !data.joinUsMailSent"
+                v-if="data.roles.includes('ROLE_TRIAL') && !data.joinUsMailSent"
                 v-tooltip.top="'Send Join Us Mail'"
                 icon="pi pi-envelope"
                 variant="text"
