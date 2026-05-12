@@ -257,7 +257,14 @@ onMounted(async () => {
     </header>
 
     <main class="container">
-      <RouterView />
+      <router-view v-slot="{ Component }">
+        <transition 
+          name="fade-slide" 
+          mode="out-in"
+        >
+          <component :is="Component" />
+        </transition>
+      </router-view>
     </main>
 
     <TheFooter v-if="authStore.isLoggedIn()" />
@@ -632,5 +639,21 @@ html, body, #app {
   50% {
     opacity: 0.5;
   }
+}
+
+/* Route Transitions */
+.fade-slide-enter-active,
+.fade-slide-leave-active {
+  transition: all 0.3s ease-out;
+}
+
+.fade-slide-enter-from {
+  opacity: 0;
+  transform: translateX(20px);
+}
+
+.fade-slide-leave-to {
+  opacity: 0;
+  transform: translateX(-20px);
 }
 </style>
