@@ -14,7 +14,7 @@ const editingUser = ref<any>({ name: '', email: '', roles: ['ROLE_MEMBER'], pass
 const submitting = ref(false);
 const submitted = ref(false);
 const resettingPassword = ref(false);
-const sendingWelcome = ref(false);
+const sendingJoinUs = ref(false);
 
 const getSortedRoles = (roles: string[]) => {
   const roleOrder = ['ROLE_ADMIN', 'ROLE_TRAINER', 'ROLE_MEMBER', 'ROLE_TRIAL'];
@@ -143,7 +143,7 @@ async function resetPassword() {
 }
 
 async function sendJoinUsMail(user: any) {
-    sendingWelcome.value = true;
+    sendingJoinUs.value = true;
     try {
         await api.post(`/admin/users/${user.id}/send-join-us`);
         user.joinUsMailSent = true;
@@ -151,7 +151,7 @@ async function sendJoinUsMail(user: any) {
     } catch (e: any) {
         toast.add({ severity: 'error', summary: 'Error', detail: e.response?.data?.error || 'Failed to send join us mail', life: 5000 });
     } finally {
-        sendingWelcome.value = false;
+        sendingJoinUs.value = false;
     }
 }
 
@@ -274,11 +274,11 @@ onMounted(fetchUsers);
             <div class="flex gap-2">
               <Button
                 v-if="(data.roles.includes('ROLE_TRIAL') || data.roles.includes('ROLE_MEMBER')) && !data.joinUsMailSent"
-                v-tooltip.top="'Send Welcome Mail'"
+                v-tooltip.top="'Send Join Us Mail'"
                 icon="pi pi-envelope"
                 variant="text"
                 rounded
-                :loading="sendingWelcome"
+                :loading="sendingJoinUs"
                 @click="sendJoinUsMail(data)"
               />
               <Button
@@ -333,7 +333,7 @@ onMounted(fetchUsers);
                 />
                 <Tag
                   v-if="user.roles.includes('ROLE_TRIAL') && user.joinUsMailSent"
-                  value="Welcome Sent"
+                  value="Join us mail sent"
                   severity="success"
                   class="text-[10px] uppercase font-black"
                   icon="pi pi-send"
@@ -364,7 +364,7 @@ onMounted(fetchUsers);
                 severity="secondary"
                 variant="text"
                 rounded
-                :loading="sendingWelcome"
+                :loading="sendingJoinUs"
                 @click="sendJoinUsMail(user)"
               />
               <Button
