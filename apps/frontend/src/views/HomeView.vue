@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed, watch } from 'vue';
-import { formatDate, formatTime } from '../services/date-utils';
+import { formatDate, formatTime, formatDateWithDay } from '../services/date-utils';
 import api from '../services/api';
 import { authStore } from '../store/auth';
 import { useToast } from 'primevue/usetoast';
@@ -361,8 +361,8 @@ onUnmounted(() => {
           <div class="detail-row">
             <div class="detail-item">
               <small>DATE & TIME</small>
-              <span class="value">{{ formatDate(selectedCourse.startTime) }} at {{ formatTime(selectedCourse.startTime) }}</span>
-            </div>
+              <span class="value">{{ formatDateWithDay(selectedCourse.startTime) }} at {{ formatTime(selectedCourse.startTime) }}</span>
+             </div>
             <div class="detail-item duration-item">
               <small>DURATION</small>
               <span class="value">{{ formatDuration(selectedCourse.durationMinutes) }}</span>

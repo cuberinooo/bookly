@@ -242,10 +242,7 @@ function onSlotClick(day: Date, hour: number) {
                 </div>
 
                 <div class="course-meta">
-                  <div
-                    v-if="!isCompactView"
-                    class="coach-line"
-                  >
+                  <div class="coach-line">
                     <i class="pi pi-user text-[10px]" /> {{ course.user?.name }}
                   </div>
                   <div class="course-spots">

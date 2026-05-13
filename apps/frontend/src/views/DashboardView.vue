@@ -13,7 +13,7 @@ import TrialStatusCard from '../components/TrialStatusCard.vue';
 import { useRoute } from 'vue-router';
 import { eventsStore } from '../store/events';
 
-import { formatDateTime } from '../services/date-utils';
+import { formatDateWithDay, formatTime } from '../services/date-utils';
 
 const toast = useToast();
 const confirm = useConfirm();
@@ -394,7 +394,8 @@ onMounted(fetchData);
                     <i class="pi pi-calendar" />
                     <div>
                       <label>DATE & TIME</label>
-                      <span>{{ formatDateTime(course.startTime) }}</span>
+                      <span>{{ formatDateWithDay(course.startTime) }} @ {{ formatTime(course.startTime) }}</span>
+
                     </div>
                   </div>
                   <div class="focus-item border-left pl-3">

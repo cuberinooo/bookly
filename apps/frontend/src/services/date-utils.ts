@@ -10,10 +10,21 @@ export function formatDate(date: Date | string | null | undefined): string {
     });
 }
 
+export function formatDateWithDay(date: Date | string | null | undefined, short: boolean = false): string {
+    if (!date) return '';
+    const d = new Date(date);
+    return d.toLocaleDateString('de-DE', {
+        weekday: short ? 'short' : 'long',
+        day: '2-digit',
+        month: '2-digit'
+    });
+}
+
 export function formatDateTime(date: Date | string | null | undefined): string {
     if (!date) return '';
     const d = new Date(date);
     return d.toLocaleString('de-DE', {
+        weekday: 'short',
         day: '2-digit',
         month: '2-digit',
         year: 'numeric',

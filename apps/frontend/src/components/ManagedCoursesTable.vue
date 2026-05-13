@@ -7,7 +7,7 @@ import { authStore } from '../store/auth';
 import ParticipantsDialog from './ParticipantsDialog.vue';
 import { eventsStore } from '../store/events';
 
-import { formatDate, formatTime } from '../services/date-utils';
+import { formatDate, formatTime, formatDateWithDay } from '../services/date-utils';
 
 const emit = defineEmits(['edit']);
 
@@ -47,7 +47,7 @@ async function loadLazyData() {
             futureOnly: true
         };
 
-        if (authStore.isTrainer()) {
+        if (authStore.isTrainer() && !authStore.isAdmin()) {
             params.trainerId = authStore.user?.id;
         }
 
@@ -295,9 +295,24 @@ onMounted(loadLazyData);
               v-else
               class="flex flex-col"
             >
-              <span class="font-bold text-sm">{{ formatDate(slotProps.data.startTime) }}</span>
+              <span class="font-bold text-sm">{{ formatDateWithDay(slotProps.data.startTime, true) }}</span>
               <span class="text-xs">{{ formatTime(slotProps.data.startTime) }}</span>
             </div>
+          </template>
+        </Column>
+        <Column
+          v-if="authStore.isAdmin()"
+          header="Trainer"
+        >
+          <template #body="slotProps">
+            <Skeleton
+              v-if="loading"
+              width="60%"
+            />
+            <span
+              v-else
+              class="text-sm font-medium"
+            >{{ slotProps.data.user?.name }}</span>
           </template>
         </Column>
         <Column header="Duration">
@@ -455,7 +470,14 @@ onMounted(loadLazyData);
                     </span>
                     <div class="flex items-center gap-2 text-xs font-bold text-slate-500">
                       <i class="pi pi-calendar text-[10px]" />
-                      {{ formatDate(course.startTime) }} @ {{ formatTime(course.startTime) }}
+                      {{ formatDateWithDay(course.startTime, true) }} @ {{ formatTime(course.startTime) }}
+                    </div>
+                    <div
+                      v-if="authStore.isAdmin()"
+                      class="flex items-center gap-2 text-xs font-bold text-amber-600 mt-1"
+                    >
+                      <i class="pi pi-user text-[10px]" />
+                      {{ course.user?.name }}
                     </div>
                   </div>
                   <span :class="['slot-badge !py-1 !px-2 !text-[10px]', { 'is-full': course.bookings.length >= course.capacity }]">
