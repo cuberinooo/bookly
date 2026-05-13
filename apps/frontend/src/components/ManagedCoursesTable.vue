@@ -7,7 +7,11 @@ import { authStore } from '../store/auth';
 import ParticipantsDialog from './ParticipantsDialog.vue';
 import { eventsStore } from '../store/events';
 
-import { formatDate, formatTime, formatDateWithDay } from '../services/date-utils';
+import { formatTime, formatDateWithDay } from '../services/date-utils';
+
+const props = defineProps<{
+    showAllDefault?: boolean
+}>();
 
 const emit = defineEmits(['edit']);
 
@@ -20,6 +24,8 @@ const loading = ref(false);
 const transitionName = ref('slide-left');
 const participantsDialog = ref(false);
 const selectedCourse = ref<any>(null);
+
+const showAllCourses = ref(true);
 
 const lazyParams = ref({
     first: 0,
@@ -47,7 +53,7 @@ async function loadLazyData() {
             futureOnly: true
         };
 
-        if (authStore.isTrainer() && !authStore.isAdmin()) {
+        if (authStore.isTrainer() && !showAllCourses.value) {
             params.trainerId = authStore.user?.id;
         }
 
@@ -214,6 +220,17 @@ onMounted(loadLazyData);
       <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
         <h2>Managed Courses</h2>
         <div class="flex flex-wrap items-end gap-3 md:gap-4">
+          <div
+            v-if="authStore.isTrainer()"
+            class="flex items-center gap-2 h-10 md:h-8 px-3 bg-slate-100 rounded-lg border border-slate-200"
+          >
+            <ToggleSwitch
+              v-model="showAllCourses"
+              size="small"
+              @change="onFilter"
+            />
+            <span class="text-[10px] font-bold uppercase text-slate-600 whitespace-nowrap">Show All</span>
+          </div>
           <div class="flex flex-col gap-1 flex-1 min-w-[120px]">
             <label
               for="filterFrom"
@@ -301,7 +318,6 @@ onMounted(loadLazyData);
           </template>
         </Column>
         <Column
-          v-if="authStore.isAdmin()"
           header="Trainer"
         >
           <template #body="slotProps">
@@ -312,7 +328,10 @@ onMounted(loadLazyData);
             <span
               v-else
               class="text-sm font-medium"
-            >{{ slotProps.data.user?.name }}</span>
+              :class="{ 'text-amber-600 font-bold': slotProps.data.user?.id === authStore.user?.id }"
+            >
+              {{ slotProps.data.user?.id === authStore.user?.id ? 'YOU' : slotProps.data.user?.name }}
+            </span>
           </template>
         </Column>
         <Column header="Duration">
@@ -473,11 +492,11 @@ onMounted(loadLazyData);
                       {{ formatDateWithDay(course.startTime, true) }} @ {{ formatTime(course.startTime) }}
                     </div>
                     <div
-                      v-if="authStore.isAdmin()"
-                      class="flex items-center gap-2 text-xs font-bold text-amber-600 mt-1"
+                      class="flex items-center gap-2 text-xs font-bold mt-1"
+                      :class="course.user?.id === authStore.user?.id ? 'text-amber-600' : 'text-slate-500'"
                     >
                       <i class="pi pi-user text-[10px]" />
-                      {{ course.user?.name }}
+                      {{ course.user?.id === authStore.user?.id ? 'YOU' : course.user?.name }}
                     </div>
                   </div>
                   <span :class="['slot-badge !py-1 !px-2 !text-[10px]', { 'is-full': course.bookings.length >= course.capacity }]">
