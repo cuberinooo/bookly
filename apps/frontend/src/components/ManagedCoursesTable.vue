@@ -328,7 +328,7 @@ onMounted(loadLazyData);
             <span
               v-else
               class="text-sm font-medium"
-              :class="{ 'text-amber-600 font-bold': slotProps.data.user?.id === authStore.user?.id }"
+              :class="{ 'text-amber-600_ font-bold': slotProps.data.user?.id === authStore.user?.id }"
             >
               {{ slotProps.data.user?.id === authStore.user?.id ? 'YOU' : slotProps.data.user?.name }}
             </span>
@@ -493,9 +493,10 @@ onMounted(loadLazyData);
                     </div>
                     <div
                       class="flex items-center gap-2 text-xs font-bold mt-1"
-                      :class="course.user?.id === authStore.user?.id ? 'text-amber-600' : 'text-slate-500'"
+                      :class="course.user?.id === authStore.user?.id ? '!text-amber-600' : 'text-slate-500'"
                     >
                       <i class="pi pi-user text-[10px]" />
+
                       {{ course.user?.id === authStore.user?.id ? 'YOU' : course.user?.name }}
                     </div>
                   </div>
@@ -652,5 +653,9 @@ onMounted(loadLazyData);
     :deep(.p-paginator-page), :deep(.p-paginator-next), :deep(.p-paginator-last), :deep(.p-paginator-prev), :deep(.p-paginator-first) {
       @apply #{"!min-w-[32px] !h-8 !text-xs"};
     }
+}
+
+.text-amber-600_ {
+  color: var(--color-amber-600) !important;
 }
 </style>
