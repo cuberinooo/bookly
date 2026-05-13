@@ -135,8 +135,8 @@ const handleRsvp = (status: RsvpStatus) => {
       <div class="flex items-center justify-between mb-4 bg-slate-50 p-3 rounded-lg border border-slate-100">
         <div class="flex flex-col">
           <span
-            class="text-xs uppercase font-bold text-slate-400 cursor-help"
             v-tooltip.top="'Répondez s\'il vous plaît - Please respond by this date to help the organizer plan better.'"
+            class="text-xs uppercase font-bold text-slate-400 cursor-help"
           >
             RSVP Deadline
             <i class="pi pi-info-circle text-[10px]" />

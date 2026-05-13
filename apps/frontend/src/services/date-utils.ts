@@ -10,7 +10,7 @@ export function formatDate(date: Date | string | null | undefined): string {
     });
 }
 
-export function formatDateWithDay(date: Date | string | null | undefined, short: boolean = false): string {
+export function formatDateWithDay(date: Date | string | null | undefined, short = false): string {
     if (!date) return '';
     const d = new Date(date);
     return d.toLocaleDateString('de-DE', {

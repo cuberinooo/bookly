@@ -52,7 +52,8 @@ onMounted(fetchSettings);
         <h4
           class="footer-title collapsible-trigger"
           @click="toggleSection('legal')"
-        >          Legal
+        >
+          Legal
           <i :class="['pi', expandedSections.legal ? 'pi-chevron-up' : 'pi-chevron-down', 'mobile-only']" />
         </h4>
         <ul :class="['footer-list', { 'mobile-hidden': !expandedSections.legal }]">

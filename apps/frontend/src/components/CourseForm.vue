@@ -3,6 +3,7 @@ import { ref, watch, computed, onMounted } from 'vue';
 import { CourseFrequency } from '@/app/enums/CourseFrequency';
 import api from '../services/api';
 import { useToast } from 'primevue/usetoast';
+import { authStore } from '../store/auth';
 
 const props = defineProps<{
     course?: any;
@@ -17,10 +18,27 @@ const workoutTypes = ['Functional Training', 'Run Training', 'Team WOD', 'Other'
 
 const timeOptions = ref<string[]>([]);
 
+const form = ref({
+    title: '',
+    customTitle: '',
+    description: '',
+    capacity: 10,
+    allowTrial: true,
+    startTime: new Date(),
+    durationMinutes: 60,
+    recurrence: CourseFrequency.ONCE,
+    trainerId: authStore.user?.id || null,
+    transferAll: false
+});
+
 onMounted(async () => {
     try {
         const response = await api.get('/user/trainers');
         trainers.value = response.data;
+        // Default trainer to current user if not editing
+        if (!form.value.trainerId && authStore.user?.id) {
+            form.value.trainerId = authStore.user.id;
+        }
     } catch (e) {
         console.error('Failed to fetch trainers', e);
     }
@@ -68,28 +86,6 @@ const selectedTime = computed({
             newDate.setSeconds(0);
             form.value.startTime = newDate;
         }
-    }
-});
-
-const form = ref({
-    title: '',
-    customTitle: '',
-    description: '',
-    capacity: 10,
-    allowTrial: true,
-    startTime: new Date(),
-    durationMinutes: 60,
-    recurrence: CourseFrequency.ONCE,
-    trainerId: null as number | null,
-    transferAll: false
-});
-
-onMounted(async () => {
-    try {
-        const response = await api.get('/user/trainers');
-        trainers.value = response.data;
-    } catch (e) {
-        console.error('Failed to fetch trainers', e);
     }
 });
 
@@ -247,10 +243,9 @@ function handleSubmit() {
       </div>
 
       <div
-        v-if="course?.id"
         class="form-group flex-1"
       >
-        <label for="trainer">Head Coach (Transfer)</label>
+        <label for="trainer">Head Coach</label>
         <Select
           v-model="form.trainerId"
           input-id="trainer"

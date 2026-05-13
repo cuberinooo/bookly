@@ -82,16 +82,25 @@ class CourseController extends AbstractController
     }
 
     #[Route('', name: 'course_new', methods: ['POST'])]
-    public function new(Request $request, CourseService $courseService): JsonResponse
+    public function new(Request $request, CourseService $courseService, UserRepository $userRepository): JsonResponse
     {
         $this->denyAccessUnlessGranted('ROLE_TRAINER');
 
         $data = json_decode($request->getContent(), true);
 
         try {
-            /** @var \App\Entity\User $user */
-            $user = $this->getUser();
-            $courses = $courseService->createCourseSeries($data, $user);
+            /** @var \App\Entity\User $creator */
+            $creator = $this->getUser();
+            $trainer = $creator;
+
+            if (isset($data['trainerId'])) {
+                $requestedTrainer = $userRepository->find($data['trainerId']);
+                if ($requestedTrainer && in_array('ROLE_TRAINER', $requestedTrainer->getRoles())) {
+                    $trainer = $requestedTrainer;
+                }
+            }
+
+            $courses = $courseService->createCourseSeries($data, $trainer);
         } catch (ScheduleConflictException $e) {
             return new JsonResponse(['error' => $e->getFrontendMessage()], Response::HTTP_CONFLICT);
         } catch (\Exception $e) {

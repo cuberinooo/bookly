@@ -395,7 +395,6 @@ onMounted(fetchData);
                     <div>
                       <label>DATE & TIME</label>
                       <span>{{ formatDateWithDay(course.startTime) }} @ {{ formatTime(course.startTime) }}</span>
-
                     </div>
                   </div>
                   <div class="focus-item border-left pl-3">

@@ -231,10 +231,10 @@ onMounted(async () => {
                       class="toggle-container"
                     >
                       <ToggleButton
-                        onLabel="Trainer Mode"
-                        offLabel="Member Mode"
-                        onIcon="pi pi-star-fill"
-                        offIcon="pi pi-user"
+                        on-label="Trainer Mode"
+                        off-label="Member Mode"
+                        on-icon="pi pi-star-fill"
+                        off-icon="pi pi-user"
                         :model-value="authStore.viewMode === 'trainer'"
                         @update:model-value="authStore.toggleViewMode()"
                       />

@@ -9,18 +9,30 @@ const dashboardLabel = computed(() => {
 </script>
 
 <template>
-  <nav v-if="authStore.isLoggedIn()" class="mobile-nav">
-    <RouterLink to="/" class="mobile-nav-item">
+  <nav
+    v-if="authStore.isLoggedIn()"
+    class="mobile-nav"
+  >
+    <RouterLink
+      to="/"
+      class="mobile-nav-item"
+    >
       <i class="pi pi-calendar" />
       <span>Courses</span>
     </RouterLink>
     
-    <RouterLink to="/dashboard" class="mobile-nav-item">
+    <RouterLink
+      to="/dashboard"
+      class="mobile-nav-item"
+    >
       <i class="pi pi-th-large" />
       <span>{{ dashboardLabel }}</span>
     </RouterLink>
     
-    <RouterLink to="/meetups" class="mobile-nav-item">
+    <RouterLink
+      to="/meetups"
+      class="mobile-nav-item"
+    >
       <i class="pi pi-users" />
       <span>Meetups</span>
     </RouterLink>

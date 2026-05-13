@@ -155,8 +155,8 @@ const handleSubmit = async () => {
       </div>
       <div class="field">
         <label
-          for="rsvpDeadline"
           v-tooltip.top="'Répondez s\'il vous plaît - Please respond by this date to help the organizer plan better.'"
+          for="rsvpDeadline"
         >
           RSVP Deadline *
           <i class="pi pi-info-circle text-xs text-slate-400" />

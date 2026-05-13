@@ -362,7 +362,7 @@ onUnmounted(() => {
             <div class="detail-item">
               <small>DATE & TIME</small>
               <span class="value">{{ formatDateWithDay(selectedCourse.startTime) }} at {{ formatTime(selectedCourse.startTime) }}</span>
-             </div>
+            </div>
             <div class="detail-item duration-item">
               <small>DURATION</small>
               <span class="value">{{ formatDuration(selectedCourse.durationMinutes) }}</span>
