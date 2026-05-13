@@ -150,6 +150,7 @@ onMounted(fetchSettings);
                 :content="settings.welcomeMailMarkdown"
                 title="Welcome Email Preview"
                 placeholder="Your welcome email content will appear here..."
+                css-style="background-color: white !important"
               />
             </div>
           </div>
@@ -244,6 +245,7 @@ onMounted(fetchSettings);
                 :content="settings.joinUsMailMarkdown"
                 title="Join Us Email Preview"
                 placeholder="Your trial email content will appear here..."
+                css-style="background-color: white !important"
               />
             </div>
           </div>

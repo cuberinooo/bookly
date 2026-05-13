@@ -7,6 +7,7 @@ const props = defineProps<{
   content: string;
   placeholder?: string;
   title?: string;
+  cssStyle?: string;
 }>();
 
 const isExpanded = ref(false);
@@ -26,7 +27,9 @@ function toggleExpand() {
     header="Preview"
     toggleable
   >
-    <div class="preview-content phoenix-card">
+    <div  class="preview-content phoenix-card"
+          :style="cssStyle"
+    >
       <!-- eslint-disable vue/no-v-html -->
       <div
         v-if="renderedMarkdown"
