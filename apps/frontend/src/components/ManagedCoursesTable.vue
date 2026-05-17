@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, onUnmounted, watch, computed } from 'vue';
 import { useConfirm } from 'primevue/useconfirm';
 import { useToast } from 'primevue/usetoast';
 import api from '../services/api';
@@ -35,6 +35,48 @@ const lazyParams = ref({
     endDate: null as Date | null
 });
 
+const isMobile = ref(window.innerWidth <= 768);
+
+const currentWeekStart = computed(() => {
+    const d = new Date(lazyParams.value.startDate);
+    const day = d.getDay();
+    const diff = (day === 0 ? 6 : day - 1);
+    d.setDate(d.getDate() - diff);
+    d.setHours(0, 0, 0, 0);
+    return d;
+});
+
+const currentWeekEnd = computed(() => {
+    const d = new Date(currentWeekStart.value);
+    d.setDate(d.getDate() + 6);
+    d.setHours(23, 59, 59, 999);
+    return d;
+});
+
+const weekLabel = computed(() => {
+    const start = currentWeekStart.value;
+    const end = currentWeekEnd.value;
+    return `${start.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })} - ${end.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })}`;
+});
+
+function navigateWeek(direction: number) {
+    const newDate = new Date(currentWeekStart.value);
+    newDate.setDate(newDate.getDate() + (direction * 7));
+
+    transitionName.value = direction > 0 ? 'slide-left' : 'slide-right';
+
+    lazyParams.value.startDate = newDate;
+    lazyParams.value.endDate = new Date(newDate);
+    lazyParams.value.endDate.setDate(newDate.getDate() + 6);
+    lazyParams.value.endDate.setHours(23, 59, 59, 999);
+
+    onFilter();
+}
+
+function handleResize() {
+    isMobile.value = window.innerWidth <= 768;
+}
+
 watch(
   () => eventsStore.lastEvent,
   (event) => {
@@ -49,7 +91,7 @@ async function loadLazyData() {
     try {
         const params: any = {
             page: lazyParams.value.page,
-            limit: lazyParams.value.rows,
+            limit: isMobile.value ? 50 : lazyParams.value.rows,
             futureOnly: true
         };
 
@@ -101,25 +143,33 @@ function handleTouchEnd(e: TouchEvent) {
     if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 60) {
         if (deltaX < 0) {
             // Swipe Left -> Next Page
-            const nextFirst = lazyParams.value.first + lazyParams.value.rows;
-            if (nextFirst < totalRecords.value) {
-                transitionName.value = 'slide-left';
-                onPage({
-                    first: nextFirst,
-                    rows: lazyParams.value.rows,
-                    page: Math.floor(nextFirst / lazyParams.value.rows)
-                });
+            if (isMobile.value) {
+                navigateWeek(1);
+            } else {
+                const nextFirst = lazyParams.value.first + lazyParams.value.rows;
+                if (nextFirst < totalRecords.value) {
+                    transitionName.value = 'slide-left';
+                    onPage({
+                        first: nextFirst,
+                        rows: lazyParams.value.rows,
+                        page: Math.floor(nextFirst / lazyParams.value.rows)
+                    });
+                }
             }
         } else {
             // Swipe Right -> Prev Page
-            const prevFirst = lazyParams.value.first - lazyParams.value.rows;
-            if (prevFirst >= 0) {
-                transitionName.value = 'slide-right';
-                onPage({
-                    first: prevFirst,
-                    rows: lazyParams.value.rows,
-                    page: Math.floor(prevFirst / lazyParams.value.rows)
-                });
+            if (isMobile.value) {
+                navigateWeek(-1);
+            } else {
+                const prevFirst = lazyParams.value.first - lazyParams.value.rows;
+                if (prevFirst >= 0) {
+                    transitionName.value = 'slide-right';
+                    onPage({
+                        first: prevFirst,
+                        rows: lazyParams.value.rows,
+                        page: Math.floor(prevFirst / lazyParams.value.rows)
+                    });
+                }
             }
         }
     }
@@ -211,7 +261,14 @@ async function removeParticipant(bookingId: number) {
     });
 }
 
-onMounted(loadLazyData);
+onMounted(() => {
+    window.addEventListener('resize', handleResize);
+    loadLazyData();
+});
+
+onUnmounted(() => {
+    window.removeEventListener('resize', handleResize);
+});
 </script>
 
 <template>
@@ -231,7 +288,10 @@ onMounted(loadLazyData);
             />
             <span class="text-[10px] font-bold uppercase text-slate-600 whitespace-nowrap">Show All</span>
           </div>
-          <div class="flex flex-col gap-1 flex-1 min-w-[120px]">
+          <div
+            v-if="!isMobile"
+            class="flex flex-col gap-1 flex-1 min-w-[120px]"
+          >
             <label
               for="filterFrom"
               class="text-[10px] md:text-xs font-bold uppercase text-slate-500"
@@ -246,7 +306,10 @@ onMounted(loadLazyData);
               @date-select="onFilter"
             />
           </div>
-          <div class="flex flex-col gap-1 flex-1 min-w-[120px]">
+          <div
+            v-if="!isMobile"
+            class="flex flex-col gap-1 flex-1 min-w-[120px]"
+          >
             <label
               for="filterTo"
               class="text-[10px] md:text-xs font-bold uppercase text-slate-500"
@@ -262,6 +325,7 @@ onMounted(loadLazyData);
             />
           </div>
           <Button
+            v-if="!isMobile"
             v-tooltip="'Clear Filters'"
             icon="pi pi-filter-slash"
             variant="text"
@@ -269,6 +333,33 @@ onMounted(loadLazyData);
             @click="clearFilters"
           />
         </div>
+      </div>
+    </div>
+
+    <!-- Mobile Week Navigation -->
+    <div
+      v-if="isMobile"
+      class="mobile-week-nav mb-6"
+    >
+      <div class="flex items-center justify-between bg-slate-900 text-white rounded-xl p-2">
+        <Button
+          icon="pi pi-chevron-left"
+          variant="text"
+          rounded
+          class="!text-white"
+          @click="navigateWeek(-1)"
+        />
+        <div class="flex flex-col items-center">
+          <span class="text-[10px] font-black text-amber-500 uppercase tracking-widest">Selected Week</span>
+          <span class="text-sm font-black font-['Barlow_Condensed']">{{ weekLabel }}</span>
+        </div>
+        <Button
+          icon="pi pi-chevron-right"
+          variant="text"
+          rounded
+          class="!text-white"
+          @click="navigateWeek(1)"
+        />
       </div>
     </div>
 
@@ -426,7 +517,7 @@ onMounted(loadLazyData);
           mode="out-in"
         >
           <div
-            :key="lazyParams.page"
+            :key="lazyParams.startDate.getTime()"
             class="flex flex-col gap-4"
           >
             <template v-if="loading">
@@ -556,6 +647,7 @@ onMounted(loadLazyData);
       </div>
 
       <Paginator
+        v-if="!isMobile"
         v-model:first="lazyParams.first"
         :rows="lazyParams.rows"
         :total-records="totalRecords"
@@ -576,12 +668,12 @@ onMounted(loadLazyData);
 <style lang="scss" scoped>
 .managed-courses-section {
     @apply bg-white p-4 md:p-10 rounded-xl md:rounded-2xl border border-slate-200 shadow-sm;
-    overflow-x: hidden;
 }
 
 .calendar-content-wrapper {
   position: relative;
   width: 100%;
+  overflow-x: hidden;
 }
 
 /* Slide Transitions */
@@ -657,5 +749,23 @@ onMounted(loadLazyData);
 
 .text-amber-600_ {
   color: var(--color-amber-600) !important;
+}
+
+.mobile-week-nav {
+  position: sticky;
+  top: 75px; // Offset parent padding
+  z-index: 100;
+  margin-left: -1rem;
+  margin-right: -1rem;
+  padding: 0.5rem 1rem;
+  background: white; // Cover content scrolling underneath
+
+  .p-button {
+    @apply h-10 w-10 p-0;
+  }
+
+  > div {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  }
 }
 </style>
