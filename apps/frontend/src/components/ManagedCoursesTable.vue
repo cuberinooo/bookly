@@ -31,8 +31,22 @@ const lazyParams = ref({
     first: 0,
     rows: 10,
     page: 1,
-    startDate: new Date(),
-    endDate: null as Date | null
+    startDate: (() => {
+        const d = new Date();
+        const day = d.getDay();
+        const diff = (day === 0 ? 6 : day - 1);
+        d.setDate(d.getDate() - diff);
+        d.setHours(0, 0, 0, 0);
+        return d;
+    })(),
+    endDate: (() => {
+        const d = new Date();
+        const day = d.getDay();
+        const diff = (day === 0 ? 0 : 7 - day);
+        d.setDate(d.getDate() + diff);
+        d.setHours(23, 59, 59, 999);
+        return d;
+    })()
 });
 
 const isMobile = ref(window.innerWidth <= 768);
@@ -78,6 +92,15 @@ function handleResize() {
 }
 
 watch(
+  () => authStore.user?.id,
+  (newId) => {
+    if (newId) {
+      loadLazyData();
+    }
+  }
+);
+
+watch(
   () => eventsStore.lastEvent,
   (event) => {
     if (event && ['Course', 'CourseSeries', 'Booking'].includes(event.entity)) {
@@ -91,8 +114,7 @@ async function loadLazyData() {
     try {
         const params: any = {
             page: lazyParams.value.page,
-            limit: isMobile.value ? 50 : lazyParams.value.rows,
-            futureOnly: true
+            limit: isMobile.value ? 50 : lazyParams.value.rows
         };
 
         if (authStore.isTrainer() && !showAllCourses.value) {
@@ -182,8 +204,18 @@ function onFilter() {
 }
 
 function clearFilters() {
-    lazyParams.value.startDate = new Date();
-    lazyParams.value.endDate = null;
+    const d = new Date();
+    const day = d.getDay();
+    const diff = (day === 0 ? 6 : day - 1);
+    d.setDate(d.getDate() - diff);
+    d.setHours(0, 0, 0, 0);
+
+    lazyParams.value.startDate = d;
+
+    const end = new Date(d);
+    end.setDate(d.getDate() + 6);
+    end.setHours(23, 59, 59, 999);
+    lazyParams.value.endDate = end;
 
     onFilter();
 }
