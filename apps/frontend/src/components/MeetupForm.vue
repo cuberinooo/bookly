@@ -185,7 +185,7 @@ const handleSubmit = async () => {
         id="location"
         v-model="formData.location"
         required
-        placeholder="Physical address"
+        placeholder="Physical address or Link (e.g. Google Maps)"
       />
     </div>
 

@@ -41,7 +41,7 @@ class Meetup implements CompanyAwareInterface
     #[Groups(['meetup:read', 'meetup:write'])]
     private ?\DateTimeInterface $meetupDate = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 1000)]
     #[Groups(['meetup:read', 'meetup:write'])]
     private ?string $location = null;
 

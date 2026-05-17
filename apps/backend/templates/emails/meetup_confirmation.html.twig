@@ -6,7 +6,12 @@
     <p>Great news! The meetup <strong>{{ meetup.title }}</strong> has been confirmed.</p>
     <p>
         <strong>When:</strong> {{ meetup.meetupDate|date('d.m.Y H:i') }}<br>
-        <strong>Where:</strong> {{ meetup.location }}
+        <strong>Where:</strong> 
+        {% if meetup.location starts with 'http' %}
+            <a href="{{ meetup.location }}">{{ meetup.location }}</a>
+        {% else %}
+            {{ meetup.location }}
+        {% endif %}
     </p>
     <p>See you there!</p>
     <p>

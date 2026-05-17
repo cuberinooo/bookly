@@ -7,7 +7,12 @@
     <p>
         <strong>What:</strong> {{ meetup.title }}<br>
         <strong>When:</strong> {{ meetup.meetupDate|date('d.m.Y H:i') }}<br>
-        <strong>Where:</strong> {{ meetup.location }}
+        <strong>Where:</strong> 
+        {% if meetup.location starts with 'http' %}
+            <a href="{{ meetup.location }}">{{ meetup.location }}</a>
+        {% else %}
+            {{ meetup.location }}
+        {% endif %}
     </p>
     <p>{{ meetup.description }}</p>
     <p>RSVP Deadline: {{ meetup.rsvpDeadline|date('d.m.Y H:i') }}</p>

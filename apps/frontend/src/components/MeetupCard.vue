@@ -65,6 +65,11 @@ const participants = computed(() => {
     return props.meetup.rsvps.filter(r => r.status === RsvpStatus.GOING);
 });
 
+const isLocationLink = computed(() => {
+  const loc = props.meetup.location;
+  return loc.startsWith('http://') || loc.startsWith('https://');
+});
+
 const handleRsvp = (status: RsvpStatus) => {
   if (isRsvpLocked.value) return;
   emit('rsvp', status);
@@ -107,7 +112,16 @@ const handleRsvp = (status: RsvpStatus) => {
         </div>
         <div class="flex items-center gap-2 text-sm">
           <i class="pi pi-map-marker" />
-          <span>{{ meetup.location }}</span>
+          <a
+            v-if="isLocationLink"
+            :href="meetup.location"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-primary hover:underline font-medium"
+          >
+            {{ meetup.location }}
+          </a>
+          <span v-else>{{ meetup.location }}</span>
         </div>
       </div>
     </template>
