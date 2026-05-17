@@ -149,6 +149,57 @@ onMounted(fetchProfile);
       v-else
       class="grid grid-cols-1 md:grid-cols-3 gap-8"
     >
+      <div class="md:col-span-1">
+        <div class="phoenix-card text-center flex flex-col items-center">
+          <div class="profile-image-container mb-4">
+            <img
+              v-if="profilePictureUrl"
+              :src="profilePictureUrl"
+              alt="Profile"
+              class="profile-image-large"
+            >
+            <div
+              v-else
+              class="profile-image-placeholder"
+            >
+              <i class="pi pi-user text-3xl" />
+            </div>
+          </div>
+
+          <input
+            ref="fileInput"
+            type="file"
+            accept="image/*"
+            class="hidden"
+            @change="handleFileUpload"
+          >
+
+          <Button
+            label="Change Picture"
+            icon="pi pi-camera"
+            severity="secondary"
+            text
+            size="small"
+            class="mb-4"
+            :loading="uploading"
+            @click="triggerFileUpload"
+          />
+
+          <h2 class="text-xl font-bold text-slate-900">
+            {{ user.name }}
+          </h2>
+          <div class="flex flex-wrap gap-2 justify-center mt-3">
+            <span
+              v-for="role in user.roles.filter(r => r !== 'ROLE_USER')"
+              :key="role"
+              class="px-3 py-1 bg-amber-100 text-amber-800 text-[10px] font-black rounded-full tracking-widest uppercase"
+            >
+              {{ role.replace('ROLE_', '') }}
+            </span>
+          </div>
+        </div>
+      </div>
+
       <div class="md:col-span-2">
         <div class="phoenix-card">
           <form
@@ -211,63 +262,6 @@ onMounted(fetchProfile);
         </div>
       </div>
 
-      <div class="md:col-span-1">
-        <div class="phoenix-card text-center flex flex-col items-center">
-          <div class="profile-image-container mb-4">
-            <img
-              v-if="profilePictureUrl"
-              :src="profilePictureUrl"
-              alt="Profile"
-              class="profile-image-large"
-            >
-            <div
-              v-else
-              class="profile-image-placeholder"
-            >
-              <i class="pi pi-user text-3xl" />
-            </div>
-          </div>
-
-          <input
-            ref="fileInput"
-            type="file"
-            accept="image/*"
-            class="hidden"
-            @change="handleFileUpload"
-          >
-
-          <Button
-            label="Change Picture"
-            icon="pi pi-camera"
-            severity="secondary"
-            text
-            size="small"
-            class="mb-4"
-            :loading="uploading"
-            @click="triggerFileUpload"
-          />
-
-          <h2 class="text-xl font-bold text-slate-900">
-            {{ user.name }}
-          </h2>
-          <div class="flex flex-wrap gap-2 justify-center mt-3">
-            <span
-              v-for="role in user.roles.filter(r => r !== 'ROLE_USER')"
-              :key="role"
-              class="px-3 py-1 bg-amber-100 text-amber-800 text-[10px] font-black rounded-full tracking-widest uppercase"
-            >
-              {{ role.replace('ROLE_', '') }}
-            </span>
-          </div>
-
-          <div class="mt-8 w-full pt-6 border-t border-slate-100">
-            <div class="flex justify-between text-sm mb-2">
-              <span class="text-slate-500 font-bold uppercase tracking-tighter">Status</span>
-              <span class="text-slate-900 font-bold uppercase">Active</span>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   </div>
 </template>

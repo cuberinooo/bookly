@@ -114,7 +114,10 @@ const handleRsvp = (status: RsvpStatus) => {
           <i class="pi pi-calendar" />
           <span>{{ formatDateTime(meetup.meetupDate) }}</span>
         </div>
-        <div class="flex items-center gap-2 text-sm max-w-full overflow-hidden">
+        <div 
+          v-memo="[meetup.location]"
+          class="flex items-center gap-2 text-sm max-w-full overflow-hidden"
+        >
           <i class="pi pi-map-marker flex-shrink-0" />
           <a
             v-if="isLocationLink"
@@ -122,14 +125,16 @@ const handleRsvp = (status: RsvpStatus) => {
             :href="meetup.location"
             target="_blank"
             rel="noopener noreferrer"
-            class="text-primary hover:underline font-medium truncate"
+            tabindex="0"
+            class="text-primary hover:underline font-medium truncate focus:outline-none focus:ring-1 focus:ring-primary rounded-sm"
           >
             {{ meetup.location }}
           </a>
           <span
             v-else
             v-tooltip.top="meetup.location.length > 40 ? meetup.location : null"
-            class="truncate"
+            :tabindex="meetup.location.length > 40 ? 0 : undefined"
+            class="truncate focus:outline-none focus:bg-slate-100 rounded-sm px-1 -mx-1 cursor-default"
           >
             {{ meetup.location }}
           </span>
@@ -160,8 +165,10 @@ const handleRsvp = (status: RsvpStatus) => {
       <div class="flex items-center justify-between mb-4 bg-slate-50 p-3 rounded-lg border border-slate-100">
         <div class="flex flex-col">
           <span
+            v-memo="[]"
             v-tooltip.top="'Répondez s\'il vous plaît - Please respond by this date to help the organizer plan better.'"
-            class="text-xs uppercase font-bold text-slate-400 cursor-help"
+            tabindex="0"
+            class="text-xs uppercase font-bold text-slate-400 cursor-help flex items-center gap-1 focus:outline-none focus:text-slate-600 transition-colors"
           >
             RSVP Deadline
             <i class="pi pi-info-circle text-[10px]" />
