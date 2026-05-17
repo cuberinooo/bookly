@@ -229,6 +229,12 @@ function onSlotClick(day: Date, hour: number) {
                   >
                     <i class="pi pi-lock" /> TRIAL RESTRICTED
                   </div>
+                  <div
+                    v-if="isPastCourse(course)"
+                    class="past-badge"
+                  >
+                    <i class="pi pi-history" /> PAST
+                  </div>
                 </div>
                 <div class="course-time">
                   {{ formatTime(course.startTime) }}
@@ -500,11 +506,15 @@ $border-color: #e2e8f0;
         opacity: 0.6;
         border-left-color: #94a3b8;
         background: #f8fafc;
-        filter: grayscale(0.5);
+        filter: grayscale(0.8);
 
         &:hover {
           opacity: 0.9;
-          filter: grayscale(0);
+          filter: grayscale(0.2);
+        }
+
+        .course-title, .course-time, .coach-line, .course-spots {
+            color: #94a3b8 !important;
         }
     }
 
@@ -530,6 +540,22 @@ $border-color: #e2e8f0;
         font-size: 0.55rem;
         color: #f8fafc;
         background: #64748b;
+        padding: 1px 4px;
+        border-radius: 3px;
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        z-index: 2;
+
+        i { font-size: 0.5rem; }
+    }
+
+    .past-badge {
+        font-family: 'Barlow Condensed', sans-serif;
+        font-weight: 800;
+        font-size: 0.55rem;
+        color: #64748b;
+        background: #e2e8f0;
         padding: 1px 4px;
         border-radius: 3px;
         display: flex;

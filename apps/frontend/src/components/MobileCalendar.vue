@@ -110,6 +110,10 @@ function isRestrictedForTrial(course: any) {
     return authStore.isTrial() && course.allowTrial === false;
 }
 
+function isPastCourse(course: any) {
+    return new Date(course.endTime) < new Date();
+}
+
 function formatDayName(date: Date) {
     return date.toLocaleDateString('de-DE', { weekday: 'long' });
 }
@@ -181,7 +185,8 @@ function formatDayName(date: Date) {
                 class="mobile-course-card"
                 :class="{ 
                   'is-booked': isBookedByUser(course),
-                  'is-restricted': isRestrictedForTrial(course)
+                  'is-restricted': isRestrictedForTrial(course),
+                  'is-past': isPastCourse(course)
                 }"
                 @click="$emit('course-click', course)"
               >
@@ -202,6 +207,12 @@ function formatDayName(date: Date) {
                       class="ml-2 text-[10px] text-slate-500 font-black"
                     >
                       <i class="pi pi-lock" /> RESTRICTED
+                    </span>
+                    <span
+                      v-if="isPastCourse(course)"
+                      class="ml-2 text-[10px] text-slate-400 font-black"
+                    >
+                      <i class="pi pi-history" /> PAST
                     </span>
                   </div>
                   <div class="course-coach">
@@ -395,6 +406,27 @@ function formatDayName(date: Date) {
 
         .card-left .course-time, .card-main .course-title {
             color: #64748b;
+        }
+    }
+
+    &.is-past {
+        opacity: 0.6;
+        filter: grayscale(0.8);
+        background: #f1f5f9;
+        border-color: #e2e8f0;
+
+        .card-left {
+          border-right-color: #e2e8f0;
+          .course-time, .course-duration { color: #94a3b8; }
+        }
+
+        .card-main {
+          .course-title, .course-coach { color: #94a3b8; }
+        }
+
+        .card-right {
+          .booked-indicator { color: #94a3b8; }
+          .spots-pill { background: #e2e8f0; color: #94a3b8; }
         }
     }
 
