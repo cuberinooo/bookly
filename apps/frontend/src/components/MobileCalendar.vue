@@ -52,7 +52,7 @@ function handleTouchStart(e: TouchEvent) {
 function handleTouchEnd(e: TouchEvent) {
     const touchEndX = e.changedTouches[0].clientX;
     const touchEndY = e.changedTouches[0].clientY;
-    
+
     const deltaX = touchEndX - touchStartX.value;
     const deltaY = touchEndY - touchStartY.value;
 
@@ -181,9 +181,9 @@ function formatDayName(date: Date) {
               </div>
               <div
                 v-for="course in getCoursesForDay(date)"
-                :key="course.id" 
+                :key="course.id"
                 class="mobile-course-card"
-                :class="{ 
+                :class="{
                   'is-booked': isBookedByUser(course),
                   'is-restricted': isRestrictedForTrial(course),
                   'is-past': isPastCourse(course)
@@ -232,7 +232,7 @@ function formatDayName(date: Date) {
                     class="spots-pill"
                     :class="{ 'is-full': course.bookings.filter(b => !b.isWaitlist).length >= course.capacity }"
                   >
-                    {{ course.capacity - course.bookings.filter(b => !b.isWaitlist).length }} 
+                    {{ course.capacity - course.bookings.filter(b => !b.isWaitlist).length }}
                     <i class="pi pi-users" />
                   </div>
                 </div>
@@ -251,12 +251,12 @@ function formatDayName(date: Date) {
     flex-direction: column;
     background: #f8fafc;
     touch-action: pan-y; /* Allow vertical scrolling but let us handle horizontal swipes */
-    overflow-x: hidden;
 }
 
 .calendar-content-wrapper {
   position: relative;
   width: 100%;
+  overflow-x: hidden;
 }
 
 /* Slide Transitions */
@@ -288,13 +288,13 @@ function formatDayName(date: Date) {
 .mobile-nav {
     background: #0f172a;
     color: white;
-    padding: 1.5rem 1rem;
+    padding: 1rem;
     position: sticky;
-    top: 0;
+    top: 80px;
     z-index: 100;
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 0.5rem;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 
     .nav-header h2 {
