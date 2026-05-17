@@ -48,8 +48,12 @@ const countdown = computed(() => {
   const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
   const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
-  if (days > 0) return `${days}d ${hours}h`;
-  return `${hours}h ${minutes}m ${seconds}s`;
+  const pad = (n: number) => n.toString().padStart(2, '0');
+
+  if (days > 0) {
+    return `${days}d ${pad(hours)}h ${pad(minutes)}m ${pad(seconds)}s`;
+  }
+  return `${pad(hours)}h ${pad(minutes)}m ${pad(seconds)}s`;
 });
 
 const statusSeverity = computed(() => {
@@ -110,18 +114,25 @@ const handleRsvp = (status: RsvpStatus) => {
           <i class="pi pi-calendar" />
           <span>{{ formatDateTime(meetup.meetupDate) }}</span>
         </div>
-        <div class="flex items-center gap-2 text-sm">
-          <i class="pi pi-map-marker" />
+        <div class="flex items-center gap-2 text-sm max-w-full overflow-hidden">
+          <i class="pi pi-map-marker flex-shrink-0" />
           <a
             v-if="isLocationLink"
+            v-tooltip.top="meetup.location"
             :href="meetup.location"
             target="_blank"
             rel="noopener noreferrer"
-            class="text-primary hover:underline font-medium"
+            class="text-primary hover:underline font-medium truncate"
           >
             {{ meetup.location }}
           </a>
-          <span v-else>{{ meetup.location }}</span>
+          <span
+            v-else
+            v-tooltip.top="meetup.location.length > 40 ? meetup.location : null"
+            class="truncate"
+          >
+            {{ meetup.location }}
+          </span>
         </div>
       </div>
     </template>
