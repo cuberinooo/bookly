@@ -23,7 +23,10 @@ class MeetupService
     public function createMeetup(array $data, User $creator): Meetup
     {
         $meetupDate = new \DateTime($data['meetupDate']);
+        $meetupDate->setTimezone(new \DateTimeZone(date_default_timezone_get()));
+        
         $rsvpDeadline = new \DateTime($data['rsvpDeadline']);
+        $rsvpDeadline->setTimezone(new \DateTimeZone(date_default_timezone_get()));
 
         if ($rsvpDeadline > $meetupDate) {
             throw new \LogicException("The RSVP deadline cannot be after the meetup date.");
@@ -77,7 +80,13 @@ class MeetupService
         if (isset($data['imageUrl'])) $meetup->setImageUrl($data['imageUrl']);
         if (isset($data['meetupDate'])) {
             $newMeetupDate = new \DateTime($data['meetupDate']);
+            $newMeetupDate->setTimezone(new \DateTimeZone(date_default_timezone_get()));
+            
             $currentDeadline = isset($data['rsvpDeadline']) ? new \DateTime($data['rsvpDeadline']) : $meetup->getRsvpDeadline();
+            if ($currentDeadline instanceof \DateTime) {
+                $currentDeadline->setTimezone(new \DateTimeZone(date_default_timezone_get()));
+            }
+
             if ($currentDeadline > $newMeetupDate) {
                 throw new \LogicException("The RSVP deadline cannot be after the meetup date.");
             }
@@ -86,6 +95,8 @@ class MeetupService
 
         if (isset($data['rsvpDeadline'])) {
             $newDeadline = new \DateTime($data['rsvpDeadline']);
+            $newDeadline->setTimezone(new \DateTimeZone(date_default_timezone_get()));
+            
             $currentMeetupDate = $meetup->getMeetupDate();
             if ($newDeadline > $currentMeetupDate) {
                 throw new \LogicException("The RSVP deadline cannot be after the meetup date.");
