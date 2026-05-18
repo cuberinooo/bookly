@@ -26,8 +26,10 @@ class TrainerStatisticsController extends AbstractController
             ->select('COUNT(c.id)')
             ->where('c.user = :trainerId')
             ->andWhere('c.startTime < :now')
+            ->andWhere('c.status = :status')
             ->setParameter('trainerId', $trainerId)
             ->setParameter('now', $now)
+            ->setParameter('status', \App\Enum\CourseStatus::ACTIVE)
             ->getQuery()
             ->getSingleScalarResult();
 
@@ -37,9 +39,11 @@ class TrainerStatisticsController extends AbstractController
             ->where('c.user = :trainerId')
             ->andWhere('c.startTime >= :twelveMonthsAgo')
             ->andWhere('c.startTime < :now')
+            ->andWhere('c.status = :status')
             ->setParameter('trainerId', $trainerId)
             ->setParameter('twelveMonthsAgo', $twelveMonthsAgo)
             ->setParameter('now', $now)
+            ->setParameter('status', \App\Enum\CourseStatus::ACTIVE)
             ->orderBy('c.startTime', 'ASC')
             ->getQuery()
             ->getResult();
@@ -80,7 +84,9 @@ class TrainerStatisticsController extends AbstractController
             ->join('b.course', 'c')
             ->join('b.user', 'u')
             ->where('c.user = :trainerId')
+            ->andWhere('c.status = :status')
             ->setParameter('trainerId', $trainerId)
+            ->setParameter('status', \App\Enum\CourseStatus::ACTIVE)
             ->getQuery()
             ->getSingleScalarResult();
 

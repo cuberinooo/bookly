@@ -363,7 +363,7 @@ class CourseService
         // Unbook all members
         $bookings = $course->getBookings();
         foreach ($bookings as $booking) {
-            $this->bookingService->unbook($course, $booking->getUser());
+            $this->bookingService->removeBookingIfExists($course, $booking->getUser());
         }
 
         $this->entityManager->flush();
