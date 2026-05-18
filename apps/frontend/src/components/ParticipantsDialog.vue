@@ -129,11 +129,11 @@ function close() {
             <template #body="slotProps">
               <div class="flex items-center gap-3">
                 <div class="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 border border-slate-200 transition-transform duration-200 ease-out hover:scale-125 hover:z-10 hover:shadow-lg hover:border-amber-400 cursor-pointer group relative">
-                  <img 
-                    v-if="getProfilePictureUrl(slotProps.data.user)" 
-                    :src="getProfilePictureUrl(slotProps.data.user)" 
-                    alt="Profile" 
-                    class="w-full h-full object-cover" 
+                  <img
+                    v-if="getProfilePictureUrl(slotProps.data.user)"
+                    :src="getProfilePictureUrl(slotProps.data.user)"
+                    alt="Profile"
+                    class="w-full h-full object-cover"
                   >
                   <div
                     v-else
@@ -277,19 +277,25 @@ function close() {
         <div class="flex flex-col gap-1">
           <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Athlete</label>
           <span class="text-xl font-bold">{{ emergencyInfo.userName }}</span>
+        </div>
+        <div
+          v-if="emergencyInfo.phoneNumber"
+          class="flex flex-col gap-1"
+        >
+          <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Phone</label>
           <a
-            v-if="emergencyInfo.phoneNumber"
             :href="'tel:' + emergencyInfo.phoneNumber"
-            class="text-amber-500 font-bold flex items-center gap-2 mt-1"
+            class="text-xl font-black text-slate-900 flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-100"
           >
-            <i class="pi pi-phone" /> {{ emergencyInfo.phoneNumber }}
+            <i class="pi pi-phone text-amber-500" />
+            {{ emergencyInfo.phoneNumber }}
           </a>
         </div>
 
         <Divider />
 
         <div class="flex flex-col gap-4">
-          <h4 class="text-sm font-black text-red-500 uppercase tracking-tighter">
+          <h4 class="text-sm font-black !text-red-500 uppercase tracking-tighter">
             Primary Contact
           </h4>
           <div
@@ -323,6 +329,7 @@ function close() {
       <template #footer>
         <Button
           label="Close"
+          severity="primary"
           class="w-full"
           @click="showEmergencyDialog = false"
         />
@@ -381,14 +388,14 @@ function close() {
     display: flex;
     flex-direction: column;
     align-items: center;
-    
-    p { 
-      font-weight: 700; 
-      text-transform: uppercase; 
-      font-size: 0.875rem; 
-      line-height: 1.25rem; 
-      letter-spacing: -0.025em; 
-      font-family: 'Barlow Condensed', sans-serif; 
+
+    p {
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 0.875rem;
+      line-height: 1.25rem;
+      letter-spacing: -0.025em;
+      font-family: 'Barlow Condensed', sans-serif;
     }
 }
 
@@ -397,15 +404,15 @@ function close() {
     transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
     transition-duration: 200ms;
-    
-    &:hover { 
-      color: #f59e0b; 
-      background-color: #fffbeb; 
+
+    &:hover {
+      color: #f59e0b;
+      background-color: #fffbeb;
     }
-    
-    &.delete-btn:hover { 
-      color: #ef4444; 
-      background-color: #fef2f2; 
+
+    &.delete-btn:hover {
+      color: #ef4444;
+      background-color: #fef2f2;
     }
 }
 
