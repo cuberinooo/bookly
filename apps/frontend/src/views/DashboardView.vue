@@ -468,6 +468,8 @@ onMounted(fetchData);
     max-width: 1400px;
     margin: 0 auto;
     padding: 2rem 0;
+    touch-action: pan-y;
+    overflow-x: hidden;
 }
 
 .header-with-action {
@@ -543,9 +545,11 @@ onMounted(fetchData);
     border-top: 4px solid var(--primary-color) !important;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
-    &:hover {
-        transform: translateY(-8px);
-        box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+    @media (hover: hover) {
+        &:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+        }
     }
 }
 
@@ -623,7 +627,7 @@ onMounted(fetchData);
 
 .bookings-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr));
     gap: 2.5rem;
 }
 

@@ -763,6 +763,7 @@ onUnmounted(() => {
 <style lang="scss" scoped>
 .managed-courses-section {
     @apply bg-white p-4 md:p-10 rounded-xl md:rounded-2xl border border-slate-200 shadow-sm;
+    touch-action: pan-y;
 }
 
 .calendar-content-wrapper {
@@ -812,7 +813,10 @@ onUnmounted(() => {
 
     :deep(.p-datatable-tbody > tr) {
         @apply transition-colors duration-200;
-        &:hover { @apply bg-slate-50/50; }
+        
+        @media (hover: hover) {
+            &:hover { @apply bg-slate-50/50; }
+        }
 
         &.is-postponed {
           @apply opacity-50 grayscale;
@@ -843,9 +847,11 @@ onUnmounted(() => {
 
 .action-btn {
     @apply text-slate-500 transition-colors duration-200;
-    &:hover { @apply text-amber-500 bg-amber-50; }
-
-    &.delete-btn:hover { @apply text-red-500 bg-red-50; }
+    
+    @media (hover: hover) {
+        &:hover { @apply text-amber-500 bg-amber-50; }
+        &.delete-btn:hover { @apply text-red-500 bg-red-50; }
+    }
 }
 
 .mobile-paginator {
