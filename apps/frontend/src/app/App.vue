@@ -88,21 +88,34 @@ const dashboardLabel = computed(() => {
   return authStore.isTrainer() && authStore.viewMode === 'trainer' ? 'Dashboard' : 'My bookings';
 });
 
-const menuItems = computed(() => [
-  {
-    label: 'My Account',
-    items: [
-      {label: 'Profile', icon: 'pi pi-user', command: () => router.push('/profile')},
-      {label: 'Settings', icon: 'pi pi-cog', command: () => router.push('/settings')}
-    ]
-  },
-  {
+const menuItems = computed(() => {
+  const items = [
+    {
+      label: 'My Account',
+      items: [
+        {label: 'Profile', icon: 'pi pi-user', command: () => router.push('/profile')},
+        {label: 'Settings', icon: 'pi pi-cog', command: () => router.push('/settings')}
+      ]
+    }
+  ];
+
+  if (authStore.isTrainer()) {
+    items[0].items.push({
+      label: 'Statistics',
+      icon: 'pi pi-chart-bar',
+      command: () => router.push('/statistics')
+    });
+  }
+
+  items.push({
     label: 'Account Action',
     items: [
       {label: 'Logout', icon: 'pi pi-sign-out', command: () => logout()}
     ]
-  }
-]);
+  });
+
+  return items;
+});
 
 function toggleMenu(event: any) {
   menu.value.toggle(event);
@@ -258,8 +271,8 @@ onMounted(async () => {
 
     <main class="container">
       <router-view v-slot="{ Component }">
-        <transition 
-          name="fade-slide" 
+        <transition
+          name="fade-slide"
           mode="out-in"
         >
           <component :is="Component" />

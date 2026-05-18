@@ -33,6 +33,7 @@ import Skeleton from 'primevue/skeleton';
 import Avatar from 'primevue/avatar';
 import AvatarGroup from 'primevue/avatargroup';
 import ProgressSpinner from 'primevue/progressspinner';
+import Chart from 'primevue/chart';
 import {Checkbox, Divider, FileUpload, Paginator, Panel, Password, Tag, ToggleButton, Tooltip} from "primevue";
 
 const app = createApp(App);
@@ -96,5 +97,6 @@ app.component('Panel', Panel);
 app.component('Avatar', Avatar);
 app.component('AvatarGroup', AvatarGroup);
 app.component('ProgressSpinner', ProgressSpinner);
+app.component('Chart', Chart);
 
 app.mount('#root');

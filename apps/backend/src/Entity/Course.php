@@ -11,6 +11,8 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Attribute\Groups;
 
 #[ORM\Entity(repositoryClass: CourseRepository::class)]
+#[ORM\Table(name: 'course')]
+#[ORM\Index(columns: ['user_id', 'start_time'], name: 'idx_course_trainer_start')]
 #[ORM\HasLifecycleCallbacks]
 class Course implements CompanyAwareInterface
 {
