@@ -101,6 +101,48 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, Company
     #[Groups(['user:read', 'meetup:read'])]
     private ?string $profilePicture = null;
 
+    #[ORM\Column(length: 20, nullable: true)]
+    private ?string $phoneNumber = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $emergencyContactName = null;
+
+    #[ORM\Column(length: 20, nullable: true)]
+    private ?string $emergencyContactPhone = null;
+
+    public function getPhoneNumber(): ?string
+    {
+        return $this->phoneNumber;
+    }
+
+    public function setPhoneNumber(?string $phoneNumber): static
+    {
+        $this->phoneNumber = $phoneNumber;
+        return $this;
+    }
+
+    public function getEmergencyContactName(): ?string
+    {
+        return $this->emergencyContactName;
+    }
+
+    public function setEmergencyContactName(?string $emergencyContactName): static
+    {
+        $this->emergencyContactName = $emergencyContactName;
+        return $this;
+    }
+
+    public function getEmergencyContactPhone(): ?string
+    {
+        return $this->emergencyContactPhone;
+    }
+
+    public function setEmergencyContactPhone(?string $emergencyContactPhone): static
+    {
+        $this->emergencyContactPhone = $emergencyContactPhone;
+        return $this;
+    }
+
     public function getProfilePicture(): ?string
     {
         return $this->profilePicture;

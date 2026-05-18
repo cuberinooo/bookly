@@ -2,6 +2,10 @@
 
 namespace App\Controller;
 
+use App\Entity\User;
+use App\Entity\Booking;
+use App\Entity\SensitiveDataAccessLog;
+use App\Repository\BookingRepository;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -134,6 +138,72 @@ class UserController extends AbstractController
         return new JsonResponse($json, 200, [], true);
     }
 
+    #[Route('/{id}/emergency-contact', name: 'user_emergency_contact', methods: ['GET'])]
+    public function getEmergencyContact(
+        int $id,
+        UserRepository $userRepository,
+        EntityManagerInterface $entityManager
+    ): JsonResponse {
+        /** @var User $trainer */
+        $trainer = $this->getUser();
+        $targetUser = $userRepository->find($id);
+
+        if (!$targetUser) {
+            return new JsonResponse(['error' => 'User not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        // 1. Authorization: Only Trainers or Admins
+        if (!$this->isGranted('ROLE_TRAINER')) {
+            return new JsonResponse(['error' => 'Access denied'], Response::HTTP_FORBIDDEN);
+        }
+
+        // 2. Vital Interests Check: Does this trainer have an active session with this user?
+        // We allow access if there's a booking in a course that overlaps with current time (+/- 2 hours)
+        $isAuthorized = $this->isGranted('ROLE_ADMIN');
+
+        if (!$isAuthorized) {
+            $now = new \DateTime();
+            $startTime = (clone $now)->modify('-2 hours');
+            $endTime = (clone $now)->modify('+2 hours');
+
+            $bookings = $entityManager->getRepository(Booking::class)->createQueryBuilder('b')
+                ->join('b.course', 'c')
+                ->where('b.user = :user')
+                ->andWhere('c.user = :trainer')
+                ->andWhere('c.startTime <= :endTime')
+                ->andWhere('c.endTime >= :startTime')
+                ->setParameter('user', $targetUser)
+                ->setParameter('trainer', $trainer)
+                ->setParameter('startTime', $startTime)
+                ->setParameter('endTime', $endTime)
+                ->getQuery()
+                ->getResult();
+
+            if (!empty($bookings)) {
+                $isAuthorized = true;
+            }
+        }
+
+        if (!$isAuthorized) {
+            return new JsonResponse(['error' => 'You can only access emergency info for active session participants.'], Response::HTTP_FORBIDDEN);
+        }
+
+        // 3. Audit Logging (GDPR compliance)
+        $log = new SensitiveDataAccessLog();
+        $log->setViewer($trainer);
+        $log->setTargetUser($targetUser);
+        $log->setReason('Emergency contact access via Trainer Dashboard');
+        
+        $entityManager->persist($log);
+        $entityManager->flush();
+
+        return new JsonResponse([
+            'phoneNumber' => $targetUser->getPhoneNumber(),
+            'emergencyContactName' => $targetUser->getEmergencyContactName(),
+            'emergencyContactPhone' => $targetUser->getEmergencyContactPhone()
+        ]);
+    }
+
     #[Route('/change-password', name: 'user_change_password', methods: ['POST'])]
     public function changePassword(
         Request $request,
@@ -183,11 +253,24 @@ class UserController extends AbstractController
     #[Route('/me', name: 'user_update', methods: ['PATCH'])]
     public function update(Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
+        /** @var User $user */
         $user = $this->getUser();
         $data = json_decode($request->getContent(), true);
 
         if (isset($data['name'])) {
             $user->setName($data['name']);
+        }
+
+        if (isset($data['phoneNumber'])) {
+            $user->setPhoneNumber($data['phoneNumber']);
+        }
+
+        if (isset($data['emergencyContactName'])) {
+            $user->setEmergencyContactName($data['emergencyContactName']);
+        }
+
+        if (isset($data['emergencyContactPhone'])) {
+            $user->setEmergencyContactPhone($data['emergencyContactPhone']);
         }
 
         if (isset($data['courseStartNotificationHours']) || isset($data['courseStartNotificationMinutes'])) {

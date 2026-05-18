@@ -4,6 +4,9 @@ import { settingsStore } from '../store/settings';
 import { authStore } from '../store/auth';
 import api from '../services/api';
 
+import { useConfirm } from 'primevue/useconfirm';
+import { useToast } from 'primevue/usetoast';
+
 const props = defineProps<{
     visible: boolean;
     course: any;
@@ -11,7 +14,14 @@ const props = defineProps<{
 
 const emit = defineEmits(['update:visible', 'remove-participant']);
 
+const confirm = useConfirm();
+const toast = useToast();
 const profileHashes = ref<Record<number, string>>({});
+const emergencyInfo = ref<any>(null);
+const showEmergencyDialog = ref(false);
+const loadingEmergency = ref(false);
+
+const isTrainerOrAdmin = computed(() => authStore.isTrainer() || authStore.isAdmin());
 
 const confirmedParticipants = computed(() => {
     return props.course?.bookings.filter((b: any) => !b.isWaitlist) || [];
@@ -38,6 +48,40 @@ async function fetchProfilePictures() {
         profileHashes.value = response.data;
     } catch (e) {
         console.error('Failed to fetch profile pictures', e);
+    }
+}
+
+function confirmEmergencyAccess(user: any) {
+    confirm.require({
+        message: 'GDPR WARNING: You are about to access sensitive emergency contact info. This action IS LOGGED for compliance. Use this ONLY if a medical emergency has occurred during this session.',
+        header: 'Sensitive Data Access',
+        icon: 'pi pi-exclamation-triangle',
+        acceptLabel: 'Access & Log Action',
+        acceptClass: 'p-button-danger',
+        rejectProps: {
+          label: 'Cancel',
+          severity: 'secondary',
+        },
+        accept: () => {
+            fetchEmergencyInfo(user);
+        }
+    });
+}
+
+async function fetchEmergencyInfo(user: any) {
+    loadingEmergency.value = true;
+    try {
+        const response = await api.get(`/user/${user.id}/emergency-contact`);
+        emergencyInfo.value = {
+            ...response.data,
+            userName: user.name
+        };
+        showEmergencyDialog.value = true;
+    } catch (e: any) {
+        const msg = e.response?.data?.error || 'Failed to fetch info';
+        toast.add({ severity: 'error', summary: 'Error', detail: msg, life: 5000 });
+    } finally {
+        loadingEmergency.value = false;
     }
 }
 
@@ -106,20 +150,32 @@ function close() {
                 </div>
               </div>
             </template>
-          </Column>          <Column
-            v-if="$attrs['onRemoveParticipant']"
+          </Column>
+          <Column
             header="Actions"
             class="text-right"
           >
             <template #body="slotProps">
-              <Button
-                v-tooltip="'Remove Member'"
-                icon="pi pi-user-minus"
-                severity="danger"
-                variant="text"
-                class="action-btn delete-btn"
-                @click="$emit('remove-participant', slotProps.data.id)"
-              />
+              <div class="flex justify-end gap-2">
+                <Button
+                  v-if="isTrainerOrAdmin && !isAnonymized(slotProps.data.user.name)"
+                  v-tooltip="'Emergency Info'"
+                  icon="pi pi-shield"
+                  severity="warn"
+                  variant="text"
+                  class="action-btn"
+                  @click="confirmEmergencyAccess(slotProps.data.user)"
+                />
+                <Button
+                  v-if="$attrs['onRemoveParticipant']"
+                  v-tooltip="'Remove Member'"
+                  icon="pi pi-user-minus"
+                  severity="danger"
+                  variant="text"
+                  class="action-btn delete-btn"
+                  @click="$emit('remove-participant', slotProps.data.id)"
+                />
+              </div>
             </template>
           </Column>
         </DataTable>
@@ -170,19 +226,30 @@ function close() {
             </template>
           </Column>
           <Column
-            v-if="$attrs['onRemoveParticipant']"
             header="Actions"
             class="text-right"
           >
             <template #body="slotProps">
-              <Button
-                v-tooltip="'Remove Member'"
-                icon="pi pi-user-minus"
-                severity="danger"
-                variant="text"
-                class="action-btn delete-btn"
-                @click="$emit('remove-participant', slotProps.data.id)"
-              />
+              <div class="flex justify-end gap-2">
+                <Button
+                  v-if="isTrainerOrAdmin && !isAnonymized(slotProps.data.user.name)"
+                  v-tooltip="'Emergency Info'"
+                  icon="pi pi-shield"
+                  severity="warn"
+                  variant="text"
+                  class="action-btn"
+                  @click="confirmEmergencyAccess(slotProps.data.user)"
+                />
+                <Button
+                  v-if="$attrs['onRemoveParticipant']"
+                  v-tooltip="'Remove Member'"
+                  icon="pi pi-user-minus"
+                  severity="danger"
+                  variant="text"
+                  class="action-btn delete-btn"
+                  @click="$emit('remove-participant', slotProps.data.id)"
+                />
+              </div>
             </template>
           </Column>
         </DataTable>
@@ -196,6 +263,71 @@ function close() {
         <p>No athletes have joined this squad yet.</p>
       </div>
     </div>
+
+    <Dialog
+      v-model:visible="showEmergencyDialog"
+      header="EMERGENCY CONTACT INFO"
+      :modal="true"
+      class="w-full max-w-sm"
+    >
+      <div
+        v-if="emergencyInfo"
+        class="flex flex-col gap-6 py-4"
+      >
+        <div class="flex flex-col gap-1">
+          <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Athlete</label>
+          <span class="text-xl font-bold">{{ emergencyInfo.userName }}</span>
+          <a
+            v-if="emergencyInfo.phoneNumber"
+            :href="'tel:' + emergencyInfo.phoneNumber"
+            class="text-amber-500 font-bold flex items-center gap-2 mt-1"
+          >
+            <i class="pi pi-phone" /> {{ emergencyInfo.phoneNumber }}
+          </a>
+        </div>
+
+        <Divider />
+
+        <div class="flex flex-col gap-4">
+          <h4 class="text-sm font-black text-red-500 uppercase tracking-tighter">
+            Primary Contact
+          </h4>
+          <div
+            v-if="emergencyInfo.emergencyContactName"
+            class="flex flex-col gap-1"
+          >
+            <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Name</label>
+            <span class="font-bold">{{ emergencyInfo.emergencyContactName }}</span>
+          </div>
+          <div
+            v-if="emergencyInfo.emergencyContactPhone"
+            class="flex flex-col gap-1"
+          >
+            <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Phone</label>
+            <a
+              :href="'tel:' + emergencyInfo.emergencyContactPhone"
+              class="text-xl font-black text-slate-900 flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-100"
+            >
+              <i class="pi pi-phone text-amber-500" />
+              {{ emergencyInfo.emergencyContactPhone }}
+            </a>
+          </div>
+          <div
+            v-if="!emergencyInfo.emergencyContactName && !emergencyInfo.emergencyContactPhone"
+            class="text-slate-400 italic text-sm"
+          >
+            No emergency contact provided by athlete.
+          </div>
+        </div>
+      </div>
+      <template #footer>
+        <Button
+          label="Close"
+          class="w-full"
+          @click="showEmergencyDialog = false"
+        />
+      </template>
+    </Dialog>
   </Dialog>
 </template>
 

@@ -9,7 +9,17 @@ import api from '../services/api';
 const toast = useToast();
 const confirm = useConfirm();
 const router = useRouter();
-const user = ref({ name: '', email: '', id: null, roles: [] as string[], profilePicture: null });
+const user = ref({
+    name: '',
+    email: '',
+    id: null,
+    roles: [] as string[],
+    profilePicture: null,
+    phoneNumber: '',
+    emergencyContactName: '',
+    emergencyContactPhone: ''
+});
+const hasConsentedToEmergency = ref(false);
 const loading = ref(false);
 const fetching = ref(true);
 const uploading = ref(false);
@@ -107,10 +117,18 @@ async function handleFileUpload(event: Event) {
 }
 
 async function updateProfile() {
+    if ((user.value.emergencyContactName || user.value.emergencyContactPhone) && !hasConsentedToEmergency.value) {
+        toast.add({ severity: 'warn', summary: 'Consent Required', detail: 'Please confirm you have consent from your emergency contact.', life: 5000 });
+        return;
+    }
+
     loading.value = true;
     try {
         await api.patch('/user/me', {
-            name: user.value.name
+            name: user.value.name,
+            phoneNumber: user.value.phoneNumber,
+            emergencyContactName: user.value.emergencyContactName,
+            emergencyContactPhone: user.value.emergencyContactPhone
         });
         authStore.user = {
             ...authStore.user,
@@ -230,6 +248,66 @@ onMounted(fetchProfile);
                 class="opacity-70 cursor-not-allowed"
               />
               <small class="text-slate-400 mt-1">Email cannot be changed</small>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="flex flex-col">
+                <label
+                  for="phoneNumber"
+                  class="form-label-base"
+                >Your Phone Number</label>
+                <InputText
+                  id="phoneNumber"
+                  v-model="user.phoneNumber"
+                  placeholder="+49 123 456789"
+                />
+              </div>
+            </div>
+
+            <div class="border-t border-slate-100 pt-6 mt-2">
+              <h3 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                <i class="pi pi-shield text-amber-500" />
+                Safety & Emergency Info
+              </h3>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                <div class="flex flex-col">
+                  <label
+                    for="emergencyName"
+                    class="form-label-base"
+                  >Emergency Contact Name</label>
+                  <InputText
+                    id="emergencyName"
+                    v-model="user.emergencyContactName"
+                    placeholder="Next of Kin Name"
+                  />
+                </div>
+                <div class="flex flex-col">
+                  <label
+                    for="emergencyPhone"
+                    class="form-label-base"
+                  >Emergency Contact Phone</label>
+                  <InputText
+                    id="emergencyPhone"
+                    v-model="user.emergencyContactPhone"
+                    placeholder="+49 123 456789"
+                  />
+                </div>
+              </div>
+
+              <div class="flex items-start gap-3 mt-6 p-4 bg-slate-50 rounded-lg border border-slate-100">
+                <Checkbox
+                  v-model="hasConsentedToEmergency"
+                  :binary="true"
+                  input-id="consent"
+                />
+                <label
+                  for="consent"
+                  class="text-xs text-slate-600 font-medium leading-relaxed"
+                >
+                  I confirm that I have obtained the express consent of the person named above to share their contact details with {{ authStore.user?.company?.name || 'this app' }} for emergency purposes only. This data will only be accessed by trainers in the event of a medical emergency during a session.
+                </label>
+              </div>
             </div>
 
             <div class="pt-4">
