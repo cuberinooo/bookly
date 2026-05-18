@@ -333,8 +333,11 @@ class CourseService
     {
         $overlappingCourses = $this->courseRepository->findOverlappingCourses($startTime, $endTime, $excludeId, $trainerId);
 
+        // Filter out postponed courses from conflict detection
+        $overlappingCourses = array_filter($overlappingCourses, fn(Course $c) => $c->getStatus() === \App\Enum\CourseStatus::ACTIVE);
+
         if (!empty($overlappingCourses)) {
-            $conflict = $overlappingCourses[0];
+            $conflict = reset($overlappingCourses);
             $message = sprintf(
                 'Scheduling conflict: The proposed time (%s - %s) overlaps with an existing course "%s" (%s - %s).',
                 $startTime->format('d.m.Y H:i'),
@@ -346,5 +349,23 @@ class CourseService
 
             throw new ScheduleConflictException($message);
         }
+    }
+
+    public function postponeCourse(Course $course, User $trainer): void
+    {
+        if ($course->getStatus() === \App\Enum\CourseStatus::POSTPONED) {
+            throw new \LogicException('Course is already postponed.');
+        }
+
+        $course->setStatus(\App\Enum\CourseStatus::POSTPONED);
+        $course->setPostponedBy($trainer);
+
+        // Unbook all members
+        $bookings = $course->getBookings();
+        foreach ($bookings as $booking) {
+            $this->bookingService->unbook($course, $booking->getUser());
+        }
+
+        $this->entityManager->flush();
     }
 }

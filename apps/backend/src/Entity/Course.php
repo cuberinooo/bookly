@@ -60,6 +60,15 @@ class Course implements CompanyAwareInterface
     #[Groups(['course:read', 'course:write'])]
     private CourseFrequency $frequency = CourseFrequency::ONCE;
 
+    #[ORM\Column(type: "string", enumType: \App\Enum\CourseStatus::class, options: ['default' => 'active'])]
+    #[Groups(['course:read'])]
+    private \App\Enum\CourseStatus $status = \App\Enum\CourseStatus::ACTIVE;
+
+    #[ORM\ManyToOne]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
+    #[Groups(['course:read'])]
+    private ?User $postponedBy = null;
+
     #[ORM\ManyToOne(inversedBy: 'courses')]
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     #[Groups(['course:read'])]
@@ -170,6 +179,30 @@ class Course implements CompanyAwareInterface
     public function setFrequency(CourseFrequency $frequency): static
     {
         $this->frequency = $frequency;
+
+        return $this;
+    }
+
+    public function getStatus(): \App\Enum\CourseStatus
+    {
+        return $this->status;
+    }
+
+    public function setStatus(\App\Enum\CourseStatus $status): static
+    {
+        $this->status = $status;
+
+        return $this;
+    }
+
+    public function getPostponedBy(): ?User
+    {
+        return $this->postponedBy;
+    }
+
+    public function setPostponedBy(?User $postponedBy): static
+    {
+        $this->postponedBy = $postponedBy;
 
         return $this;
     }

@@ -203,37 +203,46 @@ function onSlotClick(day: Date, hour: number) {
               </template>
 
               <!-- Courses (Both views use grid positioning if not compact, or flex if compact) -->
-              <div
+                <div
                 v-for="course in getCoursesForDay(date)"
                 :key="course.id"
                 class="course-card"
                 :class="{ 
                   'is-booked': isBookedByUser(course),
                   'is-restricted': isRestrictedForTrial(course),
-                  'is-past': isPastCourse(course)
+                  'is-past': isPastCourse(course),
+                  'is-postponed': course.status === 'postponed'
                 }"
                 :style="!isCompactView ? { gridRow: getGridRow(course.startTime, course.durationMinutes) } : {}"
                 @click.stop="$emit('course-click', course)"
               >
-                <div class="flex justify-between items-start w-full">
+                <div class="flex flex-col gap-1 w-full mb-1">
                   <div
-                    v-if="isBookedByUser(course)"
-                    class="booked-badge"
+                    v-if="course.status === 'postponed'"
+                    class="postponed-badge"
                   >
-                    <i class="pi pi-check" /> BOOKED
+                    <i class="pi pi-clock" /> POSTPONED
                   </div>
-                  <div
-                    v-if="isRestrictedForTrial(course)"
-                    class="restricted-badge"
-                    title="Restricted for Trial Members"
-                  >
-                    <i class="pi pi-lock" /> TRIAL RESTRICTED
-                  </div>
-                  <div
-                    v-if="isPastCourse(course)"
-                    class="past-badge"
-                  >
-                    <i class="pi pi-history" /> PAST
+                  <div class="flex justify-between items-start w-full gap-1">
+                    <div
+                      v-if="isBookedByUser(course)"
+                      class="booked-badge"
+                    >
+                      <i class="pi pi-check" /> BOOKED
+                    </div>
+                    <div
+                      v-if="isRestrictedForTrial(course)"
+                      class="restricted-badge"
+                      title="Restricted for Trial Members"
+                    >
+                      <i class="pi pi-lock" /> TRIAL RESTRICTED
+                    </div>
+                    <div
+                      v-if="isPastCourse(course)"
+                      class="past-badge"
+                    >
+                      <i class="pi pi-history" /> PAST
+                    </div>
                   </div>
                 </div>
                 <div class="course-time">
@@ -248,6 +257,12 @@ function onSlotClick(day: Date, hour: number) {
                 </div>
 
                 <div class="course-meta">
+                  <div
+                    v-if="course.status === 'postponed' && course.postponedBy"
+                    class="coach-line !text-red-500 font-bold"
+                  >
+                    POSTPONED BY {{ course.postponedBy.name }}
+                  </div>
                   <div class="coach-line">
                     <i class="pi pi-user text-[10px]" /> {{ course.user?.name }}
                   </div>
@@ -518,6 +533,19 @@ $border-color: #e2e8f0;
         }
     }
 
+    &.is-postponed {
+        background: #f1f5f9;
+        border-color: #94a3b8;
+        border-left: 4px dashed #64748b;
+        opacity: 0.7;
+        filter: grayscale(0.5);
+
+        .course-title {
+            text-decoration: line-through;
+            color: #64748b;
+        }
+    }
+
     .booked-badge {
         font-family: 'Barlow Condensed', sans-serif;
         font-weight: 800;
@@ -532,6 +560,24 @@ $border-color: #e2e8f0;
         z-index: 2;
 
         i { font-size: 0.5rem; }
+    }
+
+    .postponed-badge {
+        font-family: 'Barlow Condensed', sans-serif;
+        font-weight: 800;
+        font-size: 0.6rem;
+        color: white;
+        background: #ef4444; // red-500
+        padding: 2px 6px;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        width: fit-content;
+        letter-spacing: 0.05em;
+        margin-bottom: 4px;
+
+        i { font-size: 0.6rem; }
     }
 
     .restricted-badge {

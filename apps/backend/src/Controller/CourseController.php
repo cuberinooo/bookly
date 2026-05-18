@@ -247,4 +247,19 @@ class CourseController extends AbstractController
 
         return new JsonResponse(['status' => 'Course deleted']);
     }
+
+    #[Route('/{id}/postpone', name: 'course_postpone', methods: ['POST'])]
+    public function postpone(Course $course, CourseService $courseService): JsonResponse
+    {
+        $this->denyAccessUnlessGranted('ROLE_TRAINER');
+
+        try {
+            /** @var \App\Entity\User $trainer */
+            $trainer = $this->getUser();
+            $courseService->postponeCourse($course, $trainer);
+            return new JsonResponse(['message' => 'Course postponed and members unbooked successfully.'], Response::HTTP_OK);
+        } catch (\Exception $e) {
+            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
+        }
+    }
 }

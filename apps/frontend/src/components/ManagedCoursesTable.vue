@@ -270,6 +270,31 @@ function confirmDeleteCourse(course: any) {
     });
 }
 
+function confirmPostponeCourse(course: any) {
+    confirm.require({
+        message: `Are you sure you want to postpone "${course.title}"? This will automatically unbook all participants and mark the course as postponed.`,
+        header: 'Confirm Postponement',
+        icon: 'pi pi-clock',
+        acceptProps: {
+            label: 'Postpone Course',
+            severity: 'warn'
+        },
+        rejectProps: {
+            label: 'Cancel',
+            severity: 'secondary'
+        },
+        accept: async () => {
+            try {
+                await api.post(`/courses/${course.id}/postpone`);
+                toast.add({ severity: 'success', summary: 'Postponed', detail: 'Course postponed and members unbooked', life: 5000 });
+                loadLazyData();
+            } catch (e: any) {
+                toast.add({ severity: 'error', summary: 'Error', detail: e.response?.data?.error || 'Failed to postpone course', life: 5000 });
+            }
+        }
+    });
+}
+
 async function removeParticipant(bookingId: number) {
     confirm.require({
         message: 'Remove this participant from the course?',
@@ -405,6 +430,7 @@ onUnmounted(() => {
         :rows="lazyParams.rows"
         :total-records="totalRecords"
         class="managed-table"
+        :row-class="(data) => ({ 'is-postponed': data.status === 'postponed' })"
         @page="onPage"
       >
         <Column
@@ -416,10 +442,19 @@ onUnmounted(() => {
               v-if="loading"
               width="60%"
             />
-            <span
+            <div
               v-else
-              class="course-title-cell"
-            >{{ slotProps.data.title }}</span>
+              class="flex flex-col"
+            >
+              <span class="course-title-cell">{{ slotProps.data.title }}</span>
+              <Tag
+                v-if="slotProps.data.status === 'postponed'"
+                severity="secondary"
+                class="w-fit text-[8px] uppercase font-black tracking-widest mt-1"
+              >
+                Postponed by {{ slotProps.data.postponedBy?.name || 'Trainer' }}
+              </Tag>
+            </div>
           </template>
         </Column>
         <Column header="Schedule">
@@ -516,7 +551,16 @@ onUnmounted(() => {
                 icon="pi pi-users"
                 variant="text"
                 class="action-btn"
+                :disabled="slotProps.data.status === 'postponed'"
                 @click="selectedCourse = slotProps.data; participantsDialog = true"
+              />
+              <Button
+                v-tooltip="'Postpone'"
+                icon="pi pi-clock"
+                variant="text"
+                class="action-btn"
+                :disabled="slotProps.data.status === 'postponed'"
+                @click="confirmPostponeCourse(slotProps.data)"
               />
               <Button
                 icon="pi pi-pencil"
@@ -610,6 +654,13 @@ onUnmounted(() => {
                     >
                       {{ course.title }}
                     </span>
+                    <Tag
+                      v-if="course.status === 'postponed'"
+                      severity="secondary"
+                      class="w-fit text-[8px] uppercase font-black tracking-widest mb-2"
+                    >
+                      Postponed by {{ course.postponedBy?.name || 'Trainer' }}
+                    </Tag>
                     <div class="flex items-center gap-2 text-xs font-bold text-slate-500">
                       <i class="pi pi-calendar text-[10px]" />
                       {{ formatDateWithDay(course.startTime, true) }} @ {{ formatTime(course.startTime) }}
@@ -637,12 +688,24 @@ onUnmounted(() => {
                   </div>
                   <div class="flex gap-2">
                     <Button
+                      v-tooltip="'Participants'"
                       icon="pi pi-users"
                       severity="secondary"
                       rounded
                       outlined
                       class="!h-10 !w-10 !p-0"
+                      :disabled="course.status === 'postponed'"
                       @click="selectedCourse = course; participantsDialog = true"
+                    />
+                    <Button
+                      v-tooltip="'Postpone'"
+                      icon="pi pi-clock"
+                      severity="secondary"
+                      rounded
+                      outlined
+                      class="!h-10 !w-10 !p-0"
+                      :disabled="course.status === 'postponed'"
+                      @click="confirmPostponeCourse(course)"
                     />
                     <Button
                       icon="pi pi-pencil"
@@ -750,7 +813,19 @@ onUnmounted(() => {
     :deep(.p-datatable-tbody > tr) {
         @apply transition-colors duration-200;
         &:hover { @apply bg-slate-50/50; }
+
+        &.is-postponed {
+          @apply opacity-50 grayscale;
+          
+          .action-btn {
+            @apply pointer-events-auto; // Allow deletion/edit even if postponed
+          }
+        }
     }
+}
+
+.is-postponed-card {
+  @apply opacity-60 grayscale border-dashed;
 }
 
 .course-title-cell {
