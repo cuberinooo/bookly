@@ -9,6 +9,7 @@ import { BookingWindow } from '../app/enums/BookingWindow';
 import WeeklyCalendar from '../components/WeeklyCalendar.vue';
 import MobileCalendar from '../components/MobileCalendar.vue';
 import CourseForm from '../components/CourseForm.vue';
+import CourseDetails from '../components/CourseDetails.vue';
 import { eventsStore } from '../store/events';
 
 const toast = useToast();
@@ -243,30 +244,9 @@ async function onDeleteCourse(course: any) {
     });
 }
 
-async function bookCourse(courseId: number) {
-  if (!authStore.isLoggedIn()) {
-    toast.add({ severity: 'info', summary: 'Login Required', detail: 'Please login to book a course', life: 5000 });
-    return;
-  }
-  try {
-    await api.post(`/courses/${courseId}/book`);
-    toast.add({ severity: 'success', summary: 'Confirmed', detail: 'Booking confirmed!', life: 5000 });
+async function onBookingChanged() {
     detailVisible.value = false;
     fetchCourses();
-  } catch (err: any) {
-    toast.add({ severity: 'error', summary: 'Error', detail: err.response?.data?.error || 'Booking failed', life: 5000 });
-  }
-}
-
-async function unbookCourse(courseId: number) {
-    try {
-        await api.delete(`/courses/${courseId}/book`);
-        toast.add({ severity: 'success', summary: 'Cancelled', detail: 'Booking cancelled', life: 5000 });
-        detailVisible.value = false;
-        fetchCourses();
-    } catch (err: any) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to cancel booking', life: 5000 });
-    }
 }
 
 function formatDuration(min: number) {
@@ -347,113 +327,18 @@ onUnmounted(() => {
       class="w-full max-w-md athletic-dialog"
       :class="{ 'mobile-full-width': isMobile }"
     >
-      <div
+      <CourseDetails
         v-if="selectedCourse"
-        class="workout-details"
-      >
-        <div class="trainer-info">
-          <div class="avatar-placeholder">
-            <i class="pi pi-user" />
-          </div>
-          <div>
-            <small>HEAD COACH</small>
-            <span class="trainer-name">{{ selectedCourse.user?.name }}</span>
-          </div>
-        </div>
-
-        <div class="schedule-detail-box">
-          <div class="detail-row">
-            <div class="detail-item">
-              <small>DATE & TIME</small>
-              <span class="value">{{ formatDateWithDay(selectedCourse.startTime) }} at {{ formatTime(selectedCourse.startTime) }}</span>
-            </div>
-            <div class="detail-item duration-item">
-              <small>DURATION</small>
-              <span class="value">{{ formatDuration(selectedCourse.durationMinutes) }}</span>
-            </div>
-          </div>
-          <div class="detail-accent-line" />
-        </div>
-
-        <div class="field">
-          <label>Workout Brief</label>
-          <Textarea
-            disabled=""
-            class="w-full"
-            :model-value="selectedCourse.description || 'No description provided.'"
-          />
-        </div>
-
-        <div class="specs-grid">
-          <div class="field">
-            <label>CAPACITY</label>
-            <InputText
-              disabled=""
-              class="w-full"
-              :model-value="selectedCourse.bookings.filter(b => !b.isWaitlist).length < selectedCourse.capacity ? (selectedCourse.capacity - selectedCourse.bookings.filter(b => !b.isWaitlist).length) + ' SPOTS LEFT' : 'WAITLIST ACTIVE'"
-            />
-          </div>
-          <div class="field">
-            <label>REGISTERED</label>
-            <InputText
-              disabled=""
-              class="w-full"
-              :model-value="selectedCourse.bookings.filter(b => !b.isWaitlist).length + ' / ' + selectedCourse.capacity"
-            />
-          </div>
-        </div>
-
-        <div
-          v-if="isMemberMode && !isPastCourse"
-          class="action-footer"
-        >
-          <template v-if="selectedCourse.user?.id !== authStore.user?.id">
-            <template v-if="!isOutsideBookingWindow && !isTrialRestricted">
-              <Button
-                v-if="!selectedCourse.bookings.some((b: any) => b.user?.id === authStore.user?.id)"
-                :label="selectedCourse.bookings.filter(b => !b.isWaitlist).length < selectedCourse.capacity ? 'RESERVE SPOT' : 'JOIN WAITLIST'"
-                severity="primary"
-                class="w-full p-4"
-                @click="bookCourse(selectedCourse.id)"
-              />
-              <Button
-                v-else
-                label="CANCEL RESERVATION"
-                severity="primary"
-                variant="text"
-                class="w-full p-4 cancel-btn"
-                @click="unbookCourse(selectedCourse.id)"
-              />
-            </template>
-            <div
-              v-else
-              class="text-center p-4 bg-slate-50 rounded-lg border border-slate-200"
-            >
-              <p class="font-bold text-slate-600 uppercase tracking-widest text-xs mb-2">
-                <i class="pi pi-lock" /> Booking Restricted
-              </p>
-              <p class="text-xs text-slate-500 font-medium">
-                {{ bookingWindowMessage }}
-              </p>
-            </div>
-          </template>
-          <div
-            v-else
-            class="text-center font-bold text-slate-500 uppercase tracking-widest text-xs"
-          >
-            <i class="pi pi-info-circle" /> You are the coach for this session.
-          </div>
-        </div>
-
-        <div
-          v-if="isPastCourse"
-          class="action-footer past-course-info"
-        >
-          <p class="text-center font-bold text-slate-500 uppercase tracking-widest text-xs">
-            <i class="pi pi-lock" /> This session has already finished.
-          </p>
-        </div>
-      </div>
+        :course="selectedCourse"
+        :settings="settings"
+        :is-past-course="isPastCourse"
+        :is-outside-booking-window="isOutsideBookingWindow"
+        :is-trial-restricted="isTrialRestricted"
+        :booking-window-message="bookingWindowMessage"
+        :is-member-mode="isMemberMode"
+        @booked="onBookingChanged"
+        @unbooked="onBookingChanged"
+      />
     </Dialog>
 
     <!-- Create/Edit Dialog -->
@@ -562,125 +447,6 @@ onUnmounted(() => {
     0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.7); }
     70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(255, 193, 7, 0); }
     100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.7); }
-}
-
-.trainer-info {
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-    padding: 1.5rem;
-    background: #f8fafc;
-    border-radius: 12px;
-    margin-bottom: 2rem;
-    border-left: 6px solid var(--primary-color);
-
-    .avatar-placeholder {
-        width: 50px;
-        height: 50px;
-        background: #e2e8f0;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #64748b;
-        font-size: 1.5rem;
-    }
-
-    small {
-        display: block;
-        font-family: 'Barlow Condensed', sans-serif;
-        font-weight: 800;
-        color: var(--text-muted);
-        letter-spacing: 0.1em;
-    }
-
-    .trainer-name {
-        font-size: 1.25rem;
-        font-weight: 800;
-        color: var(--text-header);
-        text-transform: uppercase;
-        font-family: 'Barlow Condensed', sans-serif;
-    }
-}
-
-.schedule-detail-box {
-    background: #f1f5f9;
-    padding: 1.5rem;
-    border-radius: 12px;
-    margin-bottom: 2rem;
-    position: relative;
-    overflow: hidden;
-
-    .detail-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 1.5rem;
-    }
-
-    .detail-item {
-        display: flex;
-        flex-direction: column;
-
-        small {
-            font-family: 'Barlow Condensed', sans-serif;
-            font-weight: 800;
-            color: var(--text-muted);
-            letter-spacing: 0.1em;
-            font-size: 0.7rem;
-            margin-bottom: 0.25rem;
-        }
-
-        .value {
-            font-weight: 800;
-            color: var(--text-header);
-            font-size: 1.1rem;
-        }
-
-        &.duration-item {
-            text-align: right;
-            border-left: 2px solid var(--border-color);
-            padding-left: 1.5rem;
-        }
-    }
-
-    .detail-accent-line {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        height: 4px;
-        background: var(--primary-color);
-    }
-}
-
-.specs-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.5rem;
-    margin-bottom: 3rem;
-}
-
-.action-footer {
-    padding-top: 2rem;
-    border-top: 1px solid var(--border-color);
-
-    :deep(.p-button) {
-        font-size: 1.1rem !important;
-        letter-spacing: 0.1em !important;
-    }
-}
-
-.cancel-btn {
-    &:hover { background: #fef2f2 !important; color: #ef4444 !important; }
-}
-
-::v-deep(.p-inputtext:disabled) {
-  background-color: var(--bg-color) !important;
-}
-
-::v-deep(.p-textarea:disabled) {
-  background-color: var(--bg-color) !important;
 }
 
 .mobile-full-width {
