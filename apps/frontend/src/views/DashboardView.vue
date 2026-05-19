@@ -93,7 +93,7 @@ async function fetchData() {
         }
 
         const response = await api.get(url);
-        courses.value = response.data;
+        courses.value = response.data.data || response.data;
 
         if (isTrainerMode.value) {
             trainerDashboard.value?.refreshTable();
