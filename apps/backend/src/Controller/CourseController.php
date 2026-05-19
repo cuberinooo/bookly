@@ -8,6 +8,7 @@ use App\Repository\CourseRepository;
 use App\Repository\UserRepository;
 use App\Service\BookingService;
 use App\Service\CourseService;
+use App\Service\TrainingCycleService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -20,7 +21,7 @@ use Symfony\Component\Serializer\SerializerInterface;
 class CourseController extends AbstractController
 {
     #[Route('', name: 'course_index', methods: ['GET'])]
-    public function index(Request $request, CourseRepository $courseRepository, SerializerInterface $serializer): JsonResponse
+    public function index(Request $request, CourseRepository $courseRepository, SerializerInterface $serializer, TrainingCycleService $cycleService, UserRepository $userRepository): JsonResponse
     {
         $startDateStr = $request->query->get('startDate');
         $endDateStr = $request->query->get('endDate');
@@ -61,8 +62,29 @@ class CourseController extends AbstractController
                ->getQuery()
                ->getResult();
 
-            $json = $serializer->serialize($courses, 'json', ['groups' => 'course:read']);
-            return new JsonResponse(json_decode($json, true), Response::HTTP_OK);
+            $data = json_decode($serializer->serialize($courses, 'json', ['groups' => 'course:read']), true);
+
+            foreach ($data as &$courseData) {
+                // Find the course object to get the user and startTime
+                $course = null;
+                foreach ($courses as $c) {
+                    if ($c->getId() === $courseData['id']) {
+                        $course = $c;
+                        break;
+                    }
+                }
+                if ($course) {
+                    $cycleCategory = $cycleService->getCategoryForDate($course->getUser(), $course->getStartTime());
+                    if ($cycleCategory) {
+                        $courseData['cycleCategory'] = $cycleCategory;
+                    }
+                }
+            }
+
+            return new JsonResponse([
+                'data' => $data,
+                'cycle' => $trainerId ? $cycleService->getCycleInfoForTrainer($userRepository->find($trainerId), $startDate ?? new \DateTime()) : null
+            ], Response::HTTP_OK);
         }
 
         $page = $request->query->getInt('page', 1);
@@ -70,14 +92,31 @@ class CourseController extends AbstractController
 
         $paginatedResults = $courseRepository->findPaginated($page, $limit, $startDate, $endDate, $futureOnly, $trainerId, $memberId);
 
-        $data = $paginatedResults['data'];
+        $courses = $paginatedResults['data'];
         unset($paginatedResults['data']);
 
-        $serializedData = $serializer->serialize($data, 'json', ['groups' => 'course:read']);
+        $enrichedData = json_decode($serializer->serialize($courses, 'json', ['groups' => 'course:read']), true);
+
+        foreach ($enrichedData as &$courseData) {
+            $course = null;
+            foreach ($courses as $c) {
+                if ($c->getId() === $courseData['id']) {
+                    $course = $c;
+                    break;
+                }
+            }
+            if ($course) {
+                $cycleCategory = $cycleService->getCategoryForDate($course->getUser(), $course->getStartTime());
+                if ($cycleCategory) {
+                    $courseData['cycleCategory'] = $cycleCategory;
+                }
+            }
+        }
 
         return new JsonResponse([
-            'data' => json_decode($serializedData, true),
-            'meta' => $paginatedResults
+            'data' => $enrichedData,
+            'meta' => $paginatedResults,
+            'cycle' => $trainerId ? $cycleService->getCycleInfoForTrainer($userRepository->find($trainerId), $startDate ?? new \DateTime()) : null
         ], Response::HTTP_OK);
     }
 
@@ -115,15 +154,20 @@ class CourseController extends AbstractController
     }
 
     #[Route('/{id}', name: 'course_show', methods: ['GET'])]
-    public function show(int $id, CourseRepository $courseRepository, SerializerInterface $serializer): JsonResponse
+    public function show(int $id, CourseRepository $courseRepository, SerializerInterface $serializer, TrainingCycleService $cycleService): JsonResponse
     {
         $course = $courseRepository->find($id);
         if (!$course) {
             throw $this->createNotFoundException('Course not found');
         }
 
-        $json = $serializer->serialize($course, 'json', ['groups' => 'course:read']);
-        return new JsonResponse($json, Response::HTTP_OK, [], true);
+        $data = json_decode($serializer->serialize($course, 'json', ['groups' => 'course:read']), true);
+        $cycleCategory = $cycleService->getCategoryForDate($course->getUser(), $course->getStartTime());
+        if ($cycleCategory) {
+            $data['cycleCategory'] = $cycleCategory;
+        }
+
+        return new JsonResponse($data, Response::HTTP_OK);
     }
 
     #[Route('/{id}', name: 'course_edit', methods: ['PATCH'])]

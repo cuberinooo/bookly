@@ -6,9 +6,9 @@ import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
 import { BookingWindow } from '../app/enums/BookingWindow';
 import CourseForm from '../components/CourseForm.vue';
-import ManagedCoursesTable from '../components/ManagedCoursesTable.vue';
 import ParticipantsDialog from '../components/ParticipantsDialog.vue';
 import TrialStatusCard from '../components/TrialStatusCard.vue';
+import TrainerDashboard from '../components/TrainerDashboard.vue';
 import { useRoute } from 'vue-router';
 import { eventsStore } from '../store/events';
 
@@ -22,7 +22,7 @@ const notifications = ref<any[]>([]);
 const isTrainerMode = computed(() => authStore.isTrainer() && authStore.viewMode === 'trainer');
 const dashboardLabel = computed(() => isTrainerMode.value ? (authStore.isAdmin() ? 'Admin Dashboard' : 'Trainer Dashboard') : 'My bookings');
 
-const courseTable = ref<any>(null);
+const trainerDashboard = ref<any>(null);
 const courseDialog = ref(false);
 const editingCourse = ref<any>(null);
 const submitting = ref(false);
@@ -96,7 +96,7 @@ async function fetchData() {
         courses.value = response.data;
 
         if (isTrainerMode.value) {
-            courseTable.value?.refresh();
+            trainerDashboard.value?.refreshTable();
         }
 
         loading.value = true;
@@ -167,7 +167,7 @@ async function onSaveCourse(formData: any, transferAll: boolean = false) {
         }
         courseDialog.value = false;
         fetchData();
-        courseTable.value?.refresh();
+        trainerDashboard.value?.refreshTable();
     } catch (e: any) {
         const errorDetail = e.response?.data?.error || 'Operation failed';
         toast.add({ severity: 'error', summary: 'Error', detail: errorDetail, life: 5000 });
@@ -282,14 +282,12 @@ onMounted(fetchData);
 
     <div
       v-if="isTrainerMode"
-      class="trainer-layout flex flex-col lg:grid lg:grid-columns-[1fr_380px] gap-8 md:gap-12"
+      class="trainer-layout-wrapper"
     >
-      <div class="main-content order-2 lg:order-1">
-        <ManagedCoursesTable
-          ref="courseTable"
-          @edit="editCourse"
-        />
-      </div>
+      <TrainerDashboard
+        ref="trainerDashboard"
+        @edit-course="editCourse"
+      />
     </div>
 
     <div

@@ -7,6 +7,7 @@ const props = defineProps<{
     courses: any[];
     userId?: number;
     baseDate?: Date;
+    cycleInfo?: { name: string; currentWeek: number; totalWeeks: number } | null;
 }>();
 
 const emit = defineEmits(['course-click', 'update:baseDate']);
@@ -125,6 +126,17 @@ function formatDayName(date: Date) {
     @touchstart="handleTouchStart"
     @touchend="handleTouchEnd"
   >
+    <div
+      v-if="cycleInfo"
+      class="mobile-cycle-info p-3 bg-slate-900 flex items-center justify-between"
+    >
+      <div class="flex items-center gap-3">
+        <i class="pi pi-sync text-amber-400 animate-spin-slow text-xs" />
+        <span class="text-[10px] font-black text-white uppercase tracking-widest">{{ cycleInfo.name }}</span>
+      </div>
+      <span class="text-[10px] font-black text-amber-400 uppercase">WEEK {{ cycleInfo.currentWeek }} / {{ cycleInfo.totalWeeks }}</span>
+    </div>
+
     <div class="mobile-nav">
       <div class="nav-header">
         <h2>{{ currentWeekLabel }}</h2>
@@ -188,9 +200,17 @@ function formatDayName(date: Date) {
                   'is-restricted': isRestrictedForTrial(course),
                   'is-past': isPastCourse(course)
                 }"
+                :style="course.cycleCategory ? { borderLeft: `6px solid ${course.cycleCategory.categoryColor}` } : {}"
                 @click="$emit('course-click', course)"
               >
                 <div class="card-left">
+                  <div
+                    v-if="course.cycleCategory"
+                    class="absolute -top-1 -left-1 px-2 py-0.5 rounded-full text-[8px] font-black uppercase"
+                    :style="{ backgroundColor: course.cycleCategory.categoryColor, color: 'white' }"
+                  >
+                    {{ course.cycleCategory.categoryName }}
+                  </div>
                   <div class="course-time">
                     {{ formatTime(course.startTime) }}
                   </div>

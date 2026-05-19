@@ -8,10 +8,12 @@ const props = withDefaults(defineProps<{
     isCompactView?: boolean;
     userId?: number;
     baseDate?: Date;
+    cycleInfo?: { name: string; currentWeek: number; totalWeeks: number } | null;
 }>(), {
     isCompactView: true,
     userId: undefined,
-    baseDate: () => new Date()
+    baseDate: () => new Date(),
+    cycleInfo: null
 });
 
 const emit = defineEmits(['course-click', 'cell-click', 'update:baseDate']);
@@ -113,6 +115,25 @@ function onSlotClick(day: Date, hour: number) {
     class="athletic-calendar"
     :class="{ 'compact-mode': isCompactView }"
   >
+    <div
+      v-if="cycleInfo"
+      class="cycle-status-bar mb-6 p-4 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between"
+    >
+      <div class="flex items-center gap-4">
+        <div class="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
+          <i class="pi pi-sync text-amber-600 animate-spin-slow" />
+        </div>
+        <div class="flex flex-col">
+          <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Active Programming</span>
+          <span class="text-lg font-black text-slate-900 font-barlow uppercase">{{ cycleInfo.name }}</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 bg-white px-4 py-2 rounded-lg border border-slate-200 shadow-sm">
+        <span class="text-xs font-bold text-slate-400 uppercase">Cycle Progress</span>
+        <span class="text-sm font-black text-amber-600">WEEK {{ cycleInfo.currentWeek }} / {{ cycleInfo.totalWeeks }}</span>
+      </div>
+    </div>
+
     <div class="calendar-toolbar">
       <div class="date-info">
         <h2>{{ currentWeekLabel }}</h2>
@@ -213,9 +234,22 @@ function onSlotClick(day: Date, hour: number) {
                   'is-past': isPastCourse(course),
                   'is-postponed': course.status === 'postponed'
                 }"
-                :style="!isCompactView ? { gridRow: getGridRow(course.startTime, course.durationMinutes) } : {}"
+                :style="[
+                  !isCompactView ? { gridRow: getGridRow(course.startTime, course.durationMinutes) } : {},
+                  course.cycleCategory ? { borderLeft: `6px solid ${course.cycleCategory.categoryColor}` } : {}
+                ]"
                 @click.stop="$emit('course-click', course)"
               >
+                <!-- Cycle Category Tag -->
+                <div
+                  v-if="course.cycleCategory"
+                  class="cycle-tag mb-1 flex items-center gap-1"
+                  :style="{ color: course.cycleCategory.categoryColor }"
+                >
+                  <i class="pi pi-bolt text-[8px]" />
+                  <span class="text-[9px] font-black uppercase tracking-tighter">{{ course.cycleCategory.categoryName }}</span>
+                </div>
+
                 <div class="flex flex-col gap-1 w-full mb-1">
                   <div
                     v-if="course.status === 'postponed'"
@@ -620,12 +654,18 @@ $border-color: #e2e8f0;
         display: flex;
         gap: 0.25rem;
 
-        .duration-tag {
-            color: #94a3b8;
-        }
+    .duration-tag {
+        color: #94a3b8;
     }
+}
 
-    .course-title {
+.cycle-tag {
+  font-family: 'Barlow Condensed', sans-serif;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.course-title {
         font-family: 'Barlow Condensed', sans-serif;
         font-weight: 800;
         text-transform: uppercase;

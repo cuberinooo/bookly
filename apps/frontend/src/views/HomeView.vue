@@ -14,6 +14,7 @@ import { eventsStore } from '../store/events';
 const toast = useToast();
 const confirm = useConfirm();
 const courses = ref<any[]>([]);
+const cycleInfo = ref<any>(null);
 const settings = ref<any>(null);
 const loading = ref(false);
 const submitting = ref(false);
@@ -146,7 +147,8 @@ async function fetchCourses() {
     end.setHours(23, 59, 59, 999);
 
     const response = await api.get(`/courses?all=true&startDate=${start.toISOString()}&endDate=${end.toISOString()}`);
-    courses.value = response.data;
+    courses.value = response.data.data;
+    cycleInfo.value = response.data.cycle;
     loadedRange.value = { start, end };
   } catch (err) {
     console.error('Failed to fetch courses', err);
@@ -318,6 +320,7 @@ onUnmounted(() => {
         <MobileCalendar
           v-model:base-date="baseDate"
           :courses="courses"
+          :cycle-info="cycleInfo"
           :user-id="authStore.user?.id"
           @course-click="handleCourseClick"
         />
@@ -326,6 +329,7 @@ onUnmounted(() => {
         <WeeklyCalendar
           v-model:base-date="baseDate"
           :courses="courses"
+          :cycle-info="cycleInfo"
           :is-compact-view="isCompactView"
           :user-id="authStore.user?.id"
           @course-click="handleCourseClick"
