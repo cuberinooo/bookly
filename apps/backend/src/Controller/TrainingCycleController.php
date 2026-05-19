@@ -69,28 +69,36 @@ class TrainingCycleController extends AbstractController
     }
 
     #[Route('', name: 'training_cycle_new', methods: ['POST'])]
-    public function newCycle(Request $request, EntityManagerInterface $entityManager, TrainingCategoryRepository $categoryRepository): JsonResponse
+    public function saveCycle(Request $request, EntityManagerInterface $entityManager, TrainingCategoryRepository $categoryRepository): JsonResponse
     {
         $this->denyAccessUnlessGranted('ROLE_TRAINER');
         $data = json_decode($request->getContent(), true);
 
-        // Deactivate other cycles for this trainer
-        $existingCycles = $entityManager->getRepository(TrainingCycle::class)->findBy(['trainer' => $this->getUser(), 'isActive' => true]);
-        foreach ($existingCycles as $existingCycle) {
-            $existingCycle->setIsActive(false);
+        /** @var \App\Entity\User $user */
+        $user = $this->getUser();
+
+        // Get or create the single cycle for this trainer
+        $cycle = $entityManager->getRepository(TrainingCycle::class)->findOneBy(['trainer' => $user]);
+        if (!$cycle) {
+            $cycle = new TrainingCycle();
+            $cycle->setTrainer($user);
+            $cycle->setCompany($user->getCompany());
+        } else {
+            // Clear existing assignments for replacement logic
+            foreach ($cycle->getAssignments() as $assignment) {
+                $entityManager->remove($assignment);
+            }
+            $cycle->getAssignments()->clear();
         }
 
-        $cycle = new TrainingCycle();
-        $cycle->setTrainer($this->getUser());
-        $cycle->setCompany($this->getUser()->getCompany());
-        $cycle->setName($data['name']);
+        $cycle->setName($data['name'] ?? 'Training Cycle');
         $cycle->setStartDate(new \DateTime($data['startDate']));
         $cycle->setDurationWeeks($data['durationWeeks'] ?? 4);
-        $cycle->setIsActive(true);
+        $cycle->setIsActive($data['isActive'] ?? true);
 
         foreach ($data['assignments'] ?? [] as $assignData) {
             $category = $categoryRepository->find($assignData['categoryId']);
-            if ($category && $category->getTrainer() === $this->getUser()) {
+            if ($category && $category->getTrainer() === $user) {
                 $assignment = new CycleAssignment();
                 $assignment->setWeekNumber($assignData['weekNumber']);
                 $assignment->setDayOfWeek($assignData['dayOfWeek']);
@@ -102,27 +110,24 @@ class TrainingCycleController extends AbstractController
         $entityManager->persist($cycle);
         $entityManager->flush();
 
-        return new JsonResponse(['id' => $cycle->getId()], Response::HTTP_CREATED);
+        return new JsonResponse(['id' => $cycle->getId()], Response::HTTP_OK);
     }
 
-    #[Route('/{id}/activate', name: 'training_cycle_activate', methods: ['PATCH'])]
-    public function activateCycle(TrainingCycle $cycle, EntityManagerInterface $entityManager): JsonResponse
+    #[Route('/status', name: 'training_cycle_toggle', methods: ['PATCH'])]
+    public function toggleStatus(Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
         $this->denyAccessUnlessGranted('ROLE_TRAINER');
-        if ($cycle->getTrainer() !== $this->getUser()) {
-            throw $this->createAccessDeniedException();
+        $data = json_decode($request->getContent(), true);
+        
+        $cycle = $entityManager->getRepository(TrainingCycle::class)->findOneBy(['trainer' => $this->getUser()]);
+        if (!$cycle) {
+            return new JsonResponse(['error' => 'No cycle found'], Response::HTTP_NOT_FOUND);
         }
 
-        // Deactivate other cycles
-        $existingCycles = $entityManager->getRepository(TrainingCycle::class)->findBy(['trainer' => $this->getUser(), 'isActive' => true]);
-        foreach ($existingCycles as $existingCycle) {
-            $existingCycle->setIsActive(false);
-        }
-
-        $cycle->setIsActive(true);
+        $cycle->setIsActive($data['isActive']);
         $entityManager->flush();
 
-        return new JsonResponse(['status' => 'Activated']);
+        return new JsonResponse(['status' => $cycle->isIsActive() ? 'Activated' : 'Deactivated']);
     }
 
     #[Route('/{id}', name: 'training_cycle_delete', methods: ['DELETE'])]

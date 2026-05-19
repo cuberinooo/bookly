@@ -206,7 +206,7 @@ function formatDayName(date: Date) {
                 <div class="card-left">
                   <div
                     v-if="course.cycleCategory"
-                    class="absolute -top-1 -left-1 px-2 py-0.5 rounded-full text-[8px] font-black uppercase"
+                    class="px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase"
                     :style="{ backgroundColor: course.cycleCategory.categoryColor, color: 'white' }"
                   >
                     {{ course.cycleCategory.categoryName }}

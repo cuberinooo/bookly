@@ -43,13 +43,13 @@ export const trainingCycleService = {
         return response.data;
     },
 
-    async createCycle(data: any) {
+    async saveCycle(data: any) {
         const response = await api.post<{ id: number }>('/training-cycles', data);
         return response.data;
     },
 
-    async activateCycle(id: number) {
-        await api.patch(`/training-cycles/${id}/activate`);
+    async toggleStatus(isActive: boolean) {
+        await api.patch('/training-cycles/status', { isActive });
     },
 
     async deleteCycle(id: number) {

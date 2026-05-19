@@ -13,7 +13,7 @@ const props = defineProps<{
 const emit = defineEmits(['add', 'delete', 'select']);
 
 const newCategoryName = ref('');
-const newCategoryColor = ref('ffc107');
+const newCategoryColor = ref('ff0000');
 
 function addCategory() {
     if (!newCategoryName.value) return;
@@ -32,8 +32,8 @@ function addCategory() {
         Focus Categories
       </h3>
       <div class="flex flex-col gap-2 mb-4">
-        <div 
-          v-for="cat in categories" 
+        <div
+          v-for="cat in categories"
           :key="cat.id"
           class="flex items-center gap-3 p-2 rounded-lg border-2 cursor-pointer transition-all"
           :class="selectedCategory?.id === cat.id ? 'border-amber-400 bg-amber-50' : 'border-transparent bg-slate-50'"
@@ -43,7 +43,7 @@ function addCategory() {
             class="w-6 h-6 rounded-full"
             :style="{ backgroundColor: cat.colorHex }"
           />
-          <span class="flex-1 font-bold text-sm">{{ cat.name }}</span>
+          <span class="flex-1 font-bold text-sm text-primary">{{ cat.name }}</span>
           <Button
             icon="pi pi-trash"
             variant="text"
@@ -52,8 +52,8 @@ function addCategory() {
             @click.stop="$emit('delete', cat.id)"
           />
         </div>
-        
-        <div 
+
+        <div
           class="flex items-center gap-3 p-2 rounded-lg border-2 cursor-pointer transition-all"
           :class="!selectedCategory ? 'border-slate-400 bg-slate-100' : 'border-transparent'"
           @click="$emit('select', null)"
@@ -78,6 +78,7 @@ function addCategory() {
               label="Add"
               size="small"
               class="flex-1"
+              severity="primary"
               @click="addCategory"
             />
           </div>
