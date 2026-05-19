@@ -4,10 +4,8 @@ namespace App\Service;
 
 use App\Entity\Booking;
 use App\Entity\Course;
-use App\Entity\Notification;
 use App\Entity\User;
 use App\Enum\BookingWindow;
-use App\Enum\NotificationType;
 use App\Repository\BookingRepository;
 use App\Repository\GlobalSettingsRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -60,7 +58,7 @@ class BookingService
         if (in_array('ROLE_TRIAL', $user->getRoles())) {
             $globalSettings = $user->getCompany()->getGlobalSettings();
             $limit = $globalSettings ? $globalSettings->getTrialBookingLimit() : 0;
-            
+
             if ($limit > 0) {
                 $totalBookings = $this->bookingRepository->count(['user' => $user]);
                 if ($totalBookings >= $limit) {
@@ -80,15 +78,6 @@ class BookingService
         $booking->setCompany($course->getCompany());
 
         $this->entityManager->persist($booking);
-
-        // Notify trainer
-        $notification = new Notification();
-        $notification->setUser($course->getUser());
-        $notification->setCourse($course);
-        $statusMsg = $isWaitlist ? 'joined the waitlist for' : 'has joined';
-        $notification->setMessage(sprintf('%s %s your course "%s"', $user->getName(), $statusMsg, $course->getTitle()));
-        $this->entityManager->persist($notification);
-
         $this->entityManager->flush();
 
         // Send confirmation email if not on waitlist
@@ -117,21 +106,13 @@ class BookingService
         }
 
         $wasWaitlist = $booking->isWaitlist();
-        
+
         // Send cancellation email if it was a confirmed booking
         if (!$wasWaitlist) {
             $this->sendBookingCancellationEmail($booking);
         }
 
         $this->entityManager->remove($booking);
-
-        // Notify trainer
-        $notification = new Notification();
-        $notification->setUser($course->getUser());
-        $notification->setCourse($course);
-        $notification->setMessage(sprintf('%s has left your course "%s"', $user->getName(), $course->getTitle()));
-        $this->entityManager->persist($notification);
-
         $this->entityManager->flush();
 
         // If a non-waitlist booking was removed, try to promote someone from waitlist
@@ -263,7 +244,7 @@ class BookingService
         $course = $booking->getCourse();
         $company = $course->getCompany();
         $uid = sprintf('booking_%d_%d', $course->getId(), $user->getId());
-        
+
         $dtStart = $course->getStartTime()->setTimezone(new \DateTimeZone('UTC'))->format('Ymd\\THis\\Z');
         $dtEnd = $course->getEndTime()->setTimezone(new \DateTimeZone('UTC'))->format('Ymd\\THis\\Z');
         $dtStamp = (new \DateTime('now', new \DateTimeZone('UTC')))->format('Ymd\\THis\\Z');

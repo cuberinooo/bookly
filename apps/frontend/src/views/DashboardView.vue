@@ -8,7 +8,6 @@ import { BookingWindow } from '../app/enums/BookingWindow';
 import CourseForm from '../components/CourseForm.vue';
 import ManagedCoursesTable from '../components/ManagedCoursesTable.vue';
 import ParticipantsDialog from '../components/ParticipantsDialog.vue';
-import NotificationItem from '../components/NotificationItem.vue';
 import TrialStatusCard from '../components/TrialStatusCard.vue';
 import { useRoute } from 'vue-router';
 import { eventsStore } from '../store/events';
@@ -98,7 +97,6 @@ async function fetchData() {
 
         if (isTrainerMode.value) {
             courseTable.value?.refresh();
-            fetchNotifications();
         }
 
         loading.value = true;
@@ -139,13 +137,6 @@ watch(
     }
   }
 );
-
-async function fetchNotifications() {
-    try {
-        const response = await api.get('/notifications');
-        notifications.value = response.data;
-    } catch (e) {}
-}
 
 function openNewCourse() {
     editingCourse.value = {
@@ -299,32 +290,6 @@ onMounted(fetchData);
           @edit="editCourse"
         />
       </div>
-
-      <aside class="notifications-panel order-1 lg:order-2">
-        <div class="panel-header mb-4">
-          <h2
-            class="text-xl md:text-2xl font-black uppercase tracking-tight"
-            style="font-family: 'Barlow Condensed', sans-serif;"
-          >
-            Live Feed
-          </h2>
-        </div>
-        <div class="notif-list">
-          <NotificationItem
-            v-for="notif in notifications"
-            :key="notif.id"
-            :notification="notif"
-            @read="(id) => api.patch(`/notifications/${id}/read`).then(fetchNotifications)"
-          />
-          <div
-            v-if="notifications.length === 0"
-            class="empty-notifs"
-          >
-            <i class="pi pi-bell-slash" />
-            <p>No new alerts</p>
-          </div>
-        </div>
-      </aside>
     </div>
 
     <div
@@ -491,31 +456,6 @@ onMounted(fetchData);
     .trainer-layout { grid-template-columns: 1fr; }
 }
 
-.notif-list {
-    background: #f8fafc;
-    border: 1px solid var(--border-color);
-    max-height: 700px;
-    overflow-y: auto;
-    border-radius: 16px;
-}
-
-.notif-item {
-    padding: 1.5rem;
-    border-bottom: 1px solid var(--border-color);
-    background: white;
-    transition: all 0.2s;
-
-    &:last-child { border-bottom: none; }
-
-    &.unread {
-        background-color: #fffbeb;
-        border-left: 6px solid var(--primary-color);
-    }
-
-    p { margin: 0; color: var(--text-header); font-weight: 600; line-height: 1.4; }
-    small { color: var(--text-muted); font-family: 'Barlow Condensed', sans-serif; font-weight: 700; text-transform: uppercase; }
-}
-
 .mark-read-btn {
     color: var(--primary-color) !important;
     &:hover { background: #fef3c7 !important; }
@@ -657,11 +597,4 @@ onMounted(fetchData);
     &:hover { background: #f8fafc !important; border-color: var(--text-muted) !important; }
 }
 
-.empty-notifs {
-    padding: 4rem 2rem;
-    text-align: center;
-    color: #94a3b8;
-    i { font-size: 2.5rem; margin-bottom: 1rem; opacity: 0.5; }
-    p { font-family: 'Barlow Condensed', sans-serif; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em; }
-}
 </style>

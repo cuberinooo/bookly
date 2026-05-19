@@ -7,7 +7,6 @@ use App\Entity\Course;
 use App\Entity\CourseSeries;
 use App\Entity\Meetup;
 use App\Entity\MeetupRsvp;
-use App\Entity\Notification;
 use App\Service\MercurePublisherService;
 use Doctrine\Bundle\DoctrineBundle\Attribute\AsDoctrineListener;
 use Doctrine\ORM\Events;
@@ -22,7 +21,6 @@ class MercureEntityListener
         Booking::class,
         Course::class,
         CourseSeries::class,
-        Notification::class,
         Meetup::class,
         MeetupRsvp::class,
     ];

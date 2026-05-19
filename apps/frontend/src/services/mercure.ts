@@ -8,7 +8,6 @@ class MercureService {
       `${apiBase}/booking`,
       `${apiBase}/course`,
       `${apiBase}/courseseries`,
-      `${apiBase}/notification`,
       `${apiBase}/meetup`,
       `${apiBase}/meetuprsvp`,
     ];
