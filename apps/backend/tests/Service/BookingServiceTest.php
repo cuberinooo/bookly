@@ -66,7 +66,7 @@ class BookingServiceTest extends TestCase
         $this->bookingRepository->method('findOneBy')->willReturn(null);
         $this->bookingRepository->method('count')->willReturn(0);
 
-        $this->entityManager->expects($this->exactly(2))->method('persist');
+        $this->entityManager->expects($this->once())->method('persist');
         $this->entityManager->expects($this->once())->method('flush');
 
         [$booking, $isWaitlist] = $this->service->book($course, $user);
@@ -213,7 +213,6 @@ class BookingServiceTest extends TestCase
         $this->bookingRepository->method('findOneBy')->willReturn($booking);
 
         $this->entityManager->expects($this->once())->method('remove')->with($booking);
-        $this->entityManager->expects($this->once())->method('persist'); // notification
         $this->entityManager->expects($this->once())->method('flush');
 
         $this->service->unbook($course, $user);
