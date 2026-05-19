@@ -17,42 +17,33 @@ class TrainingCycleService
 
     public function getCategoryForDate(User $trainer, \DateTimeInterface $date): ?array
     {
-        $activeCycle = $this->cycleRepository->findActiveCycleForTrainer($trainer->getId());
+        $cycle = $this->cycleRepository->findActiveCycleForTrainer($trainer->getId())
+            ?? $this->cycleRepository->findLatestCycleForTrainer($trainer->getId());
         
-        if (!$activeCycle) {
+        if (!$cycle) {
             return null;
         }
 
-        $startDate = $activeCycle->getStartDate();
-        
-        // Clone and reset time for accurate day difference
-        $start = \DateTime::createFromInterface($startDate)->setTime(0, 0, 0);
+        $start = \DateTime::createFromInterface($cycle->getStartDate())->setTime(0, 0, 0);
         $target = \DateTime::createFromInterface($date)->setTime(0, 0, 0);
         
-        $diff = $target->diff($start);
-        $daysElapsed = (int)$diff->format("%r%a");
-        
-        // Note: diff format %r%a returns negative if target > start, 
-        // wait, actually $target->diff($start) returns positive if target < start.
-        // Let's use target - start.
         $daysElapsed = (int)$start->diff($target)->format("%r%a");
 
         if ($daysElapsed < 0) {
             return null; // Date is before cycle start
         }
 
-        $totalDaysInCycle = $activeCycle->getDurationWeeks() * 7;
-        $dayInCycle = $daysElapsed % $totalDaysInCycle;
-        
-        $weekNumber = (int)floor($dayInCycle / 7) + 1;
+        $totalWeeks = $cycle->getDurationWeeks();
+        $weekInCycle = (int)floor($daysElapsed / 7) % $totalWeeks + 1;
         $dayOfWeek = (int)$target->format('N'); // 1 (Mon) to 7 (Sun)
 
-        foreach ($activeCycle->getAssignments() as $assignment) {
-            if ($assignment->getWeekNumber() === $weekNumber && $assignment->getDayOfWeek() === $dayOfWeek) {
+        foreach ($cycle->getAssignments() as $assignment) {
+            if ($assignment->getWeekNumber() === $weekInCycle && $assignment->getDayOfWeek() === $dayOfWeek) {
                 $category = $assignment->getCategory();
                 return [
-                    'categoryName' => $category->getName(),
-                    'categoryColor' => $category->getColorHex()
+                    'name' => $category->getName(),
+                    'colorHex' => $category->getColorHex(),
+                    'description' => $category->getDescription()
                 ];
             }
         }
@@ -62,30 +53,30 @@ class TrainingCycleService
 
     public function getCycleInfoForTrainer(User $trainer, \DateTimeInterface $date): ?array
     {
-        $activeCycle = $this->cycleRepository->findActiveCycleForTrainer($trainer->getId());
+        $cycle = $this->cycleRepository->findActiveCycleForTrainer($trainer->getId())
+            ?? $this->cycleRepository->findLatestCycleForTrainer($trainer->getId());
         
-        if (!$activeCycle) {
+        if (!$cycle) {
             return null;
         }
 
-        $startDate = $activeCycle->getStartDate();
-        $start = \DateTime::createFromInterface($startDate)->setTime(0, 0, 0);
+        $start = \DateTime::createFromInterface($cycle->getStartDate())->setTime(0, 0, 0);
         $target = \DateTime::createFromInterface($date)->setTime(0, 0, 0);
         
         $daysElapsed = (int)$start->diff($target)->format("%r%a");
 
-        if ($daysElapsed < 0) {
-            return null;
+        $totalWeeks = $cycle->getDurationWeeks();
+        
+        // If it's before the start date, we still return it as Week 1
+        $currentWeek = 1;
+        if ($daysElapsed >= 0) {
+            $currentWeek = (int)floor($daysElapsed / 7) % $totalWeeks + 1;
         }
 
-        $totalDaysInCycle = $activeCycle->getDurationWeeks() * 7;
-        $dayInCycle = $daysElapsed % $totalDaysInCycle;
-        $weekNumber = (int)floor($dayInCycle / 7) + 1;
-
         return [
-            'name' => $activeCycle->getName(),
-            'currentWeek' => $weekNumber,
-            'totalWeeks' => $activeCycle->getDurationWeeks()
+            'name' => $cycle->getName(),
+            'currentWeek' => $currentWeek,
+            'totalWeeks' => $totalWeeks
         ];
     }
 }

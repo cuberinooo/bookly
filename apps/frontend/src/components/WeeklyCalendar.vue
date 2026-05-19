@@ -236,7 +236,7 @@ function onSlotClick(day: Date, hour: number) {
                 }"
                 :style="[
                   !isCompactView ? { gridRow: getGridRow(course.startTime, course.durationMinutes) } : {},
-                  course.cycleCategory ? { borderLeft: `6px solid ${course.cycleCategory.categoryColor}` } : {}
+                  course.cycleCategory ? { borderLeft: `6px solid ${course.cycleCategory.colorHex}` } : {}
                 ]"
                 @click.stop="$emit('course-click', course)"
               >
@@ -244,10 +244,10 @@ function onSlotClick(day: Date, hour: number) {
                 <div
                   v-if="course.cycleCategory"
                   class="cycle-tag mb-1 flex items-center gap-1"
-                  :style="{ color: course.cycleCategory.categoryColor }"
+                  :style="{ color: course.cycleCategory.colorHex }"
                 >
                   <i class="pi pi-bolt text-[8px]" />
-                  <span class="text-[9px] font-black uppercase tracking-tighter">{{ course.cycleCategory.categoryName }}</span>
+                  <span class="text-[9px] font-black uppercase tracking-tighter">{{ course.cycleCategory.name }}</span>
                 </div>
 
                 <div class="flex flex-col gap-1 w-full mb-1">

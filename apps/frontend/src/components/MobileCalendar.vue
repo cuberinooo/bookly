@@ -200,16 +200,16 @@ function formatDayName(date: Date) {
                   'is-restricted': isRestrictedForTrial(course),
                   'is-past': isPastCourse(course)
                 }"
-                :style="course.cycleCategory ? { borderLeft: `6px solid ${course.cycleCategory.categoryColor}` } : {}"
+                :style="course.cycleCategory ? { borderLeft: `6px solid ${course.cycleCategory.colorHex}` } : {}"
                 @click="$emit('course-click', course)"
               >
                 <div class="card-left">
                   <div
                     v-if="course.cycleCategory"
                     class="px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase"
-                    :style="{ backgroundColor: course.cycleCategory.categoryColor, color: 'white' }"
+                    :style="{ backgroundColor: course.cycleCategory.colorHex, color: 'white' }"
                   >
-                    {{ course.cycleCategory.categoryName }}
+                    {{ course.cycleCategory.name }}
                   </div>
                   <div class="course-time">
                     {{ formatTime(course.startTime) }}

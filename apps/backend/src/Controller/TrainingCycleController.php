@@ -38,11 +38,30 @@ class TrainingCycleController extends AbstractController
         $category->setCompany($this->getUser()->getCompany());
         $category->setName($data['name']);
         $category->setColorHex($data['colorHex']);
+        $category->setDescription($data['description'] ?? null);
 
         $entityManager->persist($category);
         $entityManager->flush();
 
         return new JsonResponse(['id' => $category->getId()], Response::HTTP_CREATED);
+    }
+
+    #[Route('/categories/{id}', name: 'training_category_update', methods: ['PATCH'])]
+    public function updateCategory(TrainingCategory $category, Request $request, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $this->denyAccessUnlessGranted('ROLE_TRAINER');
+        if ($category->getTrainer() !== $this->getUser()) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $data = json_decode($request->getContent(), true);
+        if (isset($data['name'])) $category->setName($data['name']);
+        if (isset($data['colorHex'])) $category->setColorHex($data['colorHex']);
+        if (array_key_exists('description', $data)) $category->setDescription($data['description']);
+
+        $entityManager->flush();
+
+        return new JsonResponse(['status' => 'Updated']);
     }
 
     #[Route('/categories/{id}', name: 'training_category_delete', methods: ['DELETE'])]

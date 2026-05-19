@@ -4,6 +4,7 @@ export interface TrainingCategory {
     id: number;
     name: string;
     colorHex: string;
+    description?: string;
 }
 
 export interface CycleAssignment {
@@ -29,9 +30,13 @@ export const trainingCycleService = {
         return response.data;
     },
 
-    async createCategory(data: { name: string; colorHex: string }) {
+    async createCategory(data: { name: string; colorHex: string; description?: string }) {
         const response = await api.post<{ id: number }>('/training-cycles/categories', data);
         return response.data;
+    },
+
+    async updateCategory(id: number, data: { name?: string; colorHex?: string; description?: string }) {
+        await api.patch(`/training-cycles/categories/${id}`, data);
     },
 
     async deleteCategory(id: number) {

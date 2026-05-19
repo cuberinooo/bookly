@@ -14,6 +14,9 @@ const emit = defineEmits(['save', 'cancel', 'delete']);
 
 const trainers = ref<any[]>([]);
 const toast = useToast();
+
+const activeCategoryDescription = computed(() => props.course?.cycleCategory?.description);
+
 const workoutTypes = ['Functional Training', 'Run Training', 'Team WOD', 'Other'];
 
 const timeOptions = ref<string[]>([]);
@@ -260,7 +263,23 @@ function handleSubmit() {
     </div>
     <div class="form-group">
       <label for="description">Workout Description</label>
+      <div
+        v-if="activeCategoryDescription"
+        class="mb-3 p-4 bg-amber-50 border-2 border-amber-200 rounded-xl animate-fadein"
+      >
+        <div class="flex items-center gap-2 mb-2">
+          <i class="pi pi-info-circle text-amber-600" />
+          <span class="text-[10px] font-black uppercase text-amber-700 tracking-widest">Training Cycle Focus Override</span>
+        </div>
+        <p class="text-sm font-bold text-slate-800 leading-relaxed italic">
+          "{{ activeCategoryDescription }}"
+        </p>
+        <div class="mt-2 text-[9px] font-bold text-amber-600 uppercase">
+          Category: {{ course.cycleCategory.name }}
+        </div>
+      </div>
       <Textarea
+        v-else
         id="description"
         v-model="form.description"
         rows="4"

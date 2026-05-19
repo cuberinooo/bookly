@@ -31,6 +31,10 @@ class TrainingCategory implements CompanyAwareInterface
     #[Groups(['category:read', 'cycle:read', 'course:read'])]
     private ?string $colorHex = null;
 
+    #[ORM\Column(type: 'text', nullable: true)]
+    #[Groups(['category:read', 'cycle:read', 'course:read'])]
+    private ?string $description = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -80,6 +84,18 @@ class TrainingCategory implements CompanyAwareInterface
     public function setColorHex(string $colorHex): static
     {
         $this->colorHex = $colorHex;
+
+        return $this;
+    }
+
+    public function getDescription(): ?string
+    {
+        return $this->description;
+    }
+
+    public function setDescription(?string $description): static
+    {
+        $this->description = $description;
 
         return $this;
     }

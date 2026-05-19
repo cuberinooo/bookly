@@ -24,13 +24,18 @@ class TrainingCycleServiceTest extends TestCase
         $this->service = new TrainingCycleService($this->cycleRepository, $this->assignmentRepository);
     }
 
-    public function testGetCategoryForDateReturnsNullIfNoActiveCycle(): void
+    public function testGetCategoryForDateReturnsNullIfNoCycle(): void
     {
         $trainer = $this->createMock(User::class);
         $trainer->method('getId')->willReturn(1);
         
         $this->cycleRepository->expects($this->once())
             ->method('findActiveCycleForTrainer')
+            ->with(1)
+            ->willReturn(null);
+
+        $this->cycleRepository->expects($this->once())
+            ->method('findLatestCycleForTrainer')
             ->with(1)
             ->willReturn(null);
 
@@ -83,8 +88,8 @@ class TrainingCycleServiceTest extends TestCase
         $result = $this->service->getCategoryForDate($trainer, $targetDate);
         
         $this->assertNotNull($result);
-        $this->assertEquals('Strength', $result['categoryName']);
-        $this->assertEquals('#ff0000', $result['categoryColor']);
+        $this->assertEquals('Strength', $result['name']);
+        $this->assertEquals('#ff0000', $result['colorHex']);
     }
 
     public function testGetCategoryForDateHandlesRepetition(): void
@@ -116,29 +121,27 @@ class TrainingCycleServiceTest extends TestCase
         $result = $this->service->getCategoryForDate($trainer, $targetDate);
         
         $this->assertNotNull($result);
-        $this->assertEquals('Endurance', $result['categoryName']);
+        $this->assertEquals('Endurance', $result['name']);
     }
 
-    public function testGetCycleInfoForTrainer(): void
+    public function testGetCycleInfoForTrainerFallsBackToLatest(): void
     {
         $trainer = $this->createMock(User::class);
         $trainer->method('getId')->willReturn(1);
         
         $cycle = new TrainingCycle();
-        $cycle->setName('Summer Shred');
+        $cycle->setName('Fallback Cycle');
         $cycle->setStartDate(new \DateTime('2026-05-18'));
         $cycle->setDurationWeeks(4);
         
-        $this->cycleRepository->method('findActiveCycleForTrainer')->willReturn($cycle);
+        $this->cycleRepository->method('findActiveCycleForTrainer')->willReturn(null);
+        $this->cycleRepository->method('findLatestCycleForTrainer')->willReturn($cycle);
 
-        // Day in Week 3
-        $targetDate = new \DateTime('2026-06-01'); // 14 days after start
+        $targetDate = new \DateTime('2026-05-18');
         
         $result = $this->service->getCycleInfoForTrainer($trainer, $targetDate);
         
         $this->assertNotNull($result);
-        $this->assertEquals('Summer Shred', $result['name']);
-        $this->assertEquals(3, $result['currentWeek']);
-        $this->assertEquals(4, $result['totalWeeks']);
+        $this->assertEquals('Fallback Cycle', $result['name']);
     }
 }

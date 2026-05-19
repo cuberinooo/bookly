@@ -95,6 +95,15 @@ async function deleteCategory(id: number) {
     } catch (e) {}
 }
 
+async function updateCategory(data: { id: number; name?: string; colorHex?: string; description?: string }) {
+    try {
+        const { id, ...payload } = data;
+        await trainingCycleService.updateCategory(id, payload);
+        toast.add({ severity: 'success', summary: 'Updated', detail: 'Category updated', life: 3000 });
+        await loadData();
+    } catch (e) {}
+}
+
 function toggleCell(week: number, day: number) {
     const key = `${week}-${day}`;
     if (!selectedCategory.value) {
@@ -169,6 +178,7 @@ onMounted(loadData);
         :selected-category="selectedCategory"
         @add="addCategory"
         @delete="deleteCategory"
+        @update="updateCategory"
         @select="selectedCategory = $event"
       />
 

@@ -27,4 +27,16 @@ class TrainingCycleRepository extends ServiceEntityRepository
             ->getQuery()
             ->getOneOrNullResult();
     }
+
+    public function findLatestCycleForTrainer(int $trainerId): ?TrainingCycle
+    {
+        return $this->createQueryBuilder('c')
+            ->andWhere('c.trainer = :trainerId')
+            ->setParameter('trainerId', $trainerId)
+            ->orderBy('c.startDate', 'DESC')
+            ->addOrderBy('c.id', 'DESC')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
 }
