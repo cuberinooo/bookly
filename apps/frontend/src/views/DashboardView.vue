@@ -132,7 +132,7 @@ watch(() => authStore.viewMode, () => {
 watch(
   () => eventsStore.lastEvent,
   (event) => {
-    if (event && ['Course', 'CourseSeries', 'Booking', 'Notification'].includes(event.entity)) {
+    if (event && ['Course', 'CourseSeries', 'Booking',].includes(event.entity)) {
       fetchData();
     }
   }
