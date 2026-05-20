@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import api from '../services/api';
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
@@ -9,7 +9,18 @@ const toast = useToast();
 const confirm = useConfirm();
 const authStore = useAuthStore();
 const users = ref<any[]>([]);
+const searchQuery = ref('');
 const loading = ref(false);
+
+const filteredUsers = computed(() => {
+    if (!searchQuery.value) return users.value;
+    const query = searchQuery.value.toLowerCase();
+    return users.value.filter(u =>
+        u.name.toLowerCase().includes(query) ||
+        u.email.toLowerCase().includes(query)
+    );
+});
+
 const userDialog = ref(false);
 const editingUser = ref<any>({ name: '', email: '', roles: ['ROLE_MEMBER'], password: '' });
 const submitting = ref(false);
@@ -194,198 +205,216 @@ onMounted(fetchUsers);
 
 <template>
   <div class="user-management mt-6">
-    <div class="flex justify-between items-center mb-6">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
       <h2 class="text-2xl font-bold uppercase tracking-tight font-barlow">
         User Directory
       </h2>
-      <Button
-        label="Create User"
-        icon="pi pi-user-plus"
-        severity="primary"
-        @click="openNewUser"
-      />
-    </div>
-
-    <div class="hidden md:block">
-      <DataTable
-        :value="users"
-        :loading="loading"
-        class="athletic-table"
-      >
-        <Column
-          field="name"
-          header="ATHLETE NAME"
-          sortable
-        >
-          <template #body="{ data }">
-            <div class="font-bold text-slate-900">
-              {{ data.name }}
-            </div>
-            <div class="text-xs text-slate-500">
-              {{ data.email }}
-            </div>
-          </template>
-        </Column>
-        <Column header="ROLES">
-          <template #body="{ data }">
-            <div class="flex flex-wrap gap-1">
-              <Tag
-                v-for="role in getSortedRoles(data.roles)"
-                :key="role"
-                :value="role.replace('ROLE_', '')"
-                :severity="role === 'ROLE_ADMIN' ? 'danger' : (role === 'ROLE_TRAINER' ? 'warn' : (role === 'ROLE_TRIAL' ? 'secondary' : 'info'))"
-              />
-            </div>
-          </template>
-        </Column>
-        <Column header="STATUS">
-          <template #body="{ data }">
-            <div class="flex items-center gap-2">
-              <ToggleSwitch
-                :model-value="data.isActive"
-                @update:model-value="toggleActive(data)"
-              />
-            </div>
-          </template>
-        </Column>
-        <Column header="VERIFIED">
-          <template #body="{ data }">
-            <i
-              class="pi"
-              :class="data.isVerified ? 'pi-check-circle text-accent' : 'pi-times-circle text-slate-300'"
-            />
-          </template>
-        </Column>
-        <Column header="MAIL">
-          <template #body="{ data }">
-            <div v-if="(data.roles.includes('ROLE_TRIAL'))">
-              <i
-                v-tooltip.top="data.joinUsMailSent ? 'Join us Mail Sent' : 'Not Sent'"
-                class="pi"
-                :class="data.joinUsMailSent ? 'pi-send text-accent' : 'pi-minus text-slate-300'"
-              />
-            </div>
-          </template>
-        </Column>
-        <Column
-          header="ACTIONS"
-          class="w-48"
-        >
-          <template #body="{ data }">
-            <div class="flex gap-2">
-              <Button
-                v-if="data.roles.includes('ROLE_TRIAL') && !data.joinUsMailSent"
-                v-tooltip.top="'Send Join Us Mail'"
-                icon="pi pi-envelope"
-                variant="text"
-                rounded
-                :loading="sendingJoinUs"
-                @click="sendJoinUsMail(data)"
-              />
-              <Button
-                icon="pi pi-pencil"
-                variant="text"
-                rounded
-                @click="editUser(data)"
-              />
-              <Button
-                icon="pi pi-trash"
-                variant="text"
-                severity="danger"
-                rounded
-                @click="deleteUser(data)"
-              />
-            </div>
-          </template>
-        </Column>
-      </DataTable>
-    </div>
-
-    <!-- Mobile Card Layout -->
-    <div class="md:hidden flex flex-col gap-4">
-      <div
-        v-if="loading"
-        class="flex justify-center py-8"
-      >
-        <i class="pi pi-spin pi-spinner text-3xl text-amber-400" />
+      <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+        <div class="relative w-full sm:w-72">
+          <InputText
+            v-model="searchQuery"
+            placeholder="Search by name or email..."
+            class="w-full"
+          />
+        </div>
+        <Button
+          label="Create User"
+          icon="pi pi-user-plus"
+          severity="primary"
+          @click="openNewUser"
+        />
       </div>
-      <template v-else>
-        <div
-          v-for="user in users"
-          :key="user.id"
-          class="phoenix-card p-4 border border-slate-200"
-        >
-          <div class="flex justify-between items-start mb-4">
-            <div>
-              <h3 class="font-black text-lg text-slate-900 leading-tight">
-                {{ user.name }}
-              </h3>
-              <p class="text-xs text-slate-500 font-medium mb-2">
-                {{ user.email }}
-              </p>
+    </div>
 
-              <div class="flex flex-wrap gap-1 mb-2">
+    <div class="user-list-wrapper overflow-y-auto pr-2 -mr-2" style="max-height: calc(100vh - 380px);">
+      <div class="hidden md:block">
+        <DataTable
+          :value="filteredUsers"
+          :loading="loading"
+          class="athletic-table"
+        >
+          <Column
+            field="name"
+            header="ATHLETE NAME"
+            sortable
+          >
+            <template #body="{ data }">
+              <div class="font-bold text-slate-900">
+                {{ data.name }}
+              </div>
+              <div class="text-xs text-slate-500">
+                {{ data.email }}
+              </div>
+            </template>
+          </Column>
+          <Column header="ROLES">
+            <template #body="{ data }">
+              <div class="flex flex-wrap gap-1">
                 <Tag
-                  v-for="role in getSortedRoles(user.roles)"
+                  v-for="role in getSortedRoles(data.roles)"
                   :key="role"
                   :value="role.replace('ROLE_', '')"
                   :severity="role === 'ROLE_ADMIN' ? 'danger' : (role === 'ROLE_TRAINER' ? 'warn' : (role === 'ROLE_TRIAL' ? 'secondary' : 'info'))"
-                  class="text-[10px] uppercase font-black"
                 />
-                <Tag
-                  v-if="user.roles.includes('ROLE_TRIAL') && user.joinUsMailSent"
-                  value="Join us mail sent"
-                  severity="success"
-                  class="text-[10px] uppercase font-black"
-                  icon="pi pi-send"
+              </div>
+            </template>
+          </Column>
+          <Column header="STATUS">
+            <template #body="{ data }">
+              <div class="flex items-center gap-2">
+                <ToggleSwitch
+                  :model-value="data.isActive"
+                  @update:model-value="toggleActive(data)"
+                />
+              </div>
+            </template>
+          </Column>
+          <Column header="VERIFIED">
+            <template #body="{ data }">
+              <i
+                class="pi"
+                :class="data.isVerified ? 'pi-check-circle text-accent' : 'pi-times-circle text-slate-300'"
+              />
+            </template>
+          </Column>
+          <Column header="MAIL">
+            <template #body="{ data }">
+              <div v-if="(data.roles.includes('ROLE_TRIAL'))">
+                <i
+                  v-tooltip.top="data.joinUsMailSent ? 'Join us Mail Sent' : 'Not Sent'"
+                  class="pi"
+                  :class="data.joinUsMailSent ? 'pi-send text-accent' : 'pi-minus text-slate-300'"
+                />
+              </div>
+            </template>
+          </Column>
+          <Column
+            header="ACTIONS"
+            class="w-48"
+          >
+            <template #body="{ data }">
+              <div class="flex gap-2">
+                <Button
+                  v-if="data.roles.includes('ROLE_TRIAL') && !data.joinUsMailSent"
+                  v-tooltip.top="'Send Join Us Mail'"
+                  icon="pi pi-envelope"
+                  variant="text"
+                  rounded
+                  :loading="sendingJoinUs"
+                  @click="sendJoinUsMail(data)"
+                />
+                <Button
+                  icon="pi pi-pencil"
+                  variant="text"
+                  rounded
+                  @click="editUser(data)"
+                />
+                <Button
+                  icon="pi pi-trash"
+                  variant="text"
+                  severity="danger"
+                  rounded
+                  @click="deleteUser(data)"
+                />
+              </div>
+            </template>
+          </Column>
+        </DataTable>
+      </div>
+
+      <!-- Mobile Card Layout -->
+      <div class="md:hidden flex flex-col gap-4">
+        <div
+          v-if="loading"
+          class="flex justify-center py-8"
+        >
+          <i class="pi pi-spin pi-spinner text-3xl text-amber-400" />
+        </div>
+        <template v-else>
+          <div
+            v-if="filteredUsers.length === 0"
+            class="text-center py-12 bg-slate-50 rounded-lg border-2 border-dashed border-slate-200"
+          >
+            <i class="pi pi-users text-4xl text-slate-300 mb-3" />
+            <p class="text-slate-500 font-medium">No athletes found matching your search.</p>
+          </div>
+          <div
+            v-for="user in filteredUsers"
+            :key="user.id"
+            class="phoenix-card p-4 border border-slate-200"
+          >
+            <div class="flex justify-between items-start mb-4">
+              <div>
+                <h3 class="font-black text-lg text-slate-900 leading-tight">
+                  {{ user.name }}
+                </h3>
+                <p class="text-xs text-slate-500 font-medium mb-2">
+                  {{ user.email }}
+                </p>
+
+                <div class="flex flex-wrap gap-1 mb-2">
+                  <Tag
+                    v-for="role in getSortedRoles(user.roles)"
+                    :key="role"
+                    :value="role.replace('ROLE_', '')"
+                    :severity="role === 'ROLE_ADMIN' ? 'danger' : (role === 'ROLE_TRAINER' ? 'warn' : (role === 'ROLE_TRIAL' ? 'secondary' : 'info'))"
+                    class="text-[10px] uppercase font-black"
+                  />
+                  <Tag
+                    v-if="user.roles.includes('ROLE_TRIAL') && user.joinUsMailSent"
+                    value="Join us mail sent"
+                    severity="success"
+                    class="text-[10px] uppercase font-black"
+                    icon="pi pi-send"
+                  />
+                </div>
+              </div>
+              <div class="flex items-center gap-2">
+                <i
+                  v-tooltip.left="user.isVerified ? 'Verified' : 'Unverified'"
+                  class="pi"
+                  :class="user.isVerified ? 'pi-check-circle text-accent' : 'pi-times-circle text-slate-300'"
                 />
               </div>
             </div>
-            <div class="flex items-center gap-2">
-              <i
-                v-tooltip.left="user.isVerified ? 'Verified' : 'Unverified'"
-                class="pi"
-                :class="user.isVerified ? 'pi-check-circle text-accent' : 'pi-times-circle text-slate-300'"
-              />
-            </div>
-          </div>
 
-          <div class="flex items-center justify-between pt-4 border-t border-slate-100 mt-2">
-            <div class="flex items-center gap-3">
-              <span class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Active Status</span>
-              <ToggleSwitch
-                :model-value="user.isActive"
-                @update:model-value="toggleActive(user)"
-              />
-            </div>
-            <div class="flex gap-1">
-              <Button
-                v-if="user.roles.includes('ROLE_TRIAL') && !user.joinUsMailSent"
-                icon="pi pi-envelope"
-                severity="secondary"
-                variant="text"
-                rounded
-                :loading="sendingJoinUs"
-                @click="sendJoinUsMail(user)"
-              />
-              <Button
-                icon="pi pi-pencil"
-                severity="secondary"
-                variant="text"
-                rounded
-                @click="editUser(user)"
-              />
-              <Button
-                icon="pi pi-trash"
-                severity="danger"
-                variant="text"
-                rounded
-                @click="deleteUser(user)"
-              />
+            <div class="flex items-center justify-between pt-4 border-t border-slate-100 mt-2">
+              <div class="flex items-center gap-3">
+                <span class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Active Status</span>
+                <ToggleSwitch
+                  :model-value="user.isActive"
+                  @update:model-value="toggleActive(user)"
+                />
+              </div>
+              <div class="flex gap-1">
+                <Button
+                  v-if="user.roles.includes('ROLE_TRIAL') && !user.joinUsMailSent"
+                  icon="pi pi-envelope"
+                  severity="secondary"
+                  variant="text"
+                  rounded
+                  :loading="sendingJoinUs"
+                  @click="sendJoinUsMail(user)"
+                />
+                <Button
+                  icon="pi pi-pencil"
+                  severity="secondary"
+                  variant="text"
+                  rounded
+                  @click="editUser(user)"
+                />
+                <Button
+                  icon="pi pi-trash"
+                  severity="danger"
+                  variant="text"
+                  rounded
+                  @click="deleteUser(user)"
+                />
+              </div>
             </div>
           </div>
-        </div>
-      </template>
+        </template>
+      </div>
     </div>
 
     <Dialog

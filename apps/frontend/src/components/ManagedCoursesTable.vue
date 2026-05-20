@@ -17,6 +17,7 @@ const emit = defineEmits(['edit']);
 
 const confirm = useConfirm();
 const toast = useToast();
+const authStore = useAuthStore();
 const courseStore = useCourseStore();
 
 const courses = computed(() => courseStore.courseList);
@@ -93,7 +94,7 @@ function handleResize() {
 }
 
 watch(
-  () => useAuthStore.user?.id,
+  () => authStore.user?.id,
   (newId) => {
     if (newId) {
       loadLazyData();
@@ -108,8 +109,8 @@ async function loadLazyData() {
             limit: isMobile.value ? 50 : lazyParams.value.rows
         };
 
-        if (useAuthStore.isTrainer && !showAllCourses.value) {
-            params.trainerId = useAuthStore.user?.id;
+        if (authStore.isTrainer && !showAllCourses.value) {
+            params.trainerId = authStore.user?.id;
         }
 
         if (lazyParams.value.startDate) {
@@ -322,7 +323,7 @@ onUnmounted(() => {
         <h2>Managed Courses</h2>
         <div class="flex flex-wrap items-end gap-3 md:gap-4">
           <div
-            v-if="useAuthStore.isTrainer"
+            v-if="authStore.isTrainer"
             class="flex items-center gap-2 h-10 md:h-8 px-3 bg-slate-100 rounded-lg border border-slate-200"
           >
             <ToggleSwitch
@@ -473,9 +474,9 @@ onUnmounted(() => {
             <span
               v-else
               class="text-sm font-medium"
-              :class="{ 'text-amber-600_ font-bold': slotProps.data.user?.id === useAuthStore.user?.id }"
+              :class="{ 'text-amber-600_ font-bold': slotProps.data.user?.id === authStore.user?.id }"
             >
-              {{ slotProps.data.user?.id === useAuthStore.user?.id ? 'YOU' : slotProps.data.user?.name }}
+              {{ slotProps.data.user?.id === authStore.user?.id ? 'YOU' : slotProps.data.user?.name }}
             </span>
           </template>
         </Column>
@@ -654,11 +655,11 @@ onUnmounted(() => {
                     </div>
                     <div
                       class="flex items-center gap-2 text-xs font-bold mt-1"
-                      :class="course.user?.id === useAuthStore.user?.id ? '!text-amber-600' : 'text-slate-500'"
+                      :class="course.user?.id === authStore.user?.id ? '!text-amber-600' : 'text-slate-500'"
                     >
                       <i class="pi pi-user text-[10px]" />
 
-                      {{ course.user?.id === useAuthStore.user?.id ? 'YOU' : course.user?.name }}
+                      {{ course.user?.id === authStore.user?.id ? 'YOU' : course.user?.name }}
                     </div>
                   </div>
                   <span :class="['slot-badge !py-1 !px-2 !text-[10px]', { 'is-full': course.bookings.length >= course.capacity }]">
