@@ -439,9 +439,15 @@ class CourseService
             }
 
             $trainer = $trainerId ? $this->userRepository->find($trainerId) : null;
+            $cycleInfo = null;
+            if ($trainer) {
+                $cycleInfo = $this->cycleService->getCycleInfoForTrainer($trainer, $startDate ?? new \DateTime());
+            } else {
+                $cycleInfo = $this->cycleService->getCycleInfoForCompany($startDate ?? new \DateTime());
+            }
             return [
                 'data' => $data,
-                'cycle' => $trainer ? $this->cycleService->getCycleInfoForTrainer($trainer, $startDate ?? new \DateTime()) : null
+                'cycle' => $cycleInfo
             ];
         }
 
@@ -472,10 +478,16 @@ class CourseService
         }
 
         $trainer = $trainerId ? $this->userRepository->find($trainerId) : null;
+        $cycleInfo = null;
+        if ($trainer) {
+            $cycleInfo = $this->cycleService->getCycleInfoForTrainer($trainer, $startDate ?? new \DateTime());
+        } else {
+            $cycleInfo = $this->cycleService->getCycleInfoForCompany($startDate ?? new \DateTime());
+        }
         return [
             'data' => $enrichedData,
             'meta' => $paginatedResults,
-            'cycle' => $trainer ? $this->cycleService->getCycleInfoForTrainer($trainer, $startDate ?? new \DateTime()) : null
+            'cycle' => $cycleInfo
         ];
     }
 

@@ -39,4 +39,24 @@ class TrainingCycleRepository extends ServiceEntityRepository
             ->getQuery()
             ->getOneOrNullResult();
     }
+
+    public function findActiveCycle(): ?TrainingCycle
+    {
+        return $this->createQueryBuilder('c')
+            ->andWhere('c.isActive = :isActive')
+            ->setParameter('isActive', true)
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
+    public function findLatestCycle(): ?TrainingCycle
+    {
+        return $this->createQueryBuilder('c')
+            ->orderBy('c.startDate', 'DESC')
+            ->addOrderBy('c.id', 'DESC')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
 }
