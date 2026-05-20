@@ -5,23 +5,18 @@ namespace App\Controller;
 use App\Entity\User;
 use App\Entity\Booking;
 use App\Entity\SensitiveDataAccessLog;
-use App\Repository\BookingRepository;
 use App\Repository\UserRepository;
+use App\Service\AdminUserService;
+use App\Service\UserService;
+use Aws\S3\S3ClientInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Serializer\SerializerInterface;
-
-use App\Service\PasswordValidator;
-use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
-
-use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
-use App\Service\AdminUserService;
-use Aws\S3\S3ClientInterface;
-use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\String\Slugger\SluggerInterface;
 
 #[Route('/api/user')]
@@ -31,6 +26,7 @@ class UserController extends AbstractController
         private S3ClientInterface $s3Client,
         private string $s3Bucket,
         private SluggerInterface $slugger,
+        private UserService $userService,
     ) {}
 
     #[Route('/me', name: 'user_delete', methods: ['DELETE'])]
@@ -52,7 +48,7 @@ class UserController extends AbstractController
     }
 
     #[Route('/profile-picture', name: 'user_profile_picture_upload', methods: ['POST'])]
-    public function uploadProfilePicture(Request $request, EntityManagerInterface $entityManager): JsonResponse
+    public function uploadProfilePicture(Request $request): JsonResponse
     {
         /** @var User $user */
         $user = $this->getUser();
@@ -66,28 +62,10 @@ class UserController extends AbstractController
             return new JsonResponse(['error' => 'No file uploaded'], Response::HTTP_BAD_REQUEST);
         }
 
-        $company = $user->getCompany();
-        if (!$company) {
-            return new JsonResponse(['error' => 'User has no company'], Response::HTTP_BAD_REQUEST);
-        }
-
-        $companySlug = $this->slugger->slug($company->getName())->lower();
-        $extension = $file->guessExtension() ?? 'jpg';
-        $filename = sprintf('profile_%s.%s', uniqid('', true), $extension);
-        $key = $companySlug . '/' . $user->getId() . '/' . $filename;
-
         try {
-            $prefix = $companySlug . '/' . $user->getId() . '/';
-            $this->s3Client->deleteMatchingObjects($this->s3Bucket, $prefix);
-
-            $this->s3Client->putObject([
-                'Bucket' => $this->s3Bucket,
-                'Key'    => $key,
-                'Body'   => fopen($file->getRealPath(), 'r'),
-            ]);
-
-            $user->setProfilePicture($filename);
-            $entityManager->flush();
+            $filename = $this->userService->uploadProfilePicture($user, $file);
+        } catch (\InvalidArgumentException $e) {
+            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
         } catch (\Exception $e) {
             return new JsonResponse(['error' => 'Failed to save file to S3: ' . $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
@@ -117,7 +95,6 @@ class UserController extends AbstractController
                 'Key' => $key,
             ]);
         } catch (\Aws\S3\Exception\S3Exception $e) {
-            // If the file doesn't exist in the bucket, gracefully throw a 404
             throw $this->createNotFoundException('Profile picture not found in storage.', $e);
         }
 
@@ -152,13 +129,10 @@ class UserController extends AbstractController
             return new JsonResponse(['error' => 'User not found'], Response::HTTP_NOT_FOUND);
         }
 
-        // 1. Authorization: Only Trainers or Admins
         if (!$this->isGranted('ROLE_TRAINER')) {
             return new JsonResponse(['error' => 'Access denied'], Response::HTTP_FORBIDDEN);
         }
 
-        // 2. Vital Interests Check: Does this trainer have an active session with this user?
-        // We allow access if there's a booking in a course that overlaps with current time (+/- 2 hours)
         $isAuthorized = $this->isGranted('ROLE_ADMIN');
 
         if (!$isAuthorized) {
@@ -188,7 +162,6 @@ class UserController extends AbstractController
             return new JsonResponse(['error' => 'You can only access emergency info for active session participants.'], Response::HTTP_FORBIDDEN);
         }
 
-        // 3. Audit Logging (GDPR compliance)
         $log = new SensitiveDataAccessLog();
         $log->setViewer($trainer);
         $log->setTargetUser($targetUser);
@@ -207,9 +180,6 @@ class UserController extends AbstractController
     #[Route('/change-password', name: 'user_change_password', methods: ['POST'])]
     public function changePassword(
         Request $request,
-        EntityManagerInterface $entityManager,
-        UserPasswordHasherInterface $passwordHasher,
-        PasswordValidator $passwordValidator,
         UserRepository $userRepository,
         \Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface $jwtManager
     ): JsonResponse {
@@ -231,16 +201,10 @@ class UserController extends AbstractController
         }
 
         try {
-            $passwordValidator->validate($newPassword);
+            $this->userService->changePassword($user, $newPassword);
         } catch (\Exception $e) {
             return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
         }
-
-        $hashedPassword = $passwordHasher->hashPassword($user, $newPassword);
-        $user->setPassword($hashedPassword);
-        $user->setMustChangePassword(false);
-
-        $entityManager->flush();
 
         $token = $jwtManager->create($user);
 
@@ -251,56 +215,21 @@ class UserController extends AbstractController
     }
 
     #[Route('/me', name: 'user_update', methods: ['PATCH'])]
-    public function update(Request $request, EntityManagerInterface $entityManager): JsonResponse
+    public function update(Request $request): JsonResponse
     {
         /** @var User $user */
         $user = $this->getUser();
+        if (!$user) {
+            return new JsonResponse(['error' => 'User not found'], Response::HTTP_UNAUTHORIZED);
+        }
+
         $data = json_decode($request->getContent(), true);
 
-        if (isset($data['name'])) {
-            $user->setName($data['name']);
+        try {
+            $this->userService->updateProfile($user, $data, $this->isGranted('ROLE_ADMIN'));
+        } catch (\InvalidArgumentException $e) {
+            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
         }
-
-        if (isset($data['phoneNumber'])) {
-            $user->setPhoneNumber($data['phoneNumber']);
-        }
-
-        if (isset($data['emergencyContactName'])) {
-            $user->setEmergencyContactName($data['emergencyContactName']);
-        }
-
-        if (isset($data['emergencyContactPhone'])) {
-            $user->setEmergencyContactPhone($data['emergencyContactPhone']);
-        }
-
-        if (isset($data['courseStartNotificationHours']) || isset($data['courseStartNotificationMinutes'])) {
-            $hours = (int) ($data['courseStartNotificationHours'] ?? $user->getCourseStartNotificationHours());
-            $minutes = (int) ($data['courseStartNotificationMinutes'] ?? $user->getCourseStartNotificationMinutes());
-
-            $totalMinutes = ($hours * 60) + $minutes;
-
-            if ($totalMinutes !== 0) {
-                if ($totalMinutes < 5) {
-                    return new JsonResponse(['error' => 'Notification must be at least 5 minutes.'], 400);
-                }
-                if ($totalMinutes % 5 !== 0) {
-                    return new JsonResponse(['error' => 'Notification must be in 5-minute increments.'], 400);
-                }
-            }
-
-            $user->setCourseStartNotificationHours($hours);
-            $user->setCourseStartNotificationMinutes($minutes);
-        }
-
-        if (isset($data['roles']) && is_array($data['roles']) && $this->isGranted('ROLE_ADMIN')) {
-            $allowedRoles = ['ROLE_MEMBER', 'ROLE_TRAINER', 'ROLE_ADMIN', 'ROLE_TRIAL'];
-            $newRoles = array_intersect($data['roles'], $allowedRoles);
-            if (!empty($newRoles)) {
-                $user->setRoles(array_values($newRoles));
-            }
-        }
-
-        $entityManager->flush();
 
         return new JsonResponse(['status' => 'Profile updated']);
     }

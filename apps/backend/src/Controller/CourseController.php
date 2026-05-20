@@ -21,103 +21,10 @@ use Symfony\Component\Serializer\SerializerInterface;
 class CourseController extends AbstractController
 {
     #[Route('', name: 'course_index', methods: ['GET'])]
-    public function index(Request $request, CourseRepository $courseRepository, SerializerInterface $serializer, TrainingCycleService $cycleService, UserRepository $userRepository): JsonResponse
+    public function index(Request $request, CourseService $courseService): JsonResponse
     {
-        $startDateStr = $request->query->get('startDate');
-        $endDateStr = $request->query->get('endDate');
-        $serverTz = new \DateTimeZone(date_default_timezone_get());
-        $startDate = $startDateStr ? (new \DateTime($startDateStr))->setTimezone($serverTz) : null;
-        $endDate = $endDateStr ? (new \DateTime($endDateStr))->setTimezone($serverTz) : null;
-        $futureOnly = $request->query->getBoolean('futureOnly', false);
-        $trainerId = $request->query->get('trainerId') ? $request->query->getInt('trainerId') : null;
-        $memberId = $request->query->get('memberId') ? $request->query->getInt('memberId') : null;
-
-        if ($request->query->getBoolean('all', false)) {
-            $qb = $courseRepository->createQueryBuilder('c');
-            if ($futureOnly && !$startDate) {
-                $qb->andWhere('c.endTime >= :now')
-                   ->setParameter('now', new \DateTime());
-            } elseif ($startDate) {
-                $qb->andWhere('c.endTime >= :startDate')
-                   ->setParameter('startDate', $startDate);
-            }
-
-            if ($endDate) {
-                $qb->andWhere('c.startTime <= :endDate')
-                   ->setParameter('endDate', $endDate);
-            }
-
-            if ($trainerId) {
-                $qb->andWhere('c.user = :trainerId')
-                   ->setParameter('trainerId', $trainerId);
-            }
-
-            if ($memberId) {
-                $qb->join('c.bookings', 'b')
-                   ->andWhere('b.user = :memberId')
-                   ->setParameter('memberId', $memberId);
-            }
-
-            $courses = $qb->orderBy('c.startTime', 'ASC')
-               ->getQuery()
-               ->getResult();
-
-            $data = json_decode($serializer->serialize($courses, 'json', ['groups' => 'course:read']), true);
-
-            foreach ($data as &$courseData) {
-                // Find the course object to get the user and startTime
-                $course = null;
-                foreach ($courses as $c) {
-                    if ($c->getId() === $courseData['id']) {
-                        $course = $c;
-                        break;
-                    }
-                }
-                if ($course) {
-                    $cycleCategory = $cycleService->getCategoryForDate($course->getUser(), $course->getStartTime());
-                    if ($cycleCategory) {
-                        $courseData['cycleCategory'] = $cycleCategory;
-                    }
-                }
-            }
-
-            return new JsonResponse([
-                'data' => $data,
-                'cycle' => $trainerId ? $cycleService->getCycleInfoForTrainer($userRepository->find($trainerId), $startDate ?? new \DateTime()) : null
-            ], Response::HTTP_OK);
-        }
-
-        $page = $request->query->getInt('page', 1);
-        $limit = $request->query->getInt('limit', 20);
-
-        $paginatedResults = $courseRepository->findPaginated($page, $limit, $startDate, $endDate, $futureOnly, $trainerId, $memberId);
-
-        $courses = $paginatedResults['data'];
-        unset($paginatedResults['data']);
-
-        $enrichedData = json_decode($serializer->serialize($courses, 'json', ['groups' => 'course:read']), true);
-
-        foreach ($enrichedData as &$courseData) {
-            $course = null;
-            foreach ($courses as $c) {
-                if ($c->getId() === $courseData['id']) {
-                    $course = $c;
-                    break;
-                }
-            }
-            if ($course) {
-                $cycleCategory = $cycleService->getCategoryForDate($course->getUser(), $course->getStartTime());
-                if ($cycleCategory) {
-                    $courseData['cycleCategory'] = $cycleCategory;
-                }
-            }
-        }
-
-        return new JsonResponse([
-            'data' => $enrichedData,
-            'meta' => $paginatedResults,
-            'cycle' => $trainerId ? $cycleService->getCycleInfoForTrainer($userRepository->find($trainerId), $startDate ?? new \DateTime()) : null
-        ], Response::HTTP_OK);
+        $result = $courseService->listCourses($request->query->all());
+        return new JsonResponse($result, Response::HTTP_OK);
     }
 
     #[Route('', name: 'course_new', methods: ['POST'])]
@@ -171,7 +78,7 @@ class CourseController extends AbstractController
     }
 
     #[Route('/{id}', name: 'course_edit', methods: ['PATCH'])]
-    public function edit(Request $request, int $id, CourseRepository $courseRepository, EntityManagerInterface $entityManager, CourseService $courseService, UserRepository $userRepository, BookingService $bookingService): JsonResponse
+    public function edit(Request $request, int $id, CourseRepository $courseRepository, CourseService $courseService, UserRepository $userRepository): JsonResponse
     {
         $this->denyAccessUnlessGranted('ROLE_TRAINER');
 
@@ -184,46 +91,46 @@ class CourseController extends AbstractController
         $updateSeries = $request->query->getBoolean('transferAll', false);
         $seriesId = $course->getSeriesId();
 
-        $updates = [];
-        $newTrainer = $course->getUser();
-
+        $newTrainer = null;
         if (isset($data['trainerId'])) {
             $newTrainer = $userRepository->find($data['trainerId']);
             if (!$newTrainer || !in_array('ROLE_TRAINER', $newTrainer->getRoles())) {
                 return new JsonResponse(['error' => 'Invalid trainer'], Response::HTTP_BAD_REQUEST);
             }
-            if ($newTrainer->getId() !== $course->getUser()->getId()) {
-                $updates['trainer'] = $newTrainer;
-            }
-        }
-
-        if (isset($data['startTime']) || isset($data['durationMinutes'])) {
-            $serverTz = new \DateTimeZone(date_default_timezone_get());
-            $startTime = isset($data['startTime']) ? (new \DateTime($data['startTime']))->setTimezone($serverTz) : $course->getStartTime();
-            $duration = (int) (isset($data['durationMinutes']) ? $data['durationMinutes'] : ($course->getDurationMinutes() ?? 60));
-
-            if ($startTime->format('H:i') !== $course->getStartTime()->format('H:i')) {
-                $updates['startTime'] = $startTime;
-            }
-            if ($duration !== $course->getDurationMinutes()) {
-                $updates['durationMinutes'] = $duration;
-            }
-        }
-
-        if (isset($data['title']) && $data['title'] !== $course->getTitle()) {
-            $updates['title'] = $data['title'];
-        }
-        if (isset($data['description']) && $data['description'] !== $course->getDescription()) {
-            $updates['description'] = $data['description'];
-        }
-        if (isset($data['capacity']) && (int)$data['capacity'] !== $course->getCapacity()) {
-            $updates['capacity'] = (int)$data['capacity'];
-        }
-        if (isset($data['allowTrial']) && (bool)$data['allowTrial'] !== $course->isAllowTrial()) {
-            $updates['allowTrial'] = (bool)$data['allowTrial'];
         }
 
         if ($updateSeries && $seriesId) {
+            $updates = [];
+            if ($newTrainer && $newTrainer->getId() !== $course->getUser()->getId()) {
+                $updates['trainer'] = $newTrainer;
+            }
+
+            if (isset($data['startTime']) || isset($data['durationMinutes'])) {
+                $serverTz = new \DateTimeZone(date_default_timezone_get());
+                $startTime = isset($data['startTime']) ? (new \DateTime($data['startTime']))->setTimezone($serverTz) : $course->getStartTime();
+                $duration = (int) (isset($data['durationMinutes']) ? $data['durationMinutes'] : ($course->getDurationMinutes() ?? 60));
+
+                if ($startTime->format('H:i') !== $course->getStartTime()->format('H:i')) {
+                    $updates['startTime'] = $startTime;
+                }
+                if ($duration !== $course->getDurationMinutes()) {
+                    $updates['durationMinutes'] = $duration;
+                }
+            }
+
+            if (isset($data['title']) && $data['title'] !== $course->getTitle()) {
+                $updates['title'] = $data['title'];
+            }
+            if (isset($data['description']) && $data['description'] !== $course->getDescription()) {
+                $updates['description'] = $data['description'];
+            }
+            if (isset($data['capacity']) && (int)$data['capacity'] !== $course->getCapacity()) {
+                $updates['capacity'] = (int)$data['capacity'];
+            }
+            if (isset($data['allowTrial']) && (bool)$data['allowTrial'] !== $course->isAllowTrial()) {
+                $updates['allowTrial'] = (bool)$data['allowTrial'];
+            }
+
             try {
                 $courseService->updateCourseSeries($seriesId, $updates, $course->getStartTime());
             } catch (ScheduleConflictException $e) {
@@ -232,38 +139,14 @@ class CourseController extends AbstractController
                 return new JsonResponse(['error' => 'An unexpected error occurred.'], Response::HTTP_INTERNAL_SERVER_ERROR);
             }
         } else {
-            // Update only this course
-            if (isset($updates['trainer'])) {
-                $course->setUser($newTrainer);
-                $bookingService->removeBookingIfExists($course, $newTrainer);
+            try {
+                $courseService->updateSingleCourse($course, $data, $newTrainer);
+            } catch (ScheduleConflictException $e) {
+                return new JsonResponse(['error' => $e->getFrontendMessage()], Response::HTTP_CONFLICT);
+            } catch (\Exception $e) {
+                return new JsonResponse(['error' => 'An unexpected error occurred.'], Response::HTTP_INTERNAL_SERVER_ERROR);
             }
-
-            if (isset($data['startTime']) || isset($data['durationMinutes'])) {
-                $serverTz = new \DateTimeZone(date_default_timezone_get());
-                $startTime = isset($data['startTime']) ? (new \DateTime($data['startTime']))->setTimezone($serverTz) : $course->getStartTime();
-                $duration = (int) (isset($data['durationMinutes']) ? $data['durationMinutes'] : ($course->getDurationMinutes() ?? 60));
-
-                $endTime = clone $startTime;
-                $endTime->modify("+$duration minutes");
-
-                try {
-                    $courseService->validateSchedule($startTime, $endTime, $course->getId(), $newTrainer->getId());
-                } catch (ScheduleConflictException $e) {
-                    return new JsonResponse(['error' => $e->getFrontendMessage()], Response::HTTP_CONFLICT);
-                }
-
-                $course->setStartTime($startTime);
-                $course->setDurationMinutes($duration);
-                $course->setEndTime($endTime);
-            }
-
-            if (isset($data['title'])) $course->setTitle($data['title']);
-            if (isset($data['description'])) $course->setDescription($data['description']);
-            if (isset($data['capacity'])) $course->setCapacity((int) $data['capacity']);
-            if (isset($data['allowTrial'])) $course->setAllowTrial((bool) $data['allowTrial']);
         }
-
-        $entityManager->flush();
 
         return new JsonResponse(['status' => 'Course updated']);
     }

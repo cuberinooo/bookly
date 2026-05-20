@@ -8,6 +8,9 @@ use App\Exception\ScheduleConflictException;
 use App\Repository\CourseRepository;
 
 use App\Repository\CourseSeriesRepository;
+use App\Repository\UserRepository;
+use App\Service\TrainingCycleService;
+use Symfony\Component\Serializer\SerializerInterface;
 use App\Entity\User;
 use App\Enum\CourseFrequency;
 use Doctrine\ORM\EntityManagerInterface;
@@ -18,7 +21,10 @@ class CourseService
         private CourseRepository $courseRepository,
         private CourseSeriesRepository $seriesRepository,
         private EntityManagerInterface $entityManager,
-        private BookingService $bookingService
+        private BookingService $bookingService,
+        private ?SerializerInterface $serializer = null,
+        private ?TrainingCycleService $cycleService = null,
+        private ?UserRepository $userRepository = null
     ) {
     }
 
@@ -364,6 +370,152 @@ class CourseService
         $bookings = $course->getBookings();
         foreach ($bookings as $booking) {
             $this->bookingService->removeBookingIfExists($course, $booking->getUser());
+        }
+
+        $this->entityManager->flush();
+    }
+
+    /**
+     * Finds and formats courses with training cycle category enrichment.
+     */
+    public function listCourses(array $queryParams): array
+    {
+        $startDateStr = $queryParams['startDate'] ?? null;
+        $endDateStr = $queryParams['endDate'] ?? null;
+        $serverTz = new \DateTimeZone(date_default_timezone_get());
+        $startDate = $startDateStr ? (new \DateTime($startDateStr))->setTimezone($serverTz) : null;
+        $endDate = $endDateStr ? (new \DateTime($endDateStr))->setTimezone($serverTz) : null;
+        $futureOnly = (bool)($queryParams['futureOnly'] ?? false);
+        $trainerId = isset($queryParams['trainerId']) && $queryParams['trainerId'] !== '' ? (int)$queryParams['trainerId'] : null;
+        $memberId = isset($queryParams['memberId']) && $queryParams['memberId'] !== '' ? (int)$queryParams['memberId'] : null;
+        $all = (bool)($queryParams['all'] ?? false);
+
+        if ($all) {
+            $qb = $this->courseRepository->createQueryBuilder('c');
+            if ($futureOnly && !$startDate) {
+                $qb->andWhere('c.endTime >= :now')
+                   ->setParameter('now', new \DateTime());
+            } elseif ($startDate) {
+                $qb->andWhere('c.endTime >= :startDate')
+                   ->setParameter('startDate', $startDate);
+            }
+
+            if ($endDate) {
+                $qb->andWhere('c.startTime <= :endDate')
+                   ->setParameter('endDate', $endDate);
+            }
+
+            if ($trainerId) {
+                $qb->andWhere('c.user = :trainerId')
+                   ->setParameter('trainerId', $trainerId);
+            }
+
+            if ($memberId) {
+                $qb->join('c.bookings', 'b')
+                   ->andWhere('b.user = :memberId')
+                   ->setParameter('memberId', $memberId);
+            }
+
+            $courses = $qb->orderBy('c.startTime', 'ASC')
+               ->getQuery()
+               ->getResult();
+
+            $data = json_decode($this->serializer->serialize($courses, 'json', ['groups' => 'course:read']), true);
+
+            foreach ($data as &$courseData) {
+                $course = null;
+                foreach ($courses as $c) {
+                    if ($c->getId() === $courseData['id']) {
+                        $course = $c;
+                        break;
+                    }
+                }
+                if ($course) {
+                    $cycleCategory = $this->cycleService->getCategoryForDate($course->getUser(), $course->getStartTime());
+                    if ($cycleCategory) {
+                        $courseData['cycleCategory'] = $cycleCategory;
+                    }
+                }
+            }
+
+            $trainer = $trainerId ? $this->userRepository->find($trainerId) : null;
+            return [
+                'data' => $data,
+                'cycle' => $trainer ? $this->cycleService->getCycleInfoForTrainer($trainer, $startDate ?? new \DateTime()) : null
+            ];
+        }
+
+        $page = (int)($queryParams['page'] ?? 1);
+        $limit = (int)($queryParams['limit'] ?? 20);
+
+        $paginatedResults = $this->courseRepository->findPaginated($page, $limit, $startDate, $endDate, $futureOnly, $trainerId, $memberId);
+
+        $courses = $paginatedResults['data'];
+        unset($paginatedResults['data']);
+
+        $enrichedData = json_decode($this->serializer->serialize($courses, 'json', ['groups' => 'course:read']), true);
+
+        foreach ($enrichedData as &$courseData) {
+            $course = null;
+            foreach ($courses as $c) {
+                if ($c->getId() === $courseData['id']) {
+                    $course = $c;
+                    break;
+                }
+            }
+            if ($course) {
+                $cycleCategory = $this->cycleService->getCategoryForDate($course->getUser(), $course->getStartTime());
+                if ($cycleCategory) {
+                    $courseData['cycleCategory'] = $cycleCategory;
+                }
+            }
+        }
+
+        $trainer = $trainerId ? $this->userRepository->find($trainerId) : null;
+        return [
+            'data' => $enrichedData,
+            'meta' => $paginatedResults,
+            'cycle' => $trainer ? $this->cycleService->getCycleInfoForTrainer($trainer, $startDate ?? new \DateTime()) : null
+        ];
+    }
+
+    /**
+     * Updates a single course and validates its schedule.
+     */
+    public function updateSingleCourse(Course $course, array $data, ?User $newTrainer = null): void
+    {
+        if ($newTrainer) {
+            $course->setUser($newTrainer);
+            $this->bookingService->removeBookingIfExists($course, $newTrainer);
+        }
+
+        if (isset($data['startTime']) || isset($data['durationMinutes'])) {
+            $serverTz = new \DateTimeZone(date_default_timezone_get());
+            $startTime = isset($data['startTime']) ? (new \DateTime($data['startTime']))->setTimezone($serverTz) : $course->getStartTime();
+            $duration = (int) (isset($data['durationMinutes']) ? $data['durationMinutes'] : ($course->getDurationMinutes() ?? 60));
+
+            $endTime = clone $startTime;
+            $endTime->modify("+$duration minutes");
+
+            $trainerId = $newTrainer ? $newTrainer->getId() : $course->getUser()->getId();
+            $this->validateSchedule($startTime, $endTime, $course->getId(), $trainerId);
+
+            $course->setStartTime($startTime);
+            $course->setDurationMinutes($duration);
+            $course->setEndTime($endTime);
+        }
+
+        if (isset($data['title'])) {
+            $course->setTitle($data['title']);
+        }
+        if (isset($data['description'])) {
+            $course->setDescription($data['description']);
+        }
+        if (isset($data['capacity'])) {
+            $course->setCapacity((int) $data['capacity']);
+        }
+        if (isset($data['allowTrial'])) {
+            $course->setAllowTrial((bool) $data['allowTrial']);
         }
 
         $this->entityManager->flush();
