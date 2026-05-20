@@ -81,7 +81,7 @@ class MercurePublisherService
             }
             
             // Deduplicate: same entity ID -> latest action wins
-            $entityId = $update['id'];
+            $entityId = (string) ($update['id'] ?? '');
             $batches[$key]['updates'][$entityId] = $update;
         }
 
