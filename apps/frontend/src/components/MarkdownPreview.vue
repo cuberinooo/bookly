@@ -27,8 +27,9 @@ function toggleExpand() {
     header="Preview"
     toggleable
   >
-    <div  class="preview-content phoenix-card"
-          :style="cssStyle"
+    <div
+      class="preview-content phoenix-card"
+      :style="cssStyle"
     >
       <!-- eslint-disable vue/no-v-html -->
       <div

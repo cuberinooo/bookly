@@ -340,7 +340,6 @@ onMounted(fetchProfile);
           />
         </div>
       </div>
-
     </div>
   </div>
 </template>

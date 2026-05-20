@@ -88,7 +88,9 @@ function handleSave() {
             :style="{ backgroundColor: cat.colorHex }"
           />
           <div class="flex-1 min-w-0">
-            <div class="font-bold text-sm truncate">{{ cat.name }}</div>
+            <div class="font-bold text-sm truncate">
+              {{ cat.name }}
+            </div>
             <div
               v-if="cat.description"
               class="text-[10px] text-slate-500 truncate"

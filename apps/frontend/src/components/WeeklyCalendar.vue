@@ -225,7 +225,7 @@ function onSlotClick(day: Date, hour: number) {
               </template>
 
               <!-- Courses (Both views use grid positioning if not compact, or flex if compact) -->
-                <div
+              <div
                 v-for="course in getCoursesForDay(date)"
                 :key="course.id"
                 class="course-card"

@@ -111,7 +111,7 @@ export const useCourseStore = defineStore('course', {
       }
     },
 
-    async updateCourse(id: number, data: any, transferAll: boolean = false) {
+    async updateCourse(id: number, data: any, transferAll = false) {
       try {
         const url = transferAll ? `/courses/${id}?transferAll=true` : `/courses/${id}`;
         const response = await api.patch(url, data);
@@ -123,7 +123,7 @@ export const useCourseStore = defineStore('course', {
       }
     },
 
-    async deleteCourse(id: number, deleteAll: boolean = false) {
+    async deleteCourse(id: number, deleteAll = false) {
       try {
         const url = deleteAll ? `/courses/${id}?deleteAll=true` : `/courses/${id}`;
         await api.delete(url);

@@ -127,14 +127,27 @@ onMounted(() => {
 <template>
   <div class="statistics-page">
     <div class="flex items-center gap-4 mb-8">
-        <h1 class="page-title">Trainer Statistics</h1>
+      <h1 class="page-title">
+        Trainer Statistics
+      </h1>
     </div>
 
-    <div v-if="loading" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-      <Skeleton v-for="i in 3" :key="i" height="160px" class="rounded-xl" />
+    <div
+      v-if="loading"
+      class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8"
+    >
+      <Skeleton
+        v-for="i in 3"
+        :key="i"
+        height="160px"
+        class="rounded-xl"
+      />
     </div>
 
-    <div v-else-if="stats" class="stats-container">
+    <div
+      v-else-if="stats"
+      class="stats-container"
+    >
       <!-- KPI Cards -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
         <Card class="stat-card">
@@ -145,8 +158,12 @@ onMounted(() => {
             </div>
           </template>
           <template #content>
-            <div class="text-5xl font-black text-slate-800">{{ stats.totalCourses }}</div>
-            <p class="text-slate-400 text-xs mt-3">All-time coached sessions</p>
+            <div class="text-5xl font-black text-slate-800">
+              {{ stats.totalCourses }}
+            </div>
+            <p class="text-slate-400 text-xs mt-3">
+              All-time coached sessions
+            </p>
           </template>
         </Card>
 
@@ -158,8 +175,12 @@ onMounted(() => {
             </div>
           </template>
           <template #content>
-            <div class="text-5xl font-black text-slate-800">{{ stats.uniqueMembers }}</div>
-            <p class="text-slate-400 text-xs mt-3">Different students reached</p>
+            <div class="text-5xl font-black text-slate-800">
+              {{ stats.uniqueMembers }}
+            </div>
+            <p class="text-slate-400 text-xs mt-3">
+              Different students reached
+            </p>
           </template>
         </Card>
 
@@ -171,10 +192,15 @@ onMounted(() => {
             </div>
           </template>
           <template #content>
-            <div class="text-5xl font-black" :class="stats.averageFillRate > 80 ? 'text-green-500' : 'text-amber-500'">
+            <div
+              class="text-5xl font-black"
+              :class="stats.averageFillRate > 80 ? 'text-green-500' : 'text-amber-500'"
+            >
               {{ stats.averageFillRate }}%
             </div>
-            <p class="text-slate-400 text-xs mt-3">Class capacity utilization</p>
+            <p class="text-slate-400 text-xs mt-3">
+              Class capacity utilization
+            </p>
           </template>
         </Card>
       </div>
@@ -183,19 +209,33 @@ onMounted(() => {
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
         <Card class="chart-card overflow-hidden">
           <template #title>
-              <div class="text-sm font-bold uppercase tracking-wider text-slate-600 mb-4">Course Volume (12 Months)</div>
+            <div class="text-sm font-bold uppercase tracking-wider text-slate-600 mb-4">
+              Course Volume (12 Months)
+            </div>
           </template>
           <template #content>
-            <Chart type="line" :data="lineData" :options="lineOptions" class="h-[350px] w-full" />
+            <Chart
+              type="line"
+              :data="lineData"
+              :options="lineOptions"
+              class="h-[350px] w-full"
+            />
           </template>
         </Card>
 
         <Card class="chart-card overflow-hidden">
           <template #title>
-              <div class="text-sm font-bold uppercase tracking-wider text-slate-600 mb-4">Popular Time Slots</div>
+            <div class="text-sm font-bold uppercase tracking-wider text-slate-600 mb-4">
+              Popular Time Slots
+            </div>
           </template>
           <template #content>
-            <Chart type="bar" :data="barData" :options="barOptions" class="h-[350px] w-full" />
+            <Chart
+              type="bar"
+              :data="barData"
+              :options="barOptions"
+              class="h-[350px] w-full"
+            />
           </template>
         </Card>
       </div>
@@ -203,11 +243,17 @@ onMounted(() => {
       <div class="grid grid-cols-1 gap-8">
         <Card class="chart-card">
           <template #title>
-              <div class="text-sm font-bold uppercase tracking-wider text-slate-600 mb-6">Most Popular Course Types</div>
+            <div class="text-sm font-bold uppercase tracking-wider text-slate-600 mb-6">
+              Most Popular Course Types
+            </div>
           </template>
           <template #content>
             <div class="flex flex-col gap-6">
-              <div v-for="(course, index) in stats.popularCourseTypes" :key="index" class="popular-item">
+              <div
+                v-for="(course, index) in stats.popularCourseTypes"
+                :key="index"
+                class="popular-item"
+              >
                 <div class="flex justify-between items-center mb-2">
                   <span class="font-bold text-slate-800">{{ course.title }}</span>
                   <span class="text-xs font-bold bg-slate-100 text-slate-600 px-3 py-1 rounded-full">{{ course.count }} sessions</span>
@@ -216,10 +262,13 @@ onMounted(() => {
                   <div 
                     class="bg-primary-gradient rounded-full h-3 transition-all duration-1000 ease-out" 
                     :style="{ width: (course.count / stats.popularCourseTypes[0].count * 100) + '%' }"
-                  ></div>
+                  />
                 </div>
               </div>
-              <div v-if="stats.popularCourseTypes.length === 0" class="text-center py-10 text-slate-400 italic">
+              <div
+                v-if="stats.popularCourseTypes.length === 0"
+                class="text-center py-10 text-slate-400 italic"
+              >
                 No course data available yet.
               </div>
             </div>
