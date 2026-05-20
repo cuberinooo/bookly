@@ -28,7 +28,7 @@ class CycleAssignment
     private ?int $dayOfWeek = null;
 
     #[ORM\ManyToOne]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     #[Groups(['cycle:read'])]
     private ?TrainingCategory $category = null;
 
