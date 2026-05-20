@@ -202,6 +202,12 @@ onMounted(async () => {
             >
               Meetups
             </RouterLink>
+            <RouterLink
+              to="/leaderboard"
+              class="desktop-only"
+            >
+              Rankings
+            </RouterLink>
             <div class="profile-dropdown-wrapper">
               <Button
                 type="button"

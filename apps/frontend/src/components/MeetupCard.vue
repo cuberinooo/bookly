@@ -117,7 +117,7 @@ const handleRsvp = (status: RsvpStatus) => {
           <i class="pi pi-calendar" />
           <span>{{ formatDateTime(meetup.meetupDate) }}</span>
         </div>
-        <div 
+        <div
           v-memo="[meetup.location]"
           class="flex items-center gap-2 text-sm max-w-full overflow-hidden"
         >
@@ -302,9 +302,5 @@ const handleRsvp = (status: RsvpStatus) => {
   width: 100%;
   height: 160px;
   object-fit: cover;
-}
-
-.text-primary {
-    color: var(--primary-color);
 }
 </style>

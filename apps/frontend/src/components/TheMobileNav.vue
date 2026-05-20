@@ -38,6 +38,14 @@ const dashboardLabel = computed(() => {
       <i class="pi pi-users" />
       <span>Meetups</span>
     </RouterLink>
+    
+    <RouterLink
+      to="/leaderboard"
+      class="mobile-nav-item"
+    >
+      <i class="pi pi-trophy" />
+      <span>Rankings</span>
+    </RouterLink>
   </nav>
 </template>
 
