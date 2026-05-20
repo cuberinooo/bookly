@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\User;
 use App\Repository\UserRepository;
+use App\Service\ApiCacheService;
 use App\Service\RegistrationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -18,13 +19,24 @@ use Symfony\Component\Serializer\SerializerInterface;
 #[IsGranted('ROLE_ADMIN')]
 class AdminUserController extends AbstractController
 {
+    public function __construct(
+        private readonly ApiCacheService $apiCache
+    ) {
+    }
+
     #[Route('', name: 'admin_user_index', methods: ['GET'])]
     public function index(UserRepository $userRepository, SerializerInterface $serializer): JsonResponse
     {
-        $users = $userRepository->findAll();
+        /** @var \App\Entity\User $user */
+        $user = $this->getUser();
+        $companyId = $user->getCompany()->getId();
 
-        $json = $serializer->serialize($users, 'json', ['groups' => 'user:read']);
-        return new JsonResponse($json, 200, [], true);
+        $data = $this->apiCache->get('user', $companyId, [], function() use ($userRepository, $serializer) {
+            $users = $userRepository->findAll();
+            return $serializer->serialize($users, 'json', ['groups' => 'user:read']);
+        }, 300);
+
+        return new JsonResponse($data, 200, [], true);
     }
 
     #[Route('', name: 'admin_user_create', methods: ['POST'])]

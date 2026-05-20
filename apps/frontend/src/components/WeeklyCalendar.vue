@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import { formatDate, formatTime } from '../services/date-utils';
-import { authStore } from '../store/auth';
+import { useAuthStore } from '../store/useAuthStore';
 
 const props = withDefaults(defineProps<{
     courses: any[];
@@ -18,6 +18,7 @@ const props = withDefaults(defineProps<{
 
 const emit = defineEmits(['course-click', 'cell-click', 'update:baseDate']);
 
+const authStore = useAuthStore();
 const internalBaseDate = ref(new Date(props.baseDate));
 
 watch(() => props.baseDate, (newVal) => {
@@ -95,7 +96,7 @@ function isBookedByUser(course: any) {
 }
 
 function isRestrictedForTrial(course: any) {
-    const isTrial = authStore.isTrial();
+    const isTrial = authStore.isTrial;
     return isTrial && course.allowTrial === false;
 }
 
@@ -228,7 +229,7 @@ function onSlotClick(day: Date, hour: number) {
                 v-for="course in getCoursesForDay(date)"
                 :key="course.id"
                 class="course-card"
-                :class="{ 
+                :class="{
                   'is-booked': isBookedByUser(course),
                   'is-restricted': isRestrictedForTrial(course),
                   'is-past': isPastCourse(course),

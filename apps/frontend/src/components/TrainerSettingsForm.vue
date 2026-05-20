@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
 import api from '../services/api';
-import { authStore } from '../store/auth';
+import { useAuthStore } from '../store/useAuthStore';
 import { useToast } from 'primevue/usetoast';
 import { BookingWindow } from '../app/enums/BookingWindow';
 
 const toast = useToast();
+const authStore = useAuthStore();
 const settings = ref({
     showParticipantNames: true,
     isWaitlistVisible: true,
@@ -214,7 +215,7 @@ onMounted(fetchSettings);
 
       <!-- PERSONAL SETTINGS SECTION -->
       <section
-        v-if="authStore.isTrainer()"
+        v-if="authStore.isTrainer"
         class="settings-section"
       >
         <div class="section-header mb-6">

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { formatTime, formatDateWithDay } from '../services/date-utils';
-import { authStore } from '../store/auth';
+import { useAuthStore } from '../store/useAuthStore';
 import api from '../services/api';
 import { useToast } from 'primevue/usetoast';
 
@@ -17,13 +17,14 @@ const props = defineProps<{
 
 const emit = defineEmits(['booked', 'unbooked']);
 
+const authStore = useAuthStore();
 const toast = useToast();
 const submitting = ref(false);
 
 const activeCategoryDescription = computed(() => props.course?.cycleCategory?.description);
 
 async function bookCourse() {
-  if (!authStore.isLoggedIn()) {
+  if (!authStore.isLoggedIn) {
     toast.add({ severity: 'info', summary: 'Login Required', detail: 'Please login to book a course', life: 5000 });
     return;
   }

@@ -2,7 +2,7 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import api from '../services/api';
-import { authStore } from '../store/auth';
+import { useAuthStore } from '../store/useAuthStore';
 import { useToast } from 'primevue/usetoast';
 
 const email = ref('');
@@ -12,6 +12,7 @@ const resending = ref(false);
 const showResend = ref(false);
 const router = useRouter();
 const toast = useToast();
+const authStore = useAuthStore();
 
 async function login() {
   loading.value = true;

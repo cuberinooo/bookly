@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import HomeView from '../views/HomeView.vue';
-import { authStore } from '../store/auth';
+import { useAuthStore } from '../store/useAuthStore';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -82,12 +82,14 @@ const router = createRouter({
 });
 
 router.beforeEach(async (to) => {
+  const authStore = useAuthStore();
+  
   // 1. Wait for authStore to be initialized
   if (!authStore.initialized) {
     await authStore.init();
   }
 
-  const loggedIn = authStore.isLoggedIn();
+  const loggedIn = authStore.isLoggedIn;
 
   // 2. Handle Authentication logic via return values
   if (to.meta.requiresAuth && !loggedIn) {

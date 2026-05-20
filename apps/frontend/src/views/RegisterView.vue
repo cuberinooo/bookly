@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
-import { settingsStore } from '../store/settings';
+import { useSettingsStore } from '../store/useSettingsStore';
 import { useRouter, useRoute } from 'vue-router';
 import api from '../services/api';
 import { useToast } from 'primevue/usetoast';
@@ -24,6 +24,7 @@ const isRegistered = ref(false);
 const router = useRouter();
 const route = useRoute();
 const toast = useToast();
+const settingsStore = useSettingsStore();
 
 const isEmailValid = computed(() => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value);

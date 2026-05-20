@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
-import { authStore } from '../store/auth';
+import { useAuthStore } from '../store/useAuthStore';
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
 import { useRouter } from 'vue-router';
@@ -9,6 +9,7 @@ import api from '../services/api';
 const toast = useToast();
 const confirm = useConfirm();
 const router = useRouter();
+const authStore = useAuthStore();
 const user = ref({
     name: '',
     email: '',

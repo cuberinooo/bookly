@@ -3,7 +3,7 @@ import { ref, watch, computed, onMounted } from 'vue';
 import { CourseFrequency } from '@/app/enums/CourseFrequency';
 import api from '../services/api';
 import { useToast } from 'primevue/usetoast';
-import { authStore } from '../store/auth';
+import { useAuthStore } from '../store/useAuthStore';
 
 const props = defineProps<{
     course?: any;
@@ -14,6 +14,7 @@ const emit = defineEmits(['save', 'cancel', 'delete']);
 
 const trainers = ref<any[]>([]);
 const toast = useToast();
+const authStore = useAuthStore();
 
 const activeCategoryDescription = computed(() => props.course?.cycleCategory?.description);
 

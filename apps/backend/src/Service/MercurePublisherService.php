@@ -10,6 +10,7 @@ use Symfony\Component\Serializer\SerializerInterface;
 class MercurePublisherService
 {
     private readonly string $topicPrefix;
+    private array $pendingUpdates = [];
 
     public function __construct(
         private readonly HubInterface $hub,
@@ -40,8 +41,6 @@ class MercurePublisherService
             }
         }
         
-        $topic = sprintf('%s/%s', $this->topicPrefix, strtolower($className));
-        
         $data = [
             'entity' => $className,
             'action' => $action,
@@ -52,6 +51,54 @@ class MercurePublisherService
             $data['companyId'] = $entity->getCompany()->getId();
         }
 
-        $this->publishUpdate($topic, $data);
+        $this->pendingUpdates[] = $data;
+
+        // Safety: flush if queue exceeds 50 items
+        if (count($this->pendingUpdates) >= 50) {
+            $this->flush();
+        }
+    }
+
+    public function flush(): void
+    {
+        if (empty($this->pendingUpdates)) {
+            return;
+        }
+
+        // Group by companyId (if available) and topic
+        $batches = [];
+        foreach ($this->pendingUpdates as $update) {
+            $companyId = $update['companyId'] ?? 'global';
+            $entityType = strtolower($update['entity']);
+            $topic = sprintf('%s/%s', $this->topicPrefix, $entityType);
+            
+            $key = $companyId . ':' . $topic;
+            if (!isset($batches[$key])) {
+                $batches[$key] = [
+                    'topic' => $topic,
+                    'updates' => []
+                ];
+            }
+            
+            // Deduplicate: same entity ID -> latest action wins
+            $entityId = $update['id'];
+            $batches[$key]['updates'][$entityId] = $update;
+        }
+
+        foreach ($batches as $batch) {
+            $payload = [
+                'batch' => true,
+                'updates' => array_values($batch['updates'])
+            ];
+
+            // If only one update, keep it simple (optional, but good for compatibility)
+            if (count($payload['updates']) === 1) {
+                $payload = $payload['updates'][0];
+            }
+
+            $this->publishUpdate($batch['topic'], $payload);
+        }
+
+        $this->pendingUpdates = [];
     }
 }

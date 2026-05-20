@@ -49,6 +49,7 @@ class MercurePublisherServiceTest extends TestCase
             }));
 
         $service->publishEntityUpdate($booking, 'updated');
+        $service->flush();
     }
 
     public function testPublishEntityUpdateForMeetupRsvp(): void
@@ -81,5 +82,45 @@ class MercurePublisherServiceTest extends TestCase
             }));
 
         $service->publishEntityUpdate($rsvp, 'created');
+        $service->flush();
+    }
+
+    public function testBatchPublishing(): void
+    {
+        $hub = $this->createMock(HubInterface::class);
+        $serializer = $this->createMock(SerializerInterface::class);
+        
+        $topicPrefix = 'http://localhost:8000/api';
+        $service = new MercurePublisherService($hub, $serializer, $topicPrefix);
+
+        $course1 = $this->createMock(\App\Entity\Course::class);
+        $course1->method('getId')->willReturn(1);
+        
+        $course2 = $this->createMock(\App\Entity\Course::class);
+        $course2->method('getId')->willReturn(2);
+
+        $expectedPayload = [
+            'batch' => true,
+            'updates' => [
+                ['entity' => 'Course', 'action' => 'created', 'id' => 1],
+                ['entity' => 'Course', 'action' => 'created', 'id' => 2],
+            ]
+        ];
+
+        $serializer->expects($this->once())
+            ->method('serialize')
+            ->with($expectedPayload, 'json')
+            ->willReturn(json_encode($expectedPayload));
+
+        $hub->expects($this->once())
+            ->method('publish')
+            ->with($this->callback(function (Update $update) use ($topicPrefix, $expectedPayload) {
+                return $update->getTopics() === [$topicPrefix . '/course']
+                    && $update->getData() === json_encode($expectedPayload);
+            }));
+
+        $service->publishEntityUpdate($course1, 'created');
+        $service->publishEntityUpdate($course2, 'created');
+        $service->flush();
     }
 }

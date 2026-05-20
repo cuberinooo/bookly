@@ -1,4 +1,4 @@
-import { eventsStore } from '../store/events';
+import { enqueueUpdate } from './mercure-queue';
 
 class MercureService {
   private eventSource: EventSource | null = null;
@@ -27,7 +27,12 @@ class MercureService {
       try {
         const data = JSON.parse(event.data);
         console.log('Mercure update received:', data);
-        eventsStore.emit(data.entity, data.action, data.id);
+        
+        if (data.batch) {
+          data.updates.forEach((u: any) => enqueueUpdate(u));
+        } else {
+          enqueueUpdate(data);
+        }
       } catch (e) {
         console.error('Failed to parse Mercure event', e);
       }

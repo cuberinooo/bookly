@@ -7,6 +7,7 @@ use App\Entity\TrainingCategory;
 use App\Entity\TrainingCycle;
 use App\Repository\TrainingCategoryRepository;
 use App\Repository\TrainingCycleRepository;
+use App\Service\ApiCacheService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -18,13 +19,26 @@ use Symfony\Component\Serializer\SerializerInterface;
 #[Route('/api/training-cycles')]
 class TrainingCycleController extends AbstractController
 {
+    public function __construct(
+        private readonly ApiCacheService $apiCache
+    ) {
+    }
+
     #[Route('/categories', name: 'training_category_index', methods: ['GET'])]
     public function indexCategories(TrainingCategoryRepository $repository, SerializerInterface $serializer): JsonResponse
     {
         $this->denyAccessUnlessGranted('ROLE_TRAINER');
-        $categories = $repository->findBy(['trainer' => $this->getUser()]);
-        $json = $serializer->serialize($categories, 'json', ['groups' => 'category:read']);
-        return new JsonResponse(json_decode($json, true), Response::HTTP_OK);
+        /** @var \App\Entity\User $user */
+        $user = $this->getUser();
+        $companyId = $user->getCompany()->getId();
+
+        $data = $this->apiCache->get('trainingcategory', $companyId, ['userId' => $user->getId()], function() use ($repository, $serializer, $user) {
+            $categories = $repository->findByTrainer($user->getId());
+            $json = $serializer->serialize($categories, 'json', ['groups' => 'category:read']);
+            return json_decode($json, true);
+        }, 600);
+
+        return new JsonResponse($data, Response::HTTP_OK);
     }
 
     #[Route('/categories', name: 'training_category_new', methods: ['POST'])]
@@ -82,9 +96,17 @@ class TrainingCycleController extends AbstractController
     public function indexCycles(TrainingCycleRepository $repository, SerializerInterface $serializer): JsonResponse
     {
         $this->denyAccessUnlessGranted('ROLE_TRAINER');
-        $cycles = $repository->findBy(['trainer' => $this->getUser()], ['startDate' => 'DESC']);
-        $json = $serializer->serialize($cycles, 'json', ['groups' => 'cycle:read']);
-        return new JsonResponse(json_decode($json, true), Response::HTTP_OK);
+        /** @var \App\Entity\User $user */
+        $user = $this->getUser();
+        $companyId = $user->getCompany()->getId();
+
+        $data = $this->apiCache->get('trainingcycle', $companyId, ['userId' => $user->getId()], function() use ($repository, $serializer, $user) {
+            $cycles = $repository->findBy(['trainer' => $user], ['startDate' => 'DESC']);
+            $json = $serializer->serialize($cycles, 'json', ['groups' => 'cycle:read']);
+            return json_decode($json, true);
+        }, 600);
+
+        return new JsonResponse($data, Response::HTTP_OK);
     }
 
     #[Route('', name: 'training_cycle_new', methods: ['POST'])]

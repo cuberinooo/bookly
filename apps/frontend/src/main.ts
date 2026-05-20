@@ -35,9 +35,12 @@ import AvatarGroup from 'primevue/avatargroup';
 import ProgressSpinner from 'primevue/progressspinner';
 import Chart from 'primevue/chart';
 import {Checkbox, Divider, FileUpload, Paginator, Panel, Password, Tag, ToggleButton, Tooltip} from "primevue";
+import {createPinia} from "pinia";
 
 const app = createApp(App);
+const pinia = createPinia();
 
+app.use(pinia);
 app.use(PrimeVue, {
     theme: {
         preset: Aura,

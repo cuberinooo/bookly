@@ -1,24 +1,26 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { authStore } from '../store/auth';
+import { useAuthStore } from '../store/useAuthStore';
 import TrainerSettingsForm from '../components/TrainerSettingsForm.vue';
 import UserManagementTab from '../components/UserManagementTab.vue';
 import LegalSettingsForm from '../components/LegalSettingsForm.vue';
 import CompanySettingsForm from '../components/CompanySettingsForm.vue';
 import MailSettingsTab from '../components/MailSettingsTab.vue';
 
+const authStore = useAuthStore();
+
 const activeTabs = computed(() => {
     const tabs = [];
-    if (authStore.isAdmin()) {
+    if (authStore.isAdmin) {
         tabs.push({ id: 'users', label: 'ATHLETES', component: UserManagementTab });
         tabs.push({ id: 'company', label: 'IDENTITY', component: CompanySettingsForm });
         tabs.push({ id: 'mail', label: 'EMAIL TEMPLATES', component: MailSettingsTab });
         tabs.push({ id: 'legal', label: 'LEGAL & COMPLIANCE', component: LegalSettingsForm });
     }
-    if (authStore.isTrainer()) {
+    if (authStore.isTrainer) {
         tabs.push({ id: 'system', label: 'SYSTEM & ALERTS', component: TrainerSettingsForm });
     }
-    if (!authStore.isAdmin() && !authStore.isTrainer()) {
+    if (!authStore.isAdmin && !authStore.isTrainer) {
         tabs.push({ id: 'privacy', label: 'PRIVACY', component: null });
     }
     return tabs;

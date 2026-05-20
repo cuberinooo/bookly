@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed, watch } from 'vue';
-import { meetupStore } from '../store/meetups';
-import { timeStore } from '../store/time';
-import { eventsStore } from '../store/events';
+import { ref, onMounted, onUnmounted, computed } from 'vue';
+import { useMeetupStore } from '../store/useMeetupStore';
+import { useTimeStore } from '../store/useTimeStore';
 import { RsvpStatus } from '../app/enums/RsvpStatus';
 import MeetupCard from '../components/MeetupCard.vue';
 import MeetupForm from '../components/MeetupForm.vue';
@@ -19,18 +18,16 @@ import { useConfirm } from 'primevue/useconfirm';
 
 const toast = useToast();
 const confirm = useConfirm();
+const meetupStore = useMeetupStore();
+const timeStore = useTimeStore();
 
-const activeTab = ref('active');
+const activeTab = ref<'active' | 'past' | 'joined' | 'cancelled'>('active');
 const showCreateDialog = ref(false);
 const editingMeetup = ref(null);
 const submitting = ref(false);
 
-const filters = computed(() => {
-  return { filter: activeTab.value as any };
-});
-
 const loadMeetups = async () => {
-  await meetupStore.fetchMeetups(filters.value);
+  await meetupStore.fetchMeetups(activeTab.value);
 };
 
 onMounted(() => {
@@ -40,16 +37,6 @@ onMounted(() => {
 
 onUnmounted(() => {
   timeStore.destroy();
-});
-
-// Watch for Mercure events
-watch(() => eventsStore.lastEvent, (event) => {
-  if (!event) return;
-  
-  // If a meetup or RSVP was updated, created or deleted, refresh the list
-  if (['Meetup', 'MeetupRsvp'].includes(event.entity)) {
-    loadMeetups();
-  }
 });
 
 const handleTabChange = () => {
@@ -164,7 +151,7 @@ const handleSubmit = async (data: any) => {
           </div>
 
           <div
-            v-else-if="meetupStore.meetups.length === 0"
+            v-else-if="meetupStore.meetupList.length === 0"
             class="text-center py-12 bg-slate-50 rounded-xl border-2 border-dashed border-slate-200"
           >
             <i class="pi pi-calendar-minus text-4xl text-slate-300 mb-4" />
@@ -187,7 +174,7 @@ const handleSubmit = async (data: any) => {
             class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
           >
             <MeetupCard
-              v-for="meetup in meetupStore.meetups"
+              v-for="meetup in meetupStore.meetupList"
               :key="meetup.id"
               :meetup="meetup"
               @rsvp="status => handleRsvp(meetup.id, status)"

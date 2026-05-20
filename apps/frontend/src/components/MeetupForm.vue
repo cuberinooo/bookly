@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
-import { authStore } from '../store/auth';
 import { Meetup } from '../services/meetup.service';
 import api from '../services/api';
 import Button from 'primevue/button';

@@ -1,8 +1,9 @@
 import api from "./api";
-import {authStore} from "../store/auth";
+import { useAuthStore } from "../store/useAuthStore";
 
 export async function downloadPrivacyPolicy(companyName?: string) {
   try {
+    const authStore = useAuthStore();
     const urlParams = companyName ? `?companyName=${encodeURIComponent(companyName)}` : '';
     
     const headers: Record<string, string> = {};
@@ -31,6 +32,7 @@ export async function downloadPrivacyPolicy(companyName?: string) {
 
 export async function downloadWelcomeAttachment(path: string, fileName: string) {
   try {
+    const authStore = useAuthStore();
     const headers: Record<string, string> = {};
     if (authStore.token) {
         headers.Authorization = `Bearer ${authStore.token}`;

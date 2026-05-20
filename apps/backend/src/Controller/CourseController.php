@@ -6,6 +6,7 @@ use App\Entity\Course;
 use App\Exception\ScheduleConflictException;
 use App\Repository\CourseRepository;
 use App\Repository\UserRepository;
+use App\Service\ApiCacheService;
 use App\Service\BookingService;
 use App\Service\CourseService;
 use App\Service\TrainingCycleService;
@@ -20,10 +21,30 @@ use Symfony\Component\Serializer\SerializerInterface;
 #[Route('/api/courses')]
 class CourseController extends AbstractController
 {
+    public function __construct(
+        private readonly ApiCacheService $apiCache
+    ) {
+    }
+
     #[Route('', name: 'course_index', methods: ['GET'])]
     public function index(Request $request, CourseService $courseService): JsonResponse
     {
-        $result = $courseService->listCourses($request->query->all());
+        /** @var \App\Entity\User $user */
+        $user = $this->getUser();
+        $companyId = $user->getCompany()->getId();
+        $queryParams = $request->query->all();
+        
+        // Context for cache includes roles and all query params
+        $context = [
+            'roles' => $user->getRoles(),
+            'query' => $queryParams,
+            'viewMode' => $request->headers->get('X-View-Mode', 'member')
+        ];
+
+        $result = $this->apiCache->get('course', $companyId, $context, function() use ($courseService, $queryParams) {
+            return $courseService->listCourses($queryParams);
+        }, 300);
+
         return new JsonResponse($result, Response::HTTP_OK);
     }
 
@@ -63,15 +84,31 @@ class CourseController extends AbstractController
     #[Route('/{id}', name: 'course_show', methods: ['GET'])]
     public function show(int $id, CourseRepository $courseRepository, SerializerInterface $serializer, TrainingCycleService $cycleService): JsonResponse
     {
-        $course = $courseRepository->find($id);
-        if (!$course) {
-            throw $this->createNotFoundException('Course not found');
-        }
+        /** @var \App\Entity\User $user */
+        $user = $this->getUser();
+        $companyId = $user->getCompany()->getId();
+        
+        $context = [
+            'id' => $id,
+            'roles' => $user->getRoles()
+        ];
 
-        $data = json_decode($serializer->serialize($course, 'json', ['groups' => 'course:read']), true);
-        $cycleCategory = $cycleService->getCategoryForDate($course->getUser(), $course->getStartTime());
-        if ($cycleCategory) {
-            $data['cycleCategory'] = $cycleCategory;
+        $data = $this->apiCache->get('course', $companyId, $context, function() use ($id, $courseRepository, $serializer, $cycleService) {
+            $course = $courseRepository->find($id);
+            if (!$course) {
+                return null;
+            }
+
+            $data = json_decode($serializer->serialize($course, 'json', ['groups' => 'course:read']), true);
+            $cycleCategory = $cycleService->getCategoryForDate($course->getUser(), $course->getStartTime());
+            if ($cycleCategory) {
+                $data['cycleCategory'] = $cycleCategory;
+            }
+            return $data;
+        }, 300);
+
+        if (!$data) {
+            throw $this->createNotFoundException('Course not found');
         }
 
         return new JsonResponse($data, Response::HTTP_OK);

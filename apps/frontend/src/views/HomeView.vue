@@ -2,7 +2,8 @@
 import { ref, onMounted, onUnmounted, computed, watch } from 'vue';
 import { formatDate, formatTime, formatDateWithDay } from '../services/date-utils';
 import api from '../services/api';
-import { authStore } from '../store/auth';
+import { useAuthStore } from '../store/useAuthStore';
+import { useCourseStore } from '../store/useCourseStore';
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
 import { BookingWindow } from '../app/enums/BookingWindow';
@@ -10,14 +11,14 @@ import WeeklyCalendar from '../components/WeeklyCalendar.vue';
 import MobileCalendar from '../components/MobileCalendar.vue';
 import CourseForm from '../components/CourseForm.vue';
 import CourseDetails from '../components/CourseDetails.vue';
-import { eventsStore } from '../store/events';
 
 const toast = useToast();
 const confirm = useConfirm();
-const courses = ref<any[]>([]);
-const cycleInfo = ref<any>(null);
+const courseStore = useCourseStore();
+
+const courses = computed(() => courseStore.courseList);
+const cycleInfo = computed(() => courseStore.cycleInfo);
 const settings = ref<any>(null);
-const loading = ref(false);
 const submitting = ref(false);
 
 const selectedCourse = ref<any>(null);
@@ -27,12 +28,11 @@ const editingCourse = ref<any>(null);
 const isCompactView = ref(true);
 
 const baseDate = ref(new Date());
-const loadedRange = ref({ start: null as Date | null, end: null as Date | null });
 
 const isMobile = ref(window.innerWidth <= 768);
 
-const isTrainerMode = computed(() => authStore.isTrainer() && authStore.viewMode === 'trainer');
-const isMemberMode = computed(() => !authStore.isLoggedIn() || !authStore.isTrainer() || authStore.viewMode === 'member');
+const isTrainerMode = computed(() => useAuthStore.isTrainer && useAuthStore.viewMode === 'trainer');
+const isMemberMode = computed(() => !useAuthStore.isLoggedIn || !useAuthStore.isTrainer || useAuthStore.viewMode === 'member');
 
 const isPastCourse = computed(() => {
     if (!selectedCourse.value?.endTime) return false;
@@ -68,7 +68,7 @@ const isOutsideBookingWindow = computed(() => {
 });
 
 const isTrialRestricted = computed(() => {
-    return authStore.isTrial() && selectedCourse.value && selectedCourse.value.allowTrial === false;
+    return useAuthStore.isTrial && selectedCourse.value && selectedCourse.value.allowTrial === false;
 });
 
 const bookingWindowMessage = computed(() => {
@@ -87,12 +87,15 @@ function handleResize() {
     isMobile.value = window.innerWidth <= 768;
 }
 
-watch(() => authStore.viewMode, () => {
+watch(() => useAuthStore.viewMode, () => {
     fetchCourses();
 });
 
 watch(baseDate, (newDate) => {
-    if (!loadedRange.value.start || !loadedRange.value.end) {
+    const loadedStart = courseStore.loadedRange.start ? new Date(courseStore.loadedRange.start) : null;
+    const loadedEnd = courseStore.loadedRange.end ? new Date(courseStore.loadedRange.end) : null;
+
+    if (!loadedStart || !loadedEnd) {
         fetchCourses();
         return;
     }
@@ -109,22 +112,12 @@ watch(baseDate, (newDate) => {
     endOfWeek.setDate(endOfWeek.getDate() + 6);
     endOfWeek.setHours(23, 59, 59, 999);
 
-    if (startOfWeek < loadedRange.value.start || endOfWeek > loadedRange.value.end) {
+    if (startOfWeek < loadedStart || endOfWeek > loadedEnd) {
         fetchCourses();
     }
 });
 
-watch(
-  () => eventsStore.lastEvent,
-  (event) => {
-    if (event && ['Course', 'CourseSeries', 'Booking'].includes(event.entity)) {
-      fetchCourses();
-    }
-  }
-);
-
 async function fetchCourses() {
-  loading.value = true;
   try {
     // Fetch settings first if not loaded
     if (!settings.value) {
@@ -147,15 +140,14 @@ async function fetchCourses() {
     end.setDate(start.getDate() + 34); // +4 weeks (28 days) + 6 days to get to Sunday
     end.setHours(23, 59, 59, 999);
 
-    const response = await api.get(`/courses?all=true&startDate=${start.toISOString()}&endDate=${end.toISOString()}`);
-    courses.value = response.data.data;
-    cycleInfo.value = response.data.cycle;
-    loadedRange.value = { start, end };
+    await courseStore.fetchCourses({
+        all: true,
+        startDate: start.toISOString(),
+        endDate: end.toISOString()
+    });
   } catch (err) {
     console.error('Failed to fetch courses', err);
     toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load courses', life: 5000 });
-  } finally {
-    loading.value = false;
   }
 }
 
@@ -185,15 +177,13 @@ async function onSaveCourse(formData: any, transferAll: boolean = false) {
     submitting.value = true;
     try {
         if (editingCourse.value?.id) {
-            const url = transferAll ? `/courses/${editingCourse.value.id}?transferAll=true` : `/courses/${editingCourse.value.id}`;
-            await api.patch(url, formData);
+            await courseStore.updateCourse(editingCourse.value.id, formData, transferAll);
             toast.add({ severity: 'success', summary: 'Updated', detail: 'Course updated successfully', life: 5000 });
         } else {
-            await api.post('/courses', formData);
+            await courseStore.createCourse(formData);
             toast.add({ severity: 'success', summary: 'Created', detail: 'Course created successfully', life: 5000 });
         }
         formVisible.value = false;
-        fetchCourses();
     } catch (err: any) {
         toast.add({ severity: 'error', summary: 'Error', detail: err.response?.data?.error || 'Failed to save course', life: 5000 });
     } finally {
@@ -220,11 +210,9 @@ async function onDeleteCourse(course: any) {
         },
         accept: async () => {
             try {
-                const url = isSeries ? `/courses/${course.id}?deleteAll=true` : `/courses/${course.id}`;
-                await api.delete(url);
+                await courseStore.deleteCourse(course.id, isSeries);
                 toast.add({ severity: 'warn', summary: 'Deleted', detail: isSeries ? 'Series removed' : 'Course removed', life: 5000 });
                 formVisible.value = false;
-                fetchCourses();
             } catch (e) {
                 toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to delete', life: 5000 });
             }
@@ -232,10 +220,9 @@ async function onDeleteCourse(course: any) {
         reject: async () => {
             if (isSeries) {
                 try {
-                    await api.delete(`/courses/${course.id}`);
+                    await courseStore.deleteCourse(course.id, false);
                     toast.add({ severity: 'warn', summary: 'Deleted', detail: 'Single course removed', life: 5000 });
                     formVisible.value = false;
-                    fetchCourses();
                 } catch (e) {
                     toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to delete', life: 5000 });
                 }
@@ -301,7 +288,8 @@ onUnmounted(() => {
           v-model:base-date="baseDate"
           :courses="courses"
           :cycle-info="cycleInfo"
-          :user-id="authStore.user?.id"
+          :user-id="useAuthStore.user?.id"
+          :loading="courseStore.loading"
           @course-click="handleCourseClick"
         />
       </div>
@@ -311,7 +299,8 @@ onUnmounted(() => {
           :courses="courses"
           :cycle-info="cycleInfo"
           :is-compact-view="isCompactView"
-          :user-id="authStore.user?.id"
+          :user-id="useAuthStore.user?.id"
+          :loading="courseStore.loading"
           @course-click="handleCourseClick"
           @cell-click="handleCellClick"
         />

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {RouterLink, RouterView} from 'vue-router';
-import {authStore} from '../store/auth';
-import {settingsStore} from '../store/settings';
+import { useAuthStore } from '../store/useAuthStore';
+import { useSettingsStore } from '../store/useSettingsStore';
 import {useRouter} from 'vue-router';
 import {ref, computed, onMounted, watch, onUnmounted} from 'vue';
 import api from '../services/api';
@@ -14,6 +14,8 @@ import mercureService from '../services/mercure';
 const router = useRouter();
 const menu = ref();
 const toast = useToast();
+const authStore = useAuthStore();
+const settingsStore = useSettingsStore();
 
 const newPassword = ref('');
 const newPasswordTouched = ref(false);
@@ -53,7 +55,7 @@ const isAppReady = computed(() => {
   if (!authStore.initialized) return false;
 
   // 2. If the user is logged in, we MUST also wait for settings
-  if (authStore.isLoggedIn()) {
+  if (authStore.isLoggedIn) {
     return settingsStore.initialized;
   }
 
@@ -85,7 +87,7 @@ async function updatePassword() {
 }
 
 const dashboardLabel = computed(() => {
-  return authStore.isTrainer() && authStore.viewMode === 'trainer' ? 'Dashboard' : 'My bookings';
+  return authStore.isTrainer && authStore.viewMode === 'trainer' ? 'Dashboard' : 'My bookings';
 });
 
 const menuItems = computed(() => {
@@ -99,7 +101,7 @@ const menuItems = computed(() => {
     }
   ];
 
-  if (authStore.isTrainer()) {
+  if (authStore.isTrainer) {
     items[0].items.push({
       label: 'Statistics',
       icon: 'pi pi-chart-bar',
@@ -135,7 +137,7 @@ async function logout() {
 }
 
 watch(
-  () => authStore.isLoggedIn(),
+  () => authStore.isLoggedIn,
   (isLoggedIn) => {
     if (!isLoggedIn) {
       settingsStore.reset();
@@ -149,7 +151,7 @@ watch(
 
 onMounted(async () => {
   // If we found a user, go get their specific company settings
-  if (authStore.isLoggedIn()) {
+  if (authStore.isLoggedIn) {
     await settingsStore.fetchSettings();
     mercureService.init();
   }
@@ -175,19 +177,19 @@ onMounted(async () => {
     <header class="main-header">
       <nav class="nav-container">
         <div class="brand">
-          <RouterLink :to="authStore.isLoggedIn() ? '/' : '/login'">
+          <RouterLink :to="authStore.isLoggedIn ? '/' : '/login'">
             {{ companyName }}
           </RouterLink>
         </div>
         <div class="nav-links">
           <RouterLink
-            v-if="authStore.isLoggedIn()"
+            v-if="authStore.isLoggedIn"
             to="/"
             class="desktop-only"
           >
             Courses
           </RouterLink>
-          <template v-if="authStore.isLoggedIn()">
+          <template v-if="authStore.isLoggedIn">
             <RouterLink
               to="/dashboard"
               class="desktop-only"
@@ -221,7 +223,7 @@ onMounted(async () => {
 
                 <!-- Role Indicator Badge -->
                 <div
-                  v-if="authStore.isTrainer()"
+                  v-if="authStore.isTrainer"
                   class="role-badge"
                   :class="authStore.viewMode"
                 >
@@ -240,7 +242,7 @@ onMounted(async () => {
                   >
                     <span class="p-2 menu-user-name">{{ authStore.user.name }}</span>
                     <div
-                      v-if="authStore.isTrainer()"
+                      v-if="authStore.isTrainer"
                       class="toggle-container"
                     >
                       <ToggleButton
@@ -280,7 +282,7 @@ onMounted(async () => {
       </router-view>
     </main>
 
-    <TheFooter v-if="authStore.isLoggedIn()" />
+    <TheFooter v-if="authStore.isLoggedIn" />
 
     <Dialog
       v-if="authStore.user"

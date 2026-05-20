@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Meetup;
 use App\Enum\RsvpStatus;
 use App\Repository\MeetupRepository;
+use App\Service\ApiCacheService;
 use App\Service\MeetupService;
 use Aws\S3\S3ClientInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -23,6 +24,7 @@ class MeetupController extends AbstractController
         private S3ClientInterface $s3Client,
         private string $s3Bucket,
         private SluggerInterface $slugger,
+        private readonly ApiCacheService $apiCache,
     ) {}
 
     #[Route('/upload-image', name: 'meetup_upload_image', methods: ['POST'])]
@@ -65,38 +67,51 @@ class MeetupController extends AbstractController
     #[Route('', name: 'meetup_index', methods: ['GET'])]
     public function index(Request $request, MeetupRepository $meetupRepository, SerializerInterface $serializer): JsonResponse
     {
+        /** @var \App\Entity\User $user */
+        $user = $this->getUser();
+        $companyId = $user->getCompany()->getId();
         $filter = $request->query->get('filter');
-        $qb = $meetupRepository->createQueryBuilder('m');
 
-        if ($filter === 'active') {
-            $qb->andWhere('m.meetupDate >= :now')
-               ->andWhere('m.status != :cancelled')
-               ->setParameter('now', new \DateTime())
-               ->setParameter('cancelled', \App\Enum\MeetupStatus::CANCELLED);
-        } elseif ($filter === 'past') {
-            $qb->andWhere('m.meetupDate < :now')
-               ->andWhere('m.status != :cancelled')
-               ->setParameter('now', new \DateTime())
-               ->setParameter('cancelled', \App\Enum\MeetupStatus::CANCELLED);
-        } elseif ($filter === 'cancelled') {
-            $qb->andWhere('m.status = :cancelled')
-               ->setParameter('cancelled', \App\Enum\MeetupStatus::CANCELLED);
-        } elseif ($filter === 'joined') {
-            $qb->join('m.rsvps', 'r')
-               ->andWhere('r.user = :user')
-               ->andWhere('r.status = :status')
-               ->andWhere('m.status != :cancelled')
-               ->setParameter('user', $this->getUser())
-               ->setParameter('status', RsvpStatus::GOING)
-               ->setParameter('cancelled', \App\Enum\MeetupStatus::CANCELLED);
-        }
+        $context = [
+            'filter' => $filter,
+            'userId' => $user->getId(),
+        ];
 
-        $meetups = $qb->orderBy('m.meetupDate', 'DESC')
-            ->getQuery()
-            ->getResult();
+        $data = $this->apiCache->get('meetup', $companyId, $context, function() use ($filter, $meetupRepository, $serializer, $user) {
+            $qb = $meetupRepository->createQueryBuilder('m');
 
-        $json = $serializer->serialize($meetups, 'json', ['groups' => 'meetup:read']);
-        return new JsonResponse(json_decode($json, true), Response::HTTP_OK);
+            if ($filter === 'active') {
+                $qb->andWhere('m.meetupDate >= :now')
+                ->andWhere('m.status != :cancelled')
+                ->setParameter('now', new \DateTime())
+                ->setParameter('cancelled', \App\Enum\MeetupStatus::CANCELLED);
+            } elseif ($filter === 'past') {
+                $qb->andWhere('m.meetupDate < :now')
+                ->andWhere('m.status != :cancelled')
+                ->setParameter('now', new \DateTime())
+                ->setParameter('cancelled', \App\Enum\MeetupStatus::CANCELLED);
+            } elseif ($filter === 'cancelled') {
+                $qb->andWhere('m.status = :cancelled')
+                ->setParameter('cancelled', \App\Enum\MeetupStatus::CANCELLED);
+            } elseif ($filter === 'joined') {
+                $qb->join('m.rsvps', 'r')
+                ->andWhere('r.user = :user')
+                ->andWhere('r.status = :status')
+                ->andWhere('m.status != :cancelled')
+                ->setParameter('user', $user)
+                ->setParameter('status', RsvpStatus::GOING)
+                ->setParameter('cancelled', \App\Enum\MeetupStatus::CANCELLED);
+            }
+
+            $meetups = $qb->orderBy('m.meetupDate', 'DESC')
+                ->getQuery()
+                ->getResult();
+
+            $json = $serializer->serialize($meetups, 'json', ['groups' => 'meetup:read']);
+            return json_decode($json, true);
+        }, 300);
+
+        return new JsonResponse($data, Response::HTTP_OK);
     }
 
     #[Route('', name: 'meetup_new', methods: ['POST'])]
@@ -118,8 +133,21 @@ class MeetupController extends AbstractController
     #[Route('/{id}', name: 'meetup_show', methods: ['GET'])]
     public function show(Meetup $meetup, SerializerInterface $serializer): JsonResponse
     {
-        $json = $serializer->serialize($meetup, 'json', ['groups' => 'meetup:read']);
-        return new JsonResponse(json_decode($json, true), Response::HTTP_OK);
+        /** @var \App\Entity\User $user */
+        $user = $this->getUser();
+        $companyId = $user->getCompany()->getId();
+
+        $context = [
+            'id' => $meetup->getId(),
+            'userId' => $user->getId(),
+        ];
+
+        $data = $this->apiCache->get('meetup', $companyId, $context, function() use ($meetup, $serializer) {
+            $json = $serializer->serialize($meetup, 'json', ['groups' => 'meetup:read']);
+            return json_decode($json, true);
+        }, 300);
+
+        return new JsonResponse($data, Response::HTTP_OK);
     }
 
     #[Route('/{id}', name: 'meetup_edit', methods: ['PUT'])]

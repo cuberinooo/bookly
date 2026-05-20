@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
-import { settingsStore } from '../store/settings';
 import api from '../services/api';
 import { useToast } from 'primevue/usetoast';
 import {downloadPrivacyPolicy} from "../services/download";

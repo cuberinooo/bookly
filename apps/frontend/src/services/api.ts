@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { authStore } from '../store/auth';
+import { useAuthStore } from '../store/useAuthStore';
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api',
@@ -22,6 +22,7 @@ const processQueue = (error: unknown, token: string | null = null) => {
 };
 
 api.interceptors.request.use((config) => {
+  const authStore = useAuthStore();
   const token = authStore.token;
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -33,6 +34,7 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+    const authStore = useAuthStore();
 
     // Don't attempt to refresh if it's already a refresh request or if it's not a 401
     if (error.response?.status !== 401 || originalRequest._retry || originalRequest.url?.includes('/token/refresh') || originalRequest.url?.includes('/login_check')) {

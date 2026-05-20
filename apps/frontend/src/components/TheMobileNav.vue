@@ -1,16 +1,18 @@
 <script setup lang="ts">
 import { RouterLink } from 'vue-router';
-import { authStore } from '../store/auth';
+import { useAuthStore } from '../store/useAuthStore';
 import { computed } from 'vue';
 
+const authStore = useAuthStore();
+
 const dashboardLabel = computed(() => {
-  return authStore.isTrainer() && authStore.viewMode === 'trainer' ? 'Dashboard' : 'Bookings';
+  return authStore.isTrainer && authStore.viewMode === 'trainer' ? 'Dashboard' : 'Bookings';
 });
 </script>
 
 <template>
   <nav
-    v-if="authStore.isLoggedIn()"
+    v-if="authStore.isLoggedIn"
     class="mobile-nav"
   >
     <RouterLink

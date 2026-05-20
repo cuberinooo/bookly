@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import { formatDate, formatTime } from '../services/date-utils';
-import { authStore } from '../store/auth';
+import { useAuthStore } from '../store/useAuthStore';
 
 const props = defineProps<{
     courses: any[];
@@ -12,6 +12,7 @@ const props = defineProps<{
 
 const emit = defineEmits(['course-click', 'update:baseDate']);
 
+const authStore = useAuthStore();
 const internalBaseDate = ref(new Date(props.baseDate || new Date()));
 const transitionName = ref('slide-left');
 const touchStartX = ref(0);
@@ -108,7 +109,7 @@ function isBookedByUser(course: any) {
 }
 
 function isRestrictedForTrial(course: any) {
-    return authStore.isTrial() && course.allowTrial === false;
+    return authStore.isTrial && course.allowTrial === false;
 }
 
 function isPastCourse(course: any) {

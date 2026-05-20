@@ -15,4 +15,17 @@ class TrainingCategoryRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, TrainingCategory::class);
     }
+
+    /**
+     * @return TrainingCategory[]
+     */
+    public function findByTrainer(int $trainerId): array
+    {
+        return $this->createQueryBuilder('tc')
+            ->andWhere('tc.trainer = :trainerId')
+            ->setParameter('trainerId', $trainerId)
+            ->getQuery()
+            ->enableResultCache(3600)
+            ->getResult();
+    }
 }

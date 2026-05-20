@@ -3,9 +3,9 @@ import { ref, onMounted, onUnmounted, watch, computed } from 'vue';
 import { useConfirm } from 'primevue/useconfirm';
 import { useToast } from 'primevue/usetoast';
 import api from '../services/api';
-import { authStore } from '../store/auth';
+import { useAuthStore } from '../store/useAuthStore';
+import { useCourseStore } from '../store/useCourseStore';
 import ParticipantsDialog from './ParticipantsDialog.vue';
-import { eventsStore } from '../store/events';
 
 import { formatTime, formatDateWithDay } from '../services/date-utils';
 
@@ -17,10 +17,11 @@ const emit = defineEmits(['edit']);
 
 const confirm = useConfirm();
 const toast = useToast();
+const courseStore = useCourseStore();
 
-const courses = ref<any[]>([]);
-const totalRecords = ref(0);
-const loading = ref(false);
+const courses = computed(() => courseStore.courseList);
+const totalRecords = computed(() => courseStore.pagination.totalItems);
+const loading = computed(() => courseStore.loading);
 const transitionName = ref('slide-left');
 const participantsDialog = ref(false);
 const selectedCourse = ref<any>(null);
@@ -92,7 +93,7 @@ function handleResize() {
 }
 
 watch(
-  () => authStore.user?.id,
+  () => useAuthStore.user?.id,
   (newId) => {
     if (newId) {
       loadLazyData();
@@ -100,25 +101,15 @@ watch(
   }
 );
 
-watch(
-  () => eventsStore.lastEvent,
-  (event) => {
-    if (event && ['Course', 'CourseSeries', 'Booking'].includes(event.entity)) {
-      loadLazyData();
-    }
-  }
-);
-
 async function loadLazyData() {
-    loading.value = true;
     try {
         const params: any = {
             page: lazyParams.value.page,
             limit: isMobile.value ? 50 : lazyParams.value.rows
         };
 
-        if (authStore.isTrainer() && !showAllCourses.value) {
-            params.trainerId = authStore.user?.id;
+        if (useAuthStore.isTrainer && !showAllCourses.value) {
+            params.trainerId = useAuthStore.user?.id;
         }
 
         if (lazyParams.value.startDate) {
@@ -128,13 +119,9 @@ async function loadLazyData() {
             params.endDate = lazyParams.value.endDate.toISOString();
         }
 
-        const response = await api.get('/courses', { params });
-        courses.value = response.data.data;
-        totalRecords.value = response.data.meta.totalItems;
+        await courseStore.fetchCourses(params);
     } catch (e) {
         toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to fetch courses', life: 5000 });
-    } finally {
-        loading.value = false;
     }
 }
 
@@ -335,7 +322,7 @@ onUnmounted(() => {
         <h2>Managed Courses</h2>
         <div class="flex flex-wrap items-end gap-3 md:gap-4">
           <div
-            v-if="authStore.isTrainer()"
+            v-if="useAuthStore.isTrainer"
             class="flex items-center gap-2 h-10 md:h-8 px-3 bg-slate-100 rounded-lg border border-slate-200"
           >
             <ToggleSwitch
@@ -486,9 +473,9 @@ onUnmounted(() => {
             <span
               v-else
               class="text-sm font-medium"
-              :class="{ 'text-amber-600_ font-bold': slotProps.data.user?.id === authStore.user?.id }"
+              :class="{ 'text-amber-600_ font-bold': slotProps.data.user?.id === useAuthStore.user?.id }"
             >
-              {{ slotProps.data.user?.id === authStore.user?.id ? 'YOU' : slotProps.data.user?.name }}
+              {{ slotProps.data.user?.id === useAuthStore.user?.id ? 'YOU' : slotProps.data.user?.name }}
             </span>
           </template>
         </Column>
@@ -667,11 +654,11 @@ onUnmounted(() => {
                     </div>
                     <div
                       class="flex items-center gap-2 text-xs font-bold mt-1"
-                      :class="course.user?.id === authStore.user?.id ? '!text-amber-600' : 'text-slate-500'"
+                      :class="course.user?.id === useAuthStore.user?.id ? '!text-amber-600' : 'text-slate-500'"
                     >
                       <i class="pi pi-user text-[10px]" />
 
-                      {{ course.user?.id === authStore.user?.id ? 'YOU' : course.user?.name }}
+                      {{ course.user?.id === useAuthStore.user?.id ? 'YOU' : course.user?.name }}
                     </div>
                   </div>
                   <span :class="['slot-badge !py-1 !px-2 !text-[10px]', { 'is-full': course.bookings.length >= course.capacity }]">
@@ -813,14 +800,14 @@ onUnmounted(() => {
 
     :deep(.p-datatable-tbody > tr) {
         @apply transition-colors duration-200;
-        
+
         @media (hover: hover) {
             &:hover { @apply bg-slate-50/50; }
         }
 
         &.is-postponed {
           @apply opacity-50 grayscale;
-          
+
           .action-btn {
             @apply pointer-events-auto; // Allow deletion/edit even if postponed
           }
@@ -847,7 +834,7 @@ onUnmounted(() => {
 
 .action-btn {
     @apply text-slate-500 transition-colors duration-200;
-    
+
     @media (hover: hover) {
         &:hover { @apply text-amber-500 bg-amber-50; }
         &.delete-btn:hover { @apply text-red-500 bg-red-50; }

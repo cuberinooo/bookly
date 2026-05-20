@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
-import { settingsStore } from '../store/settings';
-import { authStore } from '../store/auth';
+import { useAuthStore } from '../store/useAuthStore';
 import api from '../services/api';
 
 import { useConfirm } from 'primevue/useconfirm';
@@ -16,12 +15,13 @@ const emit = defineEmits(['update:visible', 'remove-participant']);
 
 const confirm = useConfirm();
 const toast = useToast();
+const authStore = useAuthStore();
 const profileHashes = ref<Record<number, string>>({});
 const emergencyInfo = ref<any>(null);
 const showEmergencyDialog = ref(false);
 const loadingEmergency = ref(false);
 
-const isTrainerOrAdmin = computed(() => authStore.isTrainer() || authStore.isAdmin());
+const isTrainerOrAdmin = computed(() => authStore.isTrainer || authStore.isAdmin);
 
 const confirmedParticipants = computed(() => {
     return props.course?.bookings.filter((b: any) => !b.isWaitlist) || [];

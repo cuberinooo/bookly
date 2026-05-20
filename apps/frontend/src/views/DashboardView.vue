@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted, watch, computed } from 'vue';
 import api from '../services/api';
-import { authStore } from '../store/auth';
+import { useAuthStore } from '../store/useAuthStore';
+import { useCourseStore } from '../store/useCourseStore';
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
 import { BookingWindow } from '../app/enums/BookingWindow';
@@ -10,17 +11,18 @@ import ParticipantsDialog from '../components/ParticipantsDialog.vue';
 import TrialStatusCard from '../components/TrialStatusCard.vue';
 import TrainerDashboard from '../components/TrainerDashboard.vue';
 import { useRoute } from 'vue-router';
-import { eventsStore } from '../store/events';
 
 import { formatDateWithDay, formatTime } from '../services/date-utils';
 
 const toast = useToast();
 const confirm = useConfirm();
 const route = useRoute();
-const courses = ref<any[]>([]);
+const authStore = useAuthStore();
+const courseStore = useCourseStore();
+const courses = computed(() => courseStore.courseList);
 const notifications = ref<any[]>([]);
-const isTrainerMode = computed(() => authStore.isTrainer() && authStore.viewMode === 'trainer');
-const dashboardLabel = computed(() => isTrainerMode.value ? (authStore.isAdmin() ? 'Admin Dashboard' : 'Trainer Dashboard') : 'My bookings');
+const isTrainerMode = computed(() => authStore.isTrainer && authStore.viewMode === 'trainer');
+const dashboardLabel = computed(() => isTrainerMode.value ? (authStore.isAdmin ? 'Admin Dashboard' : 'Trainer Dashboard') : 'My bookings');
 
 const trainerDashboard = ref<any>(null);
 const courseDialog = ref(false);
@@ -85,15 +87,14 @@ function getBookingWindowMessage() {
 
 async function fetchData() {
     try {
-        let url = '/courses?all=true&futureOnly=true';
+        let params: any = { all: true, futureOnly: true };
         if (isTrainerMode.value) {
-            url += `&trainerId=${authStore.user?.id}`;
+            params.trainerId = authStore.user?.id;
         } else {
-            url += `&memberId=${authStore.user?.id}`;
+            params.memberId = authStore.user?.id;
         }
 
-        const response = await api.get(url);
-        courses.value = response.data.data || response.data;
+        await courseStore.fetchCourses(params);
 
         if (isTrainerMode.value) {
             trainerDashboard.value?.refreshTable();
@@ -129,15 +130,6 @@ watch(() => authStore.viewMode, () => {
     fetchData();
 });
 
-watch(
-  () => eventsStore.lastEvent,
-  (event) => {
-    if (event && ['Course', 'CourseSeries', 'Booking',].includes(event.entity)) {
-      fetchData();
-    }
-  }
-);
-
 function openNewCourse() {
     editingCourse.value = {
         title: 'Functional Training',
@@ -158,16 +150,16 @@ async function onSaveCourse(formData: any, transferAll: boolean = false) {
     submitting.value = true;
     try {
         if (editingCourse.value?.id) {
-            const url = transferAll ? `/courses/${editingCourse.value.id}?transferAll=true` : `/courses/${editingCourse.value.id}`;
-            await api.patch(url, formData);
+            await courseStore.updateCourse(editingCourse.value.id, formData, transferAll);
             toast.add({ severity: 'success', summary: 'Updated', detail: 'Course updated', life: 5000 });
         } else {
-            await api.post('/courses', formData);
+            await courseStore.createCourse(formData);
             toast.add({ severity: 'success', summary: 'Created', detail: 'Course created', life: 5000 });
         }
         courseDialog.value = false;
-        fetchData();
-        trainerDashboard.value?.refreshTable();
+        if (isTrainerMode.value) {
+            trainerDashboard.value?.refreshTable();
+        }
     } catch (e: any) {
         const errorDetail = e.response?.data?.error || 'Operation failed';
         toast.add({ severity: 'error', summary: 'Error', detail: errorDetail, life: 5000 });
@@ -188,9 +180,8 @@ async function unbookCourse(courseId: number) {
         },
         accept: async () => {
             try {
-                await api.delete(`/courses/${courseId}/book`);
+                await courseStore.unbookCourse(courseId);
                 toast.add({ severity: 'info', summary: 'Cancelled', detail: 'Booking removed', life: 5000 });
-                fetchData();
             } catch (e) {
                 toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to cancel booking', life: 5000 });
             }
@@ -217,11 +208,9 @@ async function onDeleteCourse(course: any) {
         },
         accept: async () => {
             try {
-                const url = isSeries ? `/courses/${course.id}?deleteAll=true` : `/courses/${course.id}`;
-                await api.delete(url);
+                await courseStore.deleteCourse(course.id, isSeries);
                 toast.add({ severity: 'warn', summary: 'Deleted', detail: isSeries ? 'Series removed' : 'Course removed', life: 5000 });
                 courseDialog.value = false;
-                fetchData();
             } catch (e) {
                 toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to delete', life: 5000 });
             }
@@ -229,10 +218,9 @@ async function onDeleteCourse(course: any) {
         reject: async () => {
             if (isSeries) {
                 try {
-                    await api.delete(`/courses/${course.id}`);
+                    await courseStore.deleteCourse(course.id, false);
                     toast.add({ severity: 'warn', summary: 'Deleted', detail: 'Single instance removed', life: 5000 });
                     courseDialog.value = false;
-                    fetchData();
                 } catch (e) {
                     toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to delete', life: 5000 });
                 }

@@ -3,10 +3,11 @@ import { ref, onMounted } from 'vue';
 import api from '../services/api';
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
-import {authStore} from "../store/auth";
+import { useAuthStore } from '../store/useAuthStore';
 
 const toast = useToast();
 const confirm = useConfirm();
+const authStore = useAuthStore();
 const users = ref<any[]>([]);
 const loading = ref(false);
 const userDialog = ref(false);

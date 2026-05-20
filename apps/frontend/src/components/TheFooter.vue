@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { settingsStore } from '../store/settings';
+import { useSettingsStore } from '../store/useSettingsStore';
 import api from '../services/api';
 import { downloadPrivacyPolicy } from "../services/download";
 import LegalDialog from "./LegalDialog.vue";
@@ -8,6 +8,7 @@ import LegalDialog from "./LegalDialog.vue";
 const showLegalDialog = ref(false);
 const dialogType = ref<'terms' | 'legal'>('legal');
 const legalSettings = ref<any>(null);
+const settingsStore = useSettingsStore();
 
 // Mobile accordion state
 const expandedSections = ref<{ [key: string]: boolean }>({

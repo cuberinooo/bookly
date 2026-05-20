@@ -25,6 +25,7 @@ class TrainingCycleRepository extends ServiceEntityRepository
             ->setParameter('isActive', true)
             ->setMaxResults(1)
             ->getQuery()
+            ->enableResultCache(3600)
             ->getOneOrNullResult();
     }
 
@@ -37,6 +38,7 @@ class TrainingCycleRepository extends ServiceEntityRepository
             ->addOrderBy('c.id', 'DESC')
             ->setMaxResults(1)
             ->getQuery()
+            ->enableResultCache(3600)
             ->getOneOrNullResult();
     }
 
@@ -47,6 +49,7 @@ class TrainingCycleRepository extends ServiceEntityRepository
             ->setParameter('isActive', true)
             ->setMaxResults(1)
             ->getQuery()
+            ->enableResultCache(3600)
             ->getOneOrNullResult();
     }
 
@@ -57,6 +60,7 @@ class TrainingCycleRepository extends ServiceEntityRepository
             ->addOrderBy('c.id', 'DESC')
             ->setMaxResults(1)
             ->getQuery()
+            ->enableResultCache(3600)
             ->getOneOrNullResult();
     }
 }

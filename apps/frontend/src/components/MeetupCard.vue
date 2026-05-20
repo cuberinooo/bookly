@@ -3,8 +3,8 @@ import { computed } from 'vue';
 import { Meetup } from '../services/meetup.service';
 import { MeetupStatus } from '../app/enums/MeetupStatus';
 import { RsvpStatus } from '../app/enums/RsvpStatus';
-import { timeStore } from '../store/time';
-import { authStore } from '../store/auth';
+import { useTimeStore } from '../store/useTimeStore';
+import { useAuthStore } from '../store/useAuthStore';
 import { formatDate, formatDateTime } from '../services/date-utils';
 import Button from 'primevue/button';
 import Card from 'primevue/card';
@@ -21,6 +21,9 @@ const emit = defineEmits<{
   (e: 'cancel'): void;
   (e: 'edit'): void;
 }>();
+
+const timeStore = useTimeStore();
+const authStore = useAuthStore();
 
 const rsvpDeadline = computed(() => new Date(props.meetup.rsvpDeadline));
 const meetupDate = computed(() => new Date(props.meetup.meetupDate));
