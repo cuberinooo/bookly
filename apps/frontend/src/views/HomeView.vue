@@ -14,6 +14,7 @@ import CourseDetails from '../components/CourseDetails.vue';
 
 const toast = useToast();
 const confirm = useConfirm();
+const authStore = useAuthStore();
 const courseStore = useCourseStore();
 
 const courses = computed(() => courseStore.courseList);
@@ -31,8 +32,8 @@ const baseDate = ref(new Date());
 
 const isMobile = ref(window.innerWidth <= 768);
 
-const isTrainerMode = computed(() => useAuthStore.isTrainer && useAuthStore.viewMode === 'trainer');
-const isMemberMode = computed(() => !useAuthStore.isLoggedIn || !useAuthStore.isTrainer || useAuthStore.viewMode === 'member');
+const isTrainerMode = computed(() => authStore.isTrainer && authStore.viewMode === 'trainer');
+const isMemberMode = computed(() => !authStore.isLoggedIn || !authStore.isTrainer || authStore.viewMode === 'member');
 
 const isPastCourse = computed(() => {
     if (!selectedCourse.value?.endTime) return false;
@@ -68,7 +69,7 @@ const isOutsideBookingWindow = computed(() => {
 });
 
 const isTrialRestricted = computed(() => {
-    return useAuthStore.isTrial && selectedCourse.value && selectedCourse.value.allowTrial === false;
+    return authStore.isTrial && selectedCourse.value && selectedCourse.value.allowTrial === false;
 });
 
 const bookingWindowMessage = computed(() => {
@@ -87,7 +88,7 @@ function handleResize() {
     isMobile.value = window.innerWidth <= 768;
 }
 
-watch(() => useAuthStore.viewMode, () => {
+watch(() => authStore.viewMode, () => {
     fetchCourses();
 });
 
@@ -288,7 +289,7 @@ onUnmounted(() => {
           v-model:base-date="baseDate"
           :courses="courses"
           :cycle-info="cycleInfo"
-          :user-id="useAuthStore.user?.id"
+          :user-id="authStore.user?.id"
           :loading="courseStore.loading"
           @course-click="handleCourseClick"
         />
@@ -299,7 +300,7 @@ onUnmounted(() => {
           :courses="courses"
           :cycle-info="cycleInfo"
           :is-compact-view="isCompactView"
-          :user-id="useAuthStore.user?.id"
+          :user-id="authStore.user?.id"
           :loading="courseStore.loading"
           @course-click="handleCourseClick"
           @cell-click="handleCellClick"
