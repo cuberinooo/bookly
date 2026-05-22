@@ -35,6 +35,7 @@ import Avatar from 'primevue/avatar';
 import AvatarGroup from 'primevue/avatargroup';
 import ProgressSpinner from 'primevue/progressspinner';
 import Chart from 'primevue/chart';
+import Message from 'primevue/message';
 import {Checkbox, Divider, FileUpload, Paginator, Panel, Password, Tag, ToggleButton, Tooltip} from "primevue";
 import {createPinia} from "pinia";
 
@@ -103,5 +104,6 @@ app.component('Avatar', Avatar);
 app.component('AvatarGroup', AvatarGroup);
 app.component('ProgressSpinner', ProgressSpinner);
 app.component('Chart', Chart);
+app.component('Message', Message);
 
 app.mount('#root');

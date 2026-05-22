@@ -23,6 +23,7 @@ class JWTCreatedListener
         $payload['companyId'] = $user->getCompany() ? $user->getCompany()->getId() : null;
         $payload['companyName'] = $user->getCompany() ? $user->getCompany()->getName() : null;
         $payload['profilePicture'] = $user->getProfilePicture();
+        $payload['isPublic'] = $user->isPublic();
 
         $event->setData($payload);
     }

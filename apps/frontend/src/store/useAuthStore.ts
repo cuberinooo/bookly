@@ -7,6 +7,7 @@ export interface User {
   name: string;
   roles: string[];
   isActive?: boolean;
+  isPublic?: boolean;
   mustChangePassword?: boolean;
   profilePicture?: string;
 }
@@ -73,6 +74,7 @@ export const useAuthStore = defineStore('auth', () => {
         name: payload.name || '',
         roles: payload.roles || [],
         isActive: payload.isActive,
+        isPublic: payload.isPublic,
         mustChangePassword: payload.mustChangePassword,
         profilePicture: payload.profilePicture
       };

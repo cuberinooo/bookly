@@ -141,10 +141,13 @@ async function updateProfile() {
             emergencyContactName: user.value.emergencyContactName,
             emergencyContactPhone: user.value.emergencyContactPhone
         });
-        authStore.user = {
-            ...authStore.user,
-            name: user.value.name
-        };
+        if (authStore.user) {
+            authStore.user = {
+                ...authStore.user,
+                name: user.value.name,
+                isPublic: user.value.isPublic
+            };
+        }
         toast.add({ severity: 'success', summary: 'Updated', detail: 'Profile saved successfully', life: 5000 });
     } catch (e) {
         toast.add({ severity: 'error', summary: 'Error', detail: 'Update failed', life: 5000 });

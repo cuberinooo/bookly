@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
 import { useLeaderboardStore } from '../store/useLeaderboardStore';
+import { useAuthStore } from '../store/useAuthStore';
 import { useToast } from 'primevue/usetoast';
 
 const leaderboardStore = useLeaderboardStore();
+const authStore = useAuthStore();
 const toast = useToast();
 
 const showSubmitDialog = ref(false);
@@ -130,6 +132,24 @@ const getProfilePictureUrl = (userId: number, filename: string | null) => {
         @click="showSubmitDialog = true"
       />
     </div>
+
+    <!-- Privacy Hint -->
+    <Message
+      v-if="authStore.user && !authStore.user.isPublic"
+      severity="secondary"
+      class="mb-8"
+      icon="pi pi-eye-slash"
+    >
+      <div class="flex items-center gap-2">
+        <span>Your profile is currently <strong>private</strong>. Your stats and PBs are hidden from other athletes.</span>
+        <router-link
+          to="/profile"
+          class="text-amber-500 font-bold hover:underline"
+        >
+          Adjust Settings
+        </router-link>
+      </div>
+    </Message>
 
     <div
       v-if="leaderboardStore.loading"
