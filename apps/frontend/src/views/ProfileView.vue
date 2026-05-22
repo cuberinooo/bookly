@@ -287,7 +287,9 @@ onMounted(fetchProfile);
 
             <div class="flex items-center gap-4 p-4 bg-slate-50 rounded-xl border border-slate-200">
               <div class="flex-1">
-                <h4 class="font-bold text-slate-900">Public Profile</h4>
+                <h4 class="font-bold text-slate-900">
+                  Public Profile
+                </h4>
                 <p class="text-sm text-slate-600">
                   Show your personal bests (PBs) and monthly attendance on the leaderboard. If disabled, your stats will be hidden from other athletes.
                 </p>

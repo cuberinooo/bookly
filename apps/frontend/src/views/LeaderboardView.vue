@@ -113,143 +113,261 @@ const getProfilePictureUrl = (userId: number, filename: string | null) => {
 </script>
 
 <template>
-    <div class="container">
-        <div class="flex justify-between items-center mb-8">
-            <div>
-                <h1 class="text-4xl font-extrabold text-white mb-2 tracking-tight">Leaderboard</h1>
-                <p class="text-slate-400 text-lg">Push your limits and see how you stack up.</p>
-            </div>
-            <Button label="Log New PB" icon="pi pi-plus" class="p-button-primary" @click="showSubmitDialog = true" />
-        </div>
-
-        <div v-if="leaderboardStore.loading" class="flex justify-center items-center py-20">
-            <i class="pi pi-spin pi-spinner text-5xl text-amber-500"></i>
-        </div>
-
-        <div v-else class="space-y-12">
-            <!-- Section 1: Monthly Stats & Streaks -->
-            <section>
-                <h2 class="text-3xl font-bold text-white flex items-center gap-3 mb-6">
-                    <i class="pi pi-calendar text-amber-500"></i> Monthly Stats & Streaks
-                </h2>
-
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    <div v-for="(stats, gender) in monthlyStatsGrouped" :key="gender" v-show="stats.length > 0">
-                        <h3 class="text-xl font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                            <i :class="gender === 'male' ? 'pi pi-mars text-blue-400' : (gender === 'female' ? 'pi pi-venus text-pink-400' : 'pi pi-users text-slate-400')"></i>
-                            {{ gender }} Rankings
-                        </h3>
-                        <Card class="bg-slate-800 border border-slate-700 shadow-xl overflow-hidden">
-                            <template #content>
-                                <DataTable :value="stats" class="p-datatable-sm" responsiveLayout="scroll">
-                                    <Column header="Athlete">
-                                        <template #body="slotProps">
-                                            <div class="flex items-center gap-3">
-                                                <Avatar v-if="slotProps.data.profilePicture" :image="getProfilePictureUrl(slotProps.data.id, slotProps.data.profilePicture)" shape="circle" />
-                                                <Avatar v-else :label="getInitials(slotProps.data.name)" shape="circle" class="bg-amber-500 text-slate-900 font-bold" />
-                                                <span class="font-semibold text-white">{{ slotProps.data.name }}</span>
-                                            </div>
-                                        </template>
-                                    </Column>
-                                    <Column field="attendanceCount" header="Att." class="text-center">
-                                        <template #body="slotProps">
-                                            <div class="font-bold text-amber-400">{{ slotProps.data.attendanceCount }}</div>
-                                        </template>
-                                    </Column>
-                                    <Column field="streak" header="Streak" class="text-center">
-                                        <template #body="slotProps">
-                                            <div class="flex items-center justify-center gap-1">
-                                                <i v-if="slotProps.data.streak > 0" class="pi pi-bolt text-orange-500"></i>
-                                                <span class="font-bold text-white">{{ slotProps.data.streak }}</span>
-                                            </div>
-                                        </template>
-                                    </Column>
-                                </DataTable>
-                            </template>
-                        </Card>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Section 2: Personal Bests -->
-            <section>
-                <h2 class="text-3xl font-bold text-white flex items-center gap-3 mb-6">
-                    <i class="pi pi-trophy text-amber-500"></i> Personal Bests (PBs)
-                </h2>
-
-                <div v-if="activeExercises.length === 0" class="bg-slate-800 p-12 rounded-2xl border border-slate-700 text-center text-slate-400">
-                    <i class="pi pi-inbox text-5xl mb-4 opacity-50"></i>
-                    <p class="text-xl">No personal bests logged yet. Be the first!</p>
-                </div>
-
-                <div v-else class="space-y-10">
-                    <div v-for="ex in activeExercises" :key="ex" class="p-6 rounded-2xl border border-slate-700">
-                        <h3 class="text-2xl font-black text-amber-500 uppercase tracking-tighter mb-6 flex items-center justify-between border-b border-slate-700 pb-4">
-                            {{ ex }}
-                            <span class="text-sm font-medium text-slate-500 bg-slate-800 px-3 py-1 rounded-full border border-slate-700">{{ leaderboardStore.records[ex].unit }}</span>
-                        </h3>
-
-                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                            <div v-for="gender in ['male', 'female', 'other']" :key="gender" v-show="leaderboardStore.records[ex] && leaderboardStore.records[ex][gender] && leaderboardStore.records[ex][gender].length > 0">
-                                <h4 class="text-sm font-bold text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2">
-                                    <i :class="gender === 'male' ? 'pi pi-mars text-blue-400' : (gender === 'female' ? 'pi pi-venus text-pink-400' : 'pi pi-users text-slate-400')"></i>
-                                    {{ gender }}
-                                </h4>
-                                <div class="space-y-3">
-                                    <div v-for="(record, index) in leaderboardStore.records[ex][gender]" :key="record.userId" class="flex items-center justify-between p-3 rounded-lg" :class="index === 0 ? 'bg-amber-500/10 border border-amber-500/20' : 'bg-slate-700/30'">
-                                        <div class="flex items-center gap-3">
-                                            <div class="w-6 text-center font-bold" :class="index === 0 ? 'text-amber-400' : (index === 1 ? 'text-slate-300' : (index === 2 ? 'text-amber-700' : 'text-slate-500'))">
-                                                {{ index + 1 }}
-                                            </div>
-                                            <Avatar v-if="record.profilePicture" :image="getProfilePictureUrl(record.userId, record.profilePicture)" shape="circle" size="small" />
-                                            <Avatar v-else :label="getInitials(record.name)" shape="circle" size="small" class="bg-slate-600 text-white text-[10px]" />
-                                            <div>
-                                                <div class="font-bold text-primary text-sm" :class="{'text-amber-400': index === 0}">{{ record.name }}</div>
-                                                <div class="text-[10px] text-primary">{{ new Date(record.dateAchieved).toLocaleDateString() }}</div>
-                                            </div>
-                                        </div>
-                                        <div class="font-black text-primary">
-                                            {{ record.weightValue }}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-        </div>
-
-        <Dialog v-model:visible="showSubmitDialog" modal header="Log Personal Best" :style="{ width: '400px' }" class="p-fluid">
-            <div class="space-y-6 pt-4">
-                <div class="field">
-                    <label for="exercise" class="text-slate-300 font-bold mb-2 block">Exercise</label>
-                    <Select
-                        id="exercise"
-                        v-model="recordForm.exerciseName"
-                        :options="groupedExercises"
-                        optionGroupLabel="label"
-                        optionGroupChildren="items"
-                        filter
-                        :loading="leaderboardStore.loading"
-                        placeholder="Select or search exercise"
-                        class="w-full"
-                    />
-                </div>
-
-                <div class="field">
-                    <label for="weight" class="text-slate-300 font-bold mb-2 block">Weight (kg / reps / time)</label>
-                    <InputNumber id="weight" v-model="recordForm.weightValue" inputId="minmaxfraction" :minFractionDigits="0" :maxFractionDigits="2" placeholder="e.g., 100" class="w-full" />
-                </div>
-            </div>
-            <template #footer>
-                <div class="flex justify-end gap-2 mt-6">
-                    <Button label="Cancel" icon="pi pi-times" class="p-button-text p-button-secondary" @click="showSubmitDialog = false" />
-                    <Button label="Save PB" icon="pi pi-check" class="p-button-primary" @click="submitRecord" :loading="submitting" />
-                </div>
-            </template>
-        </Dialog>
+  <div class="container">
+    <div class="flex justify-between items-center mb-8">
+      <div>
+        <h1 class="text-4xl font-extrabold text-white mb-2 tracking-tight">
+          Leaderboard
+        </h1>
+        <p class="text-slate-400 text-lg">
+          Push your limits and see how you stack up.
+        </p>
+      </div>
+      <Button
+        label="Log New PB"
+        icon="pi pi-plus"
+        class="p-button-primary"
+        @click="showSubmitDialog = true"
+      />
     </div>
+
+    <div
+      v-if="leaderboardStore.loading"
+      class="flex justify-center items-center py-20"
+    >
+      <i class="pi pi-spin pi-spinner text-5xl text-amber-500" />
+    </div>
+
+    <div
+      v-else
+      class="space-y-12"
+    >
+      <!-- Section 1: Monthly Stats & Streaks -->
+      <section>
+        <h2 class="text-3xl font-bold text-white flex items-center gap-3 mb-6">
+          <i class="pi pi-calendar text-amber-500" /> Monthly Stats & Streaks
+        </h2>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div
+            v-for="(stats, gender) in monthlyStatsGrouped"
+            v-show="stats.length > 0"
+            :key="gender"
+          >
+            <h3 class="text-xl font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+              <i :class="gender === 'male' ? 'pi pi-mars text-blue-400' : (gender === 'female' ? 'pi pi-venus text-pink-400' : 'pi pi-users text-slate-400')" />
+              {{ gender }} Rankings
+            </h3>
+            <Card class="bg-slate-800 border border-slate-700 shadow-xl overflow-hidden">
+              <template #content>
+                <DataTable
+                  :value="stats"
+                  class="p-datatable-sm"
+                  responsive-layout="scroll"
+                >
+                  <Column header="Athlete">
+                    <template #body="slotProps">
+                      <div class="flex items-center gap-3">
+                        <Avatar
+                          v-if="slotProps.data.profilePicture"
+                          :image="getProfilePictureUrl(slotProps.data.id, slotProps.data.profilePicture)"
+                          shape="circle"
+                        />
+                        <Avatar
+                          v-else
+                          :label="getInitials(slotProps.data.name)"
+                          shape="circle"
+                          class="bg-amber-500 text-slate-900 font-bold"
+                        />
+                        <span class="font-semibold text-white">{{ slotProps.data.name }}</span>
+                      </div>
+                    </template>
+                  </Column>
+                  <Column
+                    field="attendanceCount"
+                    header="Att."
+                    class="text-center"
+                  >
+                    <template #body="slotProps">
+                      <div class="font-bold text-amber-400">
+                        {{ slotProps.data.attendanceCount }}
+                      </div>
+                    </template>
+                  </Column>
+                  <Column
+                    field="streak"
+                    header="Streak"
+                    class="text-center"
+                  >
+                    <template #body="slotProps">
+                      <div class="flex items-center justify-center gap-1">
+                        <i
+                          v-if="slotProps.data.streak > 0"
+                          class="pi pi-bolt text-orange-500"
+                        />
+                        <span class="font-bold text-white">{{ slotProps.data.streak }}</span>
+                      </div>
+                    </template>
+                  </Column>
+                </DataTable>
+              </template>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 2: Personal Bests -->
+      <section>
+        <h2 class="text-3xl font-bold text-white flex items-center gap-3 mb-6">
+          <i class="pi pi-trophy text-amber-500" /> Personal Bests (PBs)
+        </h2>
+
+        <div
+          v-if="activeExercises.length === 0"
+          class="bg-slate-800 p-12 rounded-2xl border border-slate-700 text-center text-slate-400"
+        >
+          <i class="pi pi-inbox text-5xl mb-4 opacity-50" />
+          <p class="text-xl">
+            No personal bests logged yet. Be the first!
+          </p>
+        </div>
+
+        <div
+          v-else
+          class="space-y-10"
+        >
+          <div
+            v-for="ex in activeExercises"
+            :key="ex"
+            class="p-6 rounded-2xl border border-slate-700"
+          >
+            <h3 class="text-2xl font-black text-amber-500 uppercase tracking-tighter mb-6 flex items-center justify-between border-b border-slate-700 pb-4">
+              {{ ex }}
+              <span class="text-sm font-medium text-slate-500 bg-slate-800 px-3 py-1 rounded-full border border-slate-700">{{ leaderboardStore.records[ex].unit }}</span>
+            </h3>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div
+                v-for="gender in ['male', 'female', 'other']"
+                v-show="leaderboardStore.records[ex] && leaderboardStore.records[ex][gender] && leaderboardStore.records[ex][gender].length > 0"
+                :key="gender"
+              >
+                <h4 class="text-sm font-bold text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+                  <i :class="gender === 'male' ? 'pi pi-mars text-blue-400' : (gender === 'female' ? 'pi pi-venus text-pink-400' : 'pi pi-users text-slate-400')" />
+                  {{ gender }}
+                </h4>
+                <div class="space-y-3">
+                  <div
+                    v-for="(record, index) in leaderboardStore.records[ex][gender]"
+                    :key="record.userId"
+                    class="flex items-center justify-between p-3 rounded-lg"
+                    :class="index === 0 ? 'bg-amber-500/10 border border-amber-500/20' : 'bg-slate-700/30'"
+                  >
+                    <div class="flex items-center gap-3">
+                      <div
+                        class="w-6 text-center font-bold"
+                        :class="index === 0 ? 'text-amber-400' : (index === 1 ? 'text-slate-300' : (index === 2 ? 'text-amber-700' : 'text-slate-500'))"
+                      >
+                        {{ index + 1 }}
+                      </div>
+                      <Avatar
+                        v-if="record.profilePicture"
+                        :image="getProfilePictureUrl(record.userId, record.profilePicture)"
+                        shape="circle"
+                        size="small"
+                      />
+                      <Avatar
+                        v-else
+                        :label="getInitials(record.name)"
+                        shape="circle"
+                        size="small"
+                        class="bg-slate-600 text-white text-[10px]"
+                      />
+                      <div>
+                        <div
+                          class="font-bold text-primary text-sm"
+                          :class="{'text-amber-400': index === 0}"
+                        >
+                          {{ record.name }}
+                        </div>
+                        <div class="text-[10px] text-primary">
+                          {{ new Date(record.dateAchieved).toLocaleDateString() }}
+                        </div>
+                      </div>
+                    </div>
+                    <div class="font-black text-primary">
+                      {{ record.weightValue }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <Dialog
+      v-model:visible="showSubmitDialog"
+      modal
+      header="Log Personal Best"
+      :style="{ width: '400px' }"
+      class="p-fluid"
+    >
+      <div class="space-y-6 pt-4">
+        <div class="field">
+          <label
+            for="exercise"
+            class="text-slate-300 font-bold mb-2 block"
+          >Exercise</label>
+          <Select
+            id="exercise"
+            v-model="recordForm.exerciseName"
+            :options="groupedExercises"
+            option-group-label="label"
+            option-group-children="items"
+            filter
+            :loading="leaderboardStore.loading"
+            placeholder="Select or search exercise"
+            class="w-full"
+          />
+        </div>
+
+        <div class="field">
+          <label
+            for="weight"
+            class="text-slate-300 font-bold mb-2 block"
+          >Weight (kg / reps / time)</label>
+          <InputNumber
+            id="weight"
+            v-model="recordForm.weightValue"
+            input-id="minmaxfraction"
+            :min-fraction-digits="0"
+            :max-fraction-digits="2"
+            placeholder="e.g., 100"
+            class="w-full"
+          />
+        </div>
+      </div>
+      <template #footer>
+        <div class="flex justify-end gap-2 mt-6">
+          <Button
+            label="Cancel"
+            icon="pi pi-times"
+            class="p-button-text p-button-secondary"
+            @click="showSubmitDialog = false"
+          />
+          <Button
+            label="Save PB"
+            icon="pi pi-check"
+            class="p-button-primary"
+            :loading="submitting"
+            @click="submitRecord"
+          />
+        </div>
+      </template>
+    </Dialog>
+  </div>
 </template>
 
 <style scoped>

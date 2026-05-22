@@ -226,7 +226,10 @@ onMounted(fetchUsers);
       </div>
     </div>
 
-    <div class="user-list-wrapper overflow-y-auto pr-2 -mr-2" style="max-height: calc(100vh - 380px);">
+    <div
+      class="user-list-wrapper overflow-y-auto pr-2 -mr-2"
+      style="max-height: calc(100vh - 380px);"
+    >
       <div class="hidden md:block">
         <DataTable
           :value="filteredUsers"
@@ -336,7 +339,9 @@ onMounted(fetchUsers);
             class="text-center py-12 bg-slate-50 rounded-lg border-2 border-dashed border-slate-200"
           >
             <i class="pi pi-users text-4xl text-slate-300 mb-3" />
-            <p class="text-slate-500 font-medium">No athletes found matching your search.</p>
+            <p class="text-slate-500 font-medium">
+              No athletes found matching your search.
+            </p>
           </div>
           <div
             v-for="user in filteredUsers"
