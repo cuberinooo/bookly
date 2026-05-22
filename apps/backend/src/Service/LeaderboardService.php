@@ -131,7 +131,7 @@ class LeaderboardService
         $grouped = [];
         foreach ($exercises as $ex) {
             $grouped[$ex->getName()] = [
-                'unit' => $ex->getUnit(),
+                'unit' => $ex->getUnit() ?? 'kg',
                 'male' => [],
                 'female' => [],
                 'other' => []
@@ -139,20 +139,32 @@ class LeaderboardService
         }
 
         foreach ($topRecords as $row) {
-            $ex = $row['exerciseName'];
+            $exName = $row['exerciseName'];
             $gender = $row['gender'];
-            if (isset($grouped[$ex])) {
-                $record = [
-                    'userId' => $row['userId'],
-                    'name' => $row['userName'],
-                    'profilePicture' => $row['profilePicture'],
-                    'weightValue' => (float)$row['maxWeight'],
-                    'dateAchieved' => $row['dateAchieved'],
-                ];
+            if ($gender instanceof \App\Enum\Gender) {
+                $gender = $gender->value;
+            }
+            $gender = $gender ?? 'other';
 
-                if ($gender === 'male' || $gender === 'female' || $gender === 'other') {
-                    $grouped[$ex][$gender][] = $record;
-                }
+            if (!isset($grouped[$exName])) {
+                $grouped[$exName] = [
+                    'unit' => 'kg',
+                    'male' => [],
+                    'female' => [],
+                    'other' => []
+                ];
+            }
+
+            $record = [
+                'userId' => $row['userId'],
+                'name' => $row['userName'],
+                'profilePicture' => $row['profilePicture'],
+                'weightValue' => (float)$row['maxWeight'],
+                'dateAchieved' => $row['dateAchieved'],
+            ];
+
+            if ($gender === 'male' || $gender === 'female' || $gender === 'other') {
+                $grouped[$exName][$gender][] = $record;
             }
         }
 

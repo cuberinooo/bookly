@@ -76,17 +76,23 @@ const groupedExercises = computed(() => {
     }));
 });
 
-// Filter out exercises with no records for cleaner display
 const activeExercises = computed(() => {
-    return Object.keys(leaderboardStore.records).filter(ex => 
-        (leaderboardStore.records[ex]?.male?.length > 0) || 
-        (leaderboardStore.records[ex]?.female?.length > 0) || 
-        (leaderboardStore.records[ex]?.other?.length > 0)
-    );
+    const records = leaderboardStore.records;
+    if (!records || typeof records !== 'object') return [];
+
+    return Object.keys(records).filter(ex => {
+        const exRecords = records[ex];
+        return (exRecords?.male?.length > 0) ||
+               (exRecords?.female?.length > 0) ||
+               (exRecords?.other?.length > 0);
+    });
 });
 
 const monthlyStatsGrouped = computed(() => {
     const stats = leaderboardStore.monthlyStats;
+    if (!Array.isArray(stats)) {
+        return { male: [], female: [], other: [] };
+    }
     return {
         male: stats.filter(s => s.gender === 'male'),
         female: stats.filter(s => s.gender === 'female'),
@@ -177,14 +183,14 @@ const getProfilePictureUrl = (userId: number, filename: string | null) => {
                 </div>
 
                 <div v-else class="space-y-10">
-                    <div v-for="ex in activeExercises" :key="ex" class="bg-slate-800/50 p-6 rounded-2xl border border-slate-700">
+                    <div v-for="ex in activeExercises" :key="ex" class="p-6 rounded-2xl border border-slate-700">
                         <h3 class="text-2xl font-black text-amber-500 uppercase tracking-tighter mb-6 flex items-center justify-between border-b border-slate-700 pb-4">
                             {{ ex }}
                             <span class="text-sm font-medium text-slate-500 bg-slate-800 px-3 py-1 rounded-full border border-slate-700">{{ leaderboardStore.records[ex].unit }}</span>
                         </h3>
-                        
+
                         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                            <div v-for="gender in ['male', 'female', 'other']" :key="gender" v-show="leaderboardStore.records[ex][gender].length > 0">
+                            <div v-for="gender in ['male', 'female', 'other']" :key="gender" v-show="leaderboardStore.records[ex] && leaderboardStore.records[ex][gender] && leaderboardStore.records[ex][gender].length > 0">
                                 <h4 class="text-sm font-bold text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2">
                                     <i :class="gender === 'male' ? 'pi pi-mars text-blue-400' : (gender === 'female' ? 'pi pi-venus text-pink-400' : 'pi pi-users text-slate-400')"></i>
                                     {{ gender }}
@@ -198,11 +204,11 @@ const getProfilePictureUrl = (userId: number, filename: string | null) => {
                                             <Avatar v-if="record.profilePicture" :image="getProfilePictureUrl(record.userId, record.profilePicture)" shape="circle" size="small" />
                                             <Avatar v-else :label="getInitials(record.name)" shape="circle" size="small" class="bg-slate-600 text-white text-[10px]" />
                                             <div>
-                                                <div class="font-bold text-white text-sm" :class="{'text-amber-400': index === 0}">{{ record.name }}</div>
-                                                <div class="text-[10px] text-slate-500">{{ new Date(record.dateAchieved).toLocaleDateString() }}</div>
+                                                <div class="font-bold text-primary text-sm" :class="{'text-amber-400': index === 0}">{{ record.name }}</div>
+                                                <div class="text-[10px] text-primary">{{ new Date(record.dateAchieved).toLocaleDateString() }}</div>
                                             </div>
                                         </div>
-                                        <div class="font-black text-white">
+                                        <div class="font-black text-primary">
                                             {{ record.weightValue }}
                                         </div>
                                     </div>
