@@ -90,6 +90,11 @@ const dashboardLabel = computed(() => {
   return authStore.isTrainer && authStore.viewMode === 'trainer' ? 'Dashboard' : 'My bookings';
 });
 
+const canSeeLeaderboard = computed(() => {
+  const allowedRoles = ['ROLE_MEMBER', 'ROLE_TRAINER', 'ROLE_ADMIN'];
+  return authStore.user?.roles.some(role => allowedRoles.includes(role));
+});
+
 const menuItems = computed(() => {
   const items = [
     {
@@ -203,6 +208,7 @@ onMounted(async () => {
               Meetups
             </RouterLink>
             <RouterLink
+              v-if="canSeeLeaderboard"
               to="/leaderboard"
               class="desktop-only"
             >

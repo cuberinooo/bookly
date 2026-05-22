@@ -82,7 +82,7 @@ const router = createRouter({
       path: '/leaderboard',
       name: 'leaderboard',
       component: () => import('../views/LeaderboardView.vue'),
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true, roles: ['ROLE_MEMBER', 'ROLE_TRAINER', 'ROLE_ADMIN'] }
     },
   ],
 });
@@ -102,7 +102,17 @@ router.beforeEach(async (to) => {
     return { name: 'login' };
   }
 
-  // 3. Redirect logged-in users away from auth pages
+  // 3. Handle Role-based Authorization logic
+  if (to.meta.roles && Array.isArray(to.meta.roles)) {
+    const userRoles = authStore.user?.roles || [];
+    const hasRequiredRole = to.meta.roles.some(role => userRoles.includes(role));
+    
+    if (!hasRequiredRole) {
+      return { name: 'home' }; // Redirect to home if user lacks required role
+    }
+  }
+
+  // 4. Redirect logged-in users away from auth pages
   if ((to.name === 'login' || to.name === 'register') && loggedIn) {
     return { name: 'home' };
   }

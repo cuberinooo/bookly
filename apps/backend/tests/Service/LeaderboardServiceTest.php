@@ -100,6 +100,15 @@ class LeaderboardServiceTest extends TestCase
                 'gender' => 'male',
                 'maxWeight' => 200.0,
                 'dateAchieved' => new \DateTime()
+            ],
+            [
+                'exerciseName' => 'Deadlift',
+                'userId' => 2,
+                'userName' => 'Unknown',
+                'profilePicture' => null,
+                'gender' => null,
+                'maxWeight' => 150.0,
+                'dateAchieved' => new \DateTime()
             ]
         ]);
 
@@ -117,6 +126,10 @@ class LeaderboardServiceTest extends TestCase
         $this->assertArrayHasKey('male', $records['Deadlift']);
         $this->assertCount(1, $records['Deadlift']['male']);
         $this->assertEquals(200.0, $records['Deadlift']['male'][0]['weightValue']);
+
+        $this->assertArrayHasKey('other', $records['Deadlift']);
+        $this->assertCount(1, $records['Deadlift']['other']);
+        $this->assertEquals(150.0, $records['Deadlift']['other'][0]['weightValue']);
     }
 
     public function testSubmitRecord(): void
