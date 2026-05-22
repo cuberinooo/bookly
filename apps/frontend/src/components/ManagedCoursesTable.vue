@@ -2,9 +2,9 @@
 import { ref, onMounted, onUnmounted, watch, computed } from 'vue';
 import { useConfirm } from 'primevue/useconfirm';
 import { useToast } from 'primevue/usetoast';
-import api from '../services/api';
 import { useAuthStore } from '../store/useAuthStore';
 import { useCourseStore } from '../store/useCourseStore';
+import { useCourseDeletion } from '../composables/useCourseDeletion';
 import ParticipantsDialog from './ParticipantsDialog.vue';
 
 import { formatTime, formatDateWithDay } from '../services/date-utils';
@@ -19,6 +19,7 @@ const confirm = useConfirm();
 const toast = useToast();
 const authStore = useAuthStore();
 const courseStore = useCourseStore();
+const { confirmDeleteCourse } = useCourseDeletion();
 
 const courses = computed(() => courseStore.courseList);
 const totalRecords = computed(() => courseStore.pagination.totalItems);
@@ -28,6 +29,49 @@ const participantsDialog = ref(false);
 const selectedCourse = ref<any>(null);
 
 const showAllCourses = ref(true);
+
+const menu = ref();
+const activeCourse = ref<any>(null);
+const menuItems = computed(() => {
+    if (!activeCourse.value) return [];
+
+    return [
+        {
+            label: 'Participants',
+            icon: 'pi pi-users',
+            disabled: activeCourse.value.status === 'postponed',
+            command: () => {
+                selectedCourse.value = activeCourse.value;
+                participantsDialog.value = true;
+            }
+        },
+        {
+            label: 'Postpone',
+            icon: 'pi pi-clock',
+            disabled: activeCourse.value.status === 'postponed',
+            command: () => confirmPostponeCourse(activeCourse.value)
+        },
+        {
+            label: 'Edit',
+            icon: 'pi pi-pencil',
+            command: () => emit('edit', activeCourse.value)
+        },
+        {
+            separator: true
+        },
+        {
+            label: 'Delete',
+            icon: 'pi pi-trash',
+            class: 'delete-menu-item',
+            command: () => confirmDeleteCourse(activeCourse.value)
+        }
+    ];
+});
+
+function toggleMenu(event: any, course: any) {
+    activeCourse.value = course;
+    menu.value.toggle(event);
+}
 
 const lazyParams = ref({
     first: 0,
@@ -216,48 +260,6 @@ function formatDuration(min: number) {
     const remaining = min % 60;
     return remaining > 0 ? `${hours}h ${remaining}min` : `${hours} hour${hours > 1 ? 's' : ''}`;
 }
-
-function confirmDeleteCourse(course: any) {
-    const isSeries = !!course.seriesId;
-
-    confirm.require({
-        message: isSeries
-            ? `Do you want to delete the entire series "${course.title}"? This cannot be undone.`
-            : `Delete "${course.title}"? This cannot be undone.`,
-        header: isSeries ? 'Series Detected' : 'Dangerous Action',
-        icon: 'pi pi-exclamation-triangle',
-        acceptProps: {
-            label: isSeries ? 'Delete Entire Series' : 'Delete',
-            severity: 'danger'
-        },
-        rejectProps: {
-          label: isSeries ? 'Delete Only This' : 'Cancel',
-          severity: isSeries ? 'warn' : 'primary',
-        },
-        accept: async () => {
-            try {
-                const url = isSeries ? `/courses/${course.id}?deleteAll=true` : `/courses/${course.id}`;
-                await api.delete(url);
-                toast.add({ severity: 'warn', summary: 'Deleted', detail: isSeries ? 'Series removed' : 'Course removed', life: 5000 });
-                loadLazyData();
-            } catch (e) {
-                toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to delete', life: 5000 });
-            }
-        },
-        reject: async () => {
-            if (isSeries) {
-                try {
-                    await api.delete(`/courses/${course.id}`);
-                    toast.add({ severity: 'warn', summary: 'Deleted', detail: 'Single instance removed', life: 5000 });
-                    loadLazyData();
-                } catch (e) {
-                    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to delete', life: 5000 });
-                }
-            }
-        }
-    });
-}
-
 function confirmPostponeCourse(course: any) {
     confirm.require({
         message: `Are you sure you want to postpone "${course.title}"? This will automatically unbook all participants and mark the course as postponed.`,
@@ -318,6 +320,13 @@ onUnmounted(() => {
 
 <template>
   <section class="managed-courses-section">
+    <!-- Action Menu (Single instance used for all rows/cards) -->
+    <Menu
+      ref="menu"
+      :model="menuItems"
+      :popup="true"
+    />
+
     <div class="section-header mb-6">
       <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
         <h2>Managed Courses</h2>
@@ -521,47 +530,18 @@ onUnmounted(() => {
                 shape="circle"
                 size="2rem"
               />
-              <Skeleton
-                shape="circle"
-                size="2rem"
-              />
-              <Skeleton
-                shape="circle"
-                size="2rem"
-              />
             </div>
             <div
               v-else
-              class="flex justify-end gap-2"
+              class="flex justify-end"
             >
               <Button
-                v-tooltip="'Participants'"
-                icon="pi pi-users"
+                label="Manage"
+                icon="pi pi-cog"
                 variant="text"
+                size="small"
                 class="action-btn"
-                :disabled="slotProps.data.status === 'postponed'"
-                @click="selectedCourse = slotProps.data; participantsDialog = true"
-              />
-              <Button
-                v-tooltip="'Postpone'"
-                icon="pi pi-clock"
-                variant="text"
-                class="action-btn"
-                :disabled="slotProps.data.status === 'postponed'"
-                @click="confirmPostponeCourse(slotProps.data)"
-              />
-              <Button
-                icon="pi pi-pencil"
-                variant="text"
-                class="action-btn"
-                @click="$emit('edit', slotProps.data)"
-              />
-              <Button
-                icon="pi pi-trash"
-                variant="text"
-                severity="danger"
-                class="action-btn delete-btn"
-                @click="confirmDeleteCourse(slotProps.data)"
+                @click="toggleMenu($event, slotProps.data)"
               />
             </div>
           </template>
@@ -611,20 +591,10 @@ onUnmounted(() => {
                     width="80px"
                     height="1rem"
                   />
-                  <div class="flex gap-2">
-                    <Skeleton
-                      shape="circle"
-                      size="2.5rem"
-                    />
-                    <Skeleton
-                      shape="circle"
-                      size="2.5rem"
-                    />
-                    <Skeleton
-                      shape="circle"
-                      size="2.5rem"
-                    />
-                  </div>
+                  <Skeleton
+                    shape="circle"
+                    size="2.5rem"
+                  />
                 </div>
               </div>
             </template>
@@ -674,44 +644,15 @@ onUnmounted(() => {
                   >
                     Duration: {{ formatDuration(course.durationMinutes) }}
                   </div>
-                  <div class="flex gap-2">
-                    <Button
-                      v-tooltip="'Participants'"
-                      icon="pi pi-users"
-                      severity="secondary"
-                      rounded
-                      outlined
-                      class="!h-10 !w-10 !p-0"
-                      :disabled="course.status === 'postponed'"
-                      @click="selectedCourse = course; participantsDialog = true"
-                    />
-                    <Button
-                      v-tooltip="'Postpone'"
-                      icon="pi pi-clock"
-                      severity="secondary"
-                      rounded
-                      outlined
-                      class="!h-10 !w-10 !p-0"
-                      :disabled="course.status === 'postponed'"
-                      @click="confirmPostponeCourse(course)"
-                    />
-                    <Button
-                      icon="pi pi-pencil"
-                      severity="secondary"
-                      rounded
-                      outlined
-                      class="!h-10 !w-10 !p-0"
-                      @click="$emit('edit', course)"
-                    />
-                    <Button
-                      icon="pi pi-trash"
-                      rounded
-                      outlined
-                      severity="danger"
-                      class="!h-10 !w-10 !p-0"
-                      @click="confirmDeleteCourse(course)"
-                    />
-                  </div>
+                  <Button
+                    label="Manage"
+                    icon="pi pi-cog"
+                    severity="secondary"
+                    outlined
+                    size="small"
+                    class="!py-1 !px-3"
+                    @click="toggleMenu($event, course)"
+                  />
                 </div>
               </div>
 
@@ -867,6 +808,14 @@ onUnmounted(() => {
 
   > div {
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  }
+}
+
+:deep(.delete-menu-item) {
+  .p-menuitem-link {
+    .p-menuitem-text, .p-menuitem-icon {
+      @apply text-red-500 font-bold;
+    }
   }
 }
 </style>

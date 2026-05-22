@@ -11,6 +11,7 @@ import ParticipantsDialog from '../components/ParticipantsDialog.vue';
 import TrialStatusCard from '../components/TrialStatusCard.vue';
 import TrainerDashboard from '../components/TrainerDashboard.vue';
 import { useRoute } from 'vue-router';
+import { useCourseDeletion } from '../composables/useCourseDeletion';
 
 import { formatDateWithDay, formatTime } from '../services/date-utils';
 
@@ -19,6 +20,7 @@ const confirm = useConfirm();
 const route = useRoute();
 const authStore = useAuthStore();
 const courseStore = useCourseStore();
+const { confirmDeleteCourse } = useCourseDeletion();
 const courses = computed(() => courseStore.courseList);
 const notifications = ref<any[]>([]);
 const isTrainerMode = computed(() => authStore.isTrainer && authStore.viewMode === 'trainer');
@@ -184,46 +186,6 @@ async function unbookCourse(courseId: number) {
                 toast.add({ severity: 'info', summary: 'Cancelled', detail: 'Booking removed', life: 5000 });
             } catch (e) {
                 toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to cancel booking', life: 5000 });
-            }
-        }
-    });
-}
-
-async function onDeleteCourse(course: any) {
-    const isSeries = !!course.seriesId;
-
-    confirm.require({
-        message: isSeries
-            ? `Do you want to delete the entire series "${course.title}"? This cannot be undone.`
-            : `Delete "${course.title}"? This cannot be undone.`,
-        header: isSeries ? 'Series Detected' : 'Dangerous Action',
-        icon: 'pi pi-exclamation-triangle',
-        acceptProps: {
-            label: isSeries ? 'Delete Entire Series' : 'Delete',
-            severity: 'danger'
-        },
-        rejectProps: {
-          label: isSeries ? 'Delete Only This' : 'Cancel',
-          severity: isSeries ? 'warn' : 'primary',
-        },
-        accept: async () => {
-            try {
-                await courseStore.deleteCourse(course.id, isSeries);
-                toast.add({ severity: 'warn', summary: 'Deleted', detail: isSeries ? 'Series removed' : 'Course removed', life: 5000 });
-                courseDialog.value = false;
-            } catch (e) {
-                toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to delete', life: 5000 });
-            }
-        },
-        reject: async () => {
-            if (isSeries) {
-                try {
-                    await courseStore.deleteCourse(course.id, false);
-                    toast.add({ severity: 'warn', summary: 'Deleted', detail: 'Single instance removed', life: 5000 });
-                    courseDialog.value = false;
-                } catch (e) {
-                    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to delete', life: 5000 });
-                }
             }
         }
     });
@@ -403,7 +365,7 @@ onMounted(fetchData);
         :loading="submitting"
         @save="onSaveCourse"
         @cancel="courseDialog = false"
-        @delete="onDeleteCourse"
+        @delete="confirmDeleteCourse($event, () => courseDialog = false)"
       />
     </Dialog>
 

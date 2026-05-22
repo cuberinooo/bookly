@@ -338,15 +338,6 @@ function handleSubmit() {
     </div>
     <div class="form-actions mt-6">
       <Button
-        v-if="course?.id"
-        label="Delete"
-        severity="danger"
-        variant="text"
-        :disabled="loading"
-        class="mr-auto delete-btn"
-        @click="$emit('delete', course)"
-      />
-      <Button
         label="Cancel"
         severity="primary"
         variant="text"
