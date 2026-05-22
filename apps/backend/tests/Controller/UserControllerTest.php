@@ -237,4 +237,51 @@ class UserControllerTest extends WebTestCase
         $this->assertNotNull($user->getGender());
         $this->assertEquals('female', $user->getGender()->value);
     }
+
+    public function testDeleteUserWithWorkoutRecords(): void
+    {
+        $client = static::createClient();
+        $container = $client->getContainer();
+        $entityManager = $container->get('doctrine.orm.entity_manager');
+
+        $company = new Company();
+        $company->setName('Delete Workout Test Company ' . uniqid());
+        $entityManager->persist($company);
+
+        $user = new User();
+        $user->setEmail('member_with_pbs' . uniqid() . '@example.com');
+        $user->setName('Member with PBs');
+        $user->setRoles(['ROLE_MEMBER']);
+        $user->setPassword('password');
+        $user->setIsVerified(true);
+        $user->setCompany($company);
+        $entityManager->persist($user);
+
+        // Add a workout record
+        $record = new \App\Entity\UserWorkoutRecord();
+        $record->setUser($user);
+        $record->setExerciseName('Deadlift');
+        $record->setWeightValue(100.0);
+        $record->setDateAchieved(new \DateTime());
+        $entityManager->persist($record);
+
+        $entityManager->flush();
+
+        $token = $this->getToken($client, $user);
+        $userId = $user->getId();
+        $recordId = $record->getId();
+
+        $client->request('DELETE', '/api/user/me', [], [], [
+            'HTTP_AUTHORIZATION' => 'Bearer ' . $token
+        ]);
+
+        $this->assertEquals(Response::HTTP_OK, $client->getResponse()->getStatusCode());
+        
+        $entityManager->clear();
+        $deletedUser = $entityManager->getRepository(User::class)->find($userId);
+        $this->assertNull($deletedUser);
+
+        $deletedRecord = $entityManager->getRepository(\App\Entity\UserWorkoutRecord::class)->find($recordId);
+        $this->assertNull($deletedRecord);
+    }
 }

@@ -17,7 +17,7 @@ class UserWorkoutRecord
     private ?int $id = null;
 
     #[ORM\ManyToOne]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     #[Groups(['workout_record:read'])]
     private ?User $user = null;
 

@@ -156,7 +156,7 @@ const getProfilePictureUrl = (userId: number, filename: string | null) => {
           >
             <h3 class="text-xl font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
               <i :class="gender === 'male' ? 'pi pi-mars text-blue-400' : (gender === 'female' ? 'pi pi-venus text-pink-400' : 'pi pi-users text-slate-400')" />
-              {{ gender }} Rankings
+              {{ gender.charAt(0).toUpperCase() + gender.slice(1) }} Rankings
             </h3>
             <Card class="bg-slate-800 border border-slate-700 shadow-xl overflow-hidden">
               <template #content>
@@ -254,7 +254,7 @@ const getProfilePictureUrl = (userId: number, filename: string | null) => {
               >
                 <h4 class="text-sm font-bold text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2">
                   <i :class="gender === 'male' ? 'pi pi-mars text-blue-400' : (gender === 'female' ? 'pi pi-venus text-pink-400' : 'pi pi-users text-slate-400')" />
-                  {{ gender }}
+                  {{ gender.charAt(0).toUpperCase() + gender.slice(1) }}
                 </h4>
                 <div class="space-y-3">
                   <div
