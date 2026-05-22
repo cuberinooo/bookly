@@ -43,7 +43,7 @@ class MeetupController extends AbstractController
 
         $extension = $file->guessExtension() ?? 'jpg';
         $filename = sprintf('meetup_%s.%s', uniqid('', true), $extension);
-        $key = 'meetups/' . $companySlug . '/' . $filename;
+        $key = $companySlug . '/' . 'meetups/' . $filename;
 
         try {
             $this->s3Client->putObject([

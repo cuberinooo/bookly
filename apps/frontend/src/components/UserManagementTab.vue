@@ -226,18 +226,16 @@ onMounted(fetchUsers);
       </div>
     </div>
 
-    <div
-      class="user-list-wrapper overflow-y-auto pr-2 -mr-2"
-      style="max-height: calc(100vh - 380px);"
-    >
-      <div class="hidden md:block">
-        <DataTable
-          :value="filteredUsers"
-          :loading="loading"
-          class="athletic-table"
-        >
-          <Column
-            field="name"
+    <div class="hidden md:block">
+      <DataTable
+        :value="filteredUsers"
+        :loading="loading"
+        scrollable
+        scroll-height="calc(100vh - 380px)"
+        class="athletic-table"
+      >
+        <Column
+          field="name"
             header="ATHLETE NAME"
             sortable
           >
@@ -322,11 +320,15 @@ onMounted(fetchUsers);
               </div>
             </template>
           </Column>
-        </DataTable>
-      </div>
+      </DataTable>
+    </div>
 
-      <!-- Mobile Card Layout -->
-      <div class="md:hidden flex flex-col gap-4">
+    <!-- Mobile Card Layout -->
+    <div
+      class="md:hidden user-list-wrapper overflow-y-auto pr-2 -mr-2 mt-4"
+      style="max-height: calc(100vh - 380px);"
+    >
+      <div class="flex flex-col gap-4">
         <div
           v-if="loading"
           class="flex justify-center py-8"
