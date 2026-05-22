@@ -142,6 +142,15 @@ class BookingService
     }
 
     /**
+     * Toggles the attendance status of a booking.
+     */
+    public function toggleAttendance(Booking $booking): void
+    {
+        $booking->setAttended(!$booking->isAttended());
+        $this->entityManager->flush();
+    }
+
+    /**
      * Removes a booking for a specific user and course if it exists.
      */
     public function removeBookingIfExists(Course $course, User $user): void
@@ -163,6 +172,11 @@ class BookingService
 
     private function processWaitlist(Course $course): void
     {
+        // Never promote from waitlist if the course has already finished
+        if ($course->getEndTime() < new \DateTime()) {
+            return;
+        }
+
         // Check if there is space now
         $confirmedBookingsCount = $this->bookingRepository->count(['course' => $course, 'isWaitlist' => false]);
 

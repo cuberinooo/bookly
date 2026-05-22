@@ -13,7 +13,7 @@ class Booking implements CompanyAwareInterface
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['booking:read'])]
+    #[Groups(['booking:read', 'course:read'])]
     private ?int $id = null;
 
     #[ORM\ManyToOne]
@@ -37,6 +37,10 @@ class Booking implements CompanyAwareInterface
     #[ORM\Column(options: ['default' => false])]
     #[Groups(['booking:read', 'course:read'])]
     private ?bool $isWaitlist = false;
+
+    #[ORM\Column(options: ['default' => true])]
+    #[Groups(['booking:read', 'course:read'])]
+    private bool $attended = true;
 
     public function __construct()
     {
@@ -104,6 +108,18 @@ class Booking implements CompanyAwareInterface
     public function setCompany(?Company $company): static
     {
         $this->company = $company;
+
+        return $this;
+    }
+
+    public function isAttended(): bool
+    {
+        return $this->attended;
+    }
+
+    public function setAttended(bool $attended): static
+    {
+        $this->attended = $attended;
 
         return $this;
     }

@@ -23,6 +23,11 @@ const loadingEmergency = ref(false);
 
 const isTrainerOrAdmin = computed(() => authStore.isTrainer || authStore.isAdmin);
 
+const isCourseFinished = computed(() => {
+    if (!props.course?.endTime) return false;
+    return new Date(props.course.endTime) < new Date();
+});
+
 const confirmedParticipants = computed(() => {
     return props.course?.bookings.filter((b: any) => !b.isWaitlist) || [];
 });
@@ -85,6 +90,26 @@ async function fetchEmergencyInfo(user: any) {
     }
 }
 
+async function toggleAttendance(booking: any) {
+    try {
+        const response = await api.patch(`/courses/${props.course.id}/bookings/${booking.id}/attendance`);
+        booking.attended = response.data.attended;
+        toast.add({
+            severity: 'success',
+            summary: 'Success',
+            detail: booking.attended ? 'Athlete marked as attended' : 'Athlete marked as no-show',
+            life: 3000
+        });
+    } catch (e: any) {
+        toast.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: e.response?.data?.error || 'Failed to update attendance',
+            life: 5000
+        });
+    }
+}
+
 function isAnonymized(name: string) {
     return name?.startsWith('Athlete #');
 }
@@ -143,10 +168,17 @@ function close() {
                   </div>
                 </div>
                 <div class="flex flex-col">
-                  <span :class="['font-bold', isAnonymized(slotProps.data.user.name) ? 'text-slate-400' : 'text-slate-900']">
+                  <span
+                    :class="['font-bold',
+                             isAnonymized(slotProps.data.user.name) ? 'text-slate-400' : 'text-slate-900',
+                             { 'line-through !text-slate-400': !slotProps.data.attended }]"
+                  >
                     {{ slotProps.data.user.name }}
                   </span>
-                  <small v-if="slotProps.data.user.email">{{ slotProps.data.user.email }}</small>
+                  <small
+                    v-if="slotProps.data.user.email"
+                    :class="{'line-through !text-slate-400': !slotProps.data.attended}"
+                  >{{ slotProps.data.user.email }}</small>
                 </div>
               </div>
             </template>
@@ -157,6 +189,15 @@ function close() {
           >
             <template #body="slotProps">
               <div class="flex justify-end gap-2">
+                <Button
+                  v-if="isTrainerOrAdmin && isCourseFinished"
+                  v-tooltip="slotProps.data.attended ? 'Mark as No-Show' : 'Mark as Attended'"
+                  :icon="slotProps.data.attended ? 'pi pi-user-minus' : 'pi pi-user-plus'"
+                  :severity="slotProps.data.attended ? 'secondary' : 'success'"
+                  variant="text"
+                  class="action-btn"
+                  @click="toggleAttendance(slotProps.data)"
+                />
                 <Button
                   v-if="isTrainerOrAdmin && !isAnonymized(slotProps.data.user.name)"
                   v-tooltip="'Emergency Info'"
