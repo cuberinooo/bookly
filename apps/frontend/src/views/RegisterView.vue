@@ -12,6 +12,13 @@ const name = ref('');
 const nameTouched = ref(false);
 const email = ref('');
 const emailTouched = ref(false);
+const gender = ref(null);
+const genderTouched = ref(false);
+const genderOptions = [
+    { label: 'Male', value: 'male' },
+    { label: 'Female', value: 'female' },
+    { label: 'Other', value: 'other' }
+];
 const companyName = ref('Bookly');
 const companyNameTouched = ref(false);
 const password = ref('');
@@ -59,7 +66,7 @@ const isPasswordValid = computed(() => {
 });
 
 const isStep1Valid = computed(() => {
-    return name.value && email.value && companyName.value && isPasswordValid.value && passwordValidation.value.match;
+    return name.value && email.value && companyName.value && gender.value && isPasswordValid.value && passwordValidation.value.match;
 });
 
 const isFormValid = computed(() => {
@@ -70,6 +77,7 @@ async function goToStep2() {
   nameTouched.value = true;
   emailTouched.value = true;
   companyNameTouched.value = true;
+  genderTouched.value = true;
   passwordTouched.value = true;
   confirmPasswordTouched.value = true;
 
@@ -114,6 +122,7 @@ async function register() {
     await api.post('/register', {
       name: name.value,
       email: email.value,
+      gender: gender.value,
       companyName: companyName.value,
       password: password.value
     });
@@ -191,6 +200,23 @@ async function register() {
                 v-else-if="emailTouched && !isEmailValid"
                 class="text-red-500 text-xs mt-1"
               >Please enter a valid email address.</small>
+            </div>
+
+            <div class="flex flex-col">
+              <label class="form-label-base">Gender</label>
+              <Select
+                v-model="gender"
+                :options="genderOptions"
+                option-label="label"
+                option-value="value"
+                placeholder="Select Gender"
+                :class="{ 'p-invalid': genderTouched && !gender }"
+                @blur="genderTouched = true"
+              />
+              <small
+                v-if="genderTouched && !gender"
+                class="text-red-500 text-xs mt-1"
+              >Gender is required.</small>
             </div>
 
             <div class="flex flex-col">

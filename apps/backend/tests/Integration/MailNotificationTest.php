@@ -388,4 +388,27 @@ class MailNotificationTest extends WebTestCase
         
         $this->assertTrue($adminNotificationFound, 'Admin notification email was not found');
     }
+
+    public function testRegistrationWithGender(): void
+    {
+        $client = static::createClient();
+        $container = $client->getContainer();
+        $entityManager = $container->get('doctrine.orm.entity_manager');
+
+        $email = 'gender_test' . uniqid() . '@example.com';
+        $registrationData = [
+            'email' => $email,
+            'password' => 'Password123!',
+            'name' => 'Gender Athlete',
+            'gender' => 'other',
+            'companyName' => 'Gender Gym'
+        ];
+
+        $client->request('POST', '/api/register', [], [], [], json_encode($registrationData));
+        $this->assertEquals(201, $client->getResponse()->getStatusCode());
+
+        $user = $entityManager->getRepository(\App\Entity\User::class)->findOneBy(['email' => $email]);
+        $this->assertNotNull($user);
+        $this->assertEquals('other', $user->getGender()->value);
+    }
 }

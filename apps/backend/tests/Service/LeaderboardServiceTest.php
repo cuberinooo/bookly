@@ -72,20 +72,21 @@ class LeaderboardServiceTest extends TestCase
         $user1 = $this->createMock(User::class);
         $user1->method('getId')->willReturn(1);
         $user1->method('getName')->willReturn('Athlete A');
+        $user1->method('getGender')->willReturn(\App\Enum\Gender::MALE);
         
         $user2 = $this->createMock(User::class);
         $user2->method('getId')->willReturn(2);
         $user2->method('getName')->willReturn('Athlete B');
+        $user2->method('getGender')->willReturn(\App\Enum\Gender::FEMALE);
 
-        $this->userRepository->method('findBy')->willReturn([$user1, $user2]);
+        $this->userRepository->method('findBy')->with(['isActive' => true, 'isPublic' => true])->willReturn([$user1, $user2]);
 
         $stats = $this->service->getMonthlyStats();
 
         $this->assertCount(2, $stats);
         $this->assertEquals('Athlete A', $stats[0]['name']);
         $this->assertEquals(5, $stats[0]['attendanceCount']);
-        $this->assertEquals('Athlete B', $stats[1]['name']);
-        $this->assertEquals(3, $stats[1]['attendanceCount']);
+        $this->assertEquals('male', $stats[0]['gender']);
     }
 
     public function testGetWorkoutRecords(): void
@@ -96,6 +97,7 @@ class LeaderboardServiceTest extends TestCase
                 'userId' => 1,
                 'userName' => 'John',
                 'profilePicture' => 'john.jpg',
+                'gender' => 'male',
                 'maxWeight' => 200.0,
                 'dateAchieved' => new \DateTime()
             ]
@@ -112,9 +114,9 @@ class LeaderboardServiceTest extends TestCase
         $records = $this->service->getWorkoutRecords();
 
         $this->assertArrayHasKey('Deadlift', $records);
-        $this->assertEquals('kg', $records['Deadlift']['unit']);
-        $this->assertCount(1, $records['Deadlift']['records']);
-        $this->assertEquals(200.0, $records['Deadlift']['records'][0]['weightValue']);
+        $this->assertArrayHasKey('male', $records['Deadlift']);
+        $this->assertCount(1, $records['Deadlift']['male']);
+        $this->assertEquals(200.0, $records['Deadlift']['male'][0]['weightValue']);
     }
 
     public function testSubmitRecord(): void

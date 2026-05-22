@@ -198,4 +198,43 @@ class UserControllerTest extends WebTestCase
         ]));
         $this->assertEquals(Response::HTTP_BAD_REQUEST, $client->getResponse()->getStatusCode());
     }
+
+    public function testUpdateProfileGenderAndPublic(): void
+    {
+        $client = static::createClient();
+        $container = $client->getContainer();
+        $entityManager = $container->get('doctrine.orm.entity_manager');
+
+        $company = new Company();
+        $company->setName('Test Company Profile ' . uniqid());
+        $entityManager->persist($company);
+
+        $user = new User();
+        $user->setEmail('user_profile' . uniqid() . '@example.com');
+        $user->setName('Test User');
+        $user->setRoles(['ROLE_USER']);
+        $user->setPassword('password');
+        $user->setIsVerified(true);
+        $user->setCompany($company);
+        $entityManager->persist($user);
+        $entityManager->flush();
+
+        $token = $this->getToken($client, $user);
+
+        $client->request('PATCH', '/api/user/me', [], [], [
+            'CONTENT_TYPE' => 'application/json',
+            'HTTP_AUTHORIZATION' => 'Bearer ' . $token
+        ], json_encode([
+            'name' => 'Updated Name',
+            'gender' => 'female',
+            'isPublic' => true
+        ]));
+        $this->assertEquals(Response::HTTP_OK, $client->getResponse()->getStatusCode());
+
+        $entityManager->refresh($user);
+        $this->assertEquals('Updated Name', $user->getName());
+        $this->assertTrue($user->isPublic());
+        $this->assertNotNull($user->getGender());
+        $this->assertEquals('female', $user->getGender()->value);
+    }
 }

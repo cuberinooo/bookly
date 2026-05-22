@@ -101,8 +101,38 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, Company
     #[Groups(['user:read', 'meetup:read', 'workout_record:read'])]
     private ?string $profilePicture = null;
 
+    #[ORM\Column(name: "gender", type: 'string', enumType: \App\Enum\Gender::class, nullable: true)]
+    #[Groups(['user:read'])]
+    private ?\App\Enum\Gender $gender = null;
+
+    #[ORM\Column(name: "is_public", type: 'boolean', options: ['default' => false])]
+    #[Groups(['user:read'])]
+    private bool $isPublic = false;
+
     #[ORM\Column(length: 20, nullable: true)]
     private ?string $phoneNumber = null;
+
+    public function getGender(): ?\App\Enum\Gender
+    {
+        return $this->gender;
+    }
+
+    public function setGender(?\App\Enum\Gender $gender): static
+    {
+        $this->gender = $gender;
+        return $this;
+    }
+
+    public function isPublic(): bool
+    {
+        return $this->isPublic;
+    }
+
+    public function setIsPublic(bool $isPublic): static
+    {
+        $this->isPublic = $isPublic;
+        return $this;
+    }
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $emergencyContactName = null;

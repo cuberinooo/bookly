@@ -1,0 +1,8 @@
+{
+  "name": "Gender",
+  "values": {
+    "MALE": "male",
+    "FEMALE": "female",
+    "OTHER": "other"
+  }
+}

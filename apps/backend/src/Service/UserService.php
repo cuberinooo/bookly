@@ -74,6 +74,14 @@ class UserService
             $user->setEmergencyContactPhone($data['emergencyContactPhone']);
         }
 
+        if (isset($data['gender'])) {
+            $user->setGender(\App\Enum\Gender::tryFrom($data['gender']));
+        }
+
+        if (isset($data['isPublic'])) {
+            $user->setIsPublic((bool) $data['isPublic']);
+        }
+
         if (isset($data['courseStartNotificationHours']) || isset($data['courseStartNotificationMinutes'])) {
             $hours = (int) ($data['courseStartNotificationHours'] ?? $user->getCourseStartNotificationHours());
             $minutes = (int) ($data['courseStartNotificationMinutes'] ?? $user->getCourseStartNotificationMinutes());

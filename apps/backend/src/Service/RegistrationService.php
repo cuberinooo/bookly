@@ -56,6 +56,10 @@ class RegistrationService
         $user->setName($data['name']);
         $user->setCompany($company);
 
+        if (isset($data['gender'])) {
+            $user->setGender(\App\Enum\Gender::tryFrom($data['gender']));
+        }
+
         $hashedPassword = $this->passwordHasher->hashPassword($user, $password);
         $user->setPassword($hashedPassword);
 

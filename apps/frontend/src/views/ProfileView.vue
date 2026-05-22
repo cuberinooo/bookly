@@ -18,7 +18,9 @@ const user = ref({
     profilePicture: null,
     phoneNumber: '',
     emergencyContactName: '',
-    emergencyContactPhone: ''
+    emergencyContactPhone: '',
+    gender: null,
+    isPublic: false
 });
 const hasConsentedToEmergency = ref(false);
 const loading = ref(false);
@@ -26,6 +28,12 @@ const fetching = ref(true);
 const uploading = ref(false);
 const deleting = ref(false);
 const fileInput = ref<HTMLInputElement | null>(null);
+
+const genderOptions = [
+    { label: 'Male', value: 'male' },
+    { label: 'Female', value: 'female' },
+    { label: 'Other', value: 'other' }
+];
 
 const profilePictureUrl = computed(() => {
   if (user.value.profilePicture && user.value.id) {
@@ -128,6 +136,8 @@ async function updateProfile() {
         await api.patch('/user/me', {
             name: user.value.name,
             phoneNumber: user.value.phoneNumber,
+            gender: user.value.gender,
+            isPublic: user.value.isPublic,
             emergencyContactName: user.value.emergencyContactName,
             emergencyContactPhone: user.value.emergencyContactPhone
         });
@@ -263,6 +273,26 @@ onMounted(fetchProfile);
                   placeholder="+49 123 456789"
                 />
               </div>
+              <div class="flex flex-col">
+                <label class="form-label-base">Gender</label>
+                <Select
+                  v-model="user.gender"
+                  :options="genderOptions"
+                  option-label="label"
+                  option-value="value"
+                  placeholder="Select Gender"
+                />
+              </div>
+            </div>
+
+            <div class="flex items-center gap-4 p-4 bg-slate-50 rounded-xl border border-slate-200">
+              <div class="flex-1">
+                <h4 class="font-bold text-slate-900">Public Profile</h4>
+                <p class="text-sm text-slate-600">
+                  Show your personal bests (PBs) and monthly attendance on the leaderboard. If disabled, your stats will be hidden from other athletes.
+                </p>
+              </div>
+              <ToggleSwitch v-model="user.isPublic" />
             </div>
 
             <div class="border-t border-slate-100 pt-6 mt-2">

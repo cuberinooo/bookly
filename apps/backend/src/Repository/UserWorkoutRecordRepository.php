@@ -45,9 +45,11 @@ class UserWorkoutRecordRepository extends ServiceEntityRepository
     public function findTopRecordsByExercise(): array
     {
         return $this->createQueryBuilder('r')
-            ->select('u.id as userId', 'u.name as userName', 'u.profilePicture as profilePicture', 'r.exerciseName as exerciseName', 'MAX(r.weightValue) as maxWeight', 'MAX(r.dateAchieved) as dateAchieved')
+            ->select('u.id as userId', 'u.name as userName', 'u.profilePicture as profilePicture', 'u.gender as gender', 'r.exerciseName as exerciseName', 'MAX(r.weightValue) as maxWeight', 'MAX(r.dateAchieved) as dateAchieved')
             ->join('r.user', 'u')
-            ->groupBy('u.id', 'u.name', 'u.profilePicture', 'r.exerciseName')
+            ->where('u.isPublic = :isPublic')
+            ->setParameter('isPublic', true)
+            ->groupBy('u.id', 'u.name', 'u.profilePicture', 'u.gender', 'r.exerciseName')
             ->orderBy('r.exerciseName', 'ASC')
             ->addOrderBy('maxWeight', 'DESC')
             ->getQuery()

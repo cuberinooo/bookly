@@ -31,9 +31,11 @@ class LeaderboardService
             ->leftJoin('u.bookings', 'b')
             ->leftJoin('b.course', 'c')
             ->andWhere('b.isWaitlist = :isWaitlist')
+            ->andWhere('u.isPublic = :isPublic')
             ->andWhere('c.startTime >= :start')
             ->andWhere('c.startTime <= :end')
             ->setParameter('isWaitlist', false)
+            ->setParameter('isPublic', true)
             ->setParameter('start', $startOfMonth)
             ->setParameter('end', $endOfMonth)
             ->groupBy('u.id')
@@ -52,8 +54,10 @@ class LeaderboardService
             ->join('u.bookings', 'b')
             ->join('b.course', 'c')
             ->andWhere('b.isWaitlist = :isWaitlist')
+            ->andWhere('u.isPublic = :isPublic')
             ->andWhere('c.startTime <= :now')
             ->setParameter('isWaitlist', false)
+            ->setParameter('isPublic', true)
             ->setParameter('now', new \DateTime())
             ->orderBy('u.id', 'ASC')
             ->addOrderBy('c.startTime', 'DESC')
@@ -95,7 +99,7 @@ class LeaderboardService
         }
 
         // 3. Build response
-        $users = $this->userRepository->findBy(['isActive' => true]);
+        $users = $this->userRepository->findBy(['isActive' => true, 'isPublic' => true]);
         $data = [];
         foreach ($users as $user) {
             $userId = $user->getId();
@@ -105,6 +109,7 @@ class LeaderboardService
                 'profilePicture' => $user->getProfilePicture(),
                 'attendanceCount' => $attendanceMap[$userId] ?? 0,
                 'streak' => $streaks[$userId] ?? 0,
+                'gender' => $user->getGender()?->value,
             ];
         }
 
@@ -127,20 +132,27 @@ class LeaderboardService
         foreach ($exercises as $ex) {
             $grouped[$ex->getName()] = [
                 'unit' => $ex->getUnit(),
-                'records' => []
+                'male' => [],
+                'female' => [],
+                'other' => []
             ];
         }
 
         foreach ($topRecords as $row) {
             $ex = $row['exerciseName'];
+            $gender = $row['gender'];
             if (isset($grouped[$ex])) {
-                $grouped[$ex]['records'][] = [
+                $record = [
                     'userId' => $row['userId'],
                     'name' => $row['userName'],
                     'profilePicture' => $row['profilePicture'],
                     'weightValue' => (float)$row['maxWeight'],
                     'dateAchieved' => $row['dateAchieved'],
                 ];
+
+                if ($gender === 'male' || $gender === 'female' || $gender === 'other') {
+                    $grouped[$ex][$gender][] = $record;
+                }
             }
         }
 
