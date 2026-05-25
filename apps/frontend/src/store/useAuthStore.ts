@@ -26,28 +26,22 @@ export const useAuthStore = defineStore('auth', () => {
   async function logout() {
     try {
       const { default: api } = await import('../services/api');
-      await api.post('/logout');
+      await api.post('/logout'); // Assuming backend invalidates the cookie here
     } catch (e) {
       console.error('Logout failed', e);
     } finally {
       token.value = null;
       user.value = null;
-      localStorage.removeItem('refresh_token');
     }
   }
 
   async function init() {
     try {
       const { default: api } = await import('../services/api');
-      const localRefreshToken = localStorage.getItem('refresh_token');
 
-      const response = await api.post('/token/refresh', {
-        refresh_token: localRefreshToken
-      });
-
-      if (response.data.refresh_token) {
-        localStorage.setItem('refresh_token', response.data.refresh_token);
-      }
+      // We no longer read from localStorage or send a body payload.
+      // The browser automatically attaches the HTTP-only refresh token cookie.
+      const response = await api.post('/token/refresh');
 
       setToken(response.data.token);
     } catch {
