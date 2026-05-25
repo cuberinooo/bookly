@@ -189,6 +189,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, Company
     #[Groups(['user:read'])]
     private bool $joinUsMailSent = false;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $stripeCustomerId = null;
+
     public function isJoinUsMailSent(): bool
     {
         return $this->joinUsMailSent;
@@ -479,5 +482,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, Company
         $data["\0".self::class."\0password"] = hash('crc32c', $this->password);
 
         return $data;
+    }
+
+    public function getStripeCustomerId(): ?string
+    {
+        return $this->stripeCustomerId;
+    }
+
+    public function setStripeCustomerId(?string $stripeCustomerId): static
+    {
+        $this->stripeCustomerId = $stripeCustomerId;
+
+        return $this;
     }
 }

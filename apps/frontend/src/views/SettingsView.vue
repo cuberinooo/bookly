@@ -6,6 +6,7 @@ import UserManagementTab from '../components/UserManagementTab.vue';
 import LegalSettingsForm from '../components/LegalSettingsForm.vue';
 import CompanySettingsForm from '../components/CompanySettingsForm.vue';
 import MailSettingsTab from '../components/MailSettingsTab.vue';
+import StripeSettingsTab from '../components/StripeSettingsTab.vue';
 
 const authStore = useAuthStore();
 
@@ -14,6 +15,7 @@ const activeTabs = computed(() => {
     if (authStore.isAdmin) {
         tabs.push({ id: 'users', label: 'ATHLETES', component: UserManagementTab });
         tabs.push({ id: 'company', label: 'IDENTITY', component: CompanySettingsForm });
+        tabs.push({ id: 'stripe', label: 'PAYMENTS', component: StripeSettingsTab });
         tabs.push({ id: 'mail', label: 'EMAIL TEMPLATES', component: MailSettingsTab });
         tabs.push({ id: 'legal', label: 'LEGAL & COMPLIANCE', component: LegalSettingsForm });
     }

@@ -35,6 +35,18 @@ class Company
     #[ORM\OneToMany(targetEntity: User::class, mappedBy: 'company')]
     private Collection $users;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $stripeAccountId = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?bool $stripeOnboardingComplete = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $stripePriceSetupFeeId = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $stripePriceMembershipId = null;
+
     public function __construct()
     {
         $this->users = new ArrayCollection();
@@ -173,6 +185,54 @@ class Company
                 $courseSeries->setCompany(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getStripeAccountId(): ?string
+    {
+        return $this->stripeAccountId;
+    }
+
+    public function setStripeAccountId(?string $stripeAccountId): static
+    {
+        $this->stripeAccountId = $stripeAccountId;
+
+        return $this;
+    }
+
+    public function isStripeOnboardingComplete(): ?bool
+    {
+        return $this->stripeOnboardingComplete;
+    }
+
+    public function setStripeOnboardingComplete(?bool $stripeOnboardingComplete): static
+    {
+        $this->stripeOnboardingComplete = $stripeOnboardingComplete;
+
+        return $this;
+    }
+
+    public function getStripePriceSetupFeeId(): ?string
+    {
+        return $this->stripePriceSetupFeeId;
+    }
+
+    public function setStripePriceSetupFeeId(?string $stripePriceSetupFeeId): static
+    {
+        $this->stripePriceSetupFeeId = $stripePriceSetupFeeId;
+
+        return $this;
+    }
+
+    public function getStripePriceMembershipId(): ?string
+    {
+        return $this->stripePriceMembershipId;
+    }
+
+    public function setStripePriceMembershipId(?string $stripePriceMembershipId): static
+    {
+        $this->stripePriceMembershipId = $stripePriceMembershipId;
 
         return $this;
     }

@@ -35,6 +35,9 @@ class AdminSettingsController extends AbstractController
 
         $data = json_decode($this->serializer->serialize($settings, 'json', ['groups' => 'admin:read']), true);
         $data['name'] = $company->getName();
+        $data['stripeOnboardingComplete'] = $company->isStripeOnboardingComplete();
+        $data['stripePriceSetupFeeId'] = $company->getStripePriceSetupFeeId();
+        $data['stripePriceMembershipId'] = $company->getStripePriceMembershipId();
 
         return new JsonResponse($data);
     }

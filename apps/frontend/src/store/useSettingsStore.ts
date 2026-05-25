@@ -9,6 +9,9 @@ export const useSettingsStore = defineStore('settings', () => {
   const bookingWindow = ref('OFF');
   const welcomeMailMarkdown = ref('');
   const welcomeMailAttachments = ref<{ path: string; fileName: string }[]>([]);
+  const stripeOnboardingComplete = ref(false);
+  const stripePriceSetupFeeId = ref('');
+  const stripePriceMembershipId = ref('');
   const initialized = ref(false);
 
   async function fetchSettings() {
@@ -24,6 +27,9 @@ export const useSettingsStore = defineStore('settings', () => {
       bookingWindow.value = response.data.bookingWindow;
       welcomeMailMarkdown.value = adminResponse.data.welcomeMailMarkdown || '';
       welcomeMailAttachments.value = adminResponse.data.welcomeMailAttachments || [];
+      stripeOnboardingComplete.value = adminResponse.data.stripeOnboardingComplete || false;
+      stripePriceSetupFeeId.value = adminResponse.data.stripePriceSetupFeeId || '';
+      stripePriceMembershipId.value = adminResponse.data.stripePriceMembershipId || '';
     } catch (e) {
       console.error('Failed to fetch global settings', e);
     } finally {
@@ -48,6 +54,9 @@ export const useSettingsStore = defineStore('settings', () => {
     bookingWindow,
     welcomeMailMarkdown,
     welcomeMailAttachments,
+    stripeOnboardingComplete,
+    stripePriceSetupFeeId,
+    stripePriceMembershipId,
     initialized,
     fetchSettings,
     reset
