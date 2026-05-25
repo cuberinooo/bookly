@@ -8,10 +8,12 @@ use Symfony\Component\HttpFoundation\Cookie;
 class AuthenticationSuccessListener
 {
     private int $tokenTtl;
+    private ?string $cookieDomain;
 
-    public function __construct(int $tokenTtl)
+    public function __construct(int $tokenTtl, ?string $cookieDomain = null)
     {
         $this->tokenTtl = $tokenTtl;
+        $this->cookieDomain = $cookieDomain;
     }
 
     public function onAuthenticationSuccessResponse(AuthenticationSuccessEvent $event): void
@@ -33,11 +35,11 @@ class AuthenticationSuccessListener
                     $refreshToken,
                     time() + $this->tokenTtl,
                     '/api/token/refresh', // Only send to refresh endpoint
-                    null,
+                    $this->cookieDomain,
                     true, // Secure
                     true, // HttpOnly
                     false,
-                    'strict' // SameSite
+                    'lax' // SameSite
                 )
             );
         }
