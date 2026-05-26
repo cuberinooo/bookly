@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Tests\Controller;
 
 use App\Entity\Company;
@@ -49,26 +51,27 @@ class AdminSettingsControllerTest extends WebTestCase
             $entityManager->persist($admin);
             $entityManager->flush();
         }
+
         return $admin;
     }
 
-    public function testGetSettingsRequiresAuth(): void
+    public function test_get_settings_requires_auth(): void
     {
         // Security layer returns 401 if not authenticated
         $this->client->request('GET', '/api/admin-settings');
         $this->assertResponseStatusCodeSame(Response::HTTP_UNAUTHORIZED);
-        
+
         $admin = $this->createAdmin();
         $token = $this->getToken($admin);
-        
+
         $this->client->request('GET', '/api/admin-settings', [], [], [
-            'HTTP_AUTHORIZATION' => 'Bearer ' . $token,
+            'HTTP_AUTHORIZATION' => 'Bearer '.$token,
         ]);
         $this->assertResponseIsSuccessful();
         $this->assertResponseHeaderSame('Content-Type', 'application/json');
     }
 
-    public function testUpdateSettingsRequiresAdmin(): void
+    public function test_update_settings_requires_admin(): void
     {
         $this->client->request('PATCH', '/api/admin-settings', [], [], [], json_encode(['legalNoticeRepresentative' => 'Denied']));
         $this->assertResponseStatusCodeSame(401);
@@ -77,17 +80,17 @@ class AdminSettingsControllerTest extends WebTestCase
         $token = $this->getToken($admin);
 
         $this->client->request('PATCH', '/api/admin-settings', [], [], [
-            'HTTP_AUTHORIZATION' => 'Bearer ' . $token,
-            'CONTENT_TYPE' => 'application/json'
+            'HTTP_AUTHORIZATION' => 'Bearer '.$token,
+            'CONTENT_TYPE' => 'application/json',
         ], json_encode(['legalNoticeRepresentative' => 'John Doe']));
-        
+
         $this->assertResponseIsSuccessful();
-        
+
         $data = json_decode($this->client->getResponse()->getContent(), true);
         $this->assertEquals('Admin settings updated', $data['status']);
     }
 
-    public function testAdminCannotUpdateCompanyName(): void
+    public function test_admin_cannot_update_company_name(): void
     {
         $admin = $this->createAdmin();
         $token = $this->getToken($admin);
@@ -95,8 +98,8 @@ class AdminSettingsControllerTest extends WebTestCase
         $newName = 'Hacker Company';
 
         $this->client->request('PATCH', '/api/admin-settings', [], [], [
-            'HTTP_AUTHORIZATION' => 'Bearer ' . $token,
-            'CONTENT_TYPE' => 'application/json'
+            'HTTP_AUTHORIZATION' => 'Bearer '.$token,
+            'CONTENT_TYPE' => 'application/json',
         ], json_encode(['name' => $newName]));
 
         $this->assertResponseIsSuccessful();
@@ -104,17 +107,17 @@ class AdminSettingsControllerTest extends WebTestCase
         $entityManager = static::getContainer()->get('doctrine')->getManager();
         $entityManager->clear();
         $company = $entityManager->getRepository(Company::class)->find($admin->getCompany()->getId());
-        
+
         $this->assertEquals($originalName, $company->getName(), 'Admin should not be able to change company name');
     }
 
-    public function testDownloadPrivacyPolicy(): void
+    public function test_download_privacy_policy(): void
     {
         $admin = $this->createAdmin();
         $companyName = $admin->getCompany()->getName();
 
         // Settings exist but path is null
-        $this->client->request('GET', '/api/admin-settings/privacy-policy/download?companyName=' . urlencode($companyName));
+        $this->client->request('GET', '/api/admin-settings/privacy-policy/download?companyName='.urlencode($companyName));
         $this->assertResponseStatusCodeSame(Response::HTTP_NOT_FOUND);
 
         // Non-existent company

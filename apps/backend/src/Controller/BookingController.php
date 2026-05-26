@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Controller;
 
 use App\Entity\Booking;
@@ -23,10 +25,11 @@ class BookingController extends AbstractController
             $seriesId = (int) $parts[1];
             $timestamp = (int) $parts[2];
             $startTime = (new \DateTime())->setTimestamp($timestamp);
+
             return $courseService->instantiateVirtualCourse($seriesId, $startTime);
         }
 
-        $course = $courseRepository->find((int)$id);
+        $course = $courseRepository->find((int) $id);
         if (!$course) {
             throw $this->createNotFoundException('Course not found');
         }
@@ -105,6 +108,7 @@ class BookingController extends AbstractController
         }
 
         $msg = $isWaitlist ? 'Added to waitlist' : 'Booking confirmed';
+
         return new JsonResponse(['status' => $msg], Response::HTTP_CREATED);
     }
 
@@ -127,4 +131,3 @@ class BookingController extends AbstractController
         return new JsonResponse(['status' => 'Booking cancelled']);
     }
 }
-

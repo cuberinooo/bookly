@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Service;
 
 use App\Entity\CompanyAwareInterface;
@@ -40,7 +42,7 @@ class MercurePublisherService
                 $className = $parent->getShortName();
             }
         }
-        
+
         $data = [
             'entity' => $className,
             'action' => $action,
@@ -71,15 +73,15 @@ class MercurePublisherService
             $companyId = $update['companyId'] ?? 'global';
             $entityType = strtolower($update['entity']);
             $topic = sprintf('%s/%s', $this->topicPrefix, $entityType);
-            
-            $key = $companyId . ':' . $topic;
+
+            $key = $companyId.':'.$topic;
             if (!isset($batches[$key])) {
                 $batches[$key] = [
                     'topic' => $topic,
-                    'updates' => []
+                    'updates' => [],
                 ];
             }
-            
+
             // Deduplicate: same entity ID -> latest action wins
             $entityId = (string) ($update['id'] ?? '');
             $batches[$key]['updates'][$entityId] = $update;
@@ -88,11 +90,11 @@ class MercurePublisherService
         foreach ($batches as $batch) {
             $payload = [
                 'batch' => true,
-                'updates' => array_values($batch['updates'])
+                'updates' => array_values($batch['updates']),
             ];
 
             // If only one update, keep it simple (optional, but good for compatibility)
-            if (count($payload['updates']) === 1) {
+            if (1 === count($payload['updates'])) {
                 $payload = $payload['updates'][0];
             }
 

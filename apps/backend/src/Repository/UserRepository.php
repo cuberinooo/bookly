@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Repository;
 
 use App\Entity\Company;
@@ -52,7 +54,7 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
             try {
                 $companyId = $filters->getFilter('company_filter')->getParameter('company_id');
                 if ($companyId) {
-                    $sql .= ' AND u.company_id = ' . trim($companyId, "\'");
+                    $sql .= ' AND u.company_id = '.trim($companyId, "\'");
                 }
             } catch (\InvalidArgumentException $e) {
                 // Parameter not set, skip filtering
@@ -60,13 +62,13 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         }
 
         $rsm = new \Doctrine\ORM\Query\ResultSetMappingBuilder($entityManager);
-        $rsm->addRootEntityFromClassMetadata(\App\Entity\User::class, 'u');
+        $rsm->addRootEntityFromClassMetadata(User::class, 'u');
 
         $query = $entityManager->createNativeQuery($sql, $rsm);
 
         // We pass the role as a JSON array string: ["ROLE_TRAINER"]
         $query->setParameter('role', json_encode([$role]));
-        
+
         if ($company) {
             $query->setParameter('companyId', $company->getId());
         }

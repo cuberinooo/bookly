@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Tests\Controller;
 
 use App\Entity\Booking;
@@ -11,18 +13,18 @@ use Symfony\Component\HttpFoundation\Response;
 
 class BookingAttendanceTest extends WebTestCase
 {
-    public function testToggleAttendance(): void
+    public function test_toggle_attendance(): void
     {
         $client = static::createClient();
         $container = $client->getContainer();
         $entityManager = $container->get('doctrine.orm.entity_manager');
 
         $company = new Company();
-        $company->setName('Attendance Test Gym ' . uniqid());
+        $company->setName('Attendance Test Gym '.uniqid());
         $entityManager->persist($company);
 
         $trainer = new User();
-        $trainer->setEmail('trainer_attendance' . uniqid() . '@example.com');
+        $trainer->setEmail('trainer_attendance'.uniqid().'@example.com');
         $trainer->setName('Attendance Trainer');
         $trainer->setRoles(['ROLE_TRAINER']);
         $trainer->setPassword('password');
@@ -31,7 +33,7 @@ class BookingAttendanceTest extends WebTestCase
         $entityManager->persist($trainer);
 
         $member = new User();
-        $member->setEmail('member_attendance' . uniqid() . '@example.com');
+        $member->setEmail('member_attendance'.uniqid().'@example.com');
         $member->setName('Attendance Member');
         $member->setRoles(['ROLE_MEMBER']);
         $member->setPassword('password');
@@ -62,7 +64,7 @@ class BookingAttendanceTest extends WebTestCase
 
         // Toggle to false
         $client->request('PATCH', sprintf('/api/courses/%d/bookings/%d/attendance', $course->getId(), $booking->getId()), [], [], [
-            'HTTP_AUTHORIZATION' => 'Bearer ' . $token
+            'HTTP_AUTHORIZATION' => 'Bearer '.$token,
         ]);
 
         $this->assertEquals(Response::HTTP_OK, $client->getResponse()->getStatusCode());
@@ -75,24 +77,23 @@ class BookingAttendanceTest extends WebTestCase
 
         // Toggle back to true
         $client->request('PATCH', sprintf('/api/courses/%d/bookings/%d/attendance', $course->getId(), $booking->getId()), [], [], [
-            'HTTP_AUTHORIZATION' => 'Bearer ' . $token
+            'HTTP_AUTHORIZATION' => 'Bearer '.$token,
         ]);
         $this->assertTrue(json_decode($client->getResponse()->getContent(), true)['attended']);
     }
 
-
-    public function testCannotToggleBeforeFinish(): void
+    public function test_cannot_toggle_before_finish(): void
     {
         $client = static::createClient();
         $container = $client->getContainer();
         $entityManager = $container->get('doctrine.orm.entity_manager');
 
         $company = new Company();
-        $company->setName('Attendance Fail Gym ' . uniqid());
+        $company->setName('Attendance Fail Gym '.uniqid());
         $entityManager->persist($company);
 
         $trainer = new User();
-        $trainer->setEmail('trainer_fail' . uniqid() . '@example.com');
+        $trainer->setEmail('trainer_fail'.uniqid().'@example.com');
         $trainer->setName('Fail Trainer');
         $trainer->setRoles(['ROLE_TRAINER']);
         $trainer->setPassword('password');
@@ -126,7 +127,7 @@ class BookingAttendanceTest extends WebTestCase
         $token = $this->getToken($client, $trainer);
 
         $client->request('PATCH', sprintf('/api/courses/%d/bookings/%d/attendance', $course->getId(), $booking->getId()), [], [], [
-            'HTTP_AUTHORIZATION' => 'Bearer ' . $token
+            'HTTP_AUTHORIZATION' => 'Bearer '.$token,
         ]);
 
         $this->assertEquals(Response::HTTP_BAD_REQUEST, $client->getResponse()->getStatusCode());

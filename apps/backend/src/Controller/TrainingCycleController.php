@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Controller;
 
 use App\Entity\CycleAssignment;
@@ -32,9 +34,10 @@ class TrainingCycleController extends AbstractController
         $user = $this->getUser();
         $companyId = $user->getCompany()->getId();
 
-        $data = $this->apiCache->get('trainingcategory', $companyId, ['userId' => $user->getId()], function() use ($repository, $serializer, $user) {
+        $data = $this->apiCache->get('trainingcategory', $companyId, ['userId' => $user->getId()], function () use ($repository, $serializer, $user) {
             $categories = $repository->findByTrainer($user->getId());
             $json = $serializer->serialize($categories, 'json', ['groups' => 'category:read']);
+
             return json_decode($json, true);
         }, 600);
 
@@ -69,9 +72,15 @@ class TrainingCycleController extends AbstractController
         }
 
         $data = json_decode($request->getContent(), true);
-        if (isset($data['name'])) $category->setName($data['name']);
-        if (isset($data['colorHex'])) $category->setColorHex($data['colorHex']);
-        if (array_key_exists('description', $data)) $category->setDescription($data['description']);
+        if (isset($data['name'])) {
+            $category->setName($data['name']);
+        }
+        if (isset($data['colorHex'])) {
+            $category->setColorHex($data['colorHex']);
+        }
+        if (array_key_exists('description', $data)) {
+            $category->setDescription($data['description']);
+        }
 
         $entityManager->flush();
 
@@ -100,9 +109,10 @@ class TrainingCycleController extends AbstractController
         $user = $this->getUser();
         $companyId = $user->getCompany()->getId();
 
-        $data = $this->apiCache->get('trainingcycle', $companyId, ['userId' => $user->getId()], function() use ($repository, $serializer, $user) {
+        $data = $this->apiCache->get('trainingcycle', $companyId, ['userId' => $user->getId()], function () use ($repository, $serializer, $user) {
             $cycles = $repository->findBy(['trainer' => $user], ['startDate' => 'DESC']);
             $json = $serializer->serialize($cycles, 'json', ['groups' => 'cycle:read']);
+
             return json_decode($json, true);
         }, 600);
 
@@ -159,7 +169,7 @@ class TrainingCycleController extends AbstractController
     {
         $this->denyAccessUnlessGranted('ROLE_TRAINER');
         $data = json_decode($request->getContent(), true);
-        
+
         $cycle = $entityManager->getRepository(TrainingCycle::class)->findOneBy(['trainer' => $this->getUser()]);
         if (!$cycle) {
             return new JsonResponse(['error' => 'No cycle found'], Response::HTTP_NOT_FOUND);

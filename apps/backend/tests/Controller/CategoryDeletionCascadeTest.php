@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Tests\Controller;
 
 use App\Entity\Company;
-use App\Entity\User;
-use App\Entity\TrainingCycle;
-use App\Entity\TrainingCategory;
 use App\Entity\CycleAssignment;
+use App\Entity\TrainingCategory;
+use App\Entity\TrainingCycle;
+use App\Entity\User;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -17,20 +19,21 @@ class CategoryDeletionCascadeTest extends WebTestCase
         $company = new Company();
         $company->setName($name);
         $em->persist($company);
+
         return $company;
     }
 
-    public function testDeleteCategoryCascadesAssignments(): void
+    public function test_delete_category_cascades_assignments(): void
     {
         $client = static::createClient();
         $container = $client->getContainer();
         $entityManager = $container->get('doctrine.orm.entity_manager');
 
-        $company = $this->createCompany($entityManager, 'Fitness Club ' . uniqid());
+        $company = $this->createCompany($entityManager, 'Fitness Club '.uniqid());
 
         // 1. Create Trainer A
         $trainer = new User();
-        $trainer->setEmail('trainera' . uniqid() . '@example.com');
+        $trainer->setEmail('trainera'.uniqid().'@example.com');
         $trainer->setName('Trainer A');
         $trainer->setRoles(['ROLE_TRAINER']);
         $trainer->setPassword('password');
@@ -56,13 +59,13 @@ class CategoryDeletionCascadeTest extends WebTestCase
         $cycle->setIsActive(true);
 
         // Assignment for today (Week 1, Day of week)
-        $dayOfWeek = (int)(new \DateTime('today'))->format('N');
+        $dayOfWeek = (int) (new \DateTime('today'))->format('N');
         $assignment = new CycleAssignment();
         $assignment->setWeekNumber(1);
         $assignment->setDayOfWeek($dayOfWeek);
         $assignment->setCategory($category);
         $cycle->addAssignment($assignment);
-        
+
         $entityManager->persist($cycle);
         $entityManager->persist($assignment);
         $entityManager->flush();
@@ -76,7 +79,7 @@ class CategoryDeletionCascadeTest extends WebTestCase
 
         // 4. Log in as Trainer and call delete category endpoint
         $client->loginUser($trainer);
-        $client->request('DELETE', '/api/training-cycles/categories/' . $categoryId);
+        $client->request('DELETE', '/api/training-cycles/categories/'.$categoryId);
 
         // Assert response is NO_CONTENT
         $this->assertEquals(Response::HTTP_NO_CONTENT, $client->getResponse()->getStatusCode());

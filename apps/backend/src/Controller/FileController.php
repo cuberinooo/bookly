@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Controller;
 
 use Aws\S3\S3ClientInterface;
@@ -11,9 +13,8 @@ class FileController extends AbstractController
 {
     public function __construct(
         private S3ClientInterface $s3Client,
-        private string            $s3Bucket
-    )
-    {
+        private string $s3Bucket
+    ) {
     }
 
     #[Route('/uploads/{path}', name: 'uploads_serve', requirements: ['path' => '.+'], methods: ['GET'])]
@@ -36,7 +37,7 @@ class FileController extends AbstractController
         // 3. Return a standard response with the file content and correct mime type
         return new Response($content, 200, [
             'Content-Type' => $contentType,
-            'Content-Disposition' => 'inline; filename="' . basename($path) . '"',
+            'Content-Disposition' => 'inline; filename="'.basename($path).'"',
         ]);
     }
 }

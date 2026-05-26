@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Tests\Controller;
 
 use App\Entity\Company;
@@ -14,36 +16,38 @@ class CourseListPostponedTest extends WebTestCase
     private function createCompany($entityManager): Company
     {
         $company = new Company();
-        $company->setName('Test Company ' . uniqid());
+        $company->setName('Test Company '.uniqid());
         $entityManager->persist($company);
         $entityManager->flush();
+
         return $company;
     }
 
     private function createTrainer($entityManager, Company $company, $container): User
     {
         $trainer = new User();
-        $trainer->setEmail('trainer' . uniqid() . '@example.com');
+        $trainer->setEmail('trainer'.uniqid().'@example.com');
         $trainer->setName('Trainer');
         $trainer->setRoles(['ROLE_TRAINER']);
-        
+
         $hasher = $container->get('security.user_password_hasher');
         $hashedPassword = $hasher->hashPassword($trainer, 'password');
         $trainer->setPassword($hashedPassword);
-        
+
         $trainer->setIsVerified(true);
         $trainer->setCompany($company);
         $entityManager->persist($trainer);
         $entityManager->flush();
+
         return $trainer;
     }
 
-    public function testPostponedCoursesAreIncludedInList(): void
+    public function test_postponed_courses_are_included_in_list(): void
     {
         $client = static::createClient();
         $container = $client->getContainer();
         $entityManager = $container->get('doctrine.orm.entity_manager');
-        
+
         $company = $this->createCompany($entityManager);
         $trainer = $this->createTrainer($entityManager, $company, $container);
 
@@ -69,17 +73,17 @@ class CourseListPostponedTest extends WebTestCase
         $postponedCourse->setStatus(CourseStatus::POSTPONED);
         $postponedCourse->setPostponedBy($trainer);
         $entityManager->persist($postponedCourse);
-        
+
         $entityManager->flush();
 
-        $authHeader = ['HTTP_AUTHORIZATION' => 'Basic ' . base64_encode($trainer->getEmail() . ':password')];
+        $authHeader = ['HTTP_AUTHORIZATION' => 'Basic '.base64_encode($trainer->getEmail().':password')];
 
         // 3. Request course list (like the dashboard/calendar does)
         $client->request('GET', '/api/courses?all=true', [], [], $authHeader);
         $this->assertEquals(Response::HTTP_OK, $client->getResponse()->getStatusCode());
-        
+
         $data = json_decode($client->getResponse()->getContent(), true);
-        $courseTitles = array_map(fn($c) => $c['title'], $data['data']);
+        $courseTitles = array_map(fn ($c) => $c['title'], $data['data']);
 
         $this->assertContains('Active Course', $courseTitles);
         $this->assertContains('Postponed Course', $courseTitles, 'Postponed course should be included in the list');

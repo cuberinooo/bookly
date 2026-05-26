@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Service;
 
 use App\Entity\Booking;
@@ -25,8 +27,9 @@ class BookingService
     /**
      * Books a course for a user.
      *
-     * @return array [Booking $booking, bool $isWaitlist]
      * @throws \Exception if already booked
+     *
+     * @return array [Booking $booking, bool $isWaitlist]
      */
     public function book(Course $course, User $user): array
     {
@@ -36,7 +39,7 @@ class BookingService
         }
 
         // Check if the course is postponed
-        if ($course->getStatus() === \App\Enum\CourseStatus::POSTPONED) {
+        if (\App\Enum\CourseStatus::POSTPONED === $course->getStatus()) {
             throw new \Exception('This course has been postponed and is currently not bookable.');
         }
 
@@ -44,7 +47,7 @@ class BookingService
         $this->validateBookingWindow($course);
 
         // Check if trial members are allowed
-        if (in_array('ROLE_TRIAL', $user->getRoles()) && !$course->isAllowTrial()) {
+        if (in_array('ROLE_TRIAL', $user->getRoles(), true) && !$course->isAllowTrial()) {
             throw new \Exception('This course is not available for trial members.');
         }
 
@@ -60,7 +63,7 @@ class BookingService
         }
 
         // Trial limit check
-        if (in_array('ROLE_TRIAL', $user->getRoles())) {
+        if (in_array('ROLE_TRIAL', $user->getRoles(), true)) {
             $globalSettings = $user->getCompany()->getGlobalSettings();
             $limit = $globalSettings ? $globalSettings->getTrialBookingLimit() : 0;
 
@@ -212,7 +215,7 @@ class BookingService
         $email = (new TemplatedEmail())
             ->from($_ENV['NO_REPLY_MAIL'] ?? 'noreply@example.com')
             ->to($user->getEmail())
-            ->subject('Booking Confirmed: ' . $course->getTitle())
+            ->subject('Booking Confirmed: '.$course->getTitle())
             ->htmlTemplate('emails/booking_confirmation.html.twig')
             ->context([
                 'userName' => $user->getName(),
@@ -240,7 +243,7 @@ class BookingService
         $email = (new TemplatedEmail())
             ->from($_ENV['NO_REPLY_MAIL'] ?? 'noreply@example.com')
             ->to($user->getEmail())
-            ->subject('Booking Cancelled: ' . $course->getTitle())
+            ->subject('Booking Cancelled: '.$course->getTitle())
             ->htmlTemplate('emails/booking_cancellation.html.twig')
             ->context([
                 'userName' => $user->getName(),
@@ -270,24 +273,24 @@ class BookingService
 
         $method = $isCancellation ? 'CANCEL' : 'PUBLISH';
         $status = $isCancellation ? 'CANCELLED' : 'CONFIRMED';
-        $summary = ($isCancellation ? 'CANCELLED: ' : '') . $course->getTitle();
+        $summary = ($isCancellation ? 'CANCELLED: ' : '').$course->getTitle();
         $sequence = $isCancellation ? '1' : '0';
 
         $ics = [
             'BEGIN:VCALENDAR',
             'VERSION:2.0',
             'PRODID:-//Phoenix Booking//Course Booking//EN',
-            'METHOD:' . $method,
+            'METHOD:'.$method,
             'BEGIN:VEVENT',
-            'UID:' . $uid,
-            'DTSTAMP:' . $dtStamp,
-            'DTSTART:' . $dtStart,
-            'DTEND:' . $dtEnd,
-            'SUMMARY:' . $summary,
-            'LOCATION:' . $company->getName(),
-            'DESCRIPTION:' . ($isCancellation ? 'Booking Cancellation' : 'Booking Confirmation') . ' for ' . $user->getName(),
-            'STATUS:' . $status,
-            'SEQUENCE:' . $sequence,
+            'UID:'.$uid,
+            'DTSTAMP:'.$dtStamp,
+            'DTSTART:'.$dtStart,
+            'DTEND:'.$dtEnd,
+            'SUMMARY:'.$summary,
+            'LOCATION:'.$company->getName(),
+            'DESCRIPTION:'.($isCancellation ? 'Booking Cancellation' : 'Booking Confirmation').' for '.$user->getName(),
+            'STATUS:'.$status,
+            'SEQUENCE:'.$sequence,
             'END:VEVENT',
             'END:VCALENDAR',
         ];
@@ -303,7 +306,7 @@ class BookingService
         $email = (new TemplatedEmail())
             ->from($_ENV['NO_REPLY_MAIL'] ?? 'noreply@example.com')
             ->to($user->getEmail())
-            ->subject('Spot Available: ' . $course->getTitle())
+            ->subject('Spot Available: '.$course->getTitle())
             ->htmlTemplate('emails/waitlist_promoted.html.twig')
             ->context([
                 'name' => $user->getName(),
@@ -319,7 +322,7 @@ class BookingService
         $settings = $this->settingsRepository->find($course->getUser()->getCompany()->getGlobalSettings()->getId());
         $window = $settings->getBookingWindow();
 
-        if ($window === BookingWindow::OFF) {
+        if (BookingWindow::OFF === $window) {
             return;
         }
 
@@ -345,7 +348,7 @@ class BookingService
             case BookingWindow::CURRENT_WEEK:
                 // End of current week (Sunday 23:59:59)
                 $day = (int) $now->format('w'); // 0 (Sunday) to 6 (Saturday)
-                $daysToSunday = $day === 0 ? 0 : 7 - $day;
+                $daysToSunday = 0 === $day ? 0 : 7 - $day;
                 $deadline->modify("+$daysToSunday days");
                 $deadline->setTime(23, 59, 59);
                 break;

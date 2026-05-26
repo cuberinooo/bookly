@@ -193,7 +193,11 @@ function formatDayName(date: Date) {
                   :key="i"
                   class="mobile-course-card bg-slate-50 border-none"
                 >
-                  <Skeleton width="100%" height="4rem" borderRadius="12px" />
+                  <Skeleton
+                    width="100%"
+                    height="4rem"
+                    border-radius="12px"
+                  />
                 </div>
               </template>
               <template v-else>

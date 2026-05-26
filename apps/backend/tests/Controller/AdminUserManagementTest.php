@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Tests\Controller;
 
 use App\Entity\Booking;
@@ -17,7 +19,7 @@ class AdminUserManagementTest extends WebTestCase
             ->create($user);
     }
 
-    public function testAdminCreatesUserFlow(): void
+    public function test_admin_creates_user_flow(): void
     {
         $client = static::createClient();
         $container = $client->getContainer();
@@ -28,15 +30,15 @@ class AdminUserManagementTest extends WebTestCase
         $token = $this->getToken($client, $admin);
 
         // 2. Admin creates a new member
-        $memberEmail = 'new_member_' . uniqid('', true) . '@example.com';
+        $memberEmail = 'new_member_'.uniqid('', true).'@example.com';
         $client->request('POST', '/api/admin/users', [], [], [
             'CONTENT_TYPE' => 'application/json',
-            'HTTP_AUTHORIZATION' => 'Bearer ' . $token
+            'HTTP_AUTHORIZATION' => 'Bearer '.$token,
         ], json_encode([
             'email' => $memberEmail,
             'name' => 'New Member',
             'password' => 'TempPass123!',
-            'role' => 'ROLE_MEMBER'
+            'role' => 'ROLE_MEMBER',
         ]));
 
         $this->assertEquals(Response::HTTP_CREATED, $client->getResponse()->getStatusCode());
@@ -52,9 +54,9 @@ class AdminUserManagementTest extends WebTestCase
         $memberToken = $this->getToken($client, $member);
         $client->request('POST', '/api/user/change-password', [], [], [
             'CONTENT_TYPE' => 'application/json',
-            'HTTP_AUTHORIZATION' => 'Bearer ' . $memberToken
+            'HTTP_AUTHORIZATION' => 'Bearer '.$memberToken,
         ], json_encode([
-            'password' => 'NewStrongPass123!'
+            'password' => 'NewStrongPass123!',
         ]));
 
         $this->assertEquals(Response::HTTP_OK, $client->getResponse()->getStatusCode());
@@ -63,7 +65,7 @@ class AdminUserManagementTest extends WebTestCase
         $this->assertArrayHasKey('token', $responseContent);
 
         $newToken = $responseContent['token'];
-        $payload = json_decode(base64_decode(explode('.', $newToken)[1]), true);
+        $payload = json_decode(base64_decode(explode('.', $newToken)[1], true), true);
         $this->assertFalse($payload['mustChangePassword']);
 
         $entityManager->clear();
@@ -71,7 +73,7 @@ class AdminUserManagementTest extends WebTestCase
         $this->assertFalse($member->isMustChangePassword());
     }
 
-    public function testDeleteMemberWithBookings(): void
+    public function test_delete_member_with_bookings(): void
     {
         $client = static::createClient();
         $container = $client->getContainer();
@@ -104,8 +106,8 @@ class AdminUserManagementTest extends WebTestCase
         $bookingId = $booking->getId();
 
         // Delete Member
-        $client->request('DELETE', '/api/admin/users/' . $memberId, [], [], [
-            'HTTP_AUTHORIZATION' => 'Bearer ' . $token
+        $client->request('DELETE', '/api/admin/users/'.$memberId, [], [], [
+            'HTTP_AUTHORIZATION' => 'Bearer '.$token,
         ]);
         $this->assertEquals(Response::HTTP_OK, $client->getResponse()->getStatusCode());
 
@@ -115,7 +117,7 @@ class AdminUserManagementTest extends WebTestCase
         $this->assertNull($entityManager->getRepository(Booking::class)->find($bookingId));
     }
 
-    public function testDeleteTrainerWithCoursesDeactivatesInstead(): void
+    public function test_delete_trainer_with_courses_deactivates_instead(): void
     {
         $client = static::createClient();
         $container = $client->getContainer();
@@ -136,8 +138,8 @@ class AdminUserManagementTest extends WebTestCase
         $token = $this->getToken($client, $admin);
 
         // Delete Trainer
-        $client->request('DELETE', '/api/admin/users/' . $trainer->getId(), [], [], [
-            'HTTP_AUTHORIZATION' => 'Bearer ' . $token
+        $client->request('DELETE', '/api/admin/users/'.$trainer->getId(), [], [], [
+            'HTTP_AUTHORIZATION' => 'Bearer '.$token,
         ]);
 
         $this->assertEquals(Response::HTTP_OK, $client->getResponse()->getStatusCode());
@@ -152,13 +154,14 @@ class AdminUserManagementTest extends WebTestCase
     private function createUser($em, array $roles): User
     {
         $user = new User();
-        $user->setEmail('user_' . uniqid() . '@example.com');
+        $user->setEmail('user_'.uniqid().'@example.com');
         $user->setName('Test User');
         $user->setRoles($roles);
         $user->setPassword('StrongPass123!');
         $user->setIsVerified(true);
         $em->persist($user);
         $em->flush();
+
         return $user;
     }
 }

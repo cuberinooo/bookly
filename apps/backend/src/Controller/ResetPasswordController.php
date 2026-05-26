@@ -1,21 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Controller;
 
 use App\Entity\User;
 use App\Service\PasswordValidator;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Mailer\MailerInterface;
-use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\RateLimiter\RateLimiterFactory;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Uid\Uuid;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 class ResetPasswordController extends AbstractController
 {
@@ -49,7 +51,7 @@ class ResetPasswordController extends AbstractController
             $entityManager->flush();
 
             $frontendUrl = $_ENV['FRONTEND_URL'] ?? 'http://localhost:4200';
-            $resetUrl = $frontendUrl . '/reset-password?token=' . $token;
+            $resetUrl = $frontendUrl.'/reset-password?token='.$token;
             $siteName = $user->getCompany() ? $user->getCompany()->getName() : 'Phoenix Athletics';
 
             $emailMessage = new TemplatedEmail()

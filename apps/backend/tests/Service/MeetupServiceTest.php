@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Tests\Service;
 
 use App\Entity\Company;
@@ -30,7 +32,7 @@ class MeetupServiceTest extends TestCase
         );
     }
 
-    public function testCreateMeetup(): void
+    public function test_create_meetup(): void
     {
         $creator = new User();
         $company = new Company();
@@ -42,7 +44,7 @@ class MeetupServiceTest extends TestCase
             'meetupDate' => '2026-06-01 10:00:00',
             'location' => 'Innsbruck',
             'rsvpDeadline' => '2026-05-25 10:00:00',
-            'sendNotification' => false
+            'sendNotification' => false,
         ];
 
         $meetup = $this->service->createMeetup($data, $creator);
@@ -53,7 +55,7 @@ class MeetupServiceTest extends TestCase
         $this->assertEquals(MeetupStatus::OPEN, $meetup->getStatus());
     }
 
-    public function testCreateMeetupWithInvalidDeadline(): void
+    public function test_create_meetup_with_invalid_deadline(): void
     {
         $creator = new User();
         $company = new Company();
@@ -67,12 +69,12 @@ class MeetupServiceTest extends TestCase
         ];
 
         $this->expectException(\LogicException::class);
-        $this->expectExceptionMessage("The RSVP deadline cannot be after the meetup date.");
+        $this->expectExceptionMessage('The RSVP deadline cannot be after the meetup date.');
 
         $this->service->createMeetup($data, $creator);
     }
 
-    public function testUpdateMeetupWithInvalidDeadline(): void
+    public function test_update_meetup_with_invalid_deadline(): void
     {
         $creator = new User();
         $meetup = new Meetup();
@@ -85,54 +87,54 @@ class MeetupServiceTest extends TestCase
         ];
 
         $this->expectException(\LogicException::class);
-        $this->expectExceptionMessage("The RSVP deadline cannot be after the meetup date.");
+        $this->expectExceptionMessage('The RSVP deadline cannot be after the meetup date.');
 
         $this->service->updateMeetup($meetup, $data, $creator);
     }
 
-    public function testRsvpFreezeLogic(): void
+    public function test_rsvp_freeze_logic(): void
     {
         $meetup = new Meetup();
         // Deadline in the past
         $meetup->setRsvpDeadline(new \DateTime('-1 hour'));
         $meetup->setStatus(MeetupStatus::OPEN);
-        
+
         $user = new User();
 
         $this->expectException(\LogicException::class);
-        $this->expectExceptionMessage("The RSVP window is closed.");
+        $this->expectExceptionMessage('The RSVP window is closed.');
 
         $this->service->handleRsvp($meetup, $user, RsvpStatus::GOING);
     }
 
-    public function testCapacityLimit(): void
+    public function test_capacity_limit(): void
     {
         $meetup = new Meetup();
         $meetup->setRsvpDeadline(new \DateTime('+1 day'));
         $meetup->setMaxParticipants(1);
-        
+
         $user1 = new User();
         $user2 = new User();
 
         $rsvpRepo = $this->createMock(EntityRepository::class);
         $this->entityManager->method('getRepository')->willReturn($rsvpRepo);
-        
+
         $rsvp1 = new MeetupRsvp();
         $rsvp1->setUser($user1);
         $rsvp1->setStatus(RsvpStatus::GOING);
         $meetup->addRsvp($rsvp1);
 
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage("Meetup is full.");
+        $this->expectExceptionMessage('Meetup is full.');
 
         $this->service->handleRsvp($meetup, $user2, RsvpStatus::GOING);
     }
 
-    public function testEvaluateMeetupStatusConfirmed(): void
+    public function test_evaluate_meetup_status_confirmed(): void
     {
         $company = new Company();
         $company->setName('Test Company');
-        
+
         $meetup = new Meetup();
         $meetup->setCompany($company);
         $meetup->setMinParticipants(2);
@@ -158,7 +160,7 @@ class MeetupServiceTest extends TestCase
         $this->assertEquals(MeetupStatus::CONFIRMED, $meetup->getStatus());
     }
 
-    public function testEvaluateMeetupStatusCancelled(): void
+    public function test_evaluate_meetup_status_cancelled(): void
     {
         $company = new Company();
         $company->setName('Test Company');
@@ -182,13 +184,13 @@ class MeetupServiceTest extends TestCase
         $this->assertEquals(RsvpStatus::NOT_GOING, $rsvp1->getStatus());
     }
 
-    public function testCancelMeetupDeclinesEveryone(): void
+    public function test_cancel_meetup_declines_everyone(): void
     {
         $meetup = new Meetup();
         $creator = new User();
         $meetup->setCreator($creator);
         $meetup->setStatus(MeetupStatus::OPEN);
-        
+
         $company = new Company();
         $company->setName('Test');
         $meetup->setCompany($company);

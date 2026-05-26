@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Tests\Controller;
 
 use App\Entity\Booking;
@@ -15,54 +17,57 @@ class CoursePostponeTest extends WebTestCase
     private function createCompany($entityManager): Company
     {
         $company = new Company();
-        $company->setName('Test Company ' . uniqid());
+        $company->setName('Test Company '.uniqid());
         $entityManager->persist($company);
         $entityManager->flush();
+
         return $company;
     }
 
     private function createTrainer($entityManager, Company $company, $container): User
     {
         $trainer = new User();
-        $trainer->setEmail('trainer' . uniqid() . '@example.com');
+        $trainer->setEmail('trainer'.uniqid().'@example.com');
         $trainer->setName('Trainer');
         $trainer->setRoles(['ROLE_TRAINER']);
-        
+
         $hasher = $container->get('security.user_password_hasher');
         $hashedPassword = $hasher->hashPassword($trainer, 'password');
         $trainer->setPassword($hashedPassword);
-        
+
         $trainer->setIsVerified(true);
         $trainer->setCompany($company);
         $entityManager->persist($trainer);
         $entityManager->flush();
+
         return $trainer;
     }
 
     private function createMember($entityManager, Company $company, $container): User
     {
         $member = new User();
-        $member->setEmail('member' . uniqid() . '@example.com');
+        $member->setEmail('member'.uniqid().'@example.com');
         $member->setName('Member');
         $member->setRoles(['ROLE_USER']);
-        
+
         $hasher = $container->get('security.user_password_hasher');
         $hashedPassword = $hasher->hashPassword($member, 'password');
         $member->setPassword($hashedPassword);
-        
+
         $member->setIsVerified(true);
         $member->setCompany($company);
         $entityManager->persist($member);
         $entityManager->flush();
+
         return $member;
     }
 
-    public function testPostponeCourseUnbooksMembersAndExcludesFromStats(): void
+    public function test_postpone_course_unbooks_members_and_excludes_from_stats(): void
     {
         $client = static::createClient();
         $container = $client->getContainer();
         $entityManager = $container->get('doctrine.orm.entity_manager');
-        
+
         $company = $this->createCompany($entityManager);
         $trainer = $this->createTrainer($entityManager, $company, $container);
         $member = $this->createMember($entityManager, $company, $container);
@@ -83,13 +88,13 @@ class CoursePostponeTest extends WebTestCase
         $booking->setCourse($course);
         $booking->setCompany($company);
         $entityManager->persist($booking);
-        
+
         $entityManager->flush();
 
         $courseId = $course->getId();
         $bookingId = $booking->getId();
 
-        $authHeader = ['HTTP_AUTHORIZATION' => 'Basic ' . base64_encode($trainer->getEmail() . ':password')];
+        $authHeader = ['HTTP_AUTHORIZATION' => 'Basic '.base64_encode($trainer->getEmail().':password')];
 
         // 3. Check stats before postponement
         $client->request('GET', '/api/trainer/statistics', [], [], $authHeader);
@@ -99,7 +104,7 @@ class CoursePostponeTest extends WebTestCase
         $this->assertEquals(1, $statsBefore['uniqueMembers'], 'Member should be counted in stats before postponement');
 
         // 4. Postpone course
-        $client->request('POST', '/api/courses/' . $courseId . '/postpone', [], [], $authHeader);
+        $client->request('POST', '/api/courses/'.$courseId.'/postpone', [], [], $authHeader);
         $this->assertEquals(Response::HTTP_OK, $client->getResponse()->getStatusCode());
 
         // 5. Verify course status and unbooking

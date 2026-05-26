@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\EventListener;
 
 use Lexik\Bundle\JWTAuthenticationBundle\Event\AuthenticationSuccessEvent;
@@ -23,7 +25,7 @@ class AuthenticationSuccessListener
 
         if (isset($data['refresh_token'])) {
             $refreshToken = $data['refresh_token'];
-            
+
             // Remove refresh token from response body
             unset($data['refresh_token']);
             $event->setData($data);

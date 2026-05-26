@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Entity;
 
 use App\Repository\AdminSettingsRepository;
@@ -96,6 +98,7 @@ class AdminSettings
     public function setCompany(?Company $company): static
     {
         $this->company = $company;
+
         return $this;
     }
 
@@ -107,6 +110,7 @@ class AdminSettings
     public function setLegalNoticeRepresentative(?string $legalNoticeRepresentative): static
     {
         $this->legalNoticeRepresentative = $legalNoticeRepresentative;
+
         return $this;
     }
 
@@ -118,6 +122,7 @@ class AdminSettings
     public function setLegalNoticeStreet(?string $legalNoticeStreet): static
     {
         $this->legalNoticeStreet = $legalNoticeStreet;
+
         return $this;
     }
 
@@ -129,6 +134,7 @@ class AdminSettings
     public function setLegalNoticeHouseNumber(?string $legalNoticeHouseNumber): static
     {
         $this->legalNoticeHouseNumber = $legalNoticeHouseNumber;
+
         return $this;
     }
 
@@ -140,6 +146,7 @@ class AdminSettings
     public function setLegalNoticeZipCode(?string $legalNoticeZipCode): static
     {
         $this->legalNoticeZipCode = $legalNoticeZipCode;
+
         return $this;
     }
 
@@ -151,6 +158,7 @@ class AdminSettings
     public function setLegalNoticeCity(?string $legalNoticeCity): static
     {
         $this->legalNoticeCity = $legalNoticeCity;
+
         return $this;
     }
 
@@ -162,6 +170,7 @@ class AdminSettings
     public function setLegalNoticeEmail(?string $legalNoticeEmail): static
     {
         $this->legalNoticeEmail = $legalNoticeEmail;
+
         return $this;
     }
 
@@ -173,6 +182,7 @@ class AdminSettings
     public function setLegalNoticePhone(?string $legalNoticePhone): static
     {
         $this->legalNoticePhone = $legalNoticePhone;
+
         return $this;
     }
 
@@ -184,6 +194,7 @@ class AdminSettings
     public function setLegalNoticeTaxId(?string $legalNoticeTaxId): static
     {
         $this->legalNoticeTaxId = $legalNoticeTaxId;
+
         return $this;
     }
 
@@ -195,6 +206,7 @@ class AdminSettings
     public function setLegalNoticeVatId(?string $legalNoticeVatId): static
     {
         $this->legalNoticeVatId = $legalNoticeVatId;
+
         return $this;
     }
 
@@ -206,6 +218,7 @@ class AdminSettings
     public function setPrivacyPolicyPdfPath(?string $privacyPolicyPdfPath): static
     {
         $this->privacyPolicyPdfPath = $privacyPolicyPdfPath;
+
         return $this;
     }
 
@@ -217,6 +230,7 @@ class AdminSettings
     public function setLegalNoticeMarkdown(?string $legalNoticeMarkdown): static
     {
         $this->legalNoticeMarkdown = $legalNoticeMarkdown;
+
         return $this;
     }
 
@@ -228,6 +242,7 @@ class AdminSettings
     public function setTermsAndConditionsMarkdown(?string $termsAndConditionsMarkdown): static
     {
         $this->termsAndConditionsMarkdown = $termsAndConditionsMarkdown;
+
         return $this;
     }
 
@@ -239,6 +254,7 @@ class AdminSettings
     public function setWelcomeMailMarkdown(?string $welcomeMailMarkdown): static
     {
         $this->welcomeMailMarkdown = $welcomeMailMarkdown;
+
         return $this;
     }
 
@@ -250,6 +266,7 @@ class AdminSettings
     public function setWelcomeMailAttachments(?array $welcomeMailAttachments): static
     {
         $this->welcomeMailAttachments = $welcomeMailAttachments;
+
         return $this;
     }
 
@@ -261,6 +278,7 @@ class AdminSettings
     public function setJoinUsMailMarkdown(?string $joinUsMailMarkdown): static
     {
         $this->joinUsMailMarkdown = $joinUsMailMarkdown;
+
         return $this;
     }
 
@@ -272,6 +290,7 @@ class AdminSettings
     public function setJoinUsMailAttachments(?array $joinUsMailAttachments): static
     {
         $this->joinUsMailAttachments = $joinUsMailAttachments;
+
         return $this;
     }
 }

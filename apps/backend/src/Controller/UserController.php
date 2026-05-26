@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Controller;
 
-use App\Entity\User;
 use App\Entity\Booking;
 use App\Entity\SensitiveDataAccessLog;
+use App\Entity\User;
 use App\Repository\UserRepository;
 use App\Service\AdminUserService;
 use App\Service\UserService;
@@ -27,7 +29,8 @@ class UserController extends AbstractController
         private string $s3Bucket,
         private SluggerInterface $slugger,
         private UserService $userService,
-    ) {}
+    ) {
+    }
 
     #[Route('/me', name: 'user_delete', methods: ['DELETE'])]
     public function deleteMe(AdminUserService $adminUserService): JsonResponse
@@ -67,7 +70,7 @@ class UserController extends AbstractController
         } catch (\InvalidArgumentException $e) {
             return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
         } catch (\Exception $e) {
-            return new JsonResponse(['error' => 'Failed to save file to S3: ' . $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+            return new JsonResponse(['error' => 'Failed to save file to S3: '.$e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
         return new JsonResponse(['status' => 'Profile picture updated', 'profilePicture' => $filename]);
@@ -83,11 +86,11 @@ class UserController extends AbstractController
 
         $company = $user->getCompany();
         if (!$company) {
-             throw $this->createNotFoundException('Company not found');
+            throw $this->createNotFoundException('Company not found');
         }
 
         $companySlug = $this->slugger->slug($company->getName())->lower();
-        $key = $companySlug . '/' . $user->getId() . '/' . $user->getProfilePicture();
+        $key = $companySlug.'/'.$user->getId().'/'.$user->getProfilePicture();
 
         try {
             $result = $this->s3Client->getObject([
@@ -103,7 +106,7 @@ class UserController extends AbstractController
 
         return new Response($content, 200, [
             'Content-Type' => $contentType,
-            'Content-Disposition' => 'inline; filename="' . basename($key) . '"',
+            'Content-Disposition' => 'inline; filename="'.basename($key).'"',
         ]);
     }
 
@@ -112,6 +115,7 @@ class UserController extends AbstractController
     {
         $user = $this->getUser();
         $json = $serializer->serialize($user, 'json', ['groups' => 'user:read']);
+
         return new JsonResponse($json, 200, [], true);
     }
 
@@ -166,14 +170,14 @@ class UserController extends AbstractController
         $log->setViewer($trainer);
         $log->setTargetUser($targetUser);
         $log->setReason('Emergency contact access via Trainer Dashboard');
-        
+
         $entityManager->persist($log);
         $entityManager->flush();
 
         return new JsonResponse([
             'phoneNumber' => $targetUser->getPhoneNumber(),
             'emergencyContactName' => $targetUser->getEmergencyContactName(),
-            'emergencyContactPhone' => $targetUser->getEmergencyContactPhone()
+            'emergencyContactPhone' => $targetUser->getEmergencyContactPhone(),
         ]);
     }
 
@@ -210,7 +214,7 @@ class UserController extends AbstractController
 
         return new JsonResponse([
             'status' => 'Password changed successfully',
-            'token' => $token
+            'token' => $token,
         ]);
     }
 
@@ -239,6 +243,7 @@ class UserController extends AbstractController
     {
         $trainers = $userRepository->findByRole('ROLE_TRAINER');
         $json = $serializer->serialize($trainers, 'json', ['groups' => 'user:read']);
+
         return new JsonResponse($json, 200, [], true);
     }
 

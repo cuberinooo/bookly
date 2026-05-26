@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Controller;
 
 use App\Entity\Meetup;
@@ -25,7 +27,8 @@ class MeetupController extends AbstractController
         private string $s3Bucket,
         private SluggerInterface $slugger,
         private readonly ApiCacheService $apiCache,
-    ) {}
+    ) {
+    }
 
     #[Route('/upload-image', name: 'meetup_upload_image', methods: ['POST'])]
     public function uploadImage(Request $request): JsonResponse
@@ -43,7 +46,7 @@ class MeetupController extends AbstractController
 
         $extension = $file->guessExtension() ?? 'jpg';
         $filename = sprintf('meetup_%s.%s', uniqid('', true), $extension);
-        $key = $companySlug . '/' . 'meetups/' . $filename;
+        $key = $companySlug.'/meetups/'.$filename;
 
         try {
             $this->s3Client->putObject([
@@ -60,7 +63,7 @@ class MeetupController extends AbstractController
             return new JsonResponse(['url' => $url, 'path' => $key]);
 
         } catch (\Exception $e) {
-            return new JsonResponse(['error' => 'Failed to upload image: ' . $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+            return new JsonResponse(['error' => 'Failed to upload image: '.$e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -77,23 +80,23 @@ class MeetupController extends AbstractController
             'userId' => $user->getId(),
         ];
 
-        $data = $this->apiCache->get('meetup', $companyId, $context, function() use ($filter, $meetupRepository, $serializer, $user) {
+        $data = $this->apiCache->get('meetup', $companyId, $context, function () use ($filter, $meetupRepository, $serializer, $user) {
             $qb = $meetupRepository->createQueryBuilder('m');
 
-            if ($filter === 'active') {
+            if ('active' === $filter) {
                 $qb->andWhere('m.meetupDate >= :now')
                 ->andWhere('m.status != :cancelled')
                 ->setParameter('now', new \DateTime())
                 ->setParameter('cancelled', \App\Enum\MeetupStatus::CANCELLED);
-            } elseif ($filter === 'past') {
+            } elseif ('past' === $filter) {
                 $qb->andWhere('m.meetupDate < :now')
                 ->andWhere('m.status != :cancelled')
                 ->setParameter('now', new \DateTime())
                 ->setParameter('cancelled', \App\Enum\MeetupStatus::CANCELLED);
-            } elseif ($filter === 'cancelled') {
+            } elseif ('cancelled' === $filter) {
                 $qb->andWhere('m.status = :cancelled')
                 ->setParameter('cancelled', \App\Enum\MeetupStatus::CANCELLED);
-            } elseif ($filter === 'joined') {
+            } elseif ('joined' === $filter) {
                 $qb->join('m.rsvps', 'r')
                 ->andWhere('r.user = :user')
                 ->andWhere('r.status = :status')
@@ -108,6 +111,7 @@ class MeetupController extends AbstractController
                 ->getResult();
 
             $json = $serializer->serialize($meetups, 'json', ['groups' => 'meetup:read']);
+
             return json_decode($json, true);
         }, 300);
 
@@ -124,6 +128,7 @@ class MeetupController extends AbstractController
         try {
             $meetup = $meetupService->createMeetup($data, $user);
             $json = $serializer->serialize($meetup, 'json', ['groups' => 'meetup:read']);
+
             return new JsonResponse(json_decode($json, true), Response::HTTP_CREATED);
         } catch (\Exception $e) {
             return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
@@ -142,8 +147,9 @@ class MeetupController extends AbstractController
             'userId' => $user->getId(),
         ];
 
-        $data = $this->apiCache->get('meetup', $companyId, $context, function() use ($meetup, $serializer) {
+        $data = $this->apiCache->get('meetup', $companyId, $context, function () use ($meetup, $serializer) {
             $json = $serializer->serialize($meetup, 'json', ['groups' => 'meetup:read']);
+
             return json_decode($json, true);
         }, 300);
 
@@ -160,6 +166,7 @@ class MeetupController extends AbstractController
         try {
             $meetup = $meetupService->updateMeetup($meetup, $data, $user);
             $json = $serializer->serialize($meetup, 'json', ['groups' => 'meetup:read']);
+
             return new JsonResponse(json_decode($json, true), Response::HTTP_OK);
         } catch (\Exception $e) {
             return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
@@ -179,6 +186,7 @@ class MeetupController extends AbstractController
         try {
             $rsvp = $meetupService->handleRsvp($meetup, $user, $status);
             $json = $serializer->serialize($rsvp, 'json', ['groups' => 'rsvp:read']);
+
             return new JsonResponse(json_decode($json, true), Response::HTTP_OK);
         } catch (\Exception $e) {
             return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
@@ -193,6 +201,7 @@ class MeetupController extends AbstractController
 
         try {
             $meetupService->cancelMeetup($meetup, $user);
+
             return new JsonResponse(['status' => 'cancelled'], Response::HTTP_OK);
         } catch (\Exception $e) {
             return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_BAD_REQUEST);

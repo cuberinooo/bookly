@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Service;
 
 use App\Entity\Meetup;
@@ -18,18 +20,19 @@ class MeetupService
     public function __construct(
         private EntityManagerInterface $entityManager,
         private MailerInterface $mailer
-    ) {}
+    ) {
+    }
 
     public function createMeetup(array $data, User $creator): Meetup
     {
         $meetupDate = new \DateTime($data['meetupDate']);
         $meetupDate->setTimezone(new \DateTimeZone(date_default_timezone_get()));
-        
+
         $rsvpDeadline = new \DateTime($data['rsvpDeadline']);
         $rsvpDeadline->setTimezone(new \DateTimeZone(date_default_timezone_get()));
 
         if ($rsvpDeadline > $meetupDate) {
-            throw new \LogicException("The RSVP deadline cannot be after the meetup date.");
+            throw new \LogicException('The RSVP deadline cannot be after the meetup date.');
         }
 
         $meetup = new Meetup();
@@ -66,29 +69,37 @@ class MeetupService
 
     public function updateMeetup(Meetup $meetup, array $data, User $user): Meetup
     {
-        if ($meetup->getCreator() !== $user && !in_array('ROLE_ADMIN', $user->getRoles())) {
-            throw new AccessDeniedException("Only the creator or an admin can edit this meetup.");
+        if ($meetup->getCreator() !== $user && !in_array('ROLE_ADMIN', $user->getRoles(), true)) {
+            throw new AccessDeniedException('Only the creator or an admin can edit this meetup.');
         }
 
         if (new \DateTime() > $meetup->getMeetupDate()) {
-            throw new \LogicException("Cannot edit a past meetup.");
+            throw new \LogicException('Cannot edit a past meetup.');
         }
 
-        if (isset($data['title'])) $meetup->setTitle($data['title']);
-        if (isset($data['description'])) $meetup->setDescription($data['description']);
-        if (isset($data['location'])) $meetup->setLocation($data['location']);
-        if (isset($data['imageUrl'])) $meetup->setImageUrl($data['imageUrl']);
+        if (isset($data['title'])) {
+            $meetup->setTitle($data['title']);
+        }
+        if (isset($data['description'])) {
+            $meetup->setDescription($data['description']);
+        }
+        if (isset($data['location'])) {
+            $meetup->setLocation($data['location']);
+        }
+        if (isset($data['imageUrl'])) {
+            $meetup->setImageUrl($data['imageUrl']);
+        }
         if (isset($data['meetupDate'])) {
             $newMeetupDate = new \DateTime($data['meetupDate']);
             $newMeetupDate->setTimezone(new \DateTimeZone(date_default_timezone_get()));
-            
+
             $currentDeadline = isset($data['rsvpDeadline']) ? new \DateTime($data['rsvpDeadline']) : $meetup->getRsvpDeadline();
             if ($currentDeadline instanceof \DateTime) {
                 $currentDeadline->setTimezone(new \DateTimeZone(date_default_timezone_get()));
             }
 
             if ($currentDeadline > $newMeetupDate) {
-                throw new \LogicException("The RSVP deadline cannot be after the meetup date.");
+                throw new \LogicException('The RSVP deadline cannot be after the meetup date.');
             }
             $meetup->setMeetupDate($newMeetupDate);
         }
@@ -96,16 +107,22 @@ class MeetupService
         if (isset($data['rsvpDeadline'])) {
             $newDeadline = new \DateTime($data['rsvpDeadline']);
             $newDeadline->setTimezone(new \DateTimeZone(date_default_timezone_get()));
-            
+
             $currentMeetupDate = $meetup->getMeetupDate();
             if ($newDeadline > $currentMeetupDate) {
-                throw new \LogicException("The RSVP deadline cannot be after the meetup date.");
+                throw new \LogicException('The RSVP deadline cannot be after the meetup date.');
             }
             $meetup->setRsvpDeadline($newDeadline);
         }
-        if (isset($data['link'])) $meetup->setLink($data['link']);
-        if (isset($data['minParticipants'])) $meetup->setMinParticipants($data['minParticipants']);
-        if (isset($data['maxParticipants'])) $meetup->setMaxParticipants($data['maxParticipants']);
+        if (isset($data['link'])) {
+            $meetup->setLink($data['link']);
+        }
+        if (isset($data['minParticipants'])) {
+            $meetup->setMinParticipants($data['minParticipants']);
+        }
+        if (isset($data['maxParticipants'])) {
+            $meetup->setMaxParticipants($data['maxParticipants']);
+        }
 
         $this->entityManager->flush();
 
@@ -117,11 +134,11 @@ class MeetupService
         // RSVP Freeze Logic
         if (new \DateTime() > $meetup->getRsvpDeadline()) {
             $this->evaluateMeetupStatus($meetup);
-            throw new \LogicException("The RSVP window is closed.");
+            throw new \LogicException('The RSVP window is closed.');
         }
 
-        if ($meetup->getStatus() === MeetupStatus::CANCELLED) {
-             throw new \LogicException("This meetup has been cancelled.");
+        if (MeetupStatus::CANCELLED === $meetup->getStatus()) {
+            throw new \LogicException('This meetup has been cancelled.');
         }
 
         $rsvpRepo = $this->entityManager->getRepository(MeetupRsvp::class);
@@ -136,9 +153,9 @@ class MeetupService
             $this->entityManager->persist($rsvp);
         }
 
-        if ($status === RsvpStatus::GOING) {
-            if ($meetup->getMaxParticipants() && $meetup->getGoingCount() >= $meetup->getMaxParticipants() && $previousStatus !== RsvpStatus::GOING) {
-                throw new \RuntimeException("Meetup is full.");
+        if (RsvpStatus::GOING === $status) {
+            if ($meetup->getMaxParticipants() && $meetup->getGoingCount() >= $meetup->getMaxParticipants() && RsvpStatus::GOING !== $previousStatus) {
+                throw new \RuntimeException('Meetup is full.');
             }
         }
 
@@ -150,7 +167,9 @@ class MeetupService
 
     public function evaluateMeetupStatus(Meetup $meetup): void
     {
-        if ($meetup->getStatus() !== MeetupStatus::OPEN) return;
+        if (MeetupStatus::OPEN !== $meetup->getStatus()) {
+            return;
+        }
 
         $goingCount = $meetup->getGoingCount();
 
@@ -167,8 +186,8 @@ class MeetupService
 
     public function cancelMeetup(Meetup $meetup, User $user): void
     {
-        if ($meetup->getCreator() !== $user && !in_array('ROLE_ADMIN', $user->getRoles())) {
-            throw new AccessDeniedException("Only the creator or an admin can cancel this meetup.");
+        if ($meetup->getCreator() !== $user && !in_array('ROLE_ADMIN', $user->getRoles(), true)) {
+            throw new AccessDeniedException('Only the creator or an admin can cancel this meetup.');
         }
 
         $meetup->setStatus(MeetupStatus::CANCELLED);
@@ -180,7 +199,7 @@ class MeetupService
     private function declineAllParticipants(Meetup $meetup): void
     {
         foreach ($meetup->getRsvps() as $rsvp) {
-            if ($rsvp->getStatus() === RsvpStatus::GOING) {
+            if (RsvpStatus::GOING === $rsvp->getStatus()) {
                 $rsvp->setStatus(RsvpStatus::NOT_GOING);
             }
         }
@@ -192,7 +211,9 @@ class MeetupService
         $users = $userRepo->findBy(['company' => $meetup->getCompany(), 'isActive' => true]);
 
         foreach ($users as $user) {
-            if ($user === $meetup->getCreator()) continue;
+            if ($user === $meetup->getCreator()) {
+                continue;
+            }
 
             $email = (new TemplatedEmail())
                 ->from(new Address($_ENV['NO_REPLY_MAIL'] ?? 'noreply@example.com', $meetup->getCompany()->getName()))
@@ -213,13 +234,16 @@ class MeetupService
     private function getLoginUrl(): string
     {
         $frontendUrl = $_ENV['FRONTEND_URL'] ?? 'http://localhost:4200';
-        return $frontendUrl . '/login';
+
+        return $frontendUrl.'/login';
     }
 
     private function notifyParticipantsOfCancellation(Meetup $meetup): void
     {
         foreach ($meetup->getRsvps() as $rsvp) {
-            if ($rsvp->getStatus() !== RsvpStatus::GOING) continue;
+            if (RsvpStatus::GOING !== $rsvp->getStatus()) {
+                continue;
+            }
 
             $email = (new TemplatedEmail())
                 ->from(new Address($_ENV['NO_REPLY_MAIL'] ?? 'noreply@example.com', $meetup->getCompany()->getName()))
@@ -240,7 +264,9 @@ class MeetupService
     private function notifyParticipantsOfConfirmation(Meetup $meetup): void
     {
         foreach ($meetup->getRsvps() as $rsvp) {
-            if ($rsvp->getStatus() !== RsvpStatus::GOING) continue;
+            if (RsvpStatus::GOING !== $rsvp->getStatus()) {
+                continue;
+            }
 
             $email = (new TemplatedEmail())
                 ->from(new Address($_ENV['NO_REPLY_MAIL'] ?? 'noreply@example.com', $meetup->getCompany()->getName()))

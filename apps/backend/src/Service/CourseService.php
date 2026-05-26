@@ -1,19 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Service;
 
 use App\Entity\Course;
 use App\Entity\CourseSeries;
-use App\Exception\ScheduleConflictException;
-use App\Repository\CourseRepository;
-
-use App\Repository\CourseSeriesRepository;
-use App\Repository\UserRepository;
-use App\Service\TrainingCycleService;
-use Symfony\Component\Serializer\SerializerInterface;
 use App\Entity\User;
 use App\Enum\CourseFrequency;
+use App\Exception\ScheduleConflictException;
+use App\Repository\CourseRepository;
+use App\Repository\CourseSeriesRepository;
+use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Serializer\SerializerInterface;
 
 class CourseService
 {
@@ -40,7 +40,7 @@ class CourseService
         $duration = (int) ($data['durationMinutes'] ?? 60);
         $recurrence = CourseFrequency::tryFrom($data['recurrence'] ?? '') ?? CourseFrequency::ONCE;
 
-        if ($recurrence === CourseFrequency::ONCE) {
+        if (CourseFrequency::ONCE === $recurrence) {
             $course = new Course();
             $course->setTitle($data['title']);
             $course->setDescription($data['description'] ?? '');
@@ -82,7 +82,7 @@ class CourseService
 
     /**
      * Calculates occurrences for a series within a date range.
-     * 
+     *
      * @return array Array of occurrence objects with startTime and endTime
      */
     public function getVirtualOccurrences(CourseSeries $series, \DateTimeInterface $start, \DateTimeInterface $end): array
@@ -90,10 +90,10 @@ class CourseService
         $occurrences = [];
         $duration = $series->getDurationMinutes();
         $frequency = $series->getFrequency();
-        
+
         $scheduleStart = $series->getScheduleStartTime();
         $currentDate = clone $scheduleStart;
-        
+
         // Advance $currentDate until it is >= $start
         while ($currentDate < $start) {
             switch ($frequency) {
@@ -156,7 +156,7 @@ class CourseService
         // 1. Check if it already exists
         $existing = $this->courseRepository->findOneBy([
             'series' => $seriesId,
-            'startTime' => $startTime
+            'startTime' => $startTime,
         ]);
 
         if ($existing) {
@@ -166,7 +166,7 @@ class CourseService
         // 2. Load series
         $series = $this->seriesRepository->find($seriesId);
         if (!$series) {
-            throw new \InvalidArgumentException("Series not found");
+            throw new \InvalidArgumentException('Series not found');
         }
 
         // 3. Create new course
@@ -189,13 +189,15 @@ class CourseService
         try {
             $this->entityManager->persist($course);
             $this->entityManager->flush();
+
             return $course;
         } catch (\Doctrine\DBAL\Exception\UniqueConstraintViolationException $e) {
             // Concurrent request created it first
             $this->entityManager->detach($course);
+
             return $this->courseRepository->findOneBy([
                 'series' => $seriesId,
-                'startTime' => $startTime
+                'startTime' => $startTime,
             ]);
         }
     }
@@ -303,12 +305,24 @@ class CourseService
         }
 
         if ($series) {
-            if (isset($updates['title'])) $series->setTitle($updates['title']);
-            if (isset($updates['description'])) $series->setDescription($updates['description']);
-            if (isset($updates['capacity'])) $series->setCapacity($updates['capacity']);
-            if (isset($updates['allowTrial'])) $series->setAllowTrial($updates['allowTrial']);
-            if (isset($updates['trainer'])) $series->setUser($updates['trainer']);
-            if (isset($updates['durationMinutes'])) $series->setDurationMinutes($updates['durationMinutes']);
+            if (isset($updates['title'])) {
+                $series->setTitle($updates['title']);
+            }
+            if (isset($updates['description'])) {
+                $series->setDescription($updates['description']);
+            }
+            if (isset($updates['capacity'])) {
+                $series->setCapacity($updates['capacity']);
+            }
+            if (isset($updates['allowTrial'])) {
+                $series->setAllowTrial($updates['allowTrial']);
+            }
+            if (isset($updates['trainer'])) {
+                $series->setUser($updates['trainer']);
+            }
+            if (isset($updates['durationMinutes'])) {
+                $series->setDurationMinutes($updates['durationMinutes']);
+            }
             if (isset($updates['startTime'])) {
                 $newTime = $updates['startTime'];
                 $seriesStartTime = $series->getScheduleStartTime();
@@ -369,7 +383,7 @@ class CourseService
         $overlappingCourses = $this->courseRepository->findOverlappingCourses($startTime, $endTime, $excludeId, $trainerId);
 
         // Filter out postponed courses from conflict detection
-        $overlappingCourses = array_filter($overlappingCourses, fn(Course $c) => $c->getStatus() === \App\Enum\CourseStatus::ACTIVE);
+        $overlappingCourses = array_filter($overlappingCourses, fn (Course $c) => \App\Enum\CourseStatus::ACTIVE === $c->getStatus());
 
         if (!empty($overlappingCourses)) {
             $conflict = reset($overlappingCourses);
@@ -388,7 +402,7 @@ class CourseService
 
     public function postponeCourse(Course $course, User $trainer): void
     {
-        if ($course->getStatus() === \App\Enum\CourseStatus::POSTPONED) {
+        if (\App\Enum\CourseStatus::POSTPONED === $course->getStatus()) {
             throw new \LogicException('Course is already postponed.');
         }
 
@@ -428,20 +442,20 @@ class CourseService
     {
         $startDateStr = $queryParams['startDate'] ?? null;
         $endDateStr = $queryParams['endDate'] ?? null;
-        $memberId = isset($queryParams['memberId']) && $queryParams['memberId'] !== '' ? (int)$queryParams['memberId'] : null;
-        
+        $memberId = isset($queryParams['memberId']) && '' !== $queryParams['memberId'] ? (int) $queryParams['memberId'] : null;
+
         $serverTz = new \DateTimeZone(date_default_timezone_get());
-        $startDate = $startDateStr ? (new \DateTime($startDateStr))->setTimezone($serverTz) : (new \DateTime())->setTime(0,0,0);
-        
+        $startDate = $startDateStr ? (new \DateTime($startDateStr))->setTimezone($serverTz) : (new \DateTime())->setTime(0, 0, 0);
+
         // If memberId is provided, we default to a much larger range (1 year) to ensure all bookings are shown
         $defaultDuration = $memberId ? '+1 year' : '+7 days';
-        $endDate = $endDateStr ? (new \DateTime($endDateStr))->setTimezone($serverTz) : (clone $startDate)->modify($defaultDuration)->setTime(23,59,59);
-        
-        $futureOnly = (bool)($queryParams['futureOnly'] ?? false);
-        $trainerId = isset($queryParams['trainerId']) && $queryParams['trainerId'] !== '' ? (int)$queryParams['trainerId'] : null;
-        $page = (int)($queryParams['page'] ?? 1);
-        $limit = (int)($queryParams['limit'] ?? 20);
-        $all = (bool)($queryParams['all'] ?? false);
+        $endDate = $endDateStr ? (new \DateTime($endDateStr))->setTimezone($serverTz) : (clone $startDate)->modify($defaultDuration)->setTime(23, 59, 59);
+
+        $futureOnly = (bool) ($queryParams['futureOnly'] ?? false);
+        $trainerId = isset($queryParams['trainerId']) && '' !== $queryParams['trainerId'] ? (int) $queryParams['trainerId'] : null;
+        $page = (int) ($queryParams['page'] ?? 1);
+        $limit = (int) ($queryParams['limit'] ?? 20);
+        $all = (bool) ($queryParams['all'] ?? false);
 
         // 1. Fetch real courses (all in range for merging)
         $qb = $this->courseRepository->createQueryBuilder('c');
@@ -450,14 +464,14 @@ class CourseService
            ->setParameter('startDate', $startDate)
            ->setParameter('endDate', $endDate);
 
-        // If memberId is provided, we want to see ALL their bookings regardless of course status 
+        // If memberId is provided, we want to see ALL their bookings regardless of course status
         // (so they see history, postponed ones, etc.), but NOT deleted ones.
         // If NO memberId, we show ACTIVE and POSTPONED courses (for calendar/management)
         if (!$memberId) {
             $qb->andWhere('c.status IN (:statuses)')
                ->setParameter('statuses', [
                    \App\Enum\CourseStatus::ACTIVE,
-                   \App\Enum\CourseStatus::POSTPONED
+                   \App\Enum\CourseStatus::POSTPONED,
                ]);
         } else {
             $qb->andWhere('c.status != :deletedStatus')
@@ -508,8 +522,8 @@ class CourseService
                     // Check if ANY real course already exists for this occurrence
                     $exists = false;
                     foreach ($allRealCoursesInRange as $real) {
-                        if ($real->getSeries() && $real->getSeries()->getId() === $series->getId() && 
-                            $real->getStartTime()->getTimestamp() === $occ['startTime']->getTimestamp()) {
+                        if ($real->getSeries() && $real->getSeries()->getId() === $series->getId()
+                            && $real->getStartTime()->getTimestamp() === $occ['startTime']->getTimestamp()) {
                             $exists = true;
                             break;
                         }
@@ -517,8 +531,8 @@ class CourseService
 
                     if (!$exists) {
                         $virtualCourses[] = [
-                            'id' => 'v_' . $series->getId() . '_' . $occ['startTime']->getTimestamp(),
-                            'seriesId' => (string)$series->getId(),
+                            'id' => 'v_'.$series->getId().'_'.$occ['startTime']->getTimestamp(),
+                            'seriesId' => (string) $series->getId(),
                             'title' => $series->getTitle(),
                             'description' => $series->getDescription(),
                             'capacity' => $series->getCapacity(),
@@ -533,7 +547,7 @@ class CourseService
                                 'name' => $series->getUser()->getName(),
                             ],
                             'bookings' => [],
-                            'isVirtual' => true
+                            'isVirtual' => true,
                         ];
                     }
                 }
@@ -549,7 +563,7 @@ class CourseService
 
         // 4. Merge and Sort
         $merged = array_merge($data, $virtualCourses);
-        usort($merged, function($a, $b) {
+        usort($merged, function ($a, $b) {
             return strcmp($a['startTime'], $b['startTime']);
         });
 
@@ -582,7 +596,7 @@ class CourseService
 
         $response = [
             'data' => $merged,
-            'cycle' => $cycleInfo
+            'cycle' => $cycleInfo,
         ];
 
         if (!$all) {
@@ -590,14 +604,12 @@ class CourseService
                 'totalItems' => $totalItems,
                 'page' => $page,
                 'limit' => $limit,
-                'totalPages' => ceil($totalItems / $limit)
+                'totalPages' => ceil($totalItems / $limit),
             ];
         }
 
         return $response;
     }
-
-
 
     /**
      * Updates a single course and validates its schedule.
@@ -612,7 +624,7 @@ class CourseService
         if (isset($data['startTime']) || isset($data['durationMinutes'])) {
             $serverTz = new \DateTimeZone(date_default_timezone_get());
             $startTime = isset($data['startTime']) ? (new \DateTime($data['startTime']))->setTimezone($serverTz) : $course->getStartTime();
-            $duration = (int) (isset($data['durationMinutes']) ? $data['durationMinutes'] : ($course->getDurationMinutes() ?? 60));
+            $duration = (int) ($data['durationMinutes'] ?? ($course->getDurationMinutes() ?? 60));
 
             $endTime = clone $startTime;
             $endTime->modify("+$duration minutes");

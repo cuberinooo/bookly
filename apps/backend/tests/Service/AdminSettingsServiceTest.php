@@ -1,9 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Tests\Service;
 
-use App\Entity\Company;
 use App\Entity\AdminSettings;
+use App\Entity\Company;
 use App\Repository\AdminSettingsRepository;
 use App\Service\AdminSettingsService;
 use Aws\MockHandler;
@@ -30,7 +32,7 @@ class AdminSettingsServiceTest extends TestCase
         $this->repository = $this->createMock(AdminSettingsRepository::class);
         $this->entityManager = $this->createMock(EntityManagerInterface::class);
         $this->slugger = $this->createMock(SluggerInterface::class);
-        
+
         $this->mockHandler = new MockHandler();
         $this->s3Client = new S3Client([
             'region'  => 'us-east-1',
@@ -52,7 +54,7 @@ class AdminSettingsServiceTest extends TestCase
         );
     }
 
-    public function testGetSettingsByCompanyName(): void
+    public function test_get_settings_by_company_name(): void
     {
         $settings = new AdminSettings();
         $this->repository->expects($this->once())
@@ -64,7 +66,7 @@ class AdminSettingsServiceTest extends TestCase
         $this->assertSame($settings, $result);
     }
 
-    public function testUpdateSettings(): void
+    public function test_update_settings(): void
     {
         $company = new Company();
         $company->setName('Old Name');
@@ -75,7 +77,7 @@ class AdminSettingsServiceTest extends TestCase
         $data = [
             'legalNoticeRepresentative' => 'John Doe',
             'legalNoticeMarkdown' => '# Test',
-            'name' => 'New Company Name'
+            'name' => 'New Company Name',
         ];
 
         $result = $this->service->updateSettings($company, $data);
@@ -85,7 +87,7 @@ class AdminSettingsServiceTest extends TestCase
         $this->assertEquals('Old Name', $company->getName());
     }
 
-    public function testUploadPrivacyPolicy(): void
+    public function test_upload_privacy_policy(): void
     {
         $company = new Company();
         $company->setName('Test Company');
@@ -103,17 +105,17 @@ class AdminSettingsServiceTest extends TestCase
 
         $this->slugger->method('slug')->willReturnMap([
             ['Test Company', new UnicodeString('test-company')],
-            ['test', new UnicodeString('test')]
+            ['test', new UnicodeString('test')],
         ]);
 
         $this->mockHandler->append(new Result(['ObjectURL' => 'https://example.com/test-bucket/test-company/legal/test-123.pdf']));
 
         try {
             $result = $this->service->uploadPrivacyPolicy($company, $file);
-            
+
             $this->assertStringStartsWith('test-company/legal/test-legal', $result);
             $this->assertEquals($result, $settings->getPrivacyPolicyPdfPath());
-            
+
             $lastCommand = $this->mockHandler->getLastCommand();
             $this->assertEquals('PutObject', $lastCommand->getName());
             $this->assertEquals('test-bucket', $lastCommand['Bucket']);

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Tests\Service;
 
 use App\Entity\Company;
@@ -36,7 +38,7 @@ class CourseGenerationBugTest extends TestCase
         );
     }
 
-    public function testGenerateCoursesDoesNotShiftToMondayAndDoesNotDuplicate(): void
+    public function test_generate_courses_does_not_shift_to_monday_and_does_not_duplicate(): void
     {
         $company = new Company();
         $trainer = new User();
@@ -84,7 +86,7 @@ class CourseGenerationBugTest extends TestCase
         }
     }
 
-    public function testVirtualOccurrencesAlignment(): void
+    public function test_virtual_occurrences_alignment(): void
     {
         $company = new Company();
         $trainer = new User();
@@ -108,6 +110,4 @@ class CourseGenerationBugTest extends TestCase
         $this->assertEquals('2026-05-13', $occurrences[0]['startTime']->format('Y-m-d'), 'Should be Wednesday May 13');
         $this->assertEquals('3', $occurrences[0]['startTime']->format('N'));
     }
-
-
 }

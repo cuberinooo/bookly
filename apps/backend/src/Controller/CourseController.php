@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Controller;
 
 use App\Entity\Course;
@@ -7,7 +9,6 @@ use App\Exception\ScheduleConflictException;
 use App\Repository\CourseRepository;
 use App\Repository\UserRepository;
 use App\Service\ApiCacheService;
-use App\Service\BookingService;
 use App\Service\CourseService;
 use App\Service\TrainingCycleService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -33,15 +34,15 @@ class CourseController extends AbstractController
         $user = $this->getUser();
         $companyId = $user->getCompany()->getId();
         $queryParams = $request->query->all();
-        
+
         // Context for cache includes roles and all query params
         $context = [
             'roles' => $user->getRoles(),
             'query' => $queryParams,
-            'viewMode' => $request->headers->get('X-View-Mode', 'member')
+            'viewMode' => $request->headers->get('X-View-Mode', 'member'),
         ];
 
-        $result = $this->apiCache->get('course', $companyId, $context, function() use ($courseService, $queryParams) {
+        $result = $this->apiCache->get('course', $companyId, $context, function () use ($courseService, $queryParams) {
             return $courseService->listCourses($queryParams);
         }, 300);
 
@@ -62,7 +63,7 @@ class CourseController extends AbstractController
 
             if (isset($data['trainerId'])) {
                 $requestedTrainer = $userRepository->find($data['trainerId']);
-                if ($requestedTrainer && in_array('ROLE_TRAINER', $requestedTrainer->getRoles())) {
+                if ($requestedTrainer && in_array('ROLE_TRAINER', $requestedTrainer->getRoles(), true)) {
                     $trainer = $requestedTrainer;
                 }
             }
@@ -71,13 +72,13 @@ class CourseController extends AbstractController
         } catch (ScheduleConflictException $e) {
             return new JsonResponse(['error' => $e->getFrontendMessage()], Response::HTTP_CONFLICT);
         } catch (\Exception $e) {
-            return new JsonResponse(['error' => 'An unexpected error occurred: ' . $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+            return new JsonResponse(['error' => 'An unexpected error occurred: '.$e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
         return new JsonResponse([
             'status' => 'Course(s) created',
             'count' => count($courses),
-            'ids' => array_map(fn($c) => $c->getId(), $courses)
+            'ids' => array_map(fn ($c) => $c->getId(), $courses),
         ], Response::HTTP_CREATED);
     }
 
@@ -90,9 +91,10 @@ class CourseController extends AbstractController
 
         try {
             $course = $courseService->instantiateVirtualCourse($seriesId, $startTime);
+
             return new JsonResponse([
                 'id' => $course->getId(),
-                'status' => 'Course instantiated'
+                'status' => 'Course instantiated',
             ], Response::HTTP_OK);
         } catch (\Exception $e) {
             return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
@@ -105,29 +107,29 @@ class CourseController extends AbstractController
         /** @var \App\Entity\User $user */
         $user = $this->getUser();
         $companyId = $user->getCompany()->getId();
-        
+
         $context = [
             'id' => $id,
-            'roles' => $user->getRoles()
+            'roles' => $user->getRoles(),
         ];
 
-        $data = $this->apiCache->get('course', $companyId, $context, function() use ($id, $courseRepository, $courseService, $serializer, $cycleService) {
+        $data = $this->apiCache->get('course', $companyId, $context, function () use ($id, $courseRepository, $courseService, $serializer, $cycleService) {
             $course = null;
             if (str_starts_with($id, 'v_')) {
                 // Handle virtual course show by temporary instantiation logic (or just return data)
-                // For "show", we might want to return the virtual data without persisting yet, 
+                // For "show", we might want to return the virtual data without persisting yet,
                 // but usually "show" is followed by "book" or "edit".
                 // Let's parse virtual ID: v_{seriesId}_{timestamp}
                 $parts = explode('_', $id);
                 $seriesId = (int) $parts[1];
                 $timestamp = (int) $parts[2];
                 $startTime = (new \DateTime())->setTimestamp($timestamp);
-                
-                // For simplicity in the UI, if someone requests 'show' on a virtual course, 
+
+                // For simplicity in the UI, if someone requests 'show' on a virtual course,
                 // we might as well instantiate it so they can see real details/bookings (which will be empty).
                 $course = $courseService->instantiateVirtualCourse($seriesId, $startTime);
             } else {
-                $course = $courseRepository->find((int)$id);
+                $course = $courseRepository->find((int) $id);
             }
 
             if (!$course) {
@@ -139,6 +141,7 @@ class CourseController extends AbstractController
             if ($cycleCategory) {
                 $data['cycleCategory'] = $cycleCategory;
             }
+
             return $data;
         }, 300);
 
@@ -148,7 +151,6 @@ class CourseController extends AbstractController
 
         return new JsonResponse($data, Response::HTTP_OK);
     }
-
 
     #[Route('/{id}', name: 'course_edit', methods: ['PATCH'])]
     public function edit(Request $request, string $id, CourseRepository $courseRepository, CourseService $courseService, UserRepository $userRepository): JsonResponse
@@ -164,7 +166,7 @@ class CourseController extends AbstractController
                 $startTime = (new \DateTime())->setTimestamp($timestamp);
                 $course = $courseService->instantiateVirtualCourse($seriesId, $startTime);
             } else {
-                $course = $courseRepository->find((int)$id);
+                $course = $courseRepository->find((int) $id);
             }
 
             if (!$course) {
@@ -178,7 +180,7 @@ class CourseController extends AbstractController
             $newTrainer = null;
             if (isset($data['trainerId'])) {
                 $newTrainer = $userRepository->find($data['trainerId']);
-                if (!$newTrainer || !in_array('ROLE_TRAINER', $newTrainer->getRoles())) {
+                if (!$newTrainer || !in_array('ROLE_TRAINER', $newTrainer->getRoles(), true)) {
                     return new JsonResponse(['error' => 'Invalid trainer'], Response::HTTP_BAD_REQUEST);
                 }
             }
@@ -192,7 +194,7 @@ class CourseController extends AbstractController
                 if (isset($data['startTime']) || isset($data['durationMinutes'])) {
                     $serverTz = new \DateTimeZone(date_default_timezone_get());
                     $startTime = isset($data['startTime']) ? (new \DateTime($data['startTime']))->setTimezone($serverTz) : $course->getStartTime();
-                    $duration = (int) (isset($data['durationMinutes']) ? $data['durationMinutes'] : ($course->getDurationMinutes() ?? 60));
+                    $duration = (int) ($data['durationMinutes'] ?? ($course->getDurationMinutes() ?? 60));
 
                     if ($startTime->format('H:i') !== $course->getStartTime()->format('H:i')) {
                         $updates['startTime'] = $startTime;
@@ -208,11 +210,11 @@ class CourseController extends AbstractController
                 if (isset($data['description']) && $data['description'] !== $course->getDescription()) {
                     $updates['description'] = $data['description'];
                 }
-                if (isset($data['capacity']) && (int)$data['capacity'] !== $course->getCapacity()) {
-                    $updates['capacity'] = (int)$data['capacity'];
+                if (isset($data['capacity']) && (int) $data['capacity'] !== $course->getCapacity()) {
+                    $updates['capacity'] = (int) $data['capacity'];
                 }
-                if (isset($data['allowTrial']) && (bool)$data['allowTrial'] !== $course->isAllowTrial()) {
-                    $updates['allowTrial'] = (bool)$data['allowTrial'];
+                if (isset($data['allowTrial']) && (bool) $data['allowTrial'] !== $course->isAllowTrial()) {
+                    $updates['allowTrial'] = (bool) $data['allowTrial'];
                 }
 
                 $courseService->updateCourseSeries($seriesId, $updates, $course->getStartTime());
@@ -228,7 +230,6 @@ class CourseController extends AbstractController
         }
     }
 
-
     #[Route('/{id}', name: 'course_delete', methods: ['DELETE'])]
     public function delete(Request $request, string $id, CourseRepository $courseRepository, EntityManagerInterface $entityManager, CourseService $courseService): JsonResponse
     {
@@ -243,11 +244,11 @@ class CourseController extends AbstractController
                 $seriesId = (int) $parts[1];
                 $timestamp = (int) $parts[2];
                 $startTime = (new \DateTime())->setTimestamp($timestamp);
-                
+
                 // For series courses, we instantiate and mark as DELETED
                 $course = $courseService->instantiateVirtualCourse($seriesId, $startTime);
             } else {
-                $course = $courseRepository->find((int)$id);
+                $course = $courseRepository->find((int) $id);
             }
 
             if (!$course) {
@@ -259,6 +260,7 @@ class CourseController extends AbstractController
 
             if ($deleteAll && $seriesId) {
                 $count = $courseService->deleteCourseSeries($seriesId);
+
                 return new JsonResponse(['status' => "Series deleted ($count courses removed)"]);
             }
 
@@ -269,10 +271,6 @@ class CourseController extends AbstractController
             return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
         }
     }
-
-
-
-
 
     #[Route('/{id}/postpone', name: 'course_postpone', methods: ['POST'])]
     public function postpone(string $id, CourseRepository $courseRepository, CourseService $courseService): JsonResponse
@@ -288,7 +286,7 @@ class CourseController extends AbstractController
                 $startTime = (new \DateTime())->setTimestamp($timestamp);
                 $course = $courseService->instantiateVirtualCourse($seriesId, $startTime);
             } else {
-                $course = $courseRepository->find((int)$id);
+                $course = $courseRepository->find((int) $id);
             }
 
             if (!$course) {
@@ -298,11 +296,10 @@ class CourseController extends AbstractController
             /** @var \App\Entity\User $trainer */
             $trainer = $this->getUser();
             $courseService->postponeCourse($course, $trainer);
+
             return new JsonResponse(['message' => 'Course postponed and members unbooked successfully.'], Response::HTTP_OK);
         } catch (\Exception $e) {
             return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
         }
     }
-
-
 }

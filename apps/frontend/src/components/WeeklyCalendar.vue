@@ -233,7 +233,10 @@ function onSlotClick(day: Date, hour: number) {
                   :key="i"
                   class="p-2 border border-slate-100 rounded-lg mb-2"
                 >
-                  <Skeleton width="100%" height="3rem" />
+                  <Skeleton
+                    width="100%"
+                    height="3rem"
+                  />
                 </div>
               </template>
               <template v-else>

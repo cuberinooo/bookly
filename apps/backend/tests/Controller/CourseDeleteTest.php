@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Tests\Controller;
 
 use App\Entity\Course;
@@ -14,13 +16,14 @@ class CourseDeleteTest extends WebTestCase
     private function createTrainer($entityManager): User
     {
         $trainer = new User();
-        $trainer->setEmail('trainer' . uniqid() . '@example.com');
+        $trainer->setEmail('trainer'.uniqid().'@example.com');
         $trainer->setName('Trainer');
         $trainer->setRoles(['ROLE_TRAINER']);
         $trainer->setPassword('password');
         $trainer->setIsVerified(true);
         $entityManager->persist($trainer);
         $entityManager->flush();
+
         return $trainer;
     }
 
@@ -35,10 +38,11 @@ class CourseDeleteTest extends WebTestCase
         $series->setFrequency(CourseFrequency::WEEKLY);
         $entityManager->persist($series);
         $entityManager->flush();
+
         return $series;
     }
 
-    public function testDeleteSingleCourse(): void
+    public function test_delete_single_course(): void
     {
         $client = static::createClient();
         $entityManager = $client->getContainer()->get('doctrine.orm.entity_manager');
@@ -56,23 +60,23 @@ class CourseDeleteTest extends WebTestCase
         $courseId = $course->getId();
 
         $client->loginUser($trainer);
-        $client->request('DELETE', '/api/courses/' . $courseId);
+        $client->request('DELETE', '/api/courses/'.$courseId);
 
         $this->assertEquals(Response::HTTP_OK, $client->getResponse()->getStatusCode());
-        
+
         $entityManager->clear();
         $deletedCourse = $entityManager->getRepository(Course::class)->find($courseId);
         $this->assertNull($deletedCourse);
     }
 
-    public function testDeleteCourseSeriesReproduction(): void
+    public function test_delete_course_series_reproduction(): void
     {
         $client = static::createClient();
         $entityManager = $client->getContainer()->get('doctrine.orm.entity_manager');
         $trainer = $this->createTrainer($entityManager);
 
         $series = $this->createSeries($entityManager, $trainer, 'Series Course');
-        
+
         // Course 1: Starts 1 minute ago (Past but should be deleted as it's the target)
         $course1 = new Course();
         $course1->setTitle('Series Course 1');
@@ -100,32 +104,32 @@ class CourseDeleteTest extends WebTestCase
         $seriesId = $series->getId();
 
         $client->loginUser($trainer);
-        
+
         // Request to delete series starting from course1
-        $client->request('DELETE', '/api/courses/' . $course1Id . '?deleteAll=true');
+        $client->request('DELETE', '/api/courses/'.$course1Id.'?deleteAll=true');
 
         $this->assertEquals(Response::HTTP_OK, $client->getResponse()->getStatusCode());
-        
+
         $entityManager->clear();
-        
+
         $deletedCourse1 = $entityManager->getRepository(Course::class)->find($course1Id);
         $deletedCourse2 = $entityManager->getRepository(Course::class)->find($course2Id);
-        
+
         $this->assertNull($deletedCourse2, 'Future course in series should be deleted');
         $this->assertNull($deletedCourse1, 'Current/Target course in series should be deleted');
-        
+
         $updatedSeries = $entityManager->getRepository(CourseSeries::class)->find($seriesId);
         $this->assertNull($updatedSeries, 'Series entity should be deleted when deleteAll is true without time constraint');
     }
 
-    public function testDeleteWholeSeriesActuallyRemovesSeriesEntity(): void
+    public function test_delete_whole_series_actually_removes_series_entity(): void
     {
         $client = static::createClient();
         $entityManager = $client->getContainer()->get('doctrine.orm.entity_manager');
         $trainer = $this->createTrainer($entityManager);
 
         $series = $this->createSeries($entityManager, $trainer, 'Series To Remove');
-        
+
         $course1 = new Course();
         $course1->setTitle('Instance 1');
         $course1->setUser($trainer);
@@ -141,30 +145,30 @@ class CourseDeleteTest extends WebTestCase
         $seriesId = $series->getId();
 
         $client->loginUser($trainer);
-        
+
         // When we delete from the controller without a time, it currently calls deleteCourseSeries(seriesId)
         // because deleteAll=true is set and no other time context is passed to that specific service method in the simple delete case.
-        $client->request('DELETE', '/api/courses/' . $course1Id . '?deleteAll=true');
+        $client->request('DELETE', '/api/courses/'.$course1Id.'?deleteAll=true');
 
         $this->assertEquals(Response::HTTP_OK, $client->getResponse()->getStatusCode());
-        
+
         $entityManager->clear();
-        
+
         $deletedCourse1 = $entityManager->getRepository(Course::class)->find($course1Id);
         $this->assertNull($deletedCourse1, 'Course should be deleted');
-        
+
         $deletedSeries = $entityManager->getRepository(CourseSeries::class)->find($seriesId);
         $this->assertNull($deletedSeries, 'CourseSeries entity should be removed from database');
     }
 
-    public function testDeleteSingleOccurrenceInSeries(): void
+    public function test_delete_single_occurrence_in_series(): void
     {
         $client = static::createClient();
         $entityManager = $client->getContainer()->get('doctrine.orm.entity_manager');
         $trainer = $this->createTrainer($entityManager);
 
         $series = $this->createSeries($entityManager, $trainer, 'Single Occ');
-        
+
         $course1 = new Course();
         $course1->setTitle('Occurrence 1');
         $course1->setUser($trainer);
@@ -190,34 +194,34 @@ class CourseDeleteTest extends WebTestCase
         $seriesId = $series->getId();
 
         $client->loginUser($trainer);
-        
+
         // Request to delete ONLY course1
-        $client->request('DELETE', '/api/courses/' . $course1Id);
+        $client->request('DELETE', '/api/courses/'.$course1Id);
 
         $this->assertEquals(Response::HTTP_OK, $client->getResponse()->getStatusCode());
-        
+
         $entityManager->clear();
-        
+
         $deletedCourse1 = $entityManager->getRepository(Course::class)->find($course1Id);
         $deletedCourse2 = $entityManager->getRepository(Course::class)->find($course2Id);
-        
+
         $this->assertNotNull($deletedCourse1, 'Target course should still exist in DB');
         $this->assertEquals(\App\Enum\CourseStatus::DELETED, $deletedCourse1->getStatus(), 'Target course should be marked as deleted');
         $this->assertNotNull($deletedCourse2, 'Other courses in series should NOT be deleted');
-        
+
         $updatedSeries = $entityManager->getRepository(CourseSeries::class)->find($seriesId);
         $this->assertTrue($updatedSeries->isActive(), 'Series should still be active when only one instance is deleted');
     }
 
-    public function testSoftDeleteUnbooksUsers(): void
+    public function test_soft_delete_unbooks_users(): void
     {
         $client = static::createClient();
         $entityManager = $client->getContainer()->get('doctrine.orm.entity_manager');
         $trainer = $this->createTrainer($entityManager);
-        
+
         // Create a member
         $member = new User();
-        $member->setEmail('member' . uniqid() . '@example.com');
+        $member->setEmail('member'.uniqid().'@example.com');
         $member->setName('Member');
         $member->setRoles(['ROLE_MEMBER']);
         $member->setPassword('password');
@@ -225,7 +229,7 @@ class CourseDeleteTest extends WebTestCase
         $entityManager->persist($member);
 
         $series = $this->createSeries($entityManager, $trainer, 'Unbook Series');
-        
+
         $course = new Course();
         $course->setTitle('Course Title');
         $course->setUser($trainer);
@@ -248,15 +252,15 @@ class CourseDeleteTest extends WebTestCase
         $bookingId = $booking->getId();
 
         $client->loginUser($trainer);
-        $client->request('DELETE', '/api/courses/' . $courseId);
+        $client->request('DELETE', '/api/courses/'.$courseId);
 
         $this->assertEquals(Response::HTTP_OK, $client->getResponse()->getStatusCode());
-        
+
         $entityManager->clear();
-        
+
         $updatedCourse = $entityManager->getRepository(Course::class)->find($courseId);
         $this->assertEquals(\App\Enum\CourseStatus::DELETED, $updatedCourse->getStatus());
-        
+
         $deletedBooking = $entityManager->getRepository(\App\Entity\Booking::class)->find($bookingId);
         $this->assertNull($deletedBooking, 'Booking should be removed when course is soft-deleted');
     }

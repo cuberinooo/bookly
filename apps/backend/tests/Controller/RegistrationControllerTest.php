@@ -1,20 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Tests\Controller;
 
-use App\Entity\Company;
 use App\Entity\AdminSettings;
+use App\Entity\Company;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\HttpFoundation\Response;
 
 class RegistrationControllerTest extends WebTestCase
 {
-    public function testGetCompanyLegal(): void
+    public function test_get_company_legal(): void
     {
         $client = static::createClient();
         $entityManager = static::getContainer()->get('doctrine')->getManager();
 
-        $companyName = 'Test Legal Company ' . uniqid();
+        $companyName = 'Test Legal Company '.uniqid();
         $company = new Company();
         $company->setName($companyName);
 
@@ -27,7 +29,7 @@ class RegistrationControllerTest extends WebTestCase
         $entityManager->flush();
 
         // Test found
-        $client->request('GET', '/api/register/company-legal?name=' . urlencode($companyName));
+        $client->request('GET', '/api/register/company-legal?name='.urlencode($companyName));
         $this->assertResponseIsSuccessful();
         $data = json_decode($client->getResponse()->getContent(), true);
         $this->assertTrue($data['found']);
@@ -44,12 +46,12 @@ class RegistrationControllerTest extends WebTestCase
         $this->assertResponseStatusCodeSame(Response::HTTP_BAD_REQUEST);
     }
 
-    public function testGetTermsAndConditions(): void
+    public function test_get_terms_and_conditions(): void
     {
         $client = static::createClient();
         $entityManager = static::getContainer()->get('doctrine')->getManager();
 
-        $companyName = 'Test Terms Company ' . uniqid();
+        $companyName = 'Test Terms Company '.uniqid();
         $company = new Company();
         $company->setName($companyName);
 
@@ -62,7 +64,7 @@ class RegistrationControllerTest extends WebTestCase
         $entityManager->flush();
 
         // Test found
-        $client->request('GET', '/api/register/terms-and-conditions?name=' . urlencode($companyName));
+        $client->request('GET', '/api/register/terms-and-conditions?name='.urlencode($companyName));
         $this->assertResponseIsSuccessful();
         $data = json_decode($client->getResponse()->getContent(), true);
         $this->assertEquals('# Privacy Terms', $data['termsAndConditionsMarkdown']);

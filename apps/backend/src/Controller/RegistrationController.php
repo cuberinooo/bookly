@@ -1,21 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Controller;
 
 use App\Repository\CompanyRepository;
 use App\Service\RegistrationService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\RateLimiter\RateLimiterFactory;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 class RegistrationController extends AbstractController
 {
     #[Route('/api/register', name: 'api_register', methods: ['POST'])]
-    public function register(Request $request, RegistrationService $registrationService, #[Autowire(service: 'limiter.registration')] RateLimiterFactory $registrationLimiter): JsonResponse {
+    public function register(Request $request, RegistrationService $registrationService, #[Autowire(service: 'limiter.registration')] RateLimiterFactory $registrationLimiter): JsonResponse
+    {
         $limiter = $registrationLimiter->create($request->getClientIp());
         if (false === $limiter->consume(1)->isAccepted()) {
             return new JsonResponse(['error' => 'Too many registration attempts. Please try again later.'], Response::HTTP_TOO_MANY_REQUESTS);
@@ -31,9 +34,10 @@ class RegistrationController extends AbstractController
             $registrationService->register($data);
         } catch (\Exception $e) {
             $statusCode = Response::HTTP_BAD_REQUEST;
-            if ($e->getMessage() === 'Email already registered') {
+            if ('Email already registered' === $e->getMessage()) {
                 $statusCode = Response::HTTP_CONFLICT;
             }
+
             return new JsonResponse(['error' => $e->getMessage()], $statusCode);
         }
 
@@ -60,7 +64,8 @@ class RegistrationController extends AbstractController
     }
 
     #[Route('/api/resend-verification', name: 'api_resend_verification', methods: ['POST'])]
-    public function resendVerification(Request $request, RegistrationService $registrationService): JsonResponse {
+    public function resendVerification(Request $request, RegistrationService $registrationService): JsonResponse
+    {
         $data = json_decode($request->getContent(), true);
         $email = $data['email'] ?? null;
 
@@ -78,7 +83,7 @@ class RegistrationController extends AbstractController
     {
         return new JsonResponse([
             ['label' => 'Member', 'value' => 'ROLE_MEMBER'],
-            ['label' => 'Trainer', 'value' => 'ROLE_TRAINER']
+            ['label' => 'Trainer', 'value' => 'ROLE_TRAINER'],
         ]);
     }
 

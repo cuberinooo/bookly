@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Tests\Service;
 
 use App\Entity\AdminSettings;
@@ -10,7 +12,6 @@ use Aws\S3\S3Client;
 use PHPUnit\Framework\TestCase;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\Mailer\MailerInterface;
-use Symfony\Component\Mime\Address;
 
 class EmailServiceTest extends TestCase
 {
@@ -31,7 +32,7 @@ class EmailServiceTest extends TestCase
         );
     }
 
-    public function testSendWelcomeEmailForMember(): void
+    public function test_send_welcome_email_for_member(): void
     {
         $company = new Company();
         $company->setName('Test Company');
@@ -51,22 +52,27 @@ class EmailServiceTest extends TestCase
             ->method('__call')
             ->with('getObject', [[
                 'Bucket' => $this->s3Bucket,
-                'Key' => 'path/to/contract.pdf'
+                'Key' => 'path/to/contract.pdf',
             ]])
-            ->willReturn(['Body' => new class { public function getContents() { return 'pdf-content'; } }]);
+            ->willReturn(['Body' => new class () {
+                public function getContents()
+                {
+                    return 'pdf-content';
+                }
+            }]);
 
         $this->mailer->expects($this->once())
             ->method('send')
             ->with($this->callback(function (TemplatedEmail $email) {
-                return $email->getSubject() === 'Welcome to Test Company!' &&
-                       $email->getContext()['content'] === 'Welcome John Doe to Test Company' &&
-                       count($email->getAttachments()) === 1;
+                return 'Welcome to Test Company!' === $email->getSubject()
+                       && 'Welcome John Doe to Test Company' === $email->getContext()['content']
+                       && 1 === count($email->getAttachments());
             }));
 
         $this->service->sendCompanySpecificWelcomeEmail($user);
     }
 
-    public function testSendJoinUsEmailForTrial(): void
+    public function test_send_join_us_email_for_trial(): void
     {
         $company = new Company();
         $company->setName('Test Company');
@@ -86,16 +92,21 @@ class EmailServiceTest extends TestCase
             ->method('__call')
             ->with('getObject', [[
                 'Bucket' => $this->s3Bucket,
-                'Key' => 'path/to/trial.pdf'
+                'Key' => 'path/to/trial.pdf',
             ]])
-            ->willReturn(['Body' => new class { public function getContents() { return 'pdf-content'; } }]);
+            ->willReturn(['Body' => new class () {
+                public function getContents()
+                {
+                    return 'pdf-content';
+                }
+            }]);
 
         $this->mailer->expects($this->once())
             ->method('send')
             ->with($this->callback(function (TemplatedEmail $email) {
-                return $email->getSubject() === 'Join us at Test Company!' &&
-                       $email->getContext()['content'] === 'Join us Jane Doe at Test Company' &&
-                       count($email->getAttachments()) === 1;
+                return 'Join us at Test Company!' === $email->getSubject()
+                       && 'Join us Jane Doe at Test Company' === $email->getContext()['content']
+                       && 1 === count($email->getAttachments());
             }));
 
         $this->service->sendTrialJoinUsEmail($user);

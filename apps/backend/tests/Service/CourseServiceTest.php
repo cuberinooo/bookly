@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Tests\Service;
 
 use App\Entity\Course;
@@ -37,7 +39,7 @@ class CourseServiceTest extends TestCase
         );
     }
 
-    public function testCreateCourseSeriesThrowsExceptionOnOverlap(): void
+    public function test_create_course_series_throws_exception_on_overlap(): void
     {
         $startTime = new \DateTime('2026-05-01 10:00:00');
         $data = [
@@ -45,7 +47,7 @@ class CourseServiceTest extends TestCase
             'durationMinutes' => 60,
             'title' => 'Test Course',
             'capacity' => 10,
-            'recurrence' => 'once'
+            'recurrence' => 'once',
         ];
 
         $trainer = $this->createMock(User::class);
@@ -66,7 +68,7 @@ class CourseServiceTest extends TestCase
         $this->service->createCourseSeries($data, $trainer);
     }
 
-    public function testCreateCourseSeriesDaily(): void
+    public function test_create_course_series_daily(): void
     {
         $startTime = new \DateTime('2026-05-01 10:00:00');
         $data = [
@@ -74,7 +76,7 @@ class CourseServiceTest extends TestCase
             'durationMinutes' => 60,
             'title' => 'Daily Course',
             'capacity' => 10,
-            'recurrence' => 'daily'
+            'recurrence' => 'daily',
         ];
 
         $trainer = $this->createMock(User::class);
@@ -92,10 +94,10 @@ class CourseServiceTest extends TestCase
         $this->assertCount(0, $courses);
     }
 
-    public function testListCoursesDefaultRangeForMember(): void
+    public function test_list_courses_default_range_for_member(): void
     {
         $queryParams = [
-            'memberId' => '5'
+            'memberId' => '5',
         ];
 
         $qb = $this->createMock(QueryBuilder::class);
@@ -124,31 +126,32 @@ class CourseServiceTest extends TestCase
         // We want to verify that the query builder receives an endDate that is ~1 year from now
         // This is hard to verify with mocks of QueryBuilder unless we capture setParameter calls.
         // But we can check if it's called.
-        
+
         $now = new \DateTime();
-        $expectedEnd = (clone $now)->setTime(0,0,0)->modify('+1 year')->setTime(23,59,59);
-        
+        $expectedEnd = (clone $now)->setTime(0, 0, 0)->modify('+1 year')->setTime(23, 59, 59);
+
         // Use a callback to verify the endDate parameter
         $qb->expects($this->atLeastOnce())
            ->method('setParameter')
            ->with($this->logicalOr('startDate', 'endDate', 'memberId', 'deletedStatus'), $this->anything())
-           ->willReturnCallback(function($param, $value) use ($expectedEnd) {
-               if ($param === 'endDate') {
+           ->willReturnCallback(function ($param, $value) use ($expectedEnd) {
+               if ('endDate' === $param) {
                    $this->assertInstanceOf(\DateTimeInterface::class, $value);
                    // Check if it's within 1 minute of expected end (to account for test execution time)
                    $this->assertLessThan(60, abs($value->getTimestamp() - $expectedEnd->getTimestamp()));
                }
+
                return $this->createMock(QueryBuilder::class); // Need to return self-like mock
            });
 
         $service->listCourses($queryParams);
     }
 
-    public function testListCoursesMergesVirtualAndReal(): void
+    public function test_list_courses_merges_virtual_and_real(): void
     {
         $queryParams = [
             'startDate' => '2026-05-01T00:00:00Z',
-            'endDate' => '2026-05-03T23:59:59Z'
+            'endDate' => '2026-05-03T23:59:59Z',
         ];
 
         $company = $this->createMock(\App\Entity\Company::class);
@@ -193,13 +196,13 @@ class CourseServiceTest extends TestCase
             [
                 'id' => 100,
                 'startTime' => '2026-05-01T10:00:00+00:00',
-                'user' => ['id' => 1]
-            ]
+                'user' => ['id' => 1],
+            ],
         ]));
-        
+
         $userRepo = $this->createMock(\App\Repository\UserRepository::class);
         $userRepo->method('find')->willReturn($trainer);
-        
+
         $cycleService = $this->createMock(\App\Service\TrainingCycleService::class);
 
         $service = new CourseService(
@@ -214,7 +217,7 @@ class CourseServiceTest extends TestCase
 
         $result = $service->listCourses($queryParams);
 
-        // Expected: 
+        // Expected:
         // May 1: Real Course (instantiated)
         // May 2: Virtual Course
         // May 3: Virtual Course
@@ -222,13 +225,12 @@ class CourseServiceTest extends TestCase
         $this->assertFalse($result['data'][0]['isVirtual']);
         $this->assertTrue($result['data'][1]['isVirtual']);
         $this->assertTrue($result['data'][2]['isVirtual']);
-        
+
         $expectedTimestamp = (new \DateTime('2026-05-02 10:00:00', new \DateTimeZone('UTC')))->getTimestamp();
-        $this->assertEquals('v_10_' . $expectedTimestamp, $result['data'][1]['id']); 
+        $this->assertEquals('v_10_'.$expectedTimestamp, $result['data'][1]['id']);
     }
 
-
-    public function testDeleteCourseSeries(): void
+    public function test_delete_course_series(): void
     {
         $seriesId = '123';
 
@@ -255,7 +257,7 @@ class CourseServiceTest extends TestCase
         $this->assertEquals(2, $count);
     }
 
-    public function testDeleteCourseSeriesFutureOnly(): void
+    public function test_delete_course_series_future_only(): void
     {
         $seriesId = '123';
         $fromTime = new \DateTime('+1 day');
@@ -284,7 +286,7 @@ class CourseServiceTest extends TestCase
         $this->assertFalse($series->isActive(), 'Series should be deactivated (not deleted) when fromTime is provided');
     }
 
-    public function testTransferCourseSeries(): void
+    public function test_transfer_course_series(): void
     {
         $seriesId = '123';
         $newTrainer = new User();

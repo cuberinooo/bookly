@@ -1,20 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Tests\Service;
 
-use App\Entity\User;
 use App\Entity\Company;
-use App\Repository\UserRepository;
-use App\Repository\CompanyRepository;
+use App\Entity\User;
 use App\Repository\AdminSettingsRepository;
-use App\Service\RegistrationService;
-use App\Service\PasswordValidator;
+use App\Repository\CompanyRepository;
+use App\Repository\UserRepository;
 use App\Service\EmailService;
+use App\Service\PasswordValidator;
+use App\Service\RegistrationService;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
+use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
-use Symfony\Bundle\SecurityBundle\Security;
 
 class RegistrationServiceTest extends TestCase
 {
@@ -57,13 +59,13 @@ class RegistrationServiceTest extends TestCase
         );
     }
 
-    public function testRegisterSuccess(): void
+    public function test_register_success(): void
     {
         $data = [
             'email' => 'test@example.com',
             'password' => 'StrongPass123!',
             'name' => 'Test User',
-            'companyName' => 'New Company'
+            'companyName' => 'New Company',
         ];
 
         $this->userRepository->method('findOneBy')->willReturn(null);
@@ -83,13 +85,13 @@ class RegistrationServiceTest extends TestCase
         $this->assertTrue($user->isActive());
     }
 
-    public function testRegisterTrialMemberSuccess(): void
+    public function test_register_trial_member_success(): void
     {
         $data = [
             'email' => 'trial@example.com',
             'password' => 'StrongPass123!',
             'name' => 'Trial User',
-            'companyName' => 'Existing Company'
+            'companyName' => 'Existing Company',
         ];
 
         $existingCompany = new Company();
@@ -112,13 +114,13 @@ class RegistrationServiceTest extends TestCase
         $this->assertTrue($user->isActive());
     }
 
-    public function testAdminRegisterSuccess(): void
+    public function test_admin_register_success(): void
     {
         $data = [
             'email' => 'new-user@example.com',
             'password' => 'StrongPass123!',
             'name' => 'New User',
-            'roles' => ['ROLE_TRAINER']
+            'roles' => ['ROLE_TRAINER'],
         ];
 
         $this->userRepository->method('findOneBy')->willReturn(null);
@@ -134,14 +136,14 @@ class RegistrationServiceTest extends TestCase
         $this->assertTrue($user->isVerified());
     }
 
-    public function testRegisterRoleRestriction(): void
+    public function test_register_role_restriction(): void
     {
         $data = [
             'email' => 'test@example.com',
             'password' => 'StrongPass123!',
             'name' => 'Test User',
             'companyName' => 'Existing Company',
-            'role' => 'ROLE_ADMIN' // Should be ignored in public registration
+            'role' => 'ROLE_ADMIN', // Should be ignored in public registration
         ];
 
         $existingCompany = new Company();
@@ -162,12 +164,12 @@ class RegistrationServiceTest extends TestCase
         $this->assertNotContains('ROLE_ADMIN', $user->getRoles());
     }
 
-    public function testRegisterDuplicateEmailThrowsException(): void
+    public function test_register_duplicate_email_throws_exception(): void
     {
         $data = [
             'email' => 'test@example.com',
             'password' => 'StrongPass123!',
-            'name' => 'Test User'
+            'name' => 'Test User',
         ];
         $this->userRepository->method('findOneBy')->willReturn(new User());
 
@@ -177,7 +179,7 @@ class RegistrationServiceTest extends TestCase
         $this->service->register($data);
     }
 
-    public function testVerifyEmailSuccess(): void
+    public function test_verify_email_success(): void
     {
         $token = 'valid_token';
         $user = new User();
@@ -193,7 +195,7 @@ class RegistrationServiceTest extends TestCase
         $this->assertNull($user->getVerificationToken());
     }
 
-    public function testVerifyEmailExpiredTokenThrowsException(): void
+    public function test_verify_email_expired_token_throws_exception(): void
     {
         $token = 'expired_token';
         $user = new User();

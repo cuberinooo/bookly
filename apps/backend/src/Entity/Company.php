@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Entity;
 
 use App\Repository\CompanyRepository;
@@ -40,7 +42,7 @@ class Company
         $this->users = new ArrayCollection();
         $this->adminSettings = new AdminSettings();
         $this->globalSettings = new GlobalSettings();
-        
+
         // Synchronize the inverse side
         $this->adminSettings->setCompany($this);
         $this->globalSettings->setCompany($this);

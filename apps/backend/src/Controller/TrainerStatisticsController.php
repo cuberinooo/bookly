@@ -1,9 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Controller;
 
-use App\Repository\CourseRepository;
 use App\Repository\BookingRepository;
+use App\Repository\CourseRepository;
 use App\Service\ApiCacheService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -28,10 +30,10 @@ class TrainerStatisticsController extends AbstractController
         $companyId = $user->getCompany()->getId();
 
         $context = [
-            'trainerId' => $trainerId
+            'trainerId' => $trainerId,
         ];
 
-        $data = $this->apiCache->get('course', $companyId, $context, function() use ($trainerId, $courseRepository, $bookingRepository) {
+        $data = $this->apiCache->get('course', $companyId, $context, function () use ($trainerId, $courseRepository, $bookingRepository) {
             $now = new \DateTime();
 
             // 1. Total courses coached (All-time past)
@@ -64,7 +66,7 @@ class TrainerStatisticsController extends AbstractController
             $monthlyStats = [];
             // Initialize last 12 months with 0
             $current = clone $twelveMonthsAgo;
-            for ($i = 0; $i <= 12; $i++) {
+            for ($i = 0; $i <= 12; ++$i) {
                 $monthlyStats[$current->format('Y-m')] = 0;
                 $current->modify('+1 month');
             }
@@ -72,10 +74,10 @@ class TrainerStatisticsController extends AbstractController
             foreach ($pastCourses as $course) {
                 $month = $course->getStartTime()->format('Y-m');
                 if (isset($monthlyStats[$month])) {
-                    $monthlyStats[$month]++;
+                    ++$monthlyStats[$month];
                 }
             }
-            
+
             $formattedMonthlyStats = [];
             foreach ($monthlyStats as $month => $count) {
                 $formattedMonthlyStats[] = ['month' => $month, 'count' => $count];
@@ -110,12 +112,12 @@ class TrainerStatisticsController extends AbstractController
                 if (!isset($timeSlots[$hour])) {
                     $timeSlots[$hour] = 0;
                 }
-                $timeSlots[$hour]++;
+                ++$timeSlots[$hour];
             }
             arsort($timeSlots);
             $popularTimeSlots = [];
             foreach (array_slice($timeSlots, 0, 5, true) as $hour => $count) {
-                $popularTimeSlots[] = ['hour' => (int)$hour . ':00', 'count' => $count];
+                $popularTimeSlots[] = ['hour' => (int) $hour.':00', 'count' => $count];
             }
 
             // 6. Most popular course types (by title)
@@ -125,7 +127,7 @@ class TrainerStatisticsController extends AbstractController
                 if (!isset($courseTypes[$title])) {
                     $courseTypes[$title] = 0;
                 }
-                $courseTypes[$title]++;
+                ++$courseTypes[$title];
             }
             arsort($courseTypes);
             $popularCourseTypes = [];
@@ -134,12 +136,12 @@ class TrainerStatisticsController extends AbstractController
             }
 
             return [
-                'totalCourses' => (int)$totalCourses,
+                'totalCourses' => (int) $totalCourses,
                 'monthlyStats' => $formattedMonthlyStats,
                 'averageFillRate' => round($averageFillRate * 100, 1),
-                'uniqueMembers' => (int)$uniqueMembers,
+                'uniqueMembers' => (int) $uniqueMembers,
                 'popularTimeSlots' => $popularTimeSlots,
-                'popularCourseTypes' => $popularCourseTypes
+                'popularCourseTypes' => $popularCourseTypes,
             ];
         }, 600);
 

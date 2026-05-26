@@ -1,8 +1,9 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Service;
 
-use App\Entity\Booking;
 use App\Entity\Exercise;
 use App\Entity\User;
 use App\Entity\UserWorkoutRecord;
@@ -46,7 +47,7 @@ class LeaderboardService
 
         $attendanceMap = [];
         foreach ($attendanceData as $row) {
-            $attendanceMap[$row['userId']] = (int)$row['attendanceCount'];
+            $attendanceMap[$row['userId']] = (int) $row['attendanceCount'];
         }
 
         // 2. Calculate streaks (consecutive weeks attended)
@@ -70,32 +71,32 @@ class LeaderboardService
 
         $userWeeks = [];
         foreach ($weeksData as $row) {
-            $yw = (int)$row['startTime']->format('oW');
-            if (!isset($userWeeks[$row['userId']]) || !in_array($yw, $userWeeks[$row['userId']])) {
+            $yw = (int) $row['startTime']->format('oW');
+            if (!isset($userWeeks[$row['userId']]) || !in_array($yw, $userWeeks[$row['userId']], true)) {
                 $userWeeks[$row['userId']][] = $yw;
             }
         }
 
-        $currentYearWeek = (int)(new \DateTime())->format('oW');
+        $currentYearWeek = (int) (new \DateTime())->format('oW');
         $streaks = [];
         foreach ($userWeeks as $userId => $weeks) {
             $streak = 0;
             $checkWeek = $currentYearWeek;
 
-            if (!in_array($checkWeek, $weeks)) {
+            if (!in_array($checkWeek, $weeks, true)) {
                 $dt = new \DateTime();
                 $dt->modify('-1 week');
-                $checkWeek = (int)$dt->format('oW');
+                $checkWeek = (int) $dt->format('oW');
             }
 
-            if (in_array($checkWeek, $weeks)) {
+            if (in_array($checkWeek, $weeks, true)) {
                 $dt = new \DateTime();
                 if ($checkWeek !== $currentYearWeek) {
                     $dt->modify('-1 week');
                 }
 
-                while (in_array((int)$dt->format('oW'), $weeks)) {
-                    $streak++;
+                while (in_array((int) $dt->format('oW'), $weeks, true)) {
+                    ++$streak;
                     $dt->modify('-1 week');
                 }
             }
@@ -121,6 +122,7 @@ class LeaderboardService
             if ($a['attendanceCount'] === $b['attendanceCount']) {
                 return $b['streak'] <=> $a['streak'];
             }
+
             return $b['attendanceCount'] <=> $a['attendanceCount'];
         });
 
@@ -131,14 +133,14 @@ class LeaderboardService
     {
         $topRecords = $this->recordRepository->findTopRecordsByExercise();
         $exercises = $this->em->getRepository(Exercise::class)->findAll();
-        
+
         $grouped = [];
         foreach ($exercises as $ex) {
             $grouped[$ex->getName()] = [
                 'unit' => $ex->getUnit() ?? 'kg',
                 'male' => [],
                 'female' => [],
-                'other' => []
+                'other' => [],
             ];
         }
 
@@ -148,14 +150,14 @@ class LeaderboardService
             if ($gender instanceof \App\Enum\Gender) {
                 $gender = $gender->value;
             }
-            $gender = $gender ?? 'other';
+            $gender ??= 'other';
 
             if (!isset($grouped[$exName])) {
                 $grouped[$exName] = [
                     'unit' => 'kg',
                     'male' => [],
                     'female' => [],
-                    'other' => []
+                    'other' => [],
                 ];
             }
 
@@ -163,11 +165,11 @@ class LeaderboardService
                 'userId' => $row['userId'],
                 'name' => $row['userName'],
                 'profilePicture' => $row['profilePicture'],
-                'weightValue' => (float)$row['maxWeight'],
+                'weightValue' => (float) $row['maxWeight'],
                 'dateAchieved' => $row['dateAchieved'],
             ];
 
-            if ($gender === 'male' || $gender === 'female' || $gender === 'other') {
+            if ('male' === $gender || 'female' === $gender || 'other' === $gender) {
                 $grouped[$exName][$gender][] = $record;
             }
         }

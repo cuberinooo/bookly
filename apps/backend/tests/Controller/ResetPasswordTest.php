@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Tests\Controller;
 
 use App\Entity\User;
@@ -8,7 +10,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 class ResetPasswordTest extends WebTestCase
 {
-    public function testForgotPasswordReproduction(): void
+    public function test_forgot_password_reproduction(): void
     {
         $client = static::createClient();
         $container = $client->getContainer();
@@ -16,7 +18,7 @@ class ResetPasswordTest extends WebTestCase
 
         // Create a user to request password for
         $user = new User();
-        $user->setEmail('test_forgot_' . uniqid() . '@example.com');
+        $user->setEmail('test_forgot_'.uniqid().'@example.com');
         $user->setName('Forgot User');
         $user->setRoles(['ROLE_MEMBER']);
         $user->setPassword('StrongPass123!');
@@ -26,9 +28,9 @@ class ResetPasswordTest extends WebTestCase
 
         // Request forgot password
         $client->request('POST', '/api/forgot-password', [], [], [
-            'CONTENT_TYPE' => 'application/json'
+            'CONTENT_TYPE' => 'application/json',
         ], json_encode([
-            'email' => $user->getEmail()
+            'email' => $user->getEmail(),
         ]));
 
         // This is expected to succeed now

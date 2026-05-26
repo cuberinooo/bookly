@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Entity;
 
 use App\Enum\MeetupStatus;
@@ -61,7 +63,7 @@ class Meetup implements CompanyAwareInterface
     #[Groups(['meetup:read', 'meetup:write'])]
     private ?\DateTimeInterface $rsvpDeadline = null;
 
-    #[ORM\Column(type: "string", enumType: MeetupStatus::class)]
+    #[ORM\Column(type: 'string', enumType: MeetupStatus::class)]
     #[Groups(['meetup:read'])]
     private MeetupStatus $status = MeetupStatus::OPEN;
 
@@ -261,7 +263,7 @@ class Meetup implements CompanyAwareInterface
     #[Groups(['meetup:read'])]
     public function getGoingCount(): int
     {
-        return $this->rsvps->filter(fn(MeetupRsvp $rsvp) => $rsvp->getStatus() === \App\Enum\RsvpStatus::GOING)->count();
+        return $this->rsvps->filter(fn (MeetupRsvp $rsvp) => \App\Enum\RsvpStatus::GOING === $rsvp->getStatus())->count();
     }
 
     public function getLink(): ?string

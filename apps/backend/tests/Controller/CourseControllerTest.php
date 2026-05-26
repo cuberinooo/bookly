@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Tests\Controller;
 
 use App\Entity\Booking;
@@ -16,20 +18,21 @@ class CourseControllerTest extends WebTestCase
         $company = new Company();
         $company->setName($name);
         $em->persist($company);
+
         return $company;
     }
 
-    public function testTransferCourseToAnotherTrainer(): void
+    public function test_transfer_course_to_another_trainer(): void
     {
         $client = static::createClient();
         $container = $client->getContainer();
         $entityManager = $container->get('doctrine.orm.entity_manager');
 
-        $company = $this->createCompany($entityManager, 'Test Company ' . uniqid('', true));
+        $company = $this->createCompany($entityManager, 'Test Company '.uniqid('', true));
 
         // 1. Create original trainer
         $trainer1 = new User();
-        $trainer1->setEmail('trainer' . uniqid('', true) . '@example.com');
+        $trainer1->setEmail('trainer'.uniqid('', true).'@example.com');
         $trainer1->setName('Trainer 1');
         $trainer1->setRoles(['ROLE_TRAINER']);
         $trainer1->setPassword('password');
@@ -39,7 +42,7 @@ class CourseControllerTest extends WebTestCase
 
         // 2. Create another trainer
         $trainer2 = new User();
-        $trainer2->setEmail('trainer' . uniqid('', true) . '@example.com');
+        $trainer2->setEmail('trainer'.uniqid('', true).'@example.com');
         $trainer2->setName('Trainer 2');
         $trainer2->setRoles(['ROLE_TRAINER']);
         $trainer2->setPassword('password');
@@ -63,10 +66,10 @@ class CourseControllerTest extends WebTestCase
         $client->loginUser($trainer1);
 
         // 5. Attempt to transfer course to trainer2
-        $client->request('PATCH', '/api/courses/' . $course->getId(), [], [], [
-            'CONTENT_TYPE' => 'application/json'
+        $client->request('PATCH', '/api/courses/'.$course->getId(), [], [], [
+            'CONTENT_TYPE' => 'application/json',
         ], json_encode([
-            'trainerId' => $trainer2->getId()
+            'trainerId' => $trainer2->getId(),
         ]));
 
         $this->assertEquals(Response::HTTP_OK, $client->getResponse()->getStatusCode());
@@ -77,17 +80,17 @@ class CourseControllerTest extends WebTestCase
         $this->assertEquals($trainer2->getId(), $updatedCourse->getUser()->getId());
     }
 
-    public function testTransferCourseRemovesNewTrainerFromBookings(): void
+    public function test_transfer_course_removes_new_trainer_from_bookings(): void
     {
         $client = static::createClient();
         $container = $client->getContainer();
         $entityManager = $container->get('doctrine.orm.entity_manager');
 
-        $company = $this->createCompany($entityManager, 'Test Company ' . uniqid('', true));
+        $company = $this->createCompany($entityManager, 'Test Company '.uniqid('', true));
 
         // 1. Create original trainer
         $trainer1 = new User();
-        $trainer1->setEmail('t1_' . uniqid('', true) . '@example.com');
+        $trainer1->setEmail('t1_'.uniqid('', true).'@example.com');
         $trainer1->setName('Trainer 1');
         $trainer1->setRoles(['ROLE_TRAINER']);
         $trainer1->setPassword('password');
@@ -97,7 +100,7 @@ class CourseControllerTest extends WebTestCase
 
         // 2. Create another trainer who is also a participant
         $trainer2 = new User();
-        $trainer2->setEmail('t2_' . uniqid('', true) . '@example.com');
+        $trainer2->setEmail('t2_'.uniqid('', true).'@example.com');
         $trainer2->setName('Trainer 2');
         $trainer2->setRoles(['ROLE_TRAINER']);
         $trainer2->setPassword('password');
@@ -127,10 +130,10 @@ class CourseControllerTest extends WebTestCase
         $client->loginUser($trainer1);
 
         // 6. Transfer course to trainer2
-        $client->request('PATCH', '/api/courses/' . $course->getId(), [], [], [
-            'CONTENT_TYPE' => 'application/json'
+        $client->request('PATCH', '/api/courses/'.$course->getId(), [], [], [
+            'CONTENT_TYPE' => 'application/json',
         ], json_encode([
-            'trainerId' => $trainer2->getId()
+            'trainerId' => $trainer2->getId(),
         ]));
 
         $this->assertEquals(Response::HTTP_OK, $client->getResponse()->getStatusCode());
@@ -142,7 +145,7 @@ class CourseControllerTest extends WebTestCase
 
         $bookingExists = $entityManager->getRepository(Booking::class)->findOneBy([
             'user' => $trainer2,
-            'course' => $course
+            'course' => $course,
         ]);
         $this->assertNull($bookingExists, 'Trainer 2 should have been removed from bookings');
     }
