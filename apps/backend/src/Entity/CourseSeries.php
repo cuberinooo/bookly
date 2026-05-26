@@ -53,9 +53,6 @@ class CourseSeries implements CompanyAwareInterface
     private ?User $user = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
-    private ?\DateTimeInterface $lastGeneratedDate = null;
-
-    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     private ?\DateTimeInterface $createdAt = null;
 
     #[ORM\Column]
@@ -159,21 +156,11 @@ class CourseSeries implements CompanyAwareInterface
         return $this;
     }
 
-    public function getLastGeneratedDate(): ?\DateTimeInterface
-    {
-        return $this->lastGeneratedDate;
-    }
-
-    public function setLastGeneratedDate(?\DateTimeInterface $lastGeneratedDate): static
-    {
-        $this->lastGeneratedDate = $lastGeneratedDate;
-        return $this;
-    }
-
     public function getCreatedAt(): ?\DateTimeInterface
     {
         return $this->createdAt;
     }
+
 
     public function isActive(): bool
     {

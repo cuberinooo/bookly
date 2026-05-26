@@ -81,8 +81,26 @@ class CourseController extends AbstractController
         ], Response::HTTP_CREATED);
     }
 
+    #[Route('/instantiate', name: 'course_instantiate', methods: ['POST'])]
+    public function instantiate(Request $request, CourseService $courseService): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+        $seriesId = (int) $data['seriesId'];
+        $startTime = new \DateTime($data['startTime']);
+
+        try {
+            $course = $courseService->instantiateVirtualCourse($seriesId, $startTime);
+            return new JsonResponse([
+                'id' => $course->getId(),
+                'status' => 'Course instantiated'
+            ], Response::HTTP_OK);
+        } catch (\Exception $e) {
+            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
+        }
+    }
+
     #[Route('/{id}', name: 'course_show', methods: ['GET'])]
-    public function show(int $id, CourseRepository $courseRepository, SerializerInterface $serializer, TrainingCycleService $cycleService): JsonResponse
+    public function show(string $id, CourseRepository $courseRepository, CourseService $courseService, SerializerInterface $serializer, TrainingCycleService $cycleService): JsonResponse
     {
         /** @var \App\Entity\User $user */
         $user = $this->getUser();
@@ -93,8 +111,25 @@ class CourseController extends AbstractController
             'roles' => $user->getRoles()
         ];
 
-        $data = $this->apiCache->get('course', $companyId, $context, function() use ($id, $courseRepository, $serializer, $cycleService) {
-            $course = $courseRepository->find($id);
+        $data = $this->apiCache->get('course', $companyId, $context, function() use ($id, $courseRepository, $courseService, $serializer, $cycleService) {
+            $course = null;
+            if (str_starts_with($id, 'v_')) {
+                // Handle virtual course show by temporary instantiation logic (or just return data)
+                // For "show", we might want to return the virtual data without persisting yet, 
+                // but usually "show" is followed by "book" or "edit".
+                // Let's parse virtual ID: v_{seriesId}_{timestamp}
+                $parts = explode('_', $id);
+                $seriesId = (int) $parts[1];
+                $timestamp = (int) $parts[2];
+                $startTime = (new \DateTime())->setTimestamp($timestamp);
+                
+                // For simplicity in the UI, if someone requests 'show' on a virtual course, 
+                // we might as well instantiate it so they can see real details/bookings (which will be empty).
+                $course = $courseService->instantiateVirtualCourse($seriesId, $startTime);
+            } else {
+                $course = $courseRepository->find((int)$id);
+            }
+
             if (!$course) {
                 return null;
             }
@@ -114,110 +149,161 @@ class CourseController extends AbstractController
         return new JsonResponse($data, Response::HTTP_OK);
     }
 
+
     #[Route('/{id}', name: 'course_edit', methods: ['PATCH'])]
-    public function edit(Request $request, int $id, CourseRepository $courseRepository, CourseService $courseService, UserRepository $userRepository): JsonResponse
-    {
-        $this->denyAccessUnlessGranted('ROLE_TRAINER');
-
-        $course = $courseRepository->find($id);
-        if (!$course) {
-            throw $this->createNotFoundException('Course not found');
-        }
-
-        $data = json_decode($request->getContent(), true);
-        $updateSeries = $request->query->getBoolean('transferAll', false);
-        $seriesId = $course->getSeriesId();
-
-        $newTrainer = null;
-        if (isset($data['trainerId'])) {
-            $newTrainer = $userRepository->find($data['trainerId']);
-            if (!$newTrainer || !in_array('ROLE_TRAINER', $newTrainer->getRoles())) {
-                return new JsonResponse(['error' => 'Invalid trainer'], Response::HTTP_BAD_REQUEST);
-            }
-        }
-
-        if ($updateSeries && $seriesId) {
-            $updates = [];
-            if ($newTrainer && $newTrainer->getId() !== $course->getUser()->getId()) {
-                $updates['trainer'] = $newTrainer;
-            }
-
-            if (isset($data['startTime']) || isset($data['durationMinutes'])) {
-                $serverTz = new \DateTimeZone(date_default_timezone_get());
-                $startTime = isset($data['startTime']) ? (new \DateTime($data['startTime']))->setTimezone($serverTz) : $course->getStartTime();
-                $duration = (int) (isset($data['durationMinutes']) ? $data['durationMinutes'] : ($course->getDurationMinutes() ?? 60));
-
-                if ($startTime->format('H:i') !== $course->getStartTime()->format('H:i')) {
-                    $updates['startTime'] = $startTime;
-                }
-                if ($duration !== $course->getDurationMinutes()) {
-                    $updates['durationMinutes'] = $duration;
-                }
-            }
-
-            if (isset($data['title']) && $data['title'] !== $course->getTitle()) {
-                $updates['title'] = $data['title'];
-            }
-            if (isset($data['description']) && $data['description'] !== $course->getDescription()) {
-                $updates['description'] = $data['description'];
-            }
-            if (isset($data['capacity']) && (int)$data['capacity'] !== $course->getCapacity()) {
-                $updates['capacity'] = (int)$data['capacity'];
-            }
-            if (isset($data['allowTrial']) && (bool)$data['allowTrial'] !== $course->isAllowTrial()) {
-                $updates['allowTrial'] = (bool)$data['allowTrial'];
-            }
-
-            try {
-                $courseService->updateCourseSeries($seriesId, $updates, $course->getStartTime());
-            } catch (ScheduleConflictException $e) {
-                return new JsonResponse(['error' => $e->getFrontendMessage()], Response::HTTP_CONFLICT);
-            } catch (\Exception $e) {
-                return new JsonResponse(['error' => 'An unexpected error occurred.'], Response::HTTP_INTERNAL_SERVER_ERROR);
-            }
-        } else {
-            try {
-                $courseService->updateSingleCourse($course, $data, $newTrainer);
-            } catch (ScheduleConflictException $e) {
-                return new JsonResponse(['error' => $e->getFrontendMessage()], Response::HTTP_CONFLICT);
-            } catch (\Exception $e) {
-                return new JsonResponse(['error' => 'An unexpected error occurred.'], Response::HTTP_INTERNAL_SERVER_ERROR);
-            }
-        }
-
-        return new JsonResponse(['status' => 'Course updated']);
-    }
-
-    #[Route('/{id}', name: 'course_delete', methods: ['DELETE'])]
-    public function delete(Request $request, int $id, CourseRepository $courseRepository, EntityManagerInterface $entityManager, CourseService $courseService): JsonResponse
-    {
-        $this->denyAccessUnlessGranted('ROLE_TRAINER');
-
-        $course = $courseRepository->find($id);
-        if (!$course) {
-            throw $this->createNotFoundException('Course not found');
-        }
-
-        $deleteAll = $request->query->getBoolean('deleteAll');
-        $seriesId = $course->getSeriesId();
-
-        if ($deleteAll && $seriesId) {
-            $count = $courseService->deleteCourseSeries($seriesId);
-            return new JsonResponse(['status' => "Series deleted ($count courses removed)"]);
-        }
-
-        $entityManager->remove($course);
-        $entityManager->flush();
-
-        return new JsonResponse(['status' => 'Course deleted']);
-    }
-
-    #[Route('/{id}/postpone', name: 'course_postpone', methods: ['POST'])]
-    public function postpone(Course $course, CourseService $courseService): JsonResponse
+    public function edit(Request $request, string $id, CourseRepository $courseRepository, CourseService $courseService, UserRepository $userRepository): JsonResponse
     {
         $this->denyAccessUnlessGranted('ROLE_TRAINER');
 
         try {
+            $course = null;
+            if (str_starts_with($id, 'v_')) {
+                $parts = explode('_', $id);
+                $seriesId = (int) $parts[1];
+                $timestamp = (int) $parts[2];
+                $startTime = (new \DateTime())->setTimestamp($timestamp);
+                $course = $courseService->instantiateVirtualCourse($seriesId, $startTime);
+            } else {
+                $course = $courseRepository->find((int)$id);
+            }
+
+            if (!$course) {
+                throw $this->createNotFoundException('Course not found');
+            }
+
+            $data = json_decode($request->getContent(), true);
+            $updateSeries = $request->query->getBoolean('transferAll', false);
+            $seriesId = $course->getSeriesId();
+
+            $newTrainer = null;
+            if (isset($data['trainerId'])) {
+                $newTrainer = $userRepository->find($data['trainerId']);
+                if (!$newTrainer || !in_array('ROLE_TRAINER', $newTrainer->getRoles())) {
+                    return new JsonResponse(['error' => 'Invalid trainer'], Response::HTTP_BAD_REQUEST);
+                }
+            }
+
+            if ($updateSeries && $seriesId) {
+                $updates = [];
+                if ($newTrainer && $newTrainer->getId() !== $course->getUser()->getId()) {
+                    $updates['trainer'] = $newTrainer;
+                }
+
+                if (isset($data['startTime']) || isset($data['durationMinutes'])) {
+                    $serverTz = new \DateTimeZone(date_default_timezone_get());
+                    $startTime = isset($data['startTime']) ? (new \DateTime($data['startTime']))->setTimezone($serverTz) : $course->getStartTime();
+                    $duration = (int) (isset($data['durationMinutes']) ? $data['durationMinutes'] : ($course->getDurationMinutes() ?? 60));
+
+                    if ($startTime->format('H:i') !== $course->getStartTime()->format('H:i')) {
+                        $updates['startTime'] = $startTime;
+                    }
+                    if ($duration !== $course->getDurationMinutes()) {
+                        $updates['durationMinutes'] = $duration;
+                    }
+                }
+
+                if (isset($data['title']) && $data['title'] !== $course->getTitle()) {
+                    $updates['title'] = $data['title'];
+                }
+                if (isset($data['description']) && $data['description'] !== $course->getDescription()) {
+                    $updates['description'] = $data['description'];
+                }
+                if (isset($data['capacity']) && (int)$data['capacity'] !== $course->getCapacity()) {
+                    $updates['capacity'] = (int)$data['capacity'];
+                }
+                if (isset($data['allowTrial']) && (bool)$data['allowTrial'] !== $course->isAllowTrial()) {
+                    $updates['allowTrial'] = (bool)$data['allowTrial'];
+                }
+
+                $courseService->updateCourseSeries($seriesId, $updates, $course->getStartTime());
+            } else {
+                $courseService->updateSingleCourse($course, $data, $newTrainer);
+            }
+
+            return new JsonResponse(['status' => 'Course updated']);
+        } catch (ScheduleConflictException $e) {
+            return new JsonResponse(['error' => $e->getFrontendMessage()], Response::HTTP_CONFLICT);
+        } catch (\Exception $e) {
+            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
+        }
+    }
+
+
+    #[Route('/{id}', name: 'course_delete', methods: ['DELETE'])]
+    public function delete(Request $request, string $id, CourseRepository $courseRepository, EntityManagerInterface $entityManager, CourseService $courseService): JsonResponse
+    {
+        $this->denyAccessUnlessGranted('ROLE_TRAINER');
+
+        try {
+            $isVirtual = str_starts_with($id, 'v_');
+            $course = null;
+
+            if ($isVirtual) {
+                $parts = explode('_', $id);
+                $seriesId = (int) $parts[1];
+                $timestamp = (int) $parts[2];
+                $startTime = (new \DateTime())->setTimestamp($timestamp);
+                
+                // For series courses, we instantiate and mark as DELETED
+                $course = $courseService->instantiateVirtualCourse($seriesId, $startTime);
+            } else {
+                $course = $courseRepository->find((int)$id);
+            }
+
+            if (!$course) {
+                throw $this->createNotFoundException('Course not found');
+            }
+
+            $deleteAll = $request->query->getBoolean('deleteAll');
+            $seriesId = $course->getSeriesId();
+
+            if ($deleteAll && $seriesId) {
+                $count = $courseService->deleteCourseSeries($seriesId);
+                return new JsonResponse(['status' => "Series deleted ($count courses removed)"]);
+            }
+
+            if ($seriesId) {
+                // For any course belonging to a series, mark as DELETED instead of removing from DB
+                $course->setStatus(\App\Enum\CourseStatus::DELETED);
+                $entityManager->flush();
+                return new JsonResponse(['status' => 'Course marked as deleted']);
+            }
+
+            // For non-series courses, we can still remove them entirely
+            $entityManager->remove($course);
+            $entityManager->flush();
+
+            return new JsonResponse(['status' => 'Course deleted']);
+        } catch (\Exception $e) {
+            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
+        }
+    }
+
+
+
+
+
+    #[Route('/{id}/postpone', name: 'course_postpone', methods: ['POST'])]
+    public function postpone(string $id, CourseRepository $courseRepository, CourseService $courseService): JsonResponse
+    {
+        $this->denyAccessUnlessGranted('ROLE_TRAINER');
+
+        try {
+            $course = null;
+            if (str_starts_with($id, 'v_')) {
+                $parts = explode('_', $id);
+                $seriesId = (int) $parts[1];
+                $timestamp = (int) $parts[2];
+                $startTime = (new \DateTime())->setTimestamp($timestamp);
+                $course = $courseService->instantiateVirtualCourse($seriesId, $startTime);
+            } else {
+                $course = $courseRepository->find((int)$id);
+            }
+
+            if (!$course) {
+                throw $this->createNotFoundException('Course not found');
+            }
+
             /** @var \App\Entity\User $trainer */
             $trainer = $this->getUser();
             $courseService->postponeCourse($course, $trainer);
@@ -226,4 +312,6 @@ class CourseController extends AbstractController
             return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
         }
     }
+
+
 }

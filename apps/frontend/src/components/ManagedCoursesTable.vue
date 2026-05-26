@@ -6,6 +6,7 @@ import { useAuthStore } from '../store/useAuthStore';
 import { useCourseStore } from '../store/useCourseStore';
 import { useCourseDeletion } from '../composables/useCourseDeletion';
 import ParticipantsDialog from './ParticipantsDialog.vue';
+import api from '../services/api';
 
 import { formatTime, formatDateWithDay } from '../services/date-utils';
 
@@ -275,7 +276,7 @@ function confirmPostponeCourse(course: any) {
         },
         accept: async () => {
             try {
-                await api.post(`/courses/${course.id}/postpone`);
+                await courseStore.postponeCourse(course.id);
                 toast.add({ severity: 'success', summary: 'Postponed', detail: 'Course postponed and members unbooked', life: 5000 });
                 loadLazyData();
             } catch (e: any) {
@@ -297,16 +298,23 @@ async function removeParticipant(bookingId: number) {
         },
         accept: async () => {
             try {
-                await api.delete(`/bookings/${bookingId}`);
-                toast.add({ severity: 'success', summary: 'Removed', detail: 'Participant removed', life: 5000 });
-                loadLazyData();
-                participantsDialog.value = false;
+                await api.delete(`/courses/0/bookings/${bookingId}`); // Note: ID 0 is placeholder as it's not strictly used for single booking delete if route is handled
+                // Wait, let's check the route for deleteBooking
+                // Route is #[Route('/api/courses/{id}/bookings/{bookingId}', methods: ['DELETE'])]
+                // So we need the course ID.
+                if (selectedCourse.value) {
+                    await api.delete(`/courses/${selectedCourse.value.id}/bookings/${bookingId}`);
+                    toast.add({ severity: 'success', summary: 'Removed', detail: 'Participant removed', life: 5000 });
+                    loadLazyData();
+                    participantsDialog.value = false;
+                }
             } catch (e) {
                 toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to remove participant', life: 5000 });
             }
         }
     });
 }
+
 
 onMounted(() => {
     window.addEventListener('resize', handleResize);

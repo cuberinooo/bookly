@@ -40,18 +40,24 @@ class CourseGenerationBugTest extends TestCase
     {
         $company = new Company();
         $trainer = new User();
+        $trainer->setName('Trainer');
         $trainer->setCompany($company);
 
         // Create a series that starts on a Wednesday (2026-05-06)
         $startTime = new \DateTime('2026-05-06 10:00:00'); // Wednesday
-        $series = new CourseSeries();
-        $series->setTitle('Wednesday Workout');
-        $series->setFrequency(CourseFrequency::WEEKLY);
-        $series->setScheduleStartTime($startTime);
-        $series->setDurationMinutes(60);
-        $series->setCapacity(10);
-        $series->setUser($trainer);
-        $series->setCompany($company);
+        $series = $this->createMock(CourseSeries::class);
+        $series->method('getId')->willReturn(1);
+        $series->method('getTitle')->willReturn('Wednesday Workout');
+        $series->method('getFrequency')->willReturn(CourseFrequency::WEEKLY);
+        $series->method('getScheduleStartTime')->willReturn($startTime);
+        $series->method('getDurationMinutes')->willReturn(60);
+        $series->method('getCapacity')->willReturn(10);
+        $series->method('isAllowTrial')->willReturn(true);
+        $series->method('getUser')->willReturn($trainer);
+        $series->method('getCompany')->willReturn($company);
+
+        // Mock series repository to return this series
+        $this->seriesRepository->method('find')->with(1)->willReturn($series);
 
         // Mock overlap check to always return empty
         $this->courseRepository->method('findOverlappingCourses')->willReturn([]);
@@ -65,75 +71,43 @@ class CourseGenerationBugTest extends TestCase
         $persistedCourses = [];
         $this->entityManager->method('persist')->willReturnCallback(function ($entity) use (&$persistedCourses) {
             if ($entity instanceof Course) {
+                // Manually set ID for mock persistence
                 $persistedCourses[] = $entity;
             }
         });
 
-        $newCourses = $this->service->generateCoursesForSeries($series, $start, $end);
+        $newOccurrences = $this->service->getVirtualOccurrences($series, $start, $end);
 
-        $this->assertCount(3, $newCourses, 'Should create 3 courses (May 6, 13, 20)');
-        foreach ($newCourses as $c) {
-            $this->assertEquals('3', $c->getStartTime()->format('N'), 'All courses should be on Wednesday (3)');
+        $this->assertCount(3, $newOccurrences, 'Should calculate 3 occurrences (May 6, 13, 20)');
+        foreach ($newOccurrences as $occ) {
+            $this->assertEquals('3', $occ['startTime']->format('N'), 'All occurrences should be on Wednesday (3)');
         }
-
-        // SCENARIO 2: Duplication check
-        // Simulate that May 6 already exists in DB
-        $this->courseRepository->method('findOneBy')->willReturnCallback(function ($criteria) use ($newCourses) {
-            foreach ($newCourses as $existing) {
-                if ($existing->getStartTime()->getTimestamp() === $criteria['startTime']->getTimestamp()) {
-                    return $existing;
-                }
-            }
-            return null;
-        });
-
-        $persistedCourses = [];
-        $againCourses = $this->service->generateCoursesForSeries($series, $start, $end);
-        $this->assertCount(0, $againCourses, 'Should not create duplicates when re-running for same period');
-
-        // SCENARIO 3: The "Monday" Bug / LastGeneratedDate alignment
-        // If we start from the 'end' date of previous generation
-        $newStart = clone $end; // This is a Wednesday (2026-05-20)
-        $newEnd = (clone $newStart)->modify('+1 week');
-
-        $persistedCourses = [];
-        $thirdRunCourses = $this->service->generateCoursesForSeries($series, $newStart, $newEnd);
-        
-        // It should find May 20 exists, and only create May 27
-        $this->assertCount(1, $thirdRunCourses, 'Should create 1 new course for the extended period');
-        $this->assertEquals('2026-05-27', $thirdRunCourses[0]->getStartTime()->format('Y-m-d'));
-        $this->assertEquals('3', $thirdRunCourses[0]->getStartTime()->format('N'), 'Should still be Wednesday');
     }
 
-    public function testCommandWorkaroundStartFromNowMightCauseMondayBug(): void
+    public function testVirtualOccurrencesAlignment(): void
     {
         $company = new Company();
         $trainer = new User();
+        $trainer->setName('Trainer');
         $trainer->setCompany($company);
 
         // Create a series that starts on a Wednesday (2026-05-06)
         $startTime = new \DateTime('2026-05-06 10:00:00'); // Wednesday
-        $series = new CourseSeries();
-        $series->setTitle('Wednesday Workout');
-        $series->setFrequency(CourseFrequency::WEEKLY);
-        $series->setScheduleStartTime($startTime);
-        $series->setDurationMinutes(60);
-        $series->setCapacity(10);
-        $series->setUser($trainer);
-        $series->setCompany($company);
+        $series = $this->createMock(CourseSeries::class);
+        $series->method('getFrequency')->willReturn(CourseFrequency::WEEKLY);
+        $series->method('getScheduleStartTime')->willReturn($startTime);
+        $series->method('getDurationMinutes')->willReturn(60);
 
-        // Mock overlap check
-        $this->courseRepository->method('findOverlappingCourses')->willReturn([]);
-
-        // SCENARIO: Command runs on a Monday, and uses new DateTime() as start date
-        // Suppose it's Monday 2026-05-11
+        // SCENARIO: Query starts on a Monday
         $commandRunTime = new \DateTime('2026-05-11 09:00:00'); // Monday
         $endLimit = (clone $commandRunTime)->modify('+1 week');
 
-        $newCourses = $this->service->generateCoursesForSeries($series, $commandRunTime, $endLimit);
+        $occurrences = $this->service->getVirtualOccurrences($series, $commandRunTime, $endLimit);
 
-        $this->assertCount(1, $newCourses, 'Should find exactly one Wednesday (May 13)');
-        $this->assertEquals('2026-05-13', $newCourses[0]->getStartTime()->format('Y-m-d'), 'Should be Wednesday May 13');
-        $this->assertEquals('3', $newCourses[0]->getStartTime()->format('N'));
+        $this->assertCount(1, $occurrences, 'Should find exactly one Wednesday (May 13)');
+        $this->assertEquals('2026-05-13', $occurrences[0]['startTime']->format('Y-m-d'), 'Should be Wednesday May 13');
+        $this->assertEquals('3', $occurrences[0]['startTime']->format('N'));
     }
+
+
 }

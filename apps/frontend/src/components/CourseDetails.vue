@@ -157,7 +157,7 @@ const bookingLabel = computed(() => {
       class="action-footer"
     >
       <template v-if="course.user?.id !== authStore.user?.id">
-        <template v-if="!isOutsideBookingWindow && !isTrialRestricted">
+        <template v-if="!isOutsideBookingWindow && !isTrialRestricted && course.status !== 'postponed'">
           <Button
             v-if="!isBookedByUser"
             :label="bookingLabel"
@@ -181,10 +181,10 @@ const bookingLabel = computed(() => {
           class="text-center p-4 bg-slate-50 rounded-lg border border-slate-200"
         >
           <p class="font-bold text-slate-600 uppercase tracking-widest text-xs mb-2">
-            <i class="pi pi-lock" /> Booking Restricted
+            <i class="pi pi-lock" /> {{ course.status === 'postponed' ? 'Session Postponed' : 'Booking Restricted' }}
           </p>
           <p class="text-xs text-slate-500 font-medium">
-            {{ bookingWindowMessage }}
+            {{ course.status === 'postponed' ? 'This session has been postponed and is currently not bookable.' : bookingWindowMessage }}
           </p>
         </div>
       </template>

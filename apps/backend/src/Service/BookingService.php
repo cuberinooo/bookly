@@ -35,6 +35,11 @@ class BookingService
             throw new \Exception('You cannot book a course that has already finished');
         }
 
+        // Check if the course is postponed
+        if ($course->getStatus() === \App\Enum\CourseStatus::POSTPONED) {
+            throw new \Exception('This course has been postponed and is currently not bookable.');
+        }
+
         // Validate booking window
         $this->validateBookingWindow($course);
 

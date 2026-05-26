@@ -62,6 +62,7 @@ class BookingServiceTest extends TestCase
         $course->method('getCapacity')->willReturn(10);
         $course->method('getTitle')->willReturn('Yoga');
         $course->method('getCompany')->willReturn($this->defaultCompany);
+        $course->method('getStatus')->willReturn(\App\Enum\CourseStatus::ACTIVE);
 
         $this->bookingRepository->method('findOneBy')->willReturn(null);
         $this->bookingRepository->method('count')->willReturn(0);
@@ -93,6 +94,7 @@ class BookingServiceTest extends TestCase
         $course->method('getCapacity')->willReturn(1);
         $course->method('getTitle')->willReturn('Pilates');
         $course->method('getCompany')->willReturn($this->defaultCompany);
+        $course->method('getStatus')->willReturn(\App\Enum\CourseStatus::ACTIVE);
 
         $this->bookingRepository->method('findOneBy')->willReturn(null);
         $this->bookingRepository->method('count')->willReturn(1);
@@ -122,6 +124,7 @@ class BookingServiceTest extends TestCase
         $course->method('getCapacity')->willReturn(1);
         $course->method('getTitle')->willReturn('Pilates');
         $course->method('getCompany')->willReturn($this->defaultCompany);
+        $course->method('getStatus')->willReturn(\App\Enum\CourseStatus::ACTIVE);
 
         $booking = new Booking();
         $booking->setWaitlist(false);
@@ -163,6 +166,7 @@ class BookingServiceTest extends TestCase
         $course = $this->createMock(Course::class);
         $course->method('getEndTime')->willReturn(new \DateTime('+1 hour'));
         $course->method('getUser')->willReturn($trainer);
+        $course->method('getStatus')->willReturn(\App\Enum\CourseStatus::ACTIVE);
 
         $this->bookingRepository->method('findOneBy')->willReturn(new Booking());
 
@@ -181,6 +185,7 @@ class BookingServiceTest extends TestCase
         $course = $this->createMock(Course::class);
         $course->method('getEndTime')->willReturn(new \DateTime('+1 hour'));
         $course->method('getUser')->willReturn($user);
+        $course->method('getStatus')->willReturn(\App\Enum\CourseStatus::ACTIVE);
 
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage('As a trainer, you cannot book your own course');
@@ -240,6 +245,19 @@ class BookingServiceTest extends TestCase
         $this->entityManager->expects($this->once())->method('flush');
 
         $this->service->deleteBooking($booking);
+    }
+
+    public function testBookPostponedCourseThrowsException(): void
+    {
+        $user = new User();
+        $course = $this->createMock(Course::class);
+        $course->method('getEndTime')->willReturn(new \DateTime('+1 hour'));
+        $course->method('getStatus')->willReturn(\App\Enum\CourseStatus::POSTPONED);
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('This course has been postponed and is currently not bookable.');
+
+        $this->service->book($course, $user);
     }
 
     public function testBookPastCourseThrowsException(): void
