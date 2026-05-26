@@ -10,15 +10,27 @@ const confirm = useConfirm();
 const authStore = useAuthStore();
 const users = ref<any[]>([]);
 const searchQuery = ref('');
+const selectedRoles = ref<string[]>([]);
 const loading = ref(false);
 
 const filteredUsers = computed(() => {
-    if (!searchQuery.value) return users.value;
-    const query = searchQuery.value.toLowerCase();
-    return users.value.filter(u =>
-        u.name.toLowerCase().includes(query) ||
-        u.email.toLowerCase().includes(query)
-    );
+    let result = users.value;
+
+    if (searchQuery.value) {
+        const query = searchQuery.value.toLowerCase();
+        result = result.filter(u =>
+            u.name.toLowerCase().includes(query) ||
+            u.email.toLowerCase().includes(query)
+        );
+    }
+
+    if (selectedRoles.value && selectedRoles.value.length > 0) {
+        result = result.filter(u =>
+            u.roles.some(role => selectedRoles.value.includes(role))
+        );
+    }
+
+    return result;
 });
 
 const userDialog = ref(false);
@@ -210,11 +222,31 @@ onMounted(fetchUsers);
         User Directory
       </h2>
       <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-        <div class="relative w-full sm:w-72">
+        <div class="relative w-full sm:w-64">
           <InputText
             v-model="searchQuery"
-            placeholder="Search by name or email..."
+            placeholder="Search name/email..."
             class="w-full"
+          />
+        </div>
+        <div class="w-full sm:w-48 flex gap-2">
+          <MultiSelect
+            v-model="selectedRoles"
+            :options="roleOptions"
+            option-label="label"
+            option-value="value"
+            placeholder="Filter Roles"
+            class="flex-1"
+            :max-selected-labels="1"
+          />
+          <Button
+            v-if="searchQuery || selectedRoles.length > 0"
+            icon="pi pi-filter-slash"
+            severity="secondary"
+            variant="text"
+            v-tooltip.top="'Clear Filters'"
+            class="flex-shrink-0"
+            @click="searchQuery = ''; selectedRoles = []"
           />
         </div>
         <Button
