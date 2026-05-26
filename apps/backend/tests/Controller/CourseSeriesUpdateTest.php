@@ -29,7 +29,7 @@ class CourseSeriesUpdateTest extends WebTestCase
 
         // 2. Create a weekly series manually
         $startTime = new \DateTime('next monday 10:00:00');
-        $courses = $courseService->createCourseSeries([
+        $courseService->createCourseSeries([
             'title' => 'Weekly Yoga',
             'capacity' => 10,
             'startTime' => $startTime->format(\DateTimeInterface::RFC3339),
@@ -38,7 +38,8 @@ class CourseSeriesUpdateTest extends WebTestCase
             'description' => 'Original description'
         ], $trainer);
 
-        $firstCourseId = $courses[0]->getId();
+        $series = $entityManager->getRepository(\App\Entity\CourseSeries::class)->findOneBy(['title' => 'Weekly Yoga']);
+        $firstCourseId = 'v_' . $series->getId() . '_' . $startTime->getTimestamp();
 
         $client->loginUser($trainer);
 
@@ -100,7 +101,7 @@ class CourseSeriesUpdateTest extends WebTestCase
 
         // 2. Create a daily series manually
         $startTime = new \DateTime('tomorrow 10:00:00');
-        $courses = $courseService->createCourseSeries([
+        $courseService->createCourseSeries([
             'title' => 'Daily HIIT',
             'capacity' => 10,
             'startTime' => $startTime->format(\DateTimeInterface::RFC3339),
@@ -108,8 +109,9 @@ class CourseSeriesUpdateTest extends WebTestCase
             'recurrence' => 'daily'
         ], $trainer);
 
-        $firstCourseId = $courses[0]->getId();
-        $secondCourseId = $courses[1]->getId();
+        $series = $entityManager->getRepository(\App\Entity\CourseSeries::class)->findOneBy(['title' => 'Daily HIIT']);
+        $firstCourseId = 'v_' . $series->getId() . '_' . $startTime->getTimestamp();
+        $secondCourseId = 'v_' . $series->getId() . '_' . ((clone $startTime)->modify('+1 day')->getTimestamp());
 
         $client->loginUser($trainer);
 
@@ -125,13 +127,15 @@ class CourseSeriesUpdateTest extends WebTestCase
 
         // 4. Verify only the first course changed
         $entityManager->clear();
-        $firstCourse = $entityManager->getRepository(Course::class)->find($firstCourseId);
-        $secondCourse = $entityManager->getRepository(Course::class)->find($secondCourseId);
-
-        $this->assertEquals('Special HIIT Instance', $firstCourse->getTitle());
+        // The first course should now be a real entity because it was PATCHed
+        $firstCourse = $entityManager->getRepository(Course::class)->findOneBy(['title' => 'Special HIIT Instance']);
+        $this->assertNotNull($firstCourse);
         $this->assertEquals(5, $firstCourse->getCapacity());
 
-        $this->assertEquals('Daily HIIT', $secondCourse->getTitle());
-        $this->assertEquals(10, $secondCourse->getCapacity());
+        // The second course is still virtual, so we check if the series itself didn't change title/capacity
+        // Wait, if I update ONE virtual course, it shouldn't affect the series or other virtual courses.
+        $series = $entityManager->getRepository(\App\Entity\CourseSeries::class)->find($series->getId());
+        $this->assertEquals('Daily HIIT', $series->getTitle());
+        $this->assertEquals(10, $series->getCapacity());
     }
 }

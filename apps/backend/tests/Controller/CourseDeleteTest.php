@@ -33,7 +33,6 @@ class CourseDeleteTest extends WebTestCase
         $series->setDurationMinutes(60);
         $series->setCapacity(10);
         $series->setFrequency(CourseFrequency::WEEKLY);
-        $series->setLastGeneratedDate(new \DateTime('+3 months'));
         $entityManager->persist($series);
         $entityManager->flush();
         return $series;
@@ -202,10 +201,63 @@ class CourseDeleteTest extends WebTestCase
         $deletedCourse1 = $entityManager->getRepository(Course::class)->find($course1Id);
         $deletedCourse2 = $entityManager->getRepository(Course::class)->find($course2Id);
         
-        $this->assertNull($deletedCourse1, 'Target course should be deleted');
+        $this->assertNotNull($deletedCourse1, 'Target course should still exist in DB');
+        $this->assertEquals(\App\Enum\CourseStatus::DELETED, $deletedCourse1->getStatus(), 'Target course should be marked as deleted');
         $this->assertNotNull($deletedCourse2, 'Other courses in series should NOT be deleted');
         
         $updatedSeries = $entityManager->getRepository(CourseSeries::class)->find($seriesId);
         $this->assertTrue($updatedSeries->isActive(), 'Series should still be active when only one instance is deleted');
+    }
+
+    public function testSoftDeleteUnbooksUsers(): void
+    {
+        $client = static::createClient();
+        $entityManager = $client->getContainer()->get('doctrine.orm.entity_manager');
+        $trainer = $this->createTrainer($entityManager);
+        
+        // Create a member
+        $member = new User();
+        $member->setEmail('member' . uniqid() . '@example.com');
+        $member->setName('Member');
+        $member->setRoles(['ROLE_MEMBER']);
+        $member->setPassword('password');
+        $member->setIsVerified(true);
+        $entityManager->persist($member);
+
+        $series = $this->createSeries($entityManager, $trainer, 'Unbook Series');
+        
+        $course = new Course();
+        $course->setTitle('Course Title');
+        $course->setUser($trainer);
+        $course->setStartTime(new \DateTime('+1 day'));
+        $course->setEndTime(new \DateTime('+1 day 1 hour'));
+        $course->setCapacity(10);
+        $course->setSeries($series);
+        $entityManager->persist($course);
+
+        // Create a booking
+        $booking = new \App\Entity\Booking();
+        $booking->setUser($member);
+        $booking->setCourse($course);
+        $course->addBooking($booking);
+        $entityManager->persist($booking);
+
+        $entityManager->flush();
+
+        $courseId = $course->getId();
+        $bookingId = $booking->getId();
+
+        $client->loginUser($trainer);
+        $client->request('DELETE', '/api/courses/' . $courseId);
+
+        $this->assertEquals(Response::HTTP_OK, $client->getResponse()->getStatusCode());
+        
+        $entityManager->clear();
+        
+        $updatedCourse = $entityManager->getRepository(Course::class)->find($courseId);
+        $this->assertEquals(\App\Enum\CourseStatus::DELETED, $updatedCourse->getStatus());
+        
+        $deletedBooking = $entityManager->getRepository(\App\Entity\Booking::class)->find($bookingId);
+        $this->assertNull($deletedBooking, 'Booking should be removed when course is soft-deleted');
     }
 }

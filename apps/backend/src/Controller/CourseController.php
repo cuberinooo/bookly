@@ -262,18 +262,9 @@ class CourseController extends AbstractController
                 return new JsonResponse(['status' => "Series deleted ($count courses removed)"]);
             }
 
-            if ($seriesId) {
-                // For any course belonging to a series, mark as DELETED instead of removing from DB
-                $course->setStatus(\App\Enum\CourseStatus::DELETED);
-                $entityManager->flush();
-                return new JsonResponse(['status' => 'Course marked as deleted']);
-            }
+            $courseService->deleteCourse($course);
 
-            // For non-series courses, we can still remove them entirely
-            $entityManager->remove($course);
-            $entityManager->flush();
-
-            return new JsonResponse(['status' => 'Course deleted']);
+            return new JsonResponse(['status' => $seriesId ? 'Course marked as deleted' : 'Course deleted']);
         } catch (\Exception $e) {
             return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
         }

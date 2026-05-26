@@ -218,6 +218,7 @@ class CourseService
         $courses = $qb->getQuery()->getResult();
 
         foreach ($courses as $course) {
+            $this->unbookAll($course);
             $this->entityManager->remove($course);
         }
 
@@ -394,13 +395,33 @@ class CourseService
         $course->setStatus(\App\Enum\CourseStatus::POSTPONED);
         $course->setPostponedBy($trainer);
 
-        // Unbook all members
+        $this->unbookAll($course);
+
+        $this->entityManager->flush();
+    }
+
+    public function deleteCourse(Course $course): void
+    {
+        $seriesId = $course->getSeriesId();
+
+        if ($seriesId) {
+            // Soft delete for series courses
+            $course->setStatus(\App\Enum\CourseStatus::DELETED);
+            $this->unbookAll($course);
+        } else {
+            // Hard delete for non-series courses
+            $this->entityManager->remove($course);
+        }
+
+        $this->entityManager->flush();
+    }
+
+    private function unbookAll(Course $course): void
+    {
         $bookings = $course->getBookings();
         foreach ($bookings as $booking) {
             $this->bookingService->removeBookingIfExists($course, $booking->getUser());
         }
-
-        $this->entityManager->flush();
     }
 
     public function listCourses(array $queryParams): array

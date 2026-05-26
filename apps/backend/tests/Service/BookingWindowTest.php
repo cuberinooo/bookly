@@ -119,6 +119,7 @@ class BookingWindowTest extends TestCase
         $course->method('getEndTime')->willReturn((clone $courseDate)->modify('+1 hour'));
         $course->method('getCapacity')->willReturn(10);
         $course->method('getCompany')->willReturn($company);
+        $course->method('getStatus')->willReturn(\App\Enum\CourseStatus::ACTIVE);
 
         $this->bookingRepository->method('findOneBy')->willReturn(null);
         $this->bookingRepository->method('count')->willReturn(0);

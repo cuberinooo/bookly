@@ -131,10 +131,10 @@ class CourseServiceTest extends TestCase
         // Use a callback to verify the endDate parameter
         $qb->expects($this->atLeastOnce())
            ->method('setParameter')
-           ->with($this->logicalOr('startDate', 'endDate', 'memberId'), $this->anything())
+           ->with($this->logicalOr('startDate', 'endDate', 'memberId', 'deletedStatus'), $this->anything())
            ->willReturnCallback(function($param, $value) use ($expectedEnd) {
                if ($param === 'endDate') {
-                   $this->assertInstanceOf(\DateTime::class, $value);
+                   $this->assertInstanceOf(\DateTimeInterface::class, $value);
                    // Check if it's within 1 minute of expected end (to account for test execution time)
                    $this->assertLessThan(60, abs($value->getTimestamp() - $expectedEnd->getTimestamp()));
                }
@@ -156,12 +156,13 @@ class CourseServiceTest extends TestCase
         $trainer->method('getId')->willReturn(1);
         $trainer->method('getName')->willReturn('John Doe');
 
-        // Mock series: Daily at 10:00
+        // Mock series: Daily at 10:00 UTC
+        $startTime = new \DateTime('2026-04-30 10:00:00', new \DateTimeZone('UTC'));
         $series = $this->createMock(CourseSeries::class);
         $series->method('getId')->willReturn(10);
         $series->method('getTitle')->willReturn('Daily Series');
         $series->method('getFrequency')->willReturn(\App\Enum\CourseFrequency::DAILY);
-        $series->method('getScheduleStartTime')->willReturn(new \DateTime('2026-04-30 10:00:00'));
+        $series->method('getScheduleStartTime')->willReturn($startTime);
         $series->method('getDurationMinutes')->willReturn(60);
         $series->method('getUser')->willReturn($trainer);
         $series->method('getCapacity')->willReturn(10);
@@ -170,11 +171,12 @@ class CourseServiceTest extends TestCase
 
         $this->seriesRepository->method('findActiveSeries')->willReturn([$series]);
 
-        // Mock one real course on 2026-05-01 10:00 (matching the series)
+        // Mock one real course on 2026-05-01 10:00 UTC (matching the series)
+        $realCourseStartTime = new \DateTime('2026-05-01 10:00:00', new \DateTimeZone('UTC'));
         $realCourse = $this->createMock(Course::class);
         $realCourse->method('getId')->willReturn(100);
         $realCourse->method('getSeries')->willReturn($series);
-        $realCourse->method('getStartTime')->willReturn(new \DateTime('2026-05-01 10:00:00'));
+        $realCourse->method('getStartTime')->willReturn($realCourseStartTime);
 
         $qb = $this->createMock(QueryBuilder::class);
         $this->courseRepository->method('createQueryBuilder')->willReturn($qb);
@@ -194,10 +196,6 @@ class CourseServiceTest extends TestCase
                 'user' => ['id' => 1]
             ]
         ]));
-        
-        // Use reflection to set serializer and other private dependencies if needed, 
-        // but easier to just use the constructor if possible.
-        // Wait, I already have the constructor.
         
         $userRepo = $this->createMock(\App\Repository\UserRepository::class);
         $userRepo->method('find')->willReturn($trainer);
@@ -225,7 +223,8 @@ class CourseServiceTest extends TestCase
         $this->assertTrue($result['data'][1]['isVirtual']);
         $this->assertTrue($result['data'][2]['isVirtual']);
         
-        $this->assertEquals('v_10_1777716000', $result['data'][1]['id']); // Timestamp for 2026-05-02 10:00 UTC
+        $expectedTimestamp = (new \DateTime('2026-05-02 10:00:00', new \DateTimeZone('UTC')))->getTimestamp();
+        $this->assertEquals('v_10_' . $expectedTimestamp, $result['data'][1]['id']); 
     }
 
 
