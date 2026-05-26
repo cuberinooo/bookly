@@ -27,7 +27,6 @@ class TrainingCategoryRepository extends ServiceEntityRepository
             ->andWhere('tc.trainer = :trainerId')
             ->setParameter('trainerId', $trainerId)
             ->getQuery()
-            ->enableResultCache(3600)
             ->getResult();
     }
 }
