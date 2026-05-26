@@ -9,11 +9,13 @@ const props = withDefaults(defineProps<{
     userId?: number;
     baseDate?: Date;
     cycleInfo?: { name: string; currentWeek: number; totalWeeks: number } | null;
+    loading?: boolean;
 }>(), {
     isCompactView: true,
     userId: undefined,
     baseDate: () => new Date(),
-    cycleInfo: null
+    cycleInfo: null,
+    loading: false
 });
 
 const emit = defineEmits(['course-click', 'cell-click', 'update:baseDate']);
@@ -225,92 +227,103 @@ function onSlotClick(day: Date, hour: number) {
               </template>
 
               <!-- Courses (Both views use grid positioning if not compact, or flex if compact) -->
-              <div
-                v-for="course in getCoursesForDay(date)"
-                :key="course.id"
-                class="course-card"
-                :class="{
-                  'is-booked': isBookedByUser(course),
-                  'is-restricted': isRestrictedForTrial(course),
-                  'is-past': isPastCourse(course),
-                  'is-postponed': course.status === 'postponed'
-                }"
-                :style="[
-                  !isCompactView ? { gridRow: getGridRow(course.startTime, course.durationMinutes) } : {},
-                  course.cycleCategory ? { borderLeft: `6px solid ${course.cycleCategory.colorHex}` } : {}
-                ]"
-                @click.stop="$emit('course-click', course)"
-              >
-                <!-- Cycle Category Tag -->
+              <template v-if="loading">
                 <div
-                  v-if="course.cycleCategory"
-                  class="cycle-tag mb-1 flex items-center gap-1"
-                  :style="{ color: course.cycleCategory.colorHex }"
+                  v-for="i in 2"
+                  :key="i"
+                  class="p-2 border border-slate-100 rounded-lg mb-2"
                 >
-                  <i class="pi pi-bolt text-[8px]" />
-                  <span class="text-[9px] font-black uppercase tracking-tighter">{{ course.cycleCategory.name }}</span>
+                  <Skeleton width="100%" height="3rem" />
                 </div>
-
-                <div class="flex flex-col gap-1 w-full mb-1">
+              </template>
+              <template v-else>
+                <div
+                  v-for="course in getCoursesForDay(date)"
+                  :key="course.id"
+                  class="course-card"
+                  :class="{
+                    'is-booked': isBookedByUser(course),
+                    'is-restricted': isRestrictedForTrial(course),
+                    'is-past': isPastCourse(course),
+                    'is-postponed': course.status === 'postponed'
+                  }"
+                  :style="[
+                    !isCompactView ? { gridRow: getGridRow(course.startTime, course.durationMinutes) } : {},
+                    course.cycleCategory ? { borderLeft: `6px solid ${course.cycleCategory.colorHex}` } : {}
+                  ]"
+                  @click.stop="$emit('course-click', course)"
+                >
+                  <!-- Cycle Category Tag -->
                   <div
-                    v-if="course.status === 'postponed'"
-                    class="postponed-badge"
+                    v-if="course.cycleCategory"
+                    class="cycle-tag mb-1 flex items-center gap-1"
+                    :style="{ color: course.cycleCategory.colorHex }"
                   >
-                    <i class="pi pi-clock" /> POSTPONED
+                    <i class="pi pi-bolt text-[8px]" />
+                    <span class="text-[9px] font-black uppercase tracking-tighter">{{ course.cycleCategory.name }}</span>
                   </div>
-                  <div class="flex justify-between items-start w-full gap-1">
-                    <div
-                      v-if="isBookedByUser(course)"
-                      class="booked-badge"
-                    >
-                      <i class="pi pi-check" /> BOOKED
-                    </div>
-                    <div
-                      v-if="isRestrictedForTrial(course)"
-                      class="restricted-badge"
-                      title="Restricted for Trial Members"
-                    >
-                      <i class="pi pi-lock" /> TRIAL RESTRICTED
-                    </div>
-                    <div
-                      v-if="isPastCourse(course)"
-                      class="past-badge"
-                    >
-                      <i class="pi pi-history" /> PAST
-                    </div>
-                  </div>
-                </div>
-                <div class="course-time">
-                  {{ formatTime(course.startTime) }}
-                  <span
-                    v-if="!isCompactView"
-                    class="duration-tag"
-                  >/ {{ course.durationMinutes }} MIN</span>
-                </div>
-                <div class="course-title">
-                  {{ course.title }}
-                </div>
 
-                <div class="course-meta">
-                  <div
-                    v-if="course.status === 'postponed' && course.postponedBy"
-                    class="coach-line !text-red-500 font-bold"
-                  >
-                    POSTPONED BY {{ course.postponedBy.name }}
+                  <div class="flex flex-col gap-1 w-full mb-1">
+                    <div
+                      v-if="course.status === 'postponed'"
+                      class="postponed-badge"
+                    >
+                      <i class="pi pi-clock" /> POSTPONED
+                    </div>
+                    <div class="flex justify-between items-start w-full gap-1">
+                      <div
+                        v-if="isBookedByUser(course)"
+                        class="booked-badge"
+                      >
+                        <i class="pi pi-check" /> BOOKED
+                      </div>
+                      <div
+                        v-if="isRestrictedForTrial(course)"
+                        class="restricted-badge"
+                        title="Restricted for Trial Members"
+                      >
+                        <i class="pi pi-lock" /> TRIAL RESTRICTED
+                      </div>
+                      <div
+                        v-if="isPastCourse(course)"
+                        class="past-badge"
+                      >
+                        <i class="pi pi-history" /> PAST
+                      </div>
+                    </div>
                   </div>
-                  <div class="coach-line">
-                    <i class="pi pi-user text-[10px]" /> {{ course.user?.name }}
+                  <div class="course-time">
+                    {{ formatTime(course.startTime) }}
+                    <span
+                      v-if="!isCompactView"
+                      class="duration-tag"
+                    >/ {{ course.durationMinutes }} MIN</span>
                   </div>
-                  <div class="course-spots">
-                    <template v-if="course.bookings.filter(b => !b.isWaitlist).length < course.capacity">
-                      {{ course.bookings.filter(b => !b.isWaitlist).length }} / {{ course.capacity }} <i class="pi pi-users text-[10px]" />
-                    </template>
-                    <template v-else>
-                      <span class="text-amber-500">FULL</span>
-                    </template>
+                  <div class="course-title">
+                    {{ course.title }}
+                  </div>
+
+                  <div class="course-meta">
+                    <div
+                      v-if="course.status === 'postponed' && course.postponedBy"
+                      class="coach-line !text-red-500 font-bold"
+                    >
+                      POSTPONED BY {{ course.postponedBy.name }}
+                    </div>
+                    <div class="coach-line">
+                      <i class="pi pi-user text-[10px]" /> {{ course.user?.name }}
+                    </div>
+                    <div class="course-spots">
+                      <template v-if="course.bookings.filter(b => !b.isWaitlist).length < course.capacity">
+                        {{ course.bookings.filter(b => !b.isWaitlist).length }} / {{ course.capacity }} <i class="pi pi-users text-[10px]" />
+                      </template>
+                      <template v-else>
+                        <span class="text-amber-500">FULL</span>
+                      </template>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </template>
             </div>
           </div>
         </div>

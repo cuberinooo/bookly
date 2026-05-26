@@ -8,6 +8,7 @@ const props = defineProps<{
     userId?: number;
     baseDate?: Date;
     cycleInfo?: { name: string; currentWeek: number; totalWeeks: number } | null;
+    loading?: boolean;
 }>();
 
 const emit = defineEmits(['course-click', 'update:baseDate']);
@@ -186,78 +187,89 @@ function formatDayName(date: Date) {
             </div>
 
             <div class="courses-stack">
-              <div
-                v-if="getCoursesForDay(date).length === 0"
-                class="empty-day"
-              >
-                No sessions scheduled
-              </div>
-              <div
-                v-for="course in getCoursesForDay(date)"
-                :key="course.id"
-                class="mobile-course-card"
-                :class="{
-                  'is-booked': isBookedByUser(course),
-                  'is-restricted': isRestrictedForTrial(course),
-                  'is-past': isPastCourse(course)
-                }"
-                :style="course.cycleCategory ? { borderLeft: `6px solid ${course.cycleCategory.colorHex}` } : {}"
-                @click="$emit('course-click', course)"
-              >
-                <div class="card-left">
-                  <div
-                    v-if="course.cycleCategory"
-                    class="px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase"
-                    :style="{ backgroundColor: course.cycleCategory.colorHex, color: 'white' }"
-                  >
-                    {{ course.cycleCategory.name }}
-                  </div>
-                  <div class="course-time">
-                    {{ formatTime(course.startTime) }}
-                  </div>
-                  <div class="course-duration">
-                    {{ course.durationMinutes }} MIN
-                  </div>
+              <template v-if="loading">
+                <div
+                  v-for="i in 2"
+                  :key="i"
+                  class="mobile-course-card bg-slate-50 border-none"
+                >
+                  <Skeleton width="100%" height="4rem" borderRadius="12px" />
                 </div>
-
-                <div class="card-main">
-                  <div class="course-title">
-                    {{ course.title }}
-                    <span
-                      v-if="isRestrictedForTrial(course)"
-                      class="ml-2 text-[10px] text-slate-500 font-black"
+              </template>
+              <template v-else>
+                <div
+                  v-if="getCoursesForDay(date).length === 0"
+                  class="empty-day"
+                >
+                  No sessions scheduled
+                </div>
+                <div
+                  v-for="course in getCoursesForDay(date)"
+                  :key="course.id"
+                  class="mobile-course-card"
+                  :class="{
+                    'is-booked': isBookedByUser(course),
+                    'is-restricted': isRestrictedForTrial(course),
+                    'is-past': isPastCourse(course)
+                  }"
+                  :style="course.cycleCategory ? { borderLeft: `6px solid ${course.cycleCategory.colorHex}` } : {}"
+                  @click="$emit('course-click', course)"
+                >
+                  <div class="card-left">
+                    <div
+                      v-if="course.cycleCategory"
+                      class="px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase"
+                      :style="{ backgroundColor: course.cycleCategory.colorHex, color: 'white' }"
                     >
-                      <i class="pi pi-lock" /> RESTRICTED
-                    </span>
-                    <span
-                      v-if="isPastCourse(course)"
-                      class="ml-2 text-[10px] text-slate-400 font-black"
-                    >
-                      <i class="pi pi-history" /> PAST
-                    </span>
+                      {{ course.cycleCategory.name }}
+                    </div>
+                    <div class="course-time">
+                      {{ formatTime(course.startTime) }}
+                    </div>
+                    <div class="course-duration">
+                      {{ course.durationMinutes }} MIN
+                    </div>
                   </div>
-                  <div class="course-coach">
-                    Coach: {{ course.user?.name }}
-                  </div>
-                </div>
 
-                <div class="card-right">
-                  <div
-                    v-if="isBookedByUser(course)"
-                    class="booked-indicator"
-                  >
-                    <i class="pi pi-check-circle" />
+                  <div class="card-main">
+                    <div class="course-title">
+                      {{ course.title }}
+                      <span
+                        v-if="isRestrictedForTrial(course)"
+                        class="ml-2 text-[10px] text-slate-500 font-black"
+                      >
+                        <i class="pi pi-lock" /> RESTRICTED
+                      </span>
+                      <span
+                        v-if="isPastCourse(course)"
+                        class="ml-2 text-[10px] text-slate-400 font-black"
+                      >
+                        <i class="pi pi-history" /> PAST
+                      </span>
+                    </div>
+                    <div class="course-coach">
+                      Coach: {{ course.user?.name }}
+                    </div>
                   </div>
-                  <div
-                    v-else
-                    class="spots-pill"
-                    :class="{ 'is-full': course.bookings.filter(b => !b.isWaitlist).length >= course.capacity }"
-                  >
-                    {{ course.capacity - course.bookings.filter(b => !b.isWaitlist).length }}
-                    <i class="pi pi-users" />
+
+                  <div class="card-right">
+                    <div
+                      v-if="isBookedByUser(course)"
+                      class="booked-indicator"
+                    >
+                      <i class="pi pi-check-circle" />
+                    </div>
+                    <div
+                      v-else
+                      class="spots-pill"
+                      :class="{ 'is-full': course.bookings.filter(b => !b.isWaitlist).length >= course.capacity }"
+                    >
+                      {{ course.capacity - course.bookings.filter(b => !b.isWaitlist).length }}
+                      <i class="pi pi-users" />
+                    </div>
                   </div>
                 </div>
-              </div>
+              </template>
             </div>
           </div>
         </div>

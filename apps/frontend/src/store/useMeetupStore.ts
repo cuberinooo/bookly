@@ -6,7 +6,7 @@ export const useMeetupStore = defineStore('meetup', {
   state: () => ({
     meetups: new Map<number, Meetup>(),
     meetupListOrder: [] as number[],
-    loading: false,
+    isLoading: false,
     lastFetched: null as number | null,
     activeFilter: 'active' as 'active' | 'past' | 'joined' | 'cancelled'
   }),
@@ -17,7 +17,10 @@ export const useMeetupStore = defineStore('meetup', {
 
   actions: {
     async fetchMeetups(filter: 'active' | 'past' | 'joined' | 'cancelled' = this.activeFilter) {
-      this.loading = true;
+      this.isLoading = true;
+      this.meetupListOrder = [];
+      this.meetups = new Map<number, Meetup>();
+      
       this.activeFilter = filter;
       try {
         const data = await meetupService.getMeetups({ filter });
@@ -28,7 +31,7 @@ export const useMeetupStore = defineStore('meetup', {
         console.error('Failed to fetch meetups', err);
         throw err;
       } finally {
-        this.loading = false;
+        this.isLoading = false;
       }
     },
 

@@ -38,7 +38,7 @@ export const useCourseStore = defineStore('course', {
     courses: new Map<string | number, Course>(),
     courseListOrder: [] as (string | number)[],
     cycleInfo: null as any,
-    loading: false,
+    isLoading: false,
     lastFetched: null as number | null,
     filters: {} as CourseFilters,
     loadedRange: { start: null as string | null, end: null as string | null },
@@ -59,7 +59,11 @@ export const useCourseStore = defineStore('course', {
 
   actions: {
     async fetchCourses(filters: CourseFilters = this.filters) {
-      this.loading = true;
+      this.isLoading = true;
+      // Clear existing data to prevent flickering
+      this.courseListOrder = [];
+      this.courses = new Map<string | number, Course>();
+      
       this.filters = { ...filters };
       try {
         const response = await api.get('/courses', { params: filters });
@@ -75,7 +79,7 @@ export const useCourseStore = defineStore('course', {
             };
         }
 
-        // Reset order but keep the Map for O(1) lookups
+        // Populate new data
         this.courseListOrder = data.map(c => c.id);
         data.forEach(c => this.courses.set(c.id, c));
         
@@ -86,11 +90,12 @@ export const useCourseStore = defineStore('course', {
         console.error('Failed to fetch courses', err);
         throw err;
       } finally {
-        this.loading = false;
+        this.isLoading = false;
       }
     },
 
     async fetchCourse(id: string | number) {
+      this.isLoading = true;
       try {
         const response = await api.get(`/courses/${id}`);
         const course = response.data as Course;
@@ -99,6 +104,8 @@ export const useCourseStore = defineStore('course', {
       } catch (err) {
         console.error(`Failed to fetch course ${id}`, err);
         throw err;
+      } finally {
+        this.isLoading = false;
       }
     },
 

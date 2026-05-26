@@ -24,7 +24,7 @@ const { confirmDeleteCourse } = useCourseDeletion();
 
 const courses = computed(() => courseStore.courseList);
 const totalRecords = computed(() => courseStore.pagination.totalItems);
-const loading = computed(() => courseStore.loading);
+const loading = computed(() => courseStore.isLoading);
 const transitionName = ref('slide-left');
 const participantsDialog = ref(false);
 const selectedCourse = ref<any>(null);
