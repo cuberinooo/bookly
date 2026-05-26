@@ -186,6 +186,14 @@ class CourseController extends AbstractController
             }
 
             if ($updateSeries && $seriesId) {
+                // IMPORTANT: If we are updating a virtual course by ID, we must ensure it is instantiated
+                // so it can be included in the update list (or simply as a reference point).
+                // Actually, CourseService::updateCourseSeries uses $fromTime to find courses to update.
+                // If it's a virtual course, we might want to instantiate it first so it's "real" for the update.
+                if (str_starts_with($id, 'v_')) {
+                    $course = $courseService->instantiateVirtualCourse((int) $seriesId, $course->getStartTime());
+                }
+
                 $updates = [];
                 if ($newTrainer && $newTrainer->getId() !== $course->getUser()->getId()) {
                     $updates['trainer'] = $newTrainer;

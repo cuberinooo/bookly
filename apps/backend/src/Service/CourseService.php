@@ -246,7 +246,22 @@ class CourseService
      */
     public function updateCourseSeries(string $seriesId, array $updates, ?\DateTimeInterface $fromTime = null): int
     {
+        $series = $this->seriesRepository->find((int) $seriesId);
+        if (!$series) {
+            return 0;
+        }
+
         $now = $fromTime ?? new \DateTime();
+        
+        // 1. Instantiate future occurrences for the next 3 months to make them "real" for the update
+        $threeMonthsLater = (clone $now)->modify('+3 months');
+        $occurrences = $this->getVirtualOccurrences($series, $now, $threeMonthsLater);
+        
+        foreach ($occurrences as $occ) {
+            $this->instantiateVirtualCourse($series->getId(), $occ['startTime']);
+        }
+
+        // 2. Fetch all real courses for this series that are in the future
         $courses = $this->courseRepository->createQueryBuilder('c')
             ->where('c.series = :seriesId')
             ->andWhere('c.startTime >= :now')
@@ -254,8 +269,6 @@ class CourseService
             ->setParameter('now', $now)
             ->getQuery()
             ->getResult();
-
-        $series = $this->seriesRepository->find((int) $seriesId);
 
         foreach ($courses as $course) {
             if (isset($updates['title'])) {
