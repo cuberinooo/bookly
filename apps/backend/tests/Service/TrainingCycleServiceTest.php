@@ -29,16 +29,13 @@ class TrainingCycleServiceTest extends TestCase
     public function test_get_category_for_date_returns_null_if_no_cycle(): void
     {
         $trainer = $this->createMock(User::class);
-        $trainer->method('getId')->willReturn(1);
 
         $this->cycleRepository->expects($this->once())
-            ->method('findActiveCycleForTrainer')
-            ->with(1)
+            ->method('findActiveCycle')
             ->willReturn(null);
 
         $this->cycleRepository->expects($this->once())
-            ->method('findLatestCycleForTrainer')
-            ->with(1)
+            ->method('findLatestCycle')
             ->willReturn(null);
 
         $result = $this->service->getCategoryForDate($trainer, new \DateTime());
@@ -48,13 +45,12 @@ class TrainingCycleServiceTest extends TestCase
     public function test_get_category_for_date_returns_null_if_date_before_cycle_start(): void
     {
         $trainer = $this->createMock(User::class);
-        $trainer->method('getId')->willReturn(1);
 
         $cycle = new TrainingCycle();
         $cycle->setStartDate(new \DateTime('2026-05-20'));
         $cycle->setDurationWeeks(4);
 
-        $this->cycleRepository->method('findActiveCycleForTrainer')->willReturn($cycle);
+        $this->cycleRepository->method('findActiveCycle')->willReturn($cycle);
 
         $result = $this->service->getCategoryForDate($trainer, new \DateTime('2026-05-19'));
         $this->assertNull($result);
@@ -63,7 +59,6 @@ class TrainingCycleServiceTest extends TestCase
     public function test_get_category_for_date_calculates_correct_week_and_day(): void
     {
         $trainer = $this->createMock(User::class);
-        $trainer->method('getId')->willReturn(1);
 
         $cycle = new TrainingCycle();
         $cycle->setStartDate(new \DateTime('2026-05-18')); // Monday
@@ -80,7 +75,7 @@ class TrainingCycleServiceTest extends TestCase
 
         $cycle->addAssignment($assignment);
 
-        $this->cycleRepository->method('findActiveCycleForTrainer')->willReturn($cycle);
+        $this->cycleRepository->method('findActiveCycle')->willReturn($cycle);
 
         // Target: Wednesday of Week 2
         // Start: 2026-05-18 (Mon W1)
@@ -97,7 +92,6 @@ class TrainingCycleServiceTest extends TestCase
     public function test_get_category_for_date_handles_repetition(): void
     {
         $trainer = $this->createMock(User::class);
-        $trainer->method('getId')->willReturn(1);
 
         $cycle = new TrainingCycle();
         $cycle->setStartDate(new \DateTime('2026-05-18')); // Monday
@@ -114,7 +108,7 @@ class TrainingCycleServiceTest extends TestCase
 
         $cycle->addAssignment($assignment);
 
-        $this->cycleRepository->method('findActiveCycleForTrainer')->willReturn($cycle);
+        $this->cycleRepository->method('findActiveCycle')->willReturn($cycle);
 
         // Target: Monday 5 weeks later (Start of second iteration of the cycle)
         // 2026-05-18 + 28 days = 2026-06-15
@@ -129,15 +123,14 @@ class TrainingCycleServiceTest extends TestCase
     public function test_get_cycle_info_for_trainer_falls_back_to_latest(): void
     {
         $trainer = $this->createMock(User::class);
-        $trainer->method('getId')->willReturn(1);
 
         $cycle = new TrainingCycle();
         $cycle->setName('Fallback Cycle');
         $cycle->setStartDate(new \DateTime('2026-05-18'));
         $cycle->setDurationWeeks(4);
 
-        $this->cycleRepository->method('findActiveCycleForTrainer')->willReturn(null);
-        $this->cycleRepository->method('findLatestCycleForTrainer')->willReturn($cycle);
+        $this->cycleRepository->method('findActiveCycle')->willReturn(null);
+        $this->cycleRepository->method('findLatestCycle')->willReturn($cycle);
 
         $targetDate = new \DateTime('2026-05-18');
 

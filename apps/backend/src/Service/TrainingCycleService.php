@@ -18,9 +18,7 @@ class TrainingCycleService
 
     public function getCategoryForDate(User $trainer, \DateTimeInterface $date): ?array
     {
-        $cycle = $this->cycleRepository->findActiveCycleForTrainer($trainer->getId())
-            ?? $this->cycleRepository->findLatestCycleForTrainer($trainer->getId())
-            ?? $this->cycleRepository->findActiveCycle()
+        $cycle = $this->cycleRepository->findActiveCycle()
             ?? $this->cycleRepository->findLatestCycle();
 
         if (!$cycle) {
@@ -57,33 +55,7 @@ class TrainingCycleService
 
     public function getCycleInfoForTrainer(User $trainer, \DateTimeInterface $date): ?array
     {
-        $cycle = $this->cycleRepository->findActiveCycleForTrainer($trainer->getId())
-            ?? $this->cycleRepository->findLatestCycleForTrainer($trainer->getId())
-            ?? $this->cycleRepository->findActiveCycle()
-            ?? $this->cycleRepository->findLatestCycle();
-
-        if (!$cycle) {
-            return null;
-        }
-
-        $start = \DateTime::createFromInterface($cycle->getStartDate())->setTime(0, 0, 0);
-        $target = \DateTime::createFromInterface($date)->setTime(0, 0, 0);
-
-        $daysElapsed = (int) $start->diff($target)->format('%r%a');
-
-        $totalWeeks = $cycle->getDurationWeeks();
-
-        // If it's before the start date, we still return it as Week 1
-        $currentWeek = 1;
-        if ($daysElapsed >= 0) {
-            $currentWeek = (int) floor($daysElapsed / 7) % $totalWeeks + 1;
-        }
-
-        return [
-            'name' => $cycle->getName(),
-            'currentWeek' => $currentWeek,
-            'totalWeeks' => $totalWeeks,
-        ];
+        return $this->getCycleInfoForCompany($date);
     }
 
     public function getCycleInfoForCompany(\DateTimeInterface $date): ?array

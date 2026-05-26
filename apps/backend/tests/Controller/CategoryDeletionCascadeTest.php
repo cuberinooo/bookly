@@ -43,7 +43,6 @@ class CategoryDeletionCascadeTest extends WebTestCase
 
         // 2. Create Training Category
         $category = new TrainingCategory();
-        $category->setTrainer($trainer);
         $category->setCompany($company);
         $category->setName('Cardio Burn');
         $category->setColorHex('#e74c3c');
@@ -51,7 +50,6 @@ class CategoryDeletionCascadeTest extends WebTestCase
 
         // 3. Create Training Cycle starting today
         $cycle = new TrainingCycle();
-        $cycle->setTrainer($trainer);
         $cycle->setCompany($company);
         $cycle->setName('Summer Shred');
         $cycle->setStartDate(new \DateTime('today'));

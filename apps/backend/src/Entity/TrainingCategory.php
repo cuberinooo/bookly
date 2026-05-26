@@ -21,10 +21,6 @@ class TrainingCategory implements CompanyAwareInterface
     #[ORM\JoinColumn(nullable: false)]
     private ?Company $company = null;
 
-    #[ORM\ManyToOne]
-    #[ORM\JoinColumn(nullable: false)]
-    private ?User $trainer = null;
-
     #[ORM\Column(length: 100)]
     #[Groups(['category:read', 'cycle:read', 'course:read'])]
     private ?string $name = null;
@@ -50,18 +46,6 @@ class TrainingCategory implements CompanyAwareInterface
     public function setCompany(?Company $company): static
     {
         $this->company = $company;
-
-        return $this;
-    }
-
-    public function getTrainer(): ?User
-    {
-        return $this->trainer;
-    }
-
-    public function setTrainer(?User $trainer): static
-    {
-        $this->trainer = $trainer;
 
         return $this;
     }

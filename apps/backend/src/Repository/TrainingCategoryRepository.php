@@ -21,11 +21,9 @@ class TrainingCategoryRepository extends ServiceEntityRepository
     /**
      * @return TrainingCategory[]
      */
-    public function findByTrainer(int $trainerId): array
+    public function findByCompany(): array
     {
         return $this->createQueryBuilder('tc')
-            ->andWhere('tc.trainer = :trainerId')
-            ->setParameter('trainerId', $trainerId)
             ->getQuery()
             ->getResult();
     }
