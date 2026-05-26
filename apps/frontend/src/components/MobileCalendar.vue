@@ -7,7 +7,7 @@ const props = defineProps<{
     courses: any[];
     userId?: number;
     baseDate?: Date;
-    cycleInfo?: { name: string; currentWeek: number; totalWeeks: number } | null;
+    cycleInfo?: { name: string; currentWeek: number; totalWeeks: number; startDate: string } | null;
     loading?: boolean;
 }>();
 
@@ -25,6 +25,33 @@ watch(() => props.baseDate, (newVal) => {
         transitionName.value = newVal.getTime() > internalBaseDate.value.getTime() ? 'slide-left' : 'slide-right';
         internalBaseDate.value = new Date(newVal);
     }
+});
+
+const displayedCycleWeek = computed(() => {
+    if (!props.cycleInfo || !props.cycleInfo.startDate) return 0;
+    
+    const cycleStart = new Date(props.cycleInfo.startDate);
+    cycleStart.setHours(0, 0, 0, 0);
+    
+    // Find Monday of the cycle start week
+    const day = cycleStart.getDay();
+    const diff = (day === 0 ? 6 : day - 1);
+    cycleStart.setDate(cycleStart.getDate() - diff);
+
+    const currentBase = new Date(internalBaseDate.value);
+    currentBase.setHours(0, 0, 0, 0);
+    
+    // Find Monday of the current base week
+    const currentDay = currentBase.getDay();
+    const currentDiff = (currentDay === 0 ? 6 : currentDay - 1);
+    currentBase.setDate(currentBase.getDate() - currentDiff);
+
+    const diffDays = Math.round((currentBase.getTime() - cycleStart.getTime()) / (24 * 60 * 60 * 1000));
+    const weeksElapsed = Math.floor(diffDays / 7);
+    
+    if (weeksElapsed < 0) return 1;
+    
+    return (weeksElapsed % props.cycleInfo.totalWeeks) + 1;
 });
 
 const currentWeek = computed(() => {
@@ -136,7 +163,7 @@ function formatDayName(date: Date) {
         <i class="pi pi-sync text-amber-400 animate-spin-slow text-xs" />
         <span class="text-[10px] font-black text-white uppercase tracking-widest">{{ cycleInfo.name }}</span>
       </div>
-      <span class="text-[10px] font-black text-amber-400 uppercase">WEEK {{ cycleInfo.currentWeek }} / {{ cycleInfo.totalWeeks }}</span>
+      <span class="text-[10px] font-black text-amber-400 uppercase">WEEK {{ displayedCycleWeek }} / {{ cycleInfo.totalWeeks }}</span>
     </div>
 
     <div class="mobile-nav">

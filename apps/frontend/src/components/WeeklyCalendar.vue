@@ -8,7 +8,7 @@ const props = withDefaults(defineProps<{
     isCompactView?: boolean;
     userId?: number;
     baseDate?: Date;
-    cycleInfo?: { name: string; currentWeek: number; totalWeeks: number } | null;
+    cycleInfo?: { name: string; currentWeek: number; totalWeeks: number; startDate: string } | null;
     loading?: boolean;
 }>(), {
     isCompactView: true,
@@ -27,6 +27,33 @@ watch(() => props.baseDate, (newVal) => {
     if (newVal.getTime() !== internalBaseDate.value.getTime()) {
         internalBaseDate.value = new Date(newVal);
     }
+});
+
+const displayedCycleWeek = computed(() => {
+    if (!props.cycleInfo || !props.cycleInfo.startDate) return 0;
+    
+    const cycleStart = new Date(props.cycleInfo.startDate);
+    cycleStart.setHours(0, 0, 0, 0);
+    
+    // Find Monday of the cycle start week
+    const day = cycleStart.getDay();
+    const diff = (day === 0 ? 6 : day - 1);
+    cycleStart.setDate(cycleStart.getDate() - diff);
+
+    const currentBase = new Date(internalBaseDate.value);
+    currentBase.setHours(0, 0, 0, 0);
+    
+    // Find Monday of the current base week
+    const currentDay = currentBase.getDay();
+    const currentDiff = (currentDay === 0 ? 6 : currentDay - 1);
+    currentBase.setDate(currentBase.getDate() - currentDiff);
+
+    const diffDays = Math.round((currentBase.getTime() - cycleStart.getTime()) / (24 * 60 * 60 * 1000));
+    const weeksElapsed = Math.floor(diffDays / 7);
+    
+    if (weeksElapsed < 0) return 1;
+    
+    return (weeksElapsed % props.cycleInfo.totalWeeks) + 1;
 });
 
 const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -133,7 +160,7 @@ function onSlotClick(day: Date, hour: number) {
       </div>
       <div class="flex items-center gap-2 bg-white px-4 py-2 rounded-lg border border-slate-200 shadow-sm">
         <span class="text-xs font-bold text-slate-400 uppercase">Cycle Progress</span>
-        <span class="text-sm font-black text-amber-600">WEEK {{ cycleInfo.currentWeek }} / {{ cycleInfo.totalWeeks }}</span>
+        <span class="text-sm font-black text-amber-600">WEEK {{ displayedCycleWeek }} / {{ cycleInfo.totalWeeks }}</span>
       </div>
     </div>
 

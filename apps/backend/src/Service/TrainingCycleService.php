@@ -84,6 +84,7 @@ class TrainingCycleService
             'name' => $cycle->getName(),
             'currentWeek' => $currentWeek,
             'totalWeeks' => $totalWeeks,
+            'startDate' => $cycle->getStartDate()->format(\DateTime::ATOM),
         ];
     }
 }
