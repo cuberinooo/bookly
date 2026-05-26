@@ -209,7 +209,7 @@ const getProfilePictureUrl = (userId: number, filename: string | null) => {
                     class="text-center"
                   >
                     <template #body="slotProps">
-                      <div class="font-bold text-amber-400">
+                      <div class="font-bold text-white">
                         {{ slotProps.data.attendanceCount }}
                       </div>
                     </template>
@@ -281,12 +281,12 @@ const getProfilePictureUrl = (userId: number, filename: string | null) => {
                     v-for="(record, index) in leaderboardStore.records[ex][gender]"
                     :key="record.userId"
                     class="flex items-center justify-between p-3 rounded-lg"
-                    :class="index === 0 ? 'bg-amber-500/10 border border-amber-500/20' : 'bg-slate-700/30'"
+                    :class="index === 0 ? 'border bg-pb-card-first' : 'bg-pb-card'"
                   >
                     <div class="flex items-center gap-3">
                       <div
                         class="w-6 text-center font-bold"
-                        :class="index === 0 ? 'text-amber-400' : (index === 1 ? 'text-slate-300' : (index === 2 ? 'text-amber-700' : 'text-slate-500'))"
+                        :class="index === 0 ? 'text-white' : (index === 1 ? 'text-slate-300' : (index === 2 ? 'text-amber-700' : 'text-slate-500'))"
                       >
                         {{ index + 1 }}
                       </div>
@@ -305,17 +305,17 @@ const getProfilePictureUrl = (userId: number, filename: string | null) => {
                       />
                       <div>
                         <div
-                          class="font-bold text-primary text-sm"
-                          :class="{'text-amber-400': index === 0}"
+                          class="font-bold text-white text-sm"
+                          :class="{'text-white': index === 0}"
                         >
                           {{ record.name }}
                         </div>
-                        <div class="text-[10px] text-primary">
+                        <div class="text-[10px] text-white">
                           {{ new Date(record.dateAchieved).toLocaleDateString() }}
                         </div>
                       </div>
                     </div>
-                    <div class="font-black text-primary">
+                    <div class="font-black text-white">
                       {{ record.weightValue }}
                     </div>
                   </div>
@@ -391,6 +391,15 @@ const getProfilePictureUrl = (userId: number, filename: string | null) => {
 </template>
 
 <style scoped>
+
+.bg-pb-card {
+  background-color: var(--bg-primary-color);
+}
+
+.bg-pb-card-first {
+  background-color: var(--primary-color);
+}
+
 /* Scoped styles to complement Tailwind and PrimeVue */
 :deep(.p-card-body) {
     padding: 1.5rem;
