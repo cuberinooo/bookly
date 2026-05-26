@@ -28,6 +28,15 @@ const authStore = useAuthStore();
 const rsvpDeadline = computed(() => new Date(props.meetup.rsvpDeadline));
 const meetupDate = computed(() => new Date(props.meetup.meetupDate));
 const isRsvpLocked = computed(() => timeStore.now > rsvpDeadline.value || props.meetup.status !== MeetupStatus.OPEN);
+const isPast = computed(() => timeStore.now > meetupDate.value);
+
+const displayStatus = computed(() => {
+  if (props.meetup.status === MeetupStatus.CANCELLED) return 'CANCELLED';
+  if (isPast.value) return 'CLOSED';
+  if (timeStore.now > rsvpDeadline.value) return 'LOCKED';
+  return props.meetup.status.toUpperCase();
+});
+
 const isOwner = computed(() => authStore.user?.id === props.meetup.creator.id);
 const canEdit = computed(() => isOwner.value && timeStore.now < meetupDate.value && props.meetup.status !== MeetupStatus.CANCELLED);
 
@@ -60,9 +69,12 @@ const countdown = computed(() => {
 });
 
 const statusSeverity = computed(() => {
+  if (props.meetup.status === MeetupStatus.CANCELLED) return 'danger';
+  if (isPast.value) return 'secondary';
+  if (timeStore.now > rsvpDeadline.value) return 'secondary';
+
   switch (props.meetup.status) {
     case MeetupStatus.CONFIRMED: return 'success';
-    case MeetupStatus.CANCELLED: return 'danger';
     case MeetupStatus.OPEN: return 'info';
     default: return 'info';
   }
@@ -105,7 +117,7 @@ const handleRsvp = (status: RsvpStatus) => {
           {{ meetup.title }}
         </h3>
         <Tag
-          :value="meetup.status"
+          :value="displayStatus"
           :severity="statusSeverity"
         />
       </div>

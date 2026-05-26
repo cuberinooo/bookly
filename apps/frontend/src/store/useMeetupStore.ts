@@ -16,10 +16,10 @@ export const useMeetupStore = defineStore('meetup', {
   },
 
   actions: {
-    async fetchMeetups(filter: 'active' | 'past' | 'joined' | 'cancelled' = this.activeFilter) {
-      this.isLoading = true;
-      this.meetupListOrder = [];
-      this.meetups = new Map<number, Meetup>();
+    async fetchMeetups(filter: 'active' | 'past' | 'joined' | 'cancelled' = this.activeFilter, forceLoading = false) {
+      if (forceLoading || this.meetupListOrder.length === 0) {
+        this.isLoading = true;
+      }
       
       this.activeFilter = filter;
       try {

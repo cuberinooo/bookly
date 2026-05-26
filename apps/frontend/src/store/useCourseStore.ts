@@ -58,11 +58,10 @@ export const useCourseStore = defineStore('course', {
   },
 
   actions: {
-    async fetchCourses(filters: CourseFilters = this.filters) {
-      this.isLoading = true;
-      // Clear existing data to prevent flickering
-      this.courseListOrder = [];
-      this.courses = new Map<string | number, Course>();
+    async fetchCourses(filters: CourseFilters = this.filters, forceLoading = false) {
+      if (forceLoading || this.courseListOrder.length === 0) {
+        this.isLoading = true;
+      }
       
       this.filters = { ...filters };
       try {
