@@ -115,10 +115,10 @@ onMounted(() => {
               </span>
             </div>
             <div class="flex items-baseline justify-between">
-              <h3 class="text-2xl font-black uppercase tracking-tighter text-white">
+              <h3 class="text-2xl uppercase tracking-tighter !text-white">
                 {{ pb.exerciseName }}
               </h3>
-              <div class="text-3xl font-black text-amber-500 italic">
+              <div class="text-3xl text-amber-500 italic">
                 {{ pb.weightValue }}
               </div>
             </div>

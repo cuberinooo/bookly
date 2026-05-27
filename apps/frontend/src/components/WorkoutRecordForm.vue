@@ -6,10 +6,7 @@ import Button from 'primevue/button';
 import Select from 'primevue/select';
 import InputNumber from 'primevue/inputnumber';
 
-const props = defineProps<{
-  onSuccess?: () => void;
-  onCancel?: () => void;
-}>();
+const emit = defineEmits(['success', 'cancel']);
 
 const leaderboardStore = useLeaderboardStore();
 const toast = useToast();
@@ -50,7 +47,7 @@ async function submitRecord() {
         await leaderboardStore.submitRecord(recordForm.value.exerciseName, recordForm.value.weightValue);
         toast.add({ severity: 'success', summary: 'Success', detail: 'Personal best logged successfully', life: 3000 });
         recordForm.value = { exerciseName: '', weightValue: null };
-        if (props.onSuccess) props.onSuccess();
+        emit('success');
     } catch (e) {
         toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to log personal best', life: 3000 });
     } finally {
@@ -72,6 +69,8 @@ async function submitRecord() {
         :options="groupedExercises"
         option-group-label="label"
         option-group-children="items"
+        option-label="label"
+        option-value="value"
         filter
         :loading="leaderboardStore.loading"
         placeholder="Select or search exercise"
@@ -100,7 +99,7 @@ async function submitRecord() {
         severity="secondary"
         text
         class="font-bold uppercase tracking-tight"
-        @click="onCancel"
+        @click="emit('cancel')"
       />
       <Button
         label="Save PB"
