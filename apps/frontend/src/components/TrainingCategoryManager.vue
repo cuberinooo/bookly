@@ -6,6 +6,7 @@ import InputText from 'primevue/inputtext';
 import Textarea from 'primevue/textarea';
 import ColorPicker from 'primevue/colorpicker';
 import Dialog from 'primevue/dialog';
+import { useConfirm } from 'primevue/useconfirm';
 
 const props = defineProps<{
     categories: TrainingCategory[];
@@ -14,6 +15,7 @@ const props = defineProps<{
 
 const emit = defineEmits(['add', 'delete', 'select', 'update']);
 
+const confirm = useConfirm();
 const showCreateDialog = ref(false);
 const showEditDialog = ref(false);
 
@@ -23,6 +25,25 @@ const form = ref({
     colorHex: 'ffc107',
     description: ''
 });
+
+function confirmDelete(cat: TrainingCategory) {
+    confirm.require({
+        message: `Delete "${cat.name}"? This cannot be undone and may affect courses using this category.`,
+        header: 'Dangerous Action',
+        icon: 'pi pi-exclamation-triangle',
+        acceptProps: {
+            label: 'Delete',
+            severity: 'danger'
+        },
+        rejectProps: {
+            label: 'Cancel',
+            severity: 'primary'
+        },
+        accept: () => {
+            emit('delete', cat.id);
+        }
+    });
+}
 
 function openCreate() {
     form.value = { id: null, name: '', colorHex: 'ffc107', description: '' };
@@ -112,7 +133,7 @@ function handleSave() {
               size="small"
               severity="danger"
               class="!p-1"
-              @click.stop="$emit('delete', cat.id)"
+              @click.stop="confirmDelete(cat)"
             />
           </div>
         </div>
