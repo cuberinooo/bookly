@@ -2,20 +2,16 @@
 import { computed } from 'vue';
 import { useAuthStore } from '../store/useAuthStore';
 import TrainerSettingsForm from '../components/TrainerSettingsForm.vue';
-import UserManagementTab from '../components/UserManagementTab.vue';
 import LegalSettingsForm from '../components/LegalSettingsForm.vue';
 import CompanySettingsForm from '../components/CompanySettingsForm.vue';
 import MailSettingsTab from '../components/MailSettingsTab.vue';
-import StripeSettingsTab from '../components/StripeSettingsTab.vue';
 
 const authStore = useAuthStore();
 
 const activeTabs = computed(() => {
     const tabs = [];
     if (authStore.isAdmin) {
-        tabs.push({ id: 'users', label: 'ATHLETES', component: UserManagementTab });
         tabs.push({ id: 'company', label: 'IDENTITY', component: CompanySettingsForm });
-        tabs.push({ id: 'stripe', label: 'PAYMENTS', component: StripeSettingsTab });
         tabs.push({ id: 'mail', label: 'EMAIL TEMPLATES', component: MailSettingsTab });
         tabs.push({ id: 'legal', label: 'LEGAL & COMPLIANCE', component: LegalSettingsForm });
     }
@@ -63,7 +59,7 @@ const activeTabs = computed(() => {
         >
           <div
             v-if="tab.component"
-            :class="tab.id === 'users' ? '' : 'mt-4 md:mt-6'"
+            class="mt-4 md:mt-6"
           >
             <component :is="tab.component" />
           </div>

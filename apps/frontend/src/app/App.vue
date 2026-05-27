@@ -103,29 +103,54 @@ const canSeeLeaderboard = computed(() => {
 });
 
 const menuItems = computed(() => {
-  const items = [
-    {
-      label: 'My Account',
-      items: [
-        {label: 'Profile', icon: 'pi pi-user', command: () => router.push('/profile')},
-        {label: 'My Personal Bests', icon: 'pi pi-trophy', command: () => router.push('/personal-bests')},
-        {label: 'Settings', icon: 'pi pi-cog', command: () => router.push('/settings')}
-      ]
-    }
-  ];
+  const items = [];
 
+  // Personal Category
+  items.push({
+    label: 'Personal',
+    items: [
+      { label: 'Profile', icon: 'pi pi-user', command: () => router.push('/profile') },
+      { label: 'My Personal Bests', icon: 'pi pi-trophy', command: () => router.push('/personal-bests') }
+    ]
+  });
+
+  // Management Category (Admin or Trainer)
+  const managementItems = [];
+  if (authStore.isAdmin) {
+    managementItems.push({ label: 'Athletes', icon: 'pi pi-users', command: () => router.push('/users') });
+  }
   if (authStore.isTrainer) {
-    items[0].items.push({
-      label: 'Statistics',
-      icon: 'pi pi-chart-bar',
-      command: () => router.push('/statistics')
+    managementItems.push({ label: 'Statistics', icon: 'pi pi-chart-bar', command: () => router.push('/statistics') });
+  }
+
+  if (managementItems.length > 0) {
+    items.push({
+      label: 'Management',
+      items: managementItems
     });
   }
 
+  // Administration Category (Admin or Trainer)
+  const administrationItems = [];
+  if (authStore.isAdmin) {
+    administrationItems.push({ label: 'Payments', icon: 'pi pi-credit-card', command: () => router.push('/payments') });
+  }
+  if (authStore.isAdmin || authStore.isTrainer) {
+    administrationItems.push({ label: 'System Settings', icon: 'pi pi-cog', command: () => router.push('/settings') });
+  }
+
+  if (administrationItems.length > 0) {
+    items.push({
+      label: 'Administration',
+      items: administrationItems
+    });
+  }
+
+  // Account Category
   items.push({
-    label: 'Account Action',
+    label: 'Account',
     items: [
-      {label: 'Logout', icon: 'pi pi-sign-out', command: () => logout()}
+      { label: 'Logout', icon: 'pi pi-sign-out', command: () => logout() }
     ]
   });
 
