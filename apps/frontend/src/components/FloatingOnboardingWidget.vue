@@ -13,7 +13,8 @@ const {
     isComplete,
     completedTasksCount,
     totalTasksCount,
-    skipOnboarding
+    skipOnboarding,
+    filteredMetadata
 } = useOnboarding();
 
 const isExpanded = ref(false);
@@ -22,7 +23,7 @@ const displayedTask = computed(() => currentContextualTask.value || nextPendingT
 const showWidget = computed(() => !isComplete.value);
 const isContextual = computed(() => !!currentContextualTask.value);
 const allTasks = computed(() => {
-    const tasks = Object.entries(TASK_METADATA).map(([id, meta]) => ({
+    const tasks = Object.entries(filteredMetadata.value).map(([id, meta]) => ({
         id,
         ...meta,
         isDone: onboardingState.value.includes(id),

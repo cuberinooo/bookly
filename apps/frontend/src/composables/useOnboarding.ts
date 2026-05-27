@@ -53,22 +53,31 @@ export function useOnboarding() {
 
   const onboardingState = computed(() => authStore.user?.onboardingState || []);
   const isSkipped = computed(() => onboardingState.value.includes('skipped'));
+
+  const filteredMetadata = computed(() => {
+    const metadata = { ...TASK_METADATA };
+    if (authStore.isTrial) {
+      delete metadata[ONBOARDING_TASKS.LEADERBOARD];
+    }
+    return metadata;
+  });
+
   const isComplete = computed(() => {
     if (isSkipped.value) return true;
-    const requiredTasks = Object.values(ONBOARDING_TASKS);
+    const requiredTasks = Object.keys(filteredMetadata.value);
     return requiredTasks.every(task => onboardingState.value.includes(task));
   });
 
   const completionPercentage = computed(() => {
     if (isSkipped.value) return 100;
-    const requiredTasks = Object.values(ONBOARDING_TASKS);
+    const requiredTasks = Object.keys(filteredMetadata.value);
     const completedCount = requiredTasks.filter(task => onboardingState.value.includes(task)).length;
     return Math.round((completedCount / requiredTasks.length) * 100);
   });
 
-  const totalTasksCount = computed(() => Object.values(ONBOARDING_TASKS).length);
+  const totalTasksCount = computed(() => Object.keys(filteredMetadata.value).length);
   const completedTasksCount = computed(() => {
-    const requiredTasks = Object.values(ONBOARDING_TASKS);
+    const requiredTasks = Object.keys(filteredMetadata.value);
     return requiredTasks.filter(task => onboardingState.value.includes(task)).length;
   });
 
@@ -76,7 +85,7 @@ export function useOnboarding() {
     if (isSkipped.value) return null;
     
     // Find a task that matches the current route name AND is not yet complete
-    const entry = Object.entries(TASK_METADATA).find(([taskId, meta]) => {
+    const entry = Object.entries(filteredMetadata.value).find(([taskId, meta]) => {
       return meta.routeName === route.name && !onboardingState.value.includes(taskId);
     });
 
@@ -85,7 +94,7 @@ export function useOnboarding() {
 
   const nextPendingTask = computed(() => {
     if (isSkipped.value) return null;
-    const entry = Object.entries(TASK_METADATA).find(([taskId, _]) => {
+    const entry = Object.entries(filteredMetadata.value).find(([taskId, _]) => {
       return !onboardingState.value.includes(taskId);
     });
     return entry ? { id: entry[0] as OnboardingTaskId, ...entry[1] } : null;
@@ -144,5 +153,6 @@ export function useOnboarding() {
     markTaskComplete,
     skipOnboarding,
     initRouteTracking,
+    filteredMetadata,
   };
 }
