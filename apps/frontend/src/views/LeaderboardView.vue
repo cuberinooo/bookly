@@ -3,18 +3,13 @@ import { ref, onMounted, computed } from 'vue';
 import { useLeaderboardStore } from '../store/useLeaderboardStore';
 import { useAuthStore } from '../store/useAuthStore';
 import { useToast } from 'primevue/usetoast';
+import WorkoutRecordForm from '../components/WorkoutRecordForm.vue';
 
 const leaderboardStore = useLeaderboardStore();
 const authStore = useAuthStore();
 const toast = useToast();
 
 const showSubmitDialog = ref(false);
-const submitting = ref(false);
-
-const recordForm = ref({
-    exerciseName: null,
-    weightValue: null as number | null
-});
 
 onMounted(async () => {
     try {
@@ -23,25 +18,6 @@ onMounted(async () => {
         toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load leaderboard data', life: 3000 });
     }
 });
-
-const submitRecord = async () => {
-    if (!recordForm.value.exerciseName || !recordForm.value.weightValue) {
-        toast.add({ severity: 'warn', summary: 'Validation Error', detail: 'Please fill in all fields', life: 3000 });
-        return;
-    }
-
-    submitting.value = true;
-    try {
-        await leaderboardStore.submitRecord(recordForm.value.exerciseName, recordForm.value.weightValue);
-        toast.add({ severity: 'success', summary: 'Success', detail: 'Personal best logged successfully', life: 3000 });
-        showSubmitDialog.value = false;
-        recordForm.value = { exerciseName: null, weightValue: null };
-    } catch (error) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to log personal best', life: 3000 });
-    } finally {
-        submitting.value = false;
-    }
-};
 
 const groupedExercises = computed(() => {
     const groups: Record<string, string[]> = {};
@@ -334,58 +310,10 @@ const getProfilePictureUrl = (userId: number, filename: string | null) => {
       :style="{ width: '400px' }"
       class="p-fluid"
     >
-      <div class="space-y-6 pt-4">
-        <div class="field">
-          <label
-            for="exercise"
-            class="text-slate-300 font-bold mb-2 block"
-          >Exercise</label>
-          <Select
-            id="exercise"
-            v-model="recordForm.exerciseName"
-            :options="groupedExercises"
-            option-group-label="label"
-            option-group-children="items"
-            filter
-            :loading="leaderboardStore.loading"
-            placeholder="Select or search exercise"
-            class="w-full"
-          />
-        </div>
-
-        <div class="field">
-          <label
-            for="weight"
-            class="text-slate-300 font-bold mb-2 block"
-          >Weight (kg / reps / time)</label>
-          <InputNumber
-            id="weight"
-            v-model="recordForm.weightValue"
-            input-id="minmaxfraction"
-            :min-fraction-digits="0"
-            :max-fraction-digits="2"
-            placeholder="e.g., 100"
-            class="w-full"
-          />
-        </div>
-      </div>
-      <template #footer>
-        <div class="flex justify-end gap-2 mt-6">
-          <Button
-            label="Cancel"
-            icon="pi pi-times"
-            class="p-button-text p-button-secondary"
-            @click="showSubmitDialog = false"
-          />
-          <Button
-            label="Save PB"
-            icon="pi pi-check"
-            class="p-button-primary"
-            :loading="submitting"
-            @click="submitRecord"
-          />
-        </div>
-      </template>
+      <WorkoutRecordForm
+        @success="showSubmitDialog = false"
+        @cancel="showSubmitDialog = false"
+      />
     </Dialog>
   </div>
 </template>

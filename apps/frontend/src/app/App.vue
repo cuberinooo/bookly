@@ -101,6 +101,7 @@ const menuItems = computed(() => {
       label: 'My Account',
       items: [
         {label: 'Profile', icon: 'pi pi-user', command: () => router.push('/profile')},
+        {label: 'My Personal Bests', icon: 'pi pi-trophy', command: () => router.push('/personal-bests')},
         {label: 'Settings', icon: 'pi pi-cog', command: () => router.push('/settings')}
       ]
     }

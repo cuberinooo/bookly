@@ -65,4 +65,25 @@ class LeaderboardController extends AbstractController
     {
         return $this->json($this->leaderboardService->getWorkoutRecords());
     }
+
+    #[Route('/my-records', name: 'api_leaderboard_my_records', methods: ['GET'])]
+    public function getMyRecords(): JsonResponse
+    {
+        return $this->json(
+            $this->leaderboardService->getMyRecords($this->getUser()),
+            context: ['groups' => ['workout_record:read']]
+        );
+    }
+
+    #[Route('/workout-records/{id}', name: 'api_leaderboard_delete_record', methods: ['DELETE'])]
+    public function deleteRecord(int $id): JsonResponse
+    {
+        try {
+            $this->leaderboardService->deleteRecord($this->getUser(), $id);
+
+            return $this->json(['status' => 'success']);
+        } catch (\InvalidArgumentException $e) {
+            return $this->json(['error' => $e->getMessage()], 400);
+        }
+    }
 }

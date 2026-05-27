@@ -195,4 +195,28 @@ class LeaderboardService
 
         return $record;
     }
+
+    public function getMyRecords(User $user): array
+    {
+        return $this->recordRepository->findBy(
+            ['user' => $user],
+            ['dateAchieved' => 'DESC']
+        );
+    }
+
+    public function deleteRecord(User $user, int $id): void
+    {
+        $record = $this->recordRepository->find($id);
+
+        if (!$record) {
+            throw new \InvalidArgumentException('Record not found');
+        }
+
+        if ($record->getUser() !== $user) {
+            throw new \InvalidArgumentException('You can only delete your own records');
+        }
+
+        $this->em->remove($record);
+        $this->em->flush();
+    }
 }

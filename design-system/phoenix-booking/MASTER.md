@@ -7,8 +7,8 @@
 ---
 
 **Project:** Phoenix Booking
-**Generated:** 2026-04-24 10:39:03
-**Category:** Fitness/Gym App
+**Generated:** 2026-05-27 10:13:57
+**Category:** Fitness/Gym App & Membership/Community
 
 ---
 
@@ -18,24 +18,24 @@
 
 | Role | Hex | CSS Variable |
 |------|-----|--------------|
-| Primary | `#F97316` | `--color-primary` |
-| Secondary | `#FB923C` | `--color-secondary` |
-| CTA/Accent | `#22C55E` | `--color-cta` |
-| Background | `#1F2937` | `--color-background` |
-| Text | `#F8FAFC` | `--color-text` |
+| Primary | `#18181B` | `--color-primary` |
+| Secondary | `#3F3F46` | `--color-secondary` |
+| CTA/Accent | `#2563EB` | `--color-cta` |
+| Background | `#FAFAFA` | `--color-background` |
+| Text | `#09090B` | `--color-text` |
 
-**Color Notes:** Energy orange + success green
+**Color Notes:** Monochrome + blue accent
 
 ### Typography
 
-- **Heading Font:** Syncopate
-- **Body Font:** Space Mono
-- **Mood:** kinetic, motion, futuristic, speed, wide, tech
-- **Google Fonts:** [Syncopate + Space Mono](https://fonts.google.com/share?selection.family=Space+Mono:wght@400;700|Syncopate:wght@400;700)
+- **Heading Font:** Barlow Condensed
+- **Body Font:** Barlow
+- **Mood:** sports, fitness, athletic, energetic, condensed, action
+- **Google Fonts:** [Barlow Condensed + Barlow](https://fonts.google.com/share?selection.family=Barlow+Condensed:wght@400;500;600;700|Barlow:wght@300;400;500;600;700)
 
 **CSS Import:**
 ```css
-@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syncopate:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@300;400;500;600;700&display=swap');
 ```
 
 ### Spacing Variables
@@ -68,7 +68,7 @@
 ```css
 /* Primary Button */
 .btn-primary {
-  background: #22C55E;
+  background: #2563EB;
   color: white;
   padding: 12px 24px;
   border-radius: 8px;
@@ -85,8 +85,8 @@
 /* Secondary Button */
 .btn-secondary {
   background: transparent;
-  color: #F97316;
-  border: 2px solid #F97316;
+  color: #18181B;
+  border: 2px solid #18181B;
   padding: 12px 24px;
   border-radius: 8px;
   font-weight: 600;
@@ -99,7 +99,7 @@
 
 ```css
 .card {
-  background: #1F2937;
+  background: #FAFAFA;
   border-radius: 12px;
   padding: 24px;
   box-shadow: var(--shadow-md);
@@ -125,9 +125,9 @@
 }
 
 .input:focus {
-  border-color: #F97316;
+  border-color: #18181B;
   outline: none;
-  box-shadow: 0 0 0 3px #F9731620;
+  box-shadow: 0 0 0 3px #18181B20;
 }
 ```
 
@@ -163,21 +163,18 @@
 
 ### Page Pattern
 
-**Pattern Name:** Horizontal Scroll Journey
+**Pattern Name:** Community/Forum Landing
 
-- **Conversion Strategy:** Immersive product discovery. High engagement. Keep navigation visible.
-28,Bento Grid Showcase,bento,  grid,  features,  modular,  apple-style,  showcase", 1. Hero, 2. Bento Grid (Key Features), 3. Detail Cards, 4. Tech Specs, 5. CTA, Floating Action Button or Bottom of Grid, Card backgrounds: #F5F5F7 or Glass. Icons: Vibrant brand colors. Text: Dark., Hover card scale (1.02), video inside cards, tilt effect, staggered reveal, Scannable value props. High information density without clutter. Mobile stack.
-29,Interactive 3D Configurator,3d,  configurator,  customizer,  interactive,  product", 1. Hero (Configurator), 2. Feature Highlight (synced), 3. Price/Specs, 4. Purchase, Inside Configurator UI + Sticky Bottom Bar, Neutral studio background. Product: Realistic materials. UI: Minimal overlay., Real-time rendering, material swap animation, camera rotate/zoom, light reflection, Increases ownership feeling. 360 view reduces return rates. Direct add-to-cart.
-30,AI-Driven Dynamic Landing,ai,  dynamic,  personalized,  adaptive,  generative", 1. Prompt/Input Hero, 2. Generated Result Preview, 3. How it Works, 4. Value Prop, Input Field (Hero) + 'Try it' Buttons, Adaptive to user input. Dark mode for compute feel. Neon accents., Typing text effects, shimmering generation loaders, morphing layouts, Immediate value demonstration. 'Show, don't tell'. Low friction start.
-- **CTA Placement:** Floating Sticky CTA or End of Horizontal Track
-- **Section Order:** 1. Intro (Vertical), 2. The Journey (Horizontal Track), 3. Detail Reveal, 4. Vertical Footer
+- **Conversion Strategy:** Show active community (member count, posts today). Highlight benefits. Preview content. Easy onboarding.
+- **CTA Placement:** Join button prominent + After member showcase
+- **Section Order:** 1. Hero (community value prop), 2. Popular topics/categories, 3. Active members showcase, 4. Join CTA
 
 ---
 
 ## Anti-Patterns (Do NOT Use)
 
-- ❌ Static design
-- ❌ No gamification
+- ❌ Hidden benefits
+- ❌ No community proof
 
 ### Additional Forbidden Patterns
 
