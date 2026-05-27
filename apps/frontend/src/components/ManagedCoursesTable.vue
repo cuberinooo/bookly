@@ -640,7 +640,7 @@ onUnmounted(() => {
                       {{ course.user?.id === authStore.user?.id ? 'YOU' : course.user?.name }}
                     </div>
                   </div>
-                  <span :class="['slot-badge !py-1 !px-2 !text-[10px]', { 'is-full': course.bookings.length >= course.capacity }]">
+                  <span :class="['slot-badge !py-1 !px-2', { 'is-full': course.bookings.length >= course.capacity }]">
                     {{ course.bookings.length }} / {{ course.capacity }}
                   </span>
                 </div>

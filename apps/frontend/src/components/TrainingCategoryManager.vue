@@ -98,7 +98,7 @@ function handleSave() {
               {{ cat.description }}
             </div>
           </div>
-          <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div class="flex gap-1">
             <Button
               icon="pi pi-pencil"
               variant="text"
