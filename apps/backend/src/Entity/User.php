@@ -196,6 +196,22 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, Company
     #[Groups(['user:read'])]
     private bool $joinUsMailSent = false;
 
+    #[ORM\Column(type: 'json', options: ['default' => '[]'])]
+    #[Groups(['user:read'])]
+    private array $onboardingState = [];
+
+    public function getOnboardingState(): array
+    {
+        return $this->onboardingState;
+    }
+
+    public function setOnboardingState(array $onboardingState): static
+    {
+        $this->onboardingState = $onboardingState;
+
+        return $this;
+    }
+
     public function isJoinUsMailSent(): bool
     {
         return $this->joinUsMailSent;

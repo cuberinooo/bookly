@@ -10,6 +10,7 @@ export interface User {
   isPublic?: boolean;
   mustChangePassword?: boolean;
   profilePicture?: string;
+  onboardingState?: string[];
 }
 
 export const useAuthStore = defineStore('auth', () => {
@@ -70,7 +71,8 @@ export const useAuthStore = defineStore('auth', () => {
         isActive: payload.isActive,
         isPublic: payload.isPublic,
         mustChangePassword: payload.mustChangePassword,
-        profilePicture: payload.profilePicture
+        profilePicture: payload.profilePicture,
+        onboardingState: payload.onboardingState || []
       };
     } catch {
       logout();

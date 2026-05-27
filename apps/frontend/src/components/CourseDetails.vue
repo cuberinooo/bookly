@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue';
 import { formatTime, formatDateWithDay } from '../services/date-utils';
 import { useAuthStore } from '../store/useAuthStore';
+import { useOnboarding, ONBOARDING_TASKS } from '../composables/useOnboarding';
 import api from '../services/api';
 import { useToast } from 'primevue/usetoast';
 
@@ -18,6 +19,7 @@ const props = defineProps<{
 const emit = defineEmits(['booked', 'unbooked']);
 
 const authStore = useAuthStore();
+const { markTaskComplete } = useOnboarding();
 const toast = useToast();
 const submitting = ref(false);
 
@@ -32,6 +34,7 @@ async function bookCourse() {
   try {
     await api.post(`/courses/${props.course.id}/book`);
     toast.add({ severity: 'success', summary: 'Confirmed', detail: 'Booking confirmed!', life: 5000 });
+    markTaskComplete(ONBOARDING_TASKS.FIRST_BOOKING);
     emit('booked');
   } catch (err: any) {
     toast.add({ severity: 'error', summary: 'Error', detail: err.response?.data?.error || 'Booking failed', life: 5000 });
