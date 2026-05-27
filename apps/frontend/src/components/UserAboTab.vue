@@ -136,7 +136,7 @@ onMounted(fetchAboData);
                 {{ subscription.cancel_at_period_end ? 'Subscription Cancelling' : 'Your Subscription is Active' }}
               </h3>
               <div class="flex items-center gap-2 mt-1">
-                <Tag :value="subscription.status.toUpperCase()" :severity="getStatusSeverity(subscription.status)" />
+                <Tag :value="subscription.display_status.toUpperCase()" :severity="getStatusSeverity(subscription.display_status)" />
                 <span class="text-sm text-slate-500 font-medium">
                   {{ subscription.cancel_at_period_end ? 'Access until' : 'Renews on' }} {{ formatDate(subscription.current_period_end) }}
                 </span>

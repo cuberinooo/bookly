@@ -141,43 +141,83 @@ class StripeConnectController extends AbstractController
         $stripeAccountHeader = ['stripe_account' => $company->getStripeAccountId()];
 
         try {
-            // Fetch all subscriptions for this connected account
+            // Fetch all active/past_due/trialing subscriptions
             $subscriptions = \Stripe\Subscription::all([
-                'expand' => ['data.customer', 'data.latest_invoice'],
+                'status' => 'all',
+                'expand' => ['data.customer', 'data.latest_invoice', 'data.plan.product'],
                 'limit' => 100,
             ], $stripeAccountHeader);
 
-            $mappedSubscriptions = [];
+            $groupedByCustomer = [];
             foreach ($subscriptions->data as $sub) {
+                if (in_array($sub->status, ['canceled', 'incomplete_expired'])) continue;
+
                 /** @var \Stripe\Customer $customer */
                 $customer = $sub->customer;
+                $customerId = $customer->id;
 
-                // Try to find the local user
-                $localUser = $this->em->getRepository(User::class)->findOneBy(['stripeCustomerId' => $customer->id]);
+                if (!isset($groupedByCustomer[$customerId])) {
+                    // Try to find the local user once per customer
+                    $localUser = $this->em->getRepository(User::class)->findOneBy(['stripeCustomerId' => $customerId]);
+                    
+                    $groupedByCustomer[$customerId] = [
+                        'customer' => [
+                            'id' => $customer->id,
+                            'email' => $customer->email,
+                            'name' => $customer->name,
+                        ],
+                        'localUser' => $localUser ? [
+                            'id' => $localUser->getId(),
+                            'name' => $localUser->getName(),
+                        ] : null,
+                        'subscriptions' => [],
+                        'overall_status' => 'inactive',
+                        'next_renewal' => null,
+                        'latest_invoice' => null,
+                    ];
+                }
 
-                $mappedSubscriptions[] = [
+                $planName = $sub->plan->product->name ?? 'Unknown Plan';
+                
+                // Map status: if trialing but has an anchor, it's basically active in our context
+                $displayStatus = $sub->status;
+                if ($sub->status === 'trialing' && $sub->billing_cycle_anchor > time()) {
+                    $displayStatus = 'active'; // Treat pending alignment as active
+                }
+
+                $subData = [
                     'id' => $sub->id,
                     'status' => $sub->status,
+                    'display_status' => $displayStatus,
+                    'plan_name' => $planName,
                     'current_period_end' => $sub->current_period_end,
-                    'customer' => [
-                        'id' => $customer->id,
-                        'email' => $customer->email,
-                        'name' => $customer->name,
-                    ],
-                    'localUser' => $localUser ? [
-                        'id' => $localUser->getId(),
-                        'name' => $localUser->getName(),
-                    ] : null,
-                    'latest_invoice' => $sub->latest_invoice ? [
+                    'cancel_at_period_end' => $sub->cancel_at_period_end,
+                    'last_invoice' => $sub->latest_invoice ? [
                         'status' => $sub->latest_invoice->status,
                         'amount_paid' => $sub->latest_invoice->amount_paid / 100,
                         'currency' => $sub->latest_invoice->currency,
                         'created' => $sub->latest_invoice->created,
                     ] : null,
                 ];
+
+                $groupedByCustomer[$customerId]['subscriptions'][] = $subData;
+
+                // Update overall status (if any sub is active, customer is active)
+                if ($displayStatus === 'active') {
+                    $groupedByCustomer[$customerId]['overall_status'] = 'active';
+                } elseif ($groupedByCustomer[$customerId]['overall_status'] !== 'active' && $displayStatus === 'trialing') {
+                    $groupedByCustomer[$customerId]['overall_status'] = 'trialing';
+                } elseif ($groupedByCustomer[$customerId]['overall_status'] === 'inactive') {
+                    $groupedByCustomer[$customerId]['overall_status'] = $displayStatus;
+                }
+
+                // Track earliest renewal
+                if (!$groupedByCustomer[$customerId]['next_renewal'] || $sub->current_period_end < $groupedByCustomer[$customerId]['next_renewal']) {
+                    $groupedByCustomer[$customerId]['next_renewal'] = $sub->current_period_end;
+                }
             }
 
-            return new JsonResponse($mappedSubscriptions);
+            return new JsonResponse(array_values($groupedByCustomer));
         } catch (\Exception $e) {
             return new JsonResponse(['error' => $e->getMessage()], 500);
         }
@@ -205,7 +245,7 @@ class StripeConnectController extends AbstractController
             $subscriptions = \Stripe\Subscription::all([
                 'customer' => $customerId,
                 'status' => 'all',
-                'limit' => 1,
+                'limit' => 5,
                 'expand' => ['data.latest_invoice'],
             ], $stripeAccountHeader);
 
@@ -213,18 +253,40 @@ class StripeConnectController extends AbstractController
                 return new JsonResponse(['status' => 'inactive']);
             }
 
-            $sub = $subscriptions->data[0];
+            $mappedSubs = [];
+            $overallStatus = 'inactive';
+
+            foreach ($subscriptions->data as $sub) {
+                if ($sub->status === 'canceled') continue;
+
+                $displayStatus = $sub->status;
+                if ($sub->status === 'trialing' && $sub->billing_cycle_anchor > time()) {
+                    $displayStatus = 'active';
+                }
+
+                if ($displayStatus === 'active') $overallStatus = 'active';
+
+                $mappedSubs[] = [
+                    'id' => $sub->id,
+                    'status' => $sub->status,
+                    'display_status' => $displayStatus,
+                    'cancel_at_period_end' => $sub->cancel_at_period_end,
+                    'current_period_end' => $sub->current_period_end,
+                    'latest_invoice' => $sub->latest_invoice ? [
+                        'status' => $sub->latest_invoice->status,
+                        'amount_paid' => $sub->latest_invoice->amount_paid / 100,
+                        'currency' => $sub->latest_invoice->currency,
+                    ] : null,
+                ];
+            }
 
             return new JsonResponse([
-                'id' => $sub->id,
-                'status' => $sub->status,
-                'cancel_at_period_end' => $sub->cancel_at_period_end,
-                'current_period_end' => $sub->current_period_end,
-                'latest_invoice' => $sub->latest_invoice ? [
-                    'status' => $sub->latest_invoice->status,
-                    'amount_paid' => $sub->latest_invoice->amount_paid / 100,
-                    'currency' => $sub->latest_invoice->currency,
-                ] : null,
+                'status' => $overallStatus,
+                'display_status' => $overallStatus === 'active' ? 'active' : ($mappedSubs[0]['display_status'] ?? $overallStatus),
+                'subscriptions' => $mappedSubs,
+                // For backward compatibility take the first non-canceled
+                'cancel_at_period_end' => $mappedSubs[0]['cancel_at_period_end'] ?? false,
+                'current_period_end' => $mappedSubs[0]['current_period_end'] ?? null,
             ]);
         } catch (\Exception $e) {
             return new JsonResponse(['error' => $e->getMessage()], 500);
@@ -250,21 +312,29 @@ class StripeConnectController extends AbstractController
         $stripeAccountHeader = ['stripe_account' => $company->getStripeAccountId()];
 
         try {
-            // Find all active/past_due subscriptions for this customer
+            // Find all non-canceled subscriptions for this customer
             $subscriptions = \Stripe\Subscription::all([
                 'customer' => $customerId,
-                'status' => 'active', // Also consider 'past_due'
+                'status' => 'all', 
             ], $stripeAccountHeader);
 
             if (empty($subscriptions->data)) {
                 return new JsonResponse(['error' => 'No active subscription found'], 404);
             }
 
+            $cancelledCount = 0;
             foreach ($subscriptions->data as $sub) {
+                if ($sub->status === 'canceled') continue;
+                
                 // Cancel at the end of the period
                 \Stripe\Subscription::update($sub->id, [
                     'cancel_at_period_end' => true,
                 ], $stripeAccountHeader);
+                $cancelledCount++;
+            }
+
+            if ($cancelledCount === 0) {
+                return new JsonResponse(['error' => 'No active subscription found'], 404);
             }
 
             return new JsonResponse(['status' => 'cancelled_at_period_end']);

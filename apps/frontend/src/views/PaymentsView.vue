@@ -124,30 +124,45 @@ onMounted(() => {
                     <Tag v-else value="Unmapped" severity="secondary" />
                   </template>
                 </Column>
-                <Column field="status" header="Status">
+                <Column header="Active Plans">
+                   <template #body="{ data }">
+                     <div class="flex flex-col gap-1">
+                        <div v-for="sub in data.subscriptions" :key="sub.id" class="flex items-center gap-2">
+                           <span class="text-[10px] font-bold text-slate-600 bg-green-400/10 px-2 py-0.5 rounded uppercase">{{ sub.plan_name }}</span>
+                           <i v-if="sub.cancel_at_period_end" class="pi pi-clock text-[10px] text-amber-500" v-tooltip="'Cancelling at period end'" />
+                        </div>
+                     </div>
+                   </template>
+                </Column>
+                <Column field="overall_status" header="Status">
                   <template #body="{ data }">
-                    <Tag :value="data.status.toUpperCase()" :severity="getStatusSeverity(data.status)" />
+                    <Tag :value="data.overall_status.toUpperCase()" :severity="getStatusSeverity(data.overall_status)" />
                   </template>
                 </Column>
-                <Column field="latest_invoice.amount_paid" header="Last Payment">
+                <Column header="Last Payments">
                   <template #body="{ data }">
-                    <div v-if="data.latest_invoice" class="flex flex-col">
-                      <div class="flex items-center justify-between gap-4">
-                        <span class="font-bold">{{ data.latest_invoice.amount_paid.toFixed(2) }} {{ data.latest_invoice.currency.toUpperCase() }}</span>
-                        <span class="text-[10px] text-slate-400">{{ formatDate(data.latest_invoice.created) }}</span>
-                      </div>
-                      <Tag
-                        :value="data.latest_invoice.status.toUpperCase()"
-                        :severity="data.latest_invoice.status === 'paid' ? 'success' : 'danger'"
-                        class="text-[10px] scale-90 origin-left mt-1"
-                      />
+                    <div class="flex flex-col gap-2">
+                       <div v-for="sub in data.subscriptions" :key="sub.id" class="flex flex-col bg-green-400/10 p-2 rounded border border-slate-100">
+                          <div class="flex items-center justify-between gap-4">
+                             <span class="text-[10px] font-bold text-slate-500 uppercase">{{ sub.plan_name }}</span>
+                             <span v-if="sub.last_invoice" class="text-[10px] text-slate-400 font-mono">{{ formatDate(sub.last_invoice.created) }}</span>
+                          </div>
+                          <div v-if="sub.last_invoice" class="flex items-center justify-between mt-1">
+                             <span class="text-sm font-black text-slate-900">{{ sub.last_invoice.amount_paid.toFixed(2) }} {{ sub.last_invoice.currency.toUpperCase() }}</span>
+                             <Tag
+                                :value="sub.last_invoice.status.toUpperCase()"
+                                :severity="sub.last_invoice.status === 'paid' ? 'success' : 'danger'"
+                                class="text-[9px] scale-90 origin-right"
+                             />
+                          </div>
+                          <span v-else class="text-[10px] text-slate-400 italic">No payment yet</span>
+                       </div>
                     </div>
-                    <span v-else class="text-slate-400 italic">No invoice</span>
                   </template>
                 </Column>
-                <Column field="current_period_end" header="Renewal Date">
+                <Column field="next_renewal" header="Next Renewal">
                   <template #body="{ data }">
-                    <span class="text-sm">{{ formatDate(data.current_period_end) }}</span>
+                    <span class="text-sm">{{ formatDate(data.next_renewal) }}</span>
                   </template>
                 </Column>
                 <Column header="Actions">
