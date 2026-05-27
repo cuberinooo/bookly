@@ -40,6 +40,12 @@ class Company
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $stripeAccountId = null;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $stripeProductSetupFeeId = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $stripeProductMembershipId = null;
+
     #[ORM\Column(nullable: true)]
     private ?bool $stripeOnboardingComplete = null;
 
@@ -47,7 +53,18 @@ class Company
     private ?string $stripePriceSetupFeeId = null;
 
     #[ORM\Column(length: 255, nullable: true)]
+    private ?string $stripePriceYearlyRecurringId = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
     private ?string $stripePriceMembershipId = null;
+
+    #[ORM\Column(nullable: true)]
+    #[Groups(['company:read', 'admin:read', 'admin:write'])]
+    private ?int $billingCycleAnchorDay = null;
+
+    #[ORM\Column(options: ['default' => true])]
+    #[Groups(['company:read', 'admin:read', 'admin:write'])]
+    private bool $yearlyFeeEnabled = true;
 
     public function __construct()
     {
@@ -203,6 +220,30 @@ class Company
         return $this;
     }
 
+    public function getStripeProductSetupFeeId(): ?string
+    {
+        return $this->stripeProductSetupFeeId;
+    }
+
+    public function setStripeProductSetupFeeId(?string $stripeProductSetupFeeId): static
+    {
+        $this->stripeProductSetupFeeId = $stripeProductSetupFeeId;
+
+        return $this;
+    }
+
+    public function getStripeProductMembershipId(): ?string
+    {
+        return $this->stripeProductMembershipId;
+    }
+
+    public function setStripeProductMembershipId(?string $stripeProductMembershipId): static
+    {
+        $this->stripeProductMembershipId = $stripeProductMembershipId;
+
+        return $this;
+    }
+
     public function isStripeOnboardingComplete(): ?bool
     {
         return $this->stripeOnboardingComplete;
@@ -227,6 +268,18 @@ class Company
         return $this;
     }
 
+    public function getStripePriceYearlyRecurringId(): ?string
+    {
+        return $this->stripePriceYearlyRecurringId;
+    }
+
+    public function setStripePriceYearlyRecurringId(?string $stripePriceYearlyRecurringId): static
+    {
+        $this->stripePriceYearlyRecurringId = $stripePriceYearlyRecurringId;
+
+        return $this;
+    }
+
     public function getStripePriceMembershipId(): ?string
     {
         return $this->stripePriceMembershipId;
@@ -235,6 +288,30 @@ class Company
     public function setStripePriceMembershipId(?string $stripePriceMembershipId): static
     {
         $this->stripePriceMembershipId = $stripePriceMembershipId;
+
+        return $this;
+    }
+
+    public function getBillingCycleAnchorDay(): ?int
+    {
+        return $this->billingCycleAnchorDay;
+    }
+
+    public function setBillingCycleAnchorDay(?int $billingCycleAnchorDay): static
+    {
+        $this->billingCycleAnchorDay = $billingCycleAnchorDay;
+
+        return $this;
+    }
+
+    public function isYearlyFeeEnabled(): bool
+    {
+        return $this->yearlyFeeEnabled;
+    }
+
+    public function setYearlyFeeEnabled(bool $yearlyFeeEnabled): static
+    {
+        $this->yearlyFeeEnabled = $yearlyFeeEnabled;
 
         return $this;
     }

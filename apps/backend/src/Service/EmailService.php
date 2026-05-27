@@ -110,6 +110,26 @@ class EmailService
         $this->mailer->send($email);
     }
 
+    public function sendPriceChangeNotification(User $user, float $newPrice): void
+    {
+        $company = $user->getCompany();
+        $siteName = $company ? $company->getName() : 'Phoenix Athletics';
+
+        $email = (new TemplatedEmail())
+            ->from(new Address($_ENV['NO_REPLY_MAIL'] ?? 'noreply@example.com', $siteName))
+            ->to($user->getEmail())
+            ->subject(sprintf('Important: Membership Price Update for %s', $siteName))
+            ->htmlTemplate('emails/price_update.html.twig')
+            ->context([
+                'name' => $user->getName(),
+                'siteName' => $siteName,
+                'newPrice' => number_format($newPrice, 2, ',', '.') . ' €',
+                'loginUrl' => $this->getLoginUrl(),
+            ]);
+
+        $this->mailer->send($email);
+    }
+
     private function attachFiles(TemplatedEmail $email, array $attachments): void
     {
         foreach ($attachments as $att) {

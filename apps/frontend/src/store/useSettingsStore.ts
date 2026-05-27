@@ -10,8 +10,11 @@ export const useSettingsStore = defineStore('settings', () => {
   const welcomeMailMarkdown = ref('');
   const welcomeMailAttachments = ref<{ path: string; fileName: string }[]>([]);
   const stripeOnboardingComplete = ref(false);
+  const stripeAccountId = ref('');
   const stripePriceSetupFeeId = ref('');
   const stripePriceMembershipId = ref('');
+  const billingCycleAnchorDay = ref(0);
+  const yearlyFeeEnabled = ref(true);
   const initialized = ref(false);
 
   async function fetchSettings() {
@@ -28,8 +31,11 @@ export const useSettingsStore = defineStore('settings', () => {
       welcomeMailMarkdown.value = adminResponse.data.welcomeMailMarkdown || '';
       welcomeMailAttachments.value = adminResponse.data.welcomeMailAttachments || [];
       stripeOnboardingComplete.value = adminResponse.data.stripeOnboardingComplete || false;
+      stripeAccountId.value = adminResponse.data.stripeAccountId || '';
       stripePriceSetupFeeId.value = adminResponse.data.stripePriceSetupFeeId || '';
       stripePriceMembershipId.value = adminResponse.data.stripePriceMembershipId || '';
+      billingCycleAnchorDay.value = adminResponse.data.billingCycleAnchorDay || 0;
+      yearlyFeeEnabled.value = adminResponse.data.yearlyFeeEnabled ?? true;
     } catch (e) {
       console.error('Failed to fetch global settings', e);
     } finally {
@@ -55,8 +61,11 @@ export const useSettingsStore = defineStore('settings', () => {
     welcomeMailMarkdown,
     welcomeMailAttachments,
     stripeOnboardingComplete,
+    stripeAccountId,
     stripePriceSetupFeeId,
     stripePriceMembershipId,
+    billingCycleAnchorDay,
+    yearlyFeeEnabled,
     initialized,
     fetchSettings,
     reset

@@ -54,6 +54,14 @@ class AdminSettingsService
             }
         }
 
+        if (array_key_exists('billingCycleAnchorDay', $data)) {
+            $company->setBillingCycleAnchorDay($data['billingCycleAnchorDay']);
+        }
+
+        if (array_key_exists('yearlyFeeEnabled', $data)) {
+            $company->setYearlyFeeEnabled((bool)$data['yearlyFeeEnabled']);
+        }
+
         $this->entityManager->flush();
 
         return $settings;

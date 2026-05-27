@@ -2,12 +2,14 @@
 import { ref, computed } from 'vue';
 import api from '../services/api';
 import { useToast } from 'primevue/usetoast';
+import { useRouter } from 'vue-router';
 
 const props = defineProps<{
     count: number;
     limit: number;
 }>();
 
+const router = useRouter();
 const remaining = computed(() => Math.max(0, props.limit - props.count));
 const progressWidth = computed(() => Math.max(0, Math.min(100, (props.count / props.limit) * 100)));
 
@@ -60,13 +62,21 @@ const upgrade = async () => {
       </p>
     </div>
 
-    <div class="mt-auto">
+    <div class="mt-auto space-y-3">
       <Button
         label="Sign Contract & Pay"
         icon="pi pi-file-edit"
         class="w-full upgrade-btn"
         :loading="isUpgrading"
         @click="upgrade"
+      />
+      <Button
+        label="View Plan Details"
+        icon="pi pi-info-circle"
+        class="w-full"
+        severity="secondary"
+        text
+        @click="router.push({ path: '/profile', query: { tab: 'abo' } })"
       />
     </div>
   </div>

@@ -3,16 +3,22 @@ import { ref, onMounted, computed } from 'vue';
 import { useAuthStore } from '../store/useAuthStore';
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import { useOnboarding, ONBOARDING_TASKS } from '../composables/useOnboarding';
 import OnboardingChecklist from '../components/OnboardingChecklist.vue';
+import UserAboTab from '../components/UserAboTab.vue';
 import api from '../services/api';
 
 const toast = useToast();
 const confirm = useConfirm();
 const router = useRouter();
+const route = useRoute();
 const authStore = useAuthStore();
 const { markTaskComplete } = useOnboarding();
+
+const isAthlete = computed(() => !authStore.isAdmin);
+const activeTab = ref('0');
+
 const user = ref({
     name: '',
     email: '',
@@ -25,6 +31,7 @@ const user = ref({
     gender: null,
     isPublic: false
 });
+
 const hasConsentedToEmergency = ref(false);
 const loading = ref(false);
 const fetching = ref(true);
@@ -160,7 +167,12 @@ async function updateProfile() {
     }
 }
 
-onMounted(fetchProfile);
+onMounted(() => {
+    fetchProfile();
+    if (route.query.tab === 'abo' && isAthlete.value) {
+        activeTab.value = 'abo';
+    }
+});
 </script>
 
 <template>
@@ -174,11 +186,15 @@ onMounted(fetchProfile);
       </p>
     </div>
 
-    <Tabs value="0" class="mb-8">
+    <Tabs v-model:value="activeTab" class="mb-8">
       <TabList class="mb-6">
         <Tab value="0" class="flex items-center gap-2">
           <i class="pi pi-user" />
           <span>My Account</span>
+        </Tab>
+        <Tab v-if="isAthlete" value="abo" class="flex items-center gap-2">
+          <i class="pi pi-credit-card" />
+          <span>Subscription</span>
         </Tab>
         <Tab value="1" class="flex items-center gap-2">
           <i class="pi pi-list-check" />
@@ -395,6 +411,11 @@ onMounted(fetchProfile);
             </div>
           </div>
         </TabPanel>
+
+        <TabPanel v-if="isAthlete" value="abo">
+          <UserAboTab />
+        </TabPanel>
+
         <TabPanel value="1">
           <OnboardingChecklist :always-show="true" />
         </TabPanel>
