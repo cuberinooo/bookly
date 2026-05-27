@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Tests\Service;
 
 use App\Entity\Company;
@@ -9,12 +11,11 @@ use App\Service\AdminUserService;
 use Aws\MockHandler;
 use Aws\Result;
 use Aws\S3\S3Client;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
-use Doctrine\Common\Collections\ArrayCollection;
-
 use Symfony\Component\String\Slugger\SluggerInterface;
 use Symfony\Component\String\UnicodeString;
 
@@ -35,7 +36,7 @@ class AdminUserServiceTest extends TestCase
         $this->passwordHasher = $this->createMock(UserPasswordHasherInterface::class);
         $this->mailer = $this->createMock(MailerInterface::class);
         $this->slugger = $this->createMock(SluggerInterface::class);
-        
+
         $this->mockHandler = new MockHandler();
         $this->s3Client = new S3Client([
             'region'  => 'us-east-1',
@@ -58,12 +59,12 @@ class AdminUserServiceTest extends TestCase
         );
     }
 
-    public function testDeleteUserSuccess(): void
+    public function test_delete_user_success(): void
     {
         $user = $this->createMock(User::class);
         $user->method('getCourses')->willReturn(new ArrayCollection());
         $user->method('getId')->willReturn(1);
-        
+
         $company = $this->createMock(Company::class);
         $company->method('getName')->willReturn('Test Company');
         $user->method('getCompany')->willReturn($company);
@@ -73,7 +74,7 @@ class AdminUserServiceTest extends TestCase
         // Mock ListObjectsV2 to return 0 objects
         $this->mockHandler->append(new Result([
             'IsTruncated' => false,
-            'Contents' => []
+            'Contents' => [],
         ]));
 
         $this->entityManager->expects($this->once())->method('remove')->with($user);
@@ -81,14 +82,14 @@ class AdminUserServiceTest extends TestCase
 
         $result = $this->service->deleteUser($user);
         $this->assertTrue($result);
-        
+
         $lastCommand = $this->mockHandler->getLastCommand();
         $this->assertStringContainsString('ListObjects', $lastCommand->getName());
         $this->assertEquals('test-bucket', $lastCommand['Bucket']);
         $this->assertEquals('test-company/1/', $lastCommand['Prefix']);
     }
 
-    public function testDeleteUserBlocksIfHasCourses(): void
+    public function test_delete_user_blocks_if_has_courses(): void
     {
         $user = $this->createMock(User::class);
         $course = $this->createMock(Course::class);
@@ -100,7 +101,7 @@ class AdminUserServiceTest extends TestCase
         $this->service->deleteUser($user, false);
     }
 
-    public function testDeleteUserDeactivatesIfRequested(): void
+    public function test_delete_user_deactivates_if_requested(): void
     {
         $user = $this->createMock(User::class);
         $course = $this->createMock(Course::class);

@@ -1,10 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\EventListener;
 
 use App\Entity\Company;
 use App\Entity\CompanyAwareInterface;
-use Doctrine\ORM\Events;
 use Doctrine\Persistence\Event\LifecycleEventArgs;
 
 class TestDefaultCompanyListener
@@ -16,13 +17,13 @@ class TestDefaultCompanyListener
             return;
         }
 
-        if ($entity->getCompany() !== null) {
+        if (null !== $entity->getCompany()) {
             return;
         }
 
         $entityManager = $args->getObjectManager();
         $companyRepository = $entityManager->getRepository(Company::class);
-        
+
         // Find or create a default company for tests
         $company = $companyRepository->findOneBy(['name' => 'Test Default Company']);
         if (!$company) {

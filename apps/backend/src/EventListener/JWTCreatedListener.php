@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\EventListener;
 
 use App\Entity\User;
@@ -24,6 +26,7 @@ class JWTCreatedListener
         $payload['companyName'] = $user->getCompany() ? $user->getCompany()->getName() : null;
         $payload['profilePicture'] = $user->getProfilePicture();
         $payload['isPublic'] = $user->isPublic();
+        $payload['onboardingState'] = $user->getOnboardingState();
 
         $event->setData($payload);
     }

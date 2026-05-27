@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Command;
 
 use App\Entity\Booking;
@@ -73,7 +75,7 @@ class LoadDevelopmentFixturesCommand extends Command
                 $user->setIsPublic(true);
 
                 $cleanName = strtolower(str_replace(' ', '', $data['name']));
-                $password = 'test_123' . $cleanName;
+                $password = 'test_123'.$cleanName;
                 $user->setPassword($this->passwordHasher->hashPassword($user, $password));
 
                 $this->entityManager->persist($user);
@@ -99,13 +101,13 @@ class LoadDevelopmentFixturesCommand extends Command
                 // Each user gets 3-5 random PBs
                 $numPbs = rand(3, 5);
                 shuffle($exercises);
-                for ($i = 0; $i < $numPbs; $i++) {
+                for ($i = 0; $i < $numPbs; ++$i) {
                     $ex = $exercises[$i];
                     $record = new UserWorkoutRecord();
                     $record->setUser($user);
                     $record->setExerciseName($ex->getName());
-                    $record->setWeightValue((float)rand(40, 180));
-                    $record->setDateAchieved(new \DateTime('-' . rand(1, 30) . ' days'));
+                    $record->setWeightValue((float) rand(40, 180));
+                    $record->setDateAchieved(new \DateTime('-'.rand(1, 30).' days'));
                     $this->entityManager->persist($record);
                 }
             }
@@ -115,13 +117,13 @@ class LoadDevelopmentFixturesCommand extends Command
         // 4. Create Courses (Past and Future)
         $courseTitles = ['WOD', 'Strength', 'Conditioning', 'Metcon', 'Mobility'];
         $now = new \DateTime();
-        
+
         // Past Courses
-        for ($i = 1; $i <= 5; $i++) {
+        for ($i = 1; $i <= 5; ++$i) {
             $course = new Course();
-            $course->setTitle($courseTitles[array_rand($courseTitles)] . ' (Past)');
+            $course->setTitle($courseTitles[array_rand($courseTitles)].' (Past)');
             $course->setCapacity(10);
-            $start = (clone $now)->modify('-' . ($i * 2) . ' days')->setTime(17, 0);
+            $start = (clone $now)->modify('-'.($i * 2).' days')->setTime(17, 0);
             $course->setStartTime($start);
             $course->setEndTime((clone $start)->modify('+1 hour'));
             $course->setCompany($company);
@@ -136,18 +138,18 @@ class LoadDevelopmentFixturesCommand extends Command
                     $booking->setUser($member);
                     $booking->setCourse($course);
                     $booking->setCompany($company);
-                    $booking->setAttended((bool)rand(0, 5)); // Mostly attended
+                    $booking->setAttended((bool) rand(0, 5)); // Mostly attended
                     $this->entityManager->persist($booking);
                 }
             }
         }
 
         // Future Courses
-        for ($i = 1; $i <= 10; $i++) {
+        for ($i = 1; $i <= 10; ++$i) {
             $course = new Course();
             $course->setTitle($courseTitles[array_rand($courseTitles)]);
             $course->setCapacity(10);
-            $start = (clone $now)->modify('+' . $i . ' days')->setTime(rand(7, 20), 0);
+            $start = (clone $now)->modify('+'.$i.' days')->setTime(rand(7, 20), 0);
             $course->setStartTime($start);
             $course->setEndTime((clone $start)->modify('+1 hour'));
             $course->setCompany($company);
@@ -172,12 +174,12 @@ class LoadDevelopmentFixturesCommand extends Command
 
         // 5. Create Meetups
         $meetupTitles = ['Summer BBQ', 'Pizza Night', 'Beach Workout', 'Hiking Trip'];
-        for ($i = 1; $i <= 3; $i++) {
+        for ($i = 1; $i <= 3; ++$i) {
             $meetup = new Meetup();
             $meetup->setTitle($meetupTitles[array_rand($meetupTitles)]);
             $meetup->setDescription('Community event for all members!');
             $meetup->setLocation('Local Park');
-            $start = (clone $now)->modify('+' . ($i * 7) . ' days')->setTime(18, 0);
+            $start = (clone $now)->modify('+'.($i * 7).' days')->setTime(18, 0);
             $meetup->setMeetupDate($start);
             $meetup->setRsvpDeadline((clone $start)->modify('-2 days'));
             $meetup->setCompany($company);

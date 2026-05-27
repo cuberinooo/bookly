@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Controller;
 
 use App\Entity\Exercise;
@@ -30,6 +32,7 @@ class LeaderboardController extends AbstractController
     public function getExercises(EntityManagerInterface $em): JsonResponse
     {
         $exercises = $em->getRepository(Exercise::class)->findBy([], ['category' => 'ASC', 'name' => 'ASC']);
+
         return $this->json($exercises, context: ['groups' => ['exercise:read']]);
     }
 
@@ -48,8 +51,9 @@ class LeaderboardController extends AbstractController
             $record = $this->leaderboardService->submitRecord(
                 $user,
                 $data['exerciseName'],
-                (float)$data['weightValue']
+                (float) $data['weightValue']
             );
+
             return $this->json(['status' => 'success', 'id' => $record->getId()], 201);
         } catch (\InvalidArgumentException $e) {
             return $this->json(['error' => $e->getMessage()], 400);
@@ -60,5 +64,26 @@ class LeaderboardController extends AbstractController
     public function getRecords(): JsonResponse
     {
         return $this->json($this->leaderboardService->getWorkoutRecords());
+    }
+
+    #[Route('/my-records', name: 'api_leaderboard_my_records', methods: ['GET'])]
+    public function getMyRecords(): JsonResponse
+    {
+        return $this->json(
+            $this->leaderboardService->getMyRecords($this->getUser()),
+            context: ['groups' => ['workout_record:read']]
+        );
+    }
+
+    #[Route('/workout-records/{id}', name: 'api_leaderboard_delete_record', methods: ['DELETE'])]
+    public function deleteRecord(int $id): JsonResponse
+    {
+        try {
+            $this->leaderboardService->deleteRecord($this->getUser(), $id);
+
+            return $this->json(['status' => 'success']);
+        } catch (\InvalidArgumentException $e) {
+            return $this->json(['error' => $e->getMessage()], 400);
+        }
     }
 }

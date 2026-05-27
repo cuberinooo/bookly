@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Repository;
 
 use App\Entity\TrainingCategory;
@@ -19,13 +21,10 @@ class TrainingCategoryRepository extends ServiceEntityRepository
     /**
      * @return TrainingCategory[]
      */
-    public function findByTrainer(int $trainerId): array
+    public function findByCompany(): array
     {
         return $this->createQueryBuilder('tc')
-            ->andWhere('tc.trainer = :trainerId')
-            ->setParameter('trainerId', $trainerId)
             ->getQuery()
-            ->enableResultCache(3600)
             ->getResult();
     }
 }

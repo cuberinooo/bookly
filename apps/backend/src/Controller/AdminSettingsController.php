@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Controller;
 
 use App\Service\AdminSettingsService;
@@ -20,14 +22,15 @@ class AdminSettingsController extends AbstractController
         private \Doctrine\ORM\EntityManagerInterface $entityManager,
         private S3ClientInterface $s3Client,
         private string $s3Bucket
-    ) {}
+    ) {
+    }
 
     #[Route('', name: 'admin_settings_get', methods: ['GET'])]
     public function getSettings(): JsonResponse
     {
         $user = $this->getUser();
         if (!$user instanceof \App\Entity\User || !$user->getCompany()) {
-             return new JsonResponse(['error' => 'Company not found'], Response::HTTP_NOT_FOUND);
+            return new JsonResponse(['error' => 'Company not found'], Response::HTTP_NOT_FOUND);
         }
 
         $company = $user->getCompany();
@@ -48,7 +51,7 @@ class AdminSettingsController extends AbstractController
         $this->denyAccessUnlessGranted('ROLE_ADMIN');
         $user = $this->getUser();
         if (!$user instanceof \App\Entity\User || !$user->getCompany()) {
-             return new JsonResponse(['error' => 'Company not found'], Response::HTTP_NOT_FOUND);
+            return new JsonResponse(['error' => 'Company not found'], Response::HTTP_NOT_FOUND);
         }
 
         $data = json_decode($request->getContent(), true);
@@ -63,7 +66,7 @@ class AdminSettingsController extends AbstractController
         $this->denyAccessUnlessGranted('ROLE_ADMIN');
         $user = $this->getUser();
         if (!$user instanceof \App\Entity\User || !$user->getCompany()) {
-             return new JsonResponse(['error' => 'Company not found'], Response::HTTP_NOT_FOUND);
+            return new JsonResponse(['error' => 'Company not found'], Response::HTTP_NOT_FOUND);
         }
 
         $file = $request->files->get('file');
@@ -73,6 +76,7 @@ class AdminSettingsController extends AbstractController
 
         try {
             $path = $this->adminSettingsService->uploadPrivacyPolicy($user->getCompany(), $file);
+
             return new JsonResponse(['path' => $path]);
         } catch (\RuntimeException $e) {
             return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
@@ -85,7 +89,7 @@ class AdminSettingsController extends AbstractController
         $this->denyAccessUnlessGranted('ROLE_ADMIN');
         $user = $this->getUser();
         if (!$user instanceof \App\Entity\User || !$user->getCompany()) {
-             return new JsonResponse(['error' => 'Company not found'], Response::HTTP_NOT_FOUND);
+            return new JsonResponse(['error' => 'Company not found'], Response::HTTP_NOT_FOUND);
         }
 
         $file = $request->files->get('file');
@@ -95,6 +99,7 @@ class AdminSettingsController extends AbstractController
 
         try {
             $attachment = $this->adminSettingsService->uploadWelcomeMailAttachment($user->getCompany(), $file);
+
             return new JsonResponse($attachment);
         } catch (\RuntimeException $e) {
             return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
@@ -107,7 +112,7 @@ class AdminSettingsController extends AbstractController
         $this->denyAccessUnlessGranted('ROLE_ADMIN');
         $user = $this->getUser();
         if (!$user instanceof \App\Entity\User || !$user->getCompany()) {
-             return new JsonResponse(['error' => 'Company not found'], Response::HTTP_NOT_FOUND);
+            return new JsonResponse(['error' => 'Company not found'], Response::HTTP_NOT_FOUND);
         }
 
         $path = $request->query->get('path');
@@ -126,7 +131,7 @@ class AdminSettingsController extends AbstractController
         $this->denyAccessUnlessGranted('ROLE_ADMIN');
         $user = $this->getUser();
         if (!$user instanceof \App\Entity\User || !$user->getCompany()) {
-             return new JsonResponse(['error' => 'Company not found'], Response::HTTP_NOT_FOUND);
+            return new JsonResponse(['error' => 'Company not found'], Response::HTTP_NOT_FOUND);
         }
 
         $file = $request->files->get('file');
@@ -136,6 +141,7 @@ class AdminSettingsController extends AbstractController
 
         try {
             $attachment = $this->adminSettingsService->uploadJoinUsMailAttachment($user->getCompany(), $file);
+
             return new JsonResponse($attachment);
         } catch (\RuntimeException $e) {
             return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
@@ -148,7 +154,7 @@ class AdminSettingsController extends AbstractController
         $this->denyAccessUnlessGranted('ROLE_ADMIN');
         $user = $this->getUser();
         if (!$user instanceof \App\Entity\User || !$user->getCompany()) {
-             return new JsonResponse(['error' => 'Company not found'], Response::HTTP_NOT_FOUND);
+            return new JsonResponse(['error' => 'Company not found'], Response::HTTP_NOT_FOUND);
         }
 
         $path = $request->query->get('path');
@@ -179,7 +185,7 @@ class AdminSettingsController extends AbstractController
 
         $settings = $this->adminSettingsService->getSettingsByCompanyName($companyName);
         if (!$settings) {
-            return new Response('Settings not found for company: ' . $companyName, Response::HTTP_NOT_FOUND);
+            return new Response('Settings not found for company: '.$companyName, Response::HTTP_NOT_FOUND);
         }
 
         $path = $settings->getPrivacyPolicyPdfPath();
@@ -215,7 +221,7 @@ class AdminSettingsController extends AbstractController
         $this->denyAccessUnlessGranted('ROLE_ADMIN');
         $user = $this->getUser();
         if (!$user instanceof \App\Entity\User || !$user->getCompany()) {
-             return new Response('Company not found', Response::HTTP_NOT_FOUND);
+            return new Response('Company not found', Response::HTTP_NOT_FOUND);
         }
 
         $path = $request->query->get('path');
@@ -227,7 +233,7 @@ class AdminSettingsController extends AbstractController
         $welcomeAttachments = $settings->getWelcomeMailAttachments() ?? [];
         $joinUsAttachments = $settings->getJoinUsMailAttachments() ?? [];
         $attachments = array_merge($welcomeAttachments, $joinUsAttachments);
-        
+
         $found = false;
         $fileName = 'attachment';
         foreach ($attachments as $att) {
@@ -253,7 +259,7 @@ class AdminSettingsController extends AbstractController
 
             return new Response($content, 200, [
                 'Content-Type' => $contentType,
-                'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+                'Content-Disposition' => 'attachment; filename="'.$fileName.'"',
             ]);
 
         } catch (\Exception $e) {

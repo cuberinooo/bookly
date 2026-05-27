@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Serializer;
 
 use App\Entity\Course;
@@ -13,7 +15,8 @@ class CourseNormalizer implements NormalizerInterface
         #[Autowire(service: 'serializer.normalizer.object')]
         private NormalizerInterface $normalizer,
         private Security $security
-    ) {}
+    ) {
+    }
 
     public function normalize($data, ?string $format = null, array $context = []): array
     {
@@ -29,7 +32,7 @@ class CourseNormalizer implements NormalizerInterface
             }
 
             if (isset($normalizedData['bookings'])) {
-                $normalizedData['bookings'] = array_values(array_filter($normalizedData['bookings'], function($booking) {
+                $normalizedData['bookings'] = array_values(array_filter($normalizedData['bookings'], function ($booking) {
                     return !isset($booking['_hidden']);
                 }));
             }

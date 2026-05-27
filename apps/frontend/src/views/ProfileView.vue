@@ -4,12 +4,15 @@ import { useAuthStore } from '../store/useAuthStore';
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
 import { useRouter } from 'vue-router';
+import { useOnboarding, ONBOARDING_TASKS } from '../composables/useOnboarding';
+import OnboardingChecklist from '../components/OnboardingChecklist.vue';
 import api from '../services/api';
 
 const toast = useToast();
 const confirm = useConfirm();
 const router = useRouter();
 const authStore = useAuthStore();
+const { markTaskComplete } = useOnboarding();
 const user = ref({
     name: '',
     email: '',
@@ -113,11 +116,11 @@ async function handleFileUpload(event: Event) {
     // Update local state and authStore
     user.value.profilePicture = response.data.profilePicture;
     if (authStore.user) {
-      authStore.user.profilePicture = response.data.profilePicture;
+    authStore.user.profilePicture = response.data.profilePicture;
     }
 
-    toast.add({ severity: 'success', summary: 'Success', detail: 'Profile picture updated', life: 5000 });
-  } catch (e) {
+    markTaskComplete(ONBOARDING_TASKS.PROFILE_UPDATE);
+    toast.add({ severity: 'success', summary: 'Success', detail: 'Profile picture updated', life: 5000 });  } catch (e) {
     toast.add({ severity: 'error', summary: 'Error', detail: 'Upload failed', life: 5000 });
   } finally {
     uploading.value = false;
@@ -148,6 +151,7 @@ async function updateProfile() {
                 isPublic: user.value.isPublic
             };
         }
+        markTaskComplete(ONBOARDING_TASKS.PROFILE_UPDATE);
         toast.add({ severity: 'success', summary: 'Updated', detail: 'Profile saved successfully', life: 5000 });
     } catch (e) {
         toast.add({ severity: 'error', summary: 'Error', detail: 'Update failed', life: 5000 });
@@ -170,212 +174,232 @@ onMounted(fetchProfile);
       </p>
     </div>
 
-    <div
-      v-if="fetching"
-      class="flex justify-center py-20"
-    >
-      <i class="pi pi-spin pi-spinner text-4xl text-amber-400" />
-    </div>
+    <Tabs value="0" class="mb-8">
+      <TabList class="mb-6">
+        <Tab value="0" class="flex items-center gap-2">
+          <i class="pi pi-user" />
+          <span>My Account</span>
+        </Tab>
+        <Tab value="1" class="flex items-center gap-2">
+          <i class="pi pi-list-check" />
+          <span>Onboarding Guide</span>
+        </Tab>
+      </TabList>
 
-    <div
-      v-else
-      class="grid grid-cols-1 md:grid-cols-3 gap-8"
-    >
-      <div class="md:col-span-1">
-        <div class="phoenix-card text-center flex flex-col items-center">
-          <div class="profile-image-container mb-4">
-            <img
-              v-if="profilePictureUrl"
-              :src="profilePictureUrl"
-              alt="Profile"
-              class="profile-image-large"
-            >
-            <div
-              v-else
-              class="profile-image-placeholder"
-            >
-              <i class="pi pi-user text-3xl" />
-            </div>
+      <TabPanels>
+        <TabPanel value="0">
+          <div
+            v-if="fetching"
+            class="flex justify-center py-20"
+          >
+            <i class="pi pi-spin pi-spinner text-4xl text-amber-400" />
           </div>
 
-          <input
-            ref="fileInput"
-            type="file"
-            accept="image/*"
-            class="hidden"
-            @change="handleFileUpload"
+          <div
+            v-else
+            class="grid grid-cols-1 md:grid-cols-3 gap-8"
           >
-
-          <Button
-            label="Change Picture"
-            icon="pi pi-camera"
-            severity="secondary"
-            text
-            size="small"
-            class="mb-4"
-            :loading="uploading"
-            @click="triggerFileUpload"
-          />
-
-          <h2 class="text-xl font-bold text-slate-900">
-            {{ user.name }}
-          </h2>
-          <div class="flex flex-wrap gap-2 justify-center mt-3">
-            <span
-              v-for="role in user.roles.filter(r => r !== 'ROLE_USER')"
-              :key="role"
-              class="px-3 py-1 bg-amber-100 text-amber-800 text-[10px] font-black rounded-full tracking-widest uppercase"
-            >
-              {{ role.replace('ROLE_', '') }}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      <div class="md:col-span-2">
-        <div class="phoenix-card">
-          <form
-            class="flex flex-col gap-6"
-            @submit.prevent="updateProfile"
-          >
-            <div class="flex flex-col">
-              <label
-                for="profileName"
-                class="form-label-base"
-              >Full Name</label>
-              <InputText
-                id="profileName"
-                v-model="user.name"
-              />
-            </div>
-
-            <div class="flex flex-col">
-              <label
-                for="profileEmail"
-                class="form-label-base"
-              >Email Address</label>
-              <InputText
-                id="profileEmail"
-                v-model="user.email"
-                type="email"
-                disabled
-                class="opacity-70 cursor-not-allowed"
-              />
-              <small class="text-slate-400 mt-1">Email cannot be changed</small>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div class="flex flex-col">
-                <label
-                  for="phoneNumber"
-                  class="form-label-base"
-                >Your Phone Number</label>
-                <InputText
-                  id="phoneNumber"
-                  v-model="user.phoneNumber"
-                  placeholder="+49 123 456789"
-                />
-              </div>
-              <div class="flex flex-col">
-                <label class="form-label-base">Gender</label>
-                <Select
-                  v-model="user.gender"
-                  :options="genderOptions"
-                  option-label="label"
-                  option-value="value"
-                  placeholder="Select Gender"
-                />
-              </div>
-            </div>
-
-            <div class="flex items-center gap-4 p-4 bg-slate-50 rounded-xl border border-slate-200">
-              <div class="flex-1">
-                <h4 class="font-bold text-slate-900">
-                  Public Profile
-                </h4>
-                <p class="text-sm text-slate-600">
-                  Show your personal bests (PBs) and monthly attendance on the leaderboard. If disabled, your stats will be hidden from other athletes.
-                </p>
-              </div>
-              <ToggleSwitch v-model="user.isPublic" />
-            </div>
-
-            <div class="border-t border-slate-100 pt-6 mt-2">
-              <h3 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-                <i class="pi pi-shield text-amber-500" />
-                Safety & Emergency Info
-              </h3>
-
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-                <div class="flex flex-col">
-                  <label
-                    for="emergencyName"
-                    class="form-label-base"
-                  >Emergency Contact Name</label>
-                  <InputText
-                    id="emergencyName"
-                    v-model="user.emergencyContactName"
-                    placeholder="Next of Kin Name"
-                  />
+            <div class="md:col-span-1">
+              <div class="phoenix-card text-center flex flex-col items-center">
+                <div class="profile-image-container mb-4">
+                  <img
+                    v-if="profilePictureUrl"
+                    :src="profilePictureUrl"
+                    alt="Profile"
+                    class="profile-image-large"
+                  >
+                  <div
+                    v-else
+                    class="profile-image-placeholder"
+                  >
+                    <i class="pi pi-user text-3xl" />
+                  </div>
                 </div>
-                <div class="flex flex-col">
-                  <label
-                    for="emergencyPhone"
-                    class="form-label-base"
-                  >Emergency Contact Phone</label>
-                  <InputText
-                    id="emergencyPhone"
-                    v-model="user.emergencyContactPhone"
-                    placeholder="+49 123 456789"
-                  />
-                </div>
-              </div>
 
-              <div class="flex items-start gap-3 mt-6 p-4 bg-slate-50 rounded-lg border border-slate-100">
-                <Checkbox
-                  v-model="hasConsentedToEmergency"
-                  :binary="true"
-                  input-id="consent"
-                />
-                <label
-                  for="consent"
-                  class="text-xs text-slate-600 font-medium leading-relaxed"
+                <input
+                  ref="fileInput"
+                  type="file"
+                  accept="image/*"
+                  class="hidden"
+                  @change="handleFileUpload"
                 >
-                  I confirm that I have obtained the express consent of the person named above to share their contact details with {{ authStore.user?.company?.name || 'this app' }} for emergency purposes only. This data will only be accessed by trainers in the event of a medical emergency during a session.
-                </label>
+
+                <Button
+                  label="Change Picture"
+                  icon="pi pi-camera"
+                  severity="secondary"
+                  text
+                  size="small"
+                  class="mb-4"
+                  :loading="uploading"
+                  @click="triggerFileUpload"
+                />
+
+                <h2 class="text-xl font-bold text-slate-900">
+                  {{ user.name }}
+                </h2>
+                <div class="flex flex-wrap gap-2 justify-center mt-3">
+                  <span
+                    v-for="role in user.roles.filter(r => r !== 'ROLE_USER')"
+                    :key="role"
+                    class="px-3 py-1 bg-amber-100 text-amber-800 text-[10px] font-black rounded-full tracking-widest uppercase"
+                  >
+                    {{ role.replace('ROLE_', '') }}
+                  </span>
+                </div>
               </div>
             </div>
 
-            <div class="pt-4">
-              <Button
-                severity="primary"
-                type="submit"
-                label="Save Changes"
-                :loading="loading"
-                class="btn-primary"
-              />
-            </div>
-          </form>
-        </div>
+            <div class="md:col-span-2">
+              <div class="phoenix-card">
+                <form
+                  class="flex flex-col gap-6"
+                  @submit.prevent="updateProfile"
+                >
+                  <div class="flex flex-col">
+                    <label
+                      for="profileName"
+                      class="form-label-base"
+                    >Full Name</label>
+                    <InputText
+                      id="profileName"
+                      v-model="user.name"
+                    />
+                  </div>
 
-        <div class="phoenix-card mt-8 border-red-100 bg-red-50/30">
-          <h3 class="text-red-600 font-bold uppercase tracking-wider text-sm mb-4">
-            Danger Zone
-          </h3>
-          <p class="text-slate-600 text-sm mb-6">
-            Deleting your account will permanently remove all your data, including your profile picture and bookings. This action cannot be undone.
-          </p>
-          <Button
-            label="Delete My Account"
-            severity="danger"
-            outlined
-            icon="pi pi-trash"
-            :loading="deleting"
-            @click="confirmDelete"
-          />
-        </div>
-      </div>
-    </div>
+                  <div class="flex flex-col">
+                    <label
+                      for="profileEmail"
+                      class="form-label-base"
+                    >Email Address</label>
+                    <InputText
+                      id="profileEmail"
+                      v-model="user.email"
+                      type="email"
+                      disabled
+                      class="opacity-70 cursor-not-allowed"
+                    />
+                    <small class="text-slate-400 mt-1">Email cannot be changed</small>
+                  </div>
+
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="flex flex-col">
+                      <label
+                        for="phoneNumber"
+                        class="form-label-base"
+                      >Your Phone Number</label>
+                      <InputText
+                        id="phoneNumber"
+                        v-model="user.phoneNumber"
+                        placeholder="+49 123 456789"
+                      />
+                    </div>
+                    <div class="flex flex-col">
+                      <label class="form-label-base">Gender</label>
+                      <Select
+                        v-model="user.gender"
+                        :options="genderOptions"
+                        option-label="label"
+                        option-value="value"
+                        placeholder="Select Gender"
+                      />
+                    </div>
+                  </div>
+
+                  <div class="flex items-center gap-4 p-4 bg-slate-50 rounded-xl border border-slate-200">
+                    <div class="flex-1">
+                      <h4 class="font-bold text-slate-900">
+                        Public Profile
+                      </h4>
+                      <p class="text-sm text-slate-600">
+                        Show your personal bests (PBs) and monthly attendance on the leaderboard. If disabled, your stats will be hidden from other athletes.
+                      </p>
+                    </div>
+                    <ToggleSwitch v-model="user.isPublic" />
+                  </div>
+
+                  <div class="border-t border-slate-100 pt-6 mt-2">
+                    <h3 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                      <i class="pi pi-shield text-amber-500" />
+                      Safety & Emergency Info
+                    </h3>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                      <div class="flex flex-col">
+                        <label
+                          for="emergencyName"
+                          class="form-label-base"
+                        >Emergency Contact Name</label>
+                        <InputText
+                          id="emergencyName"
+                          v-model="user.emergencyContactName"
+                          placeholder="Next of Kin Name"
+                        />
+                      </div>
+                      <div class="flex flex-col">
+                        <label
+                          for="emergencyPhone"
+                          class="form-label-base"
+                        >Emergency Contact Phone</label>
+                        <InputText
+                          id="emergencyPhone"
+                          v-model="user.emergencyContactPhone"
+                          placeholder="+49 123 456789"
+                        />
+                      </div>
+                    </div>
+
+                    <div class="flex items-start gap-3 mt-6 p-4 bg-slate-50 rounded-lg border border-slate-100">
+                      <Checkbox
+                        v-model="hasConsentedToEmergency"
+                        :binary="true"
+                        input-id="consent"
+                      />
+                      <label
+                        for="consent"
+                        class="text-xs text-slate-600 font-medium leading-relaxed"
+                      >
+                        I confirm that I have obtained the express consent of the person named above to share their contact details with {{ authStore.user?.company?.name || 'this app' }} for emergency purposes only. This data will only be accessed by trainers in the event of a medical emergency during a session.
+                      </label>
+                    </div>
+                  </div>
+
+                  <div class="pt-4">
+                    <Button
+                      severity="primary"
+                      type="submit"
+                      label="Save Changes"
+                      :loading="loading"
+                      class="btn-primary"
+                    />
+                  </div>
+                </form>
+              </div>
+
+              <div class="phoenix-card mt-8 border-red-100 bg-red-50/30">
+                <h3 class="text-red-600 font-bold uppercase tracking-wider text-sm mb-4">
+                  Danger Zone
+                </h3>
+                <p class="text-slate-600 text-sm mb-6">
+                  Deleting your account will permanently remove all your data, including your profile picture and bookings. This action cannot be undone.
+                </p>
+                <Button
+                  label="Delete My Account"
+                  severity="danger"
+                  outlined
+                  icon="pi pi-trash"
+                  :loading="deleting"
+                  @click="confirmDelete"
+                />
+              </div>
+            </div>
+          </div>
+        </TabPanel>
+        <TabPanel value="1">
+          <OnboardingChecklist :always-show="true" />
+        </TabPanel>
+      </TabPanels>
+    </Tabs>
   </div>
 </template>
 

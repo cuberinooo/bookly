@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Tests\Service;
 
 use App\Entity\Course;
@@ -38,7 +40,7 @@ class BookingWindowTest extends TestCase
         );
     }
 
-    public function testBookOutsideCurrentWeekWindow(): void
+    public function test_book_outside_current_week_window(): void
     {
         $trainer = new User();
         $trainer->setName('Trainer');
@@ -59,7 +61,7 @@ class BookingWindowTest extends TestCase
         // Course starts next Monday
         $nextMonday = new \DateTime();
         $day = (int) $nextMonday->format('w');
-        $daysToMonday = $day === 0 ? 1 : 8 - $day;
+        $daysToMonday = 0 === $day ? 1 : 8 - $day;
         $nextMonday->modify("+$daysToMonday days");
         $nextMonday->setTime(10, 0);
 
@@ -75,7 +77,7 @@ class BookingWindowTest extends TestCase
         $this->bookingService->book($course, $user);
     }
 
-    public function testBookWithinCurrentWeekWindow(): void
+    public function test_book_within_current_week_window(): void
     {
         $trainer = $this->createMock(User::class);
         $trainer->method('getId')->willReturn(1);
@@ -101,7 +103,7 @@ class BookingWindowTest extends TestCase
         // Ensure it is in the future relative to "now"
         $courseDate = new \DateTime();
         $day = (int) $courseDate->format('w');
-        $daysToSunday = $day === 0 ? 0 : 7 - $day;
+        $daysToSunday = 0 === $day ? 0 : 7 - $day;
         $courseDate->modify("+$daysToSunday days");
         $courseDate->setTime(23, 0);
 
@@ -119,6 +121,7 @@ class BookingWindowTest extends TestCase
         $course->method('getEndTime')->willReturn((clone $courseDate)->modify('+1 hour'));
         $course->method('getCapacity')->willReturn(10);
         $course->method('getCompany')->willReturn($company);
+        $course->method('getStatus')->willReturn(\App\Enum\CourseStatus::ACTIVE);
 
         $this->bookingRepository->method('findOneBy')->willReturn(null);
         $this->bookingRepository->method('count')->willReturn(0);

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Serializer;
 
 use App\Entity\Booking;
@@ -15,7 +17,8 @@ class BookingNormalizer implements NormalizerInterface
         private NormalizerInterface $normalizer,
         private Security $security,
         private GlobalSettingsRepository $settingsRepository
-    ) {}
+    ) {
+    }
 
     public function normalize($data, ?string $format = null, array $context = []): array
     {
@@ -46,7 +49,7 @@ class BookingNormalizer implements NormalizerInterface
 
             if (!$shouldShowName) {
                 if (isset($normalizedData['user']) && is_array($normalizedData['user'])) {
-                    $normalizedData['user']['name'] = 'Athlete #' . $data->getUser()->getId();
+                    $normalizedData['user']['name'] = 'Athlete #'.$data->getUser()->getId();
                 }
             }
 

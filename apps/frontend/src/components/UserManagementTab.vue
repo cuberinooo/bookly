@@ -10,15 +10,27 @@ const confirm = useConfirm();
 const authStore = useAuthStore();
 const users = ref<any[]>([]);
 const searchQuery = ref('');
+const selectedRoles = ref<string[]>([]);
 const loading = ref(false);
 
 const filteredUsers = computed(() => {
-    if (!searchQuery.value) return users.value;
-    const query = searchQuery.value.toLowerCase();
-    return users.value.filter(u =>
-        u.name.toLowerCase().includes(query) ||
-        u.email.toLowerCase().includes(query)
-    );
+    let result = users.value;
+
+    if (searchQuery.value) {
+        const query = searchQuery.value.toLowerCase();
+        result = result.filter(u =>
+            u.name.toLowerCase().includes(query) ||
+            u.email.toLowerCase().includes(query)
+        );
+    }
+
+    if (selectedRoles.value && selectedRoles.value.length > 0) {
+        result = result.filter(u =>
+            u.roles.some(role => selectedRoles.value.includes(role))
+        );
+    }
+
+    return result;
 });
 
 const userDialog = ref(false);
@@ -210,11 +222,31 @@ onMounted(fetchUsers);
         User Directory
       </h2>
       <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-        <div class="relative w-full sm:w-72">
+        <div class="relative w-full sm:w-64">
           <InputText
             v-model="searchQuery"
-            placeholder="Search by name or email..."
+            placeholder="Search name/email..."
             class="w-full"
+          />
+        </div>
+        <div class="w-full sm:w-48 flex gap-2">
+          <MultiSelect
+            v-model="selectedRoles"
+            :options="roleOptions"
+            option-label="label"
+            option-value="value"
+            placeholder="Filter Roles"
+            class="flex-1"
+            :max-selected-labels="1"
+          />
+          <Button
+            v-if="searchQuery || selectedRoles.length > 0"
+            icon="pi pi-filter-slash"
+            severity="secondary"
+            variant="text"
+            v-tooltip.top="'Clear Filters'"
+            class="flex-shrink-0"
+            @click="searchQuery = ''; selectedRoles = []"
           />
         </div>
         <Button
@@ -236,90 +268,90 @@ onMounted(fetchUsers);
       >
         <Column
           field="name"
-            header="ATHLETE NAME"
-            sortable
-          >
-            <template #body="{ data }">
-              <div class="font-bold text-slate-900">
-                {{ data.name }}
-              </div>
-              <div class="text-xs text-slate-500">
-                {{ data.email }}
-              </div>
-            </template>
-          </Column>
-          <Column header="ROLES">
-            <template #body="{ data }">
-              <div class="flex flex-wrap gap-1">
-                <Tag
-                  v-for="role in getSortedRoles(data.roles)"
-                  :key="role"
-                  :value="role.replace('ROLE_', '')"
-                  :severity="role === 'ROLE_ADMIN' ? 'danger' : (role === 'ROLE_TRAINER' ? 'warn' : (role === 'ROLE_TRIAL' ? 'secondary' : 'info'))"
-                />
-              </div>
-            </template>
-          </Column>
-          <Column header="STATUS">
-            <template #body="{ data }">
-              <div class="flex items-center gap-2">
-                <ToggleSwitch
-                  :model-value="data.isActive"
-                  @update:model-value="toggleActive(data)"
-                />
-              </div>
-            </template>
-          </Column>
-          <Column header="VERIFIED">
-            <template #body="{ data }">
-              <i
-                class="pi"
-                :class="data.isVerified ? 'pi-check-circle text-accent' : 'pi-times-circle text-slate-300'"
+          header="ATHLETE NAME"
+          sortable
+        >
+          <template #body="{ data }">
+            <div class="font-bold text-slate-900">
+              {{ data.name }}
+            </div>
+            <div class="text-xs text-slate-500">
+              {{ data.email }}
+            </div>
+          </template>
+        </Column>
+        <Column header="ROLES">
+          <template #body="{ data }">
+            <div class="flex flex-wrap gap-1">
+              <Tag
+                v-for="role in getSortedRoles(data.roles)"
+                :key="role"
+                :value="role.replace('ROLE_', '')"
+                :severity="role === 'ROLE_ADMIN' ? 'danger' : (role === 'ROLE_TRAINER' ? 'warn' : (role === 'ROLE_TRIAL' ? 'secondary' : 'info'))"
               />
-            </template>
-          </Column>
-          <Column header="MAIL">
-            <template #body="{ data }">
-              <div v-if="(data.roles.includes('ROLE_TRIAL'))">
-                <i
-                  v-tooltip.top="data.joinUsMailSent ? 'Join us Mail Sent' : 'Not Sent'"
-                  class="pi"
-                  :class="data.joinUsMailSent ? 'pi-send text-accent' : 'pi-minus text-slate-300'"
-                />
-              </div>
-            </template>
-          </Column>
-          <Column
-            header="ACTIONS"
-            class="w-48"
-          >
-            <template #body="{ data }">
-              <div class="flex gap-2">
-                <Button
-                  v-if="data.roles.includes('ROLE_TRIAL') && !data.joinUsMailSent"
-                  v-tooltip.top="'Send Join Us Mail'"
-                  icon="pi pi-envelope"
-                  variant="text"
-                  rounded
-                  :loading="sendingJoinUs"
-                  @click="sendJoinUsMail(data)"
-                />
-                <Button
-                  icon="pi pi-pencil"
-                  variant="text"
-                  rounded
-                  @click="editUser(data)"
-                />
-                <Button
-                  icon="pi pi-trash"
-                  variant="text"
-                  severity="danger"
-                  rounded
-                  @click="deleteUser(data)"
-                />
-              </div>
-            </template>
-          </Column>
+            </div>
+          </template>
+        </Column>
+        <Column header="STATUS">
+          <template #body="{ data }">
+            <div class="flex items-center gap-2">
+              <ToggleSwitch
+                :model-value="data.isActive"
+                @update:model-value="toggleActive(data)"
+              />
+            </div>
+          </template>
+        </Column>
+        <Column header="VERIFIED">
+          <template #body="{ data }">
+            <i
+              class="pi"
+              :class="data.isVerified ? 'pi-check-circle text-accent' : 'pi-times-circle text-slate-300'"
+            />
+          </template>
+        </Column>
+        <Column header="MAIL">
+          <template #body="{ data }">
+            <div v-if="(data.roles.includes('ROLE_TRIAL'))">
+              <i
+                v-tooltip.top="data.joinUsMailSent ? 'Join us Mail Sent' : 'Not Sent'"
+                class="pi"
+                :class="data.joinUsMailSent ? 'pi-send text-accent' : 'pi-minus text-slate-300'"
+              />
+            </div>
+          </template>
+        </Column>
+        <Column
+          header="ACTIONS"
+          class="w-48"
+        >
+          <template #body="{ data }">
+            <div class="flex gap-2">
+              <Button
+                v-if="data.roles.includes('ROLE_TRIAL') && !data.joinUsMailSent"
+                v-tooltip.top="'Send Join Us Mail'"
+                icon="pi pi-envelope"
+                variant="text"
+                rounded
+                :loading="sendingJoinUs"
+                @click="sendJoinUsMail(data)"
+              />
+              <Button
+                icon="pi pi-pencil"
+                variant="text"
+                rounded
+                @click="editUser(data)"
+              />
+              <Button
+                icon="pi pi-trash"
+                variant="text"
+                severity="danger"
+                rounded
+                @click="deleteUser(data)"
+              />
+            </div>
+          </template>
+        </Column>
       </DataTable>
     </div>
 

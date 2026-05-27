@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Repository;
 
 use App\Entity\TrainingCycle;
@@ -16,32 +18,6 @@ class TrainingCycleRepository extends ServiceEntityRepository
         parent::__construct($registry, TrainingCycle::class);
     }
 
-    public function findActiveCycleForTrainer(int $trainerId): ?TrainingCycle
-    {
-        return $this->createQueryBuilder('c')
-            ->andWhere('c.trainer = :trainerId')
-            ->andWhere('c.isActive = :isActive')
-            ->setParameter('trainerId', $trainerId)
-            ->setParameter('isActive', true)
-            ->setMaxResults(1)
-            ->getQuery()
-            ->enableResultCache(3600)
-            ->getOneOrNullResult();
-    }
-
-    public function findLatestCycleForTrainer(int $trainerId): ?TrainingCycle
-    {
-        return $this->createQueryBuilder('c')
-            ->andWhere('c.trainer = :trainerId')
-            ->setParameter('trainerId', $trainerId)
-            ->orderBy('c.startDate', 'DESC')
-            ->addOrderBy('c.id', 'DESC')
-            ->setMaxResults(1)
-            ->getQuery()
-            ->enableResultCache(3600)
-            ->getOneOrNullResult();
-    }
-
     public function findActiveCycle(): ?TrainingCycle
     {
         return $this->createQueryBuilder('c')
@@ -49,7 +25,6 @@ class TrainingCycleRepository extends ServiceEntityRepository
             ->setParameter('isActive', true)
             ->setMaxResults(1)
             ->getQuery()
-            ->enableResultCache(3600)
             ->getOneOrNullResult();
     }
 
@@ -60,7 +35,6 @@ class TrainingCycleRepository extends ServiceEntityRepository
             ->addOrderBy('c.id', 'DESC')
             ->setMaxResults(1)
             ->getQuery()
-            ->enableResultCache(3600)
             ->getOneOrNullResult();
     }
 }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Tests\Service;
 
 use App\Entity\Booking;
@@ -9,7 +11,6 @@ use App\Entity\User;
 use App\Repository\BookingRepository;
 use App\Repository\GlobalSettingsRepository;
 use App\Service\BookingService;
-use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Mailer\MailerInterface;
@@ -43,7 +44,7 @@ class BookingServiceTest extends TestCase
         $this->defaultCompany->setGlobalSettings($this->defaultSettings);
     }
 
-    public function testBookConfirmed(): void
+    public function test_book_confirmed(): void
     {
         $user = $this->createMock(User::class);
         $user->method('getId')->willReturn(1);
@@ -62,6 +63,7 @@ class BookingServiceTest extends TestCase
         $course->method('getCapacity')->willReturn(10);
         $course->method('getTitle')->willReturn('Yoga');
         $course->method('getCompany')->willReturn($this->defaultCompany);
+        $course->method('getStatus')->willReturn(\App\Enum\CourseStatus::ACTIVE);
 
         $this->bookingRepository->method('findOneBy')->willReturn(null);
         $this->bookingRepository->method('count')->willReturn(0);
@@ -76,7 +78,7 @@ class BookingServiceTest extends TestCase
         $this->assertSame($course, $booking->getCourse());
     }
 
-    public function testBookWaitlist(): void
+    public function test_book_waitlist(): void
     {
         $user = $this->createMock(User::class);
         $user->method('getId')->willReturn(1);
@@ -93,6 +95,7 @@ class BookingServiceTest extends TestCase
         $course->method('getCapacity')->willReturn(1);
         $course->method('getTitle')->willReturn('Pilates');
         $course->method('getCompany')->willReturn($this->defaultCompany);
+        $course->method('getStatus')->willReturn(\App\Enum\CourseStatus::ACTIVE);
 
         $this->bookingRepository->method('findOneBy')->willReturn(null);
         $this->bookingRepository->method('count')->willReturn(1);
@@ -103,7 +106,7 @@ class BookingServiceTest extends TestCase
         $this->assertTrue($booking->isWaitlist());
     }
 
-    public function testWaitlistPromotion(): void
+    public function test_waitlist_promotion(): void
     {
         $user = $this->createMock(User::class);
         $user->method('getId')->willReturn(1);
@@ -122,6 +125,7 @@ class BookingServiceTest extends TestCase
         $course->method('getCapacity')->willReturn(1);
         $course->method('getTitle')->willReturn('Pilates');
         $course->method('getCompany')->willReturn($this->defaultCompany);
+        $course->method('getStatus')->willReturn(\App\Enum\CourseStatus::ACTIVE);
 
         $booking = new Booking();
         $booking->setWaitlist(false);
@@ -151,7 +155,7 @@ class BookingServiceTest extends TestCase
         $this->assertFalse($waitlistedBooking->isWaitlist());
     }
 
-    public function testBookAlreadyBookedThrowsException(): void
+    public function test_book_already_booked_throws_exception(): void
     {
         $user = $this->createMock(User::class);
         $user->method('getId')->willReturn(1);
@@ -163,6 +167,7 @@ class BookingServiceTest extends TestCase
         $course = $this->createMock(Course::class);
         $course->method('getEndTime')->willReturn(new \DateTime('+1 hour'));
         $course->method('getUser')->willReturn($trainer);
+        $course->method('getStatus')->willReturn(\App\Enum\CourseStatus::ACTIVE);
 
         $this->bookingRepository->method('findOneBy')->willReturn(new Booking());
 
@@ -172,7 +177,7 @@ class BookingServiceTest extends TestCase
         $this->service->book($course, $user);
     }
 
-    public function testBookOwnCourseThrowsException(): void
+    public function test_book_own_course_throws_exception(): void
     {
         $user = $this->createMock(User::class);
         $user->method('getId')->willReturn(1);
@@ -181,6 +186,7 @@ class BookingServiceTest extends TestCase
         $course = $this->createMock(Course::class);
         $course->method('getEndTime')->willReturn(new \DateTime('+1 hour'));
         $course->method('getUser')->willReturn($user);
+        $course->method('getStatus')->willReturn(\App\Enum\CourseStatus::ACTIVE);
 
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage('As a trainer, you cannot book your own course');
@@ -188,7 +194,7 @@ class BookingServiceTest extends TestCase
         $this->service->book($course, $user);
     }
 
-    public function testUnbook(): void
+    public function test_unbook(): void
     {
         $user = $this->createMock(User::class);
         $user->method('getId')->willReturn(1);
@@ -218,7 +224,7 @@ class BookingServiceTest extends TestCase
         $this->service->unbook($course, $user);
     }
 
-    public function testDeleteBooking(): void
+    public function test_delete_booking(): void
     {
         $user = $this->createMock(User::class);
         $user->method('getId')->willReturn(1);
@@ -242,7 +248,20 @@ class BookingServiceTest extends TestCase
         $this->service->deleteBooking($booking);
     }
 
-    public function testBookPastCourseThrowsException(): void
+    public function test_book_postponed_course_throws_exception(): void
+    {
+        $user = new User();
+        $course = $this->createMock(Course::class);
+        $course->method('getEndTime')->willReturn(new \DateTime('+1 hour'));
+        $course->method('getStatus')->willReturn(\App\Enum\CourseStatus::POSTPONED);
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('This course has been postponed and is currently not bookable.');
+
+        $this->service->book($course, $user);
+    }
+
+    public function test_book_past_course_throws_exception(): void
     {
         $user = new User();
         $course = $this->createMock(Course::class);
@@ -254,7 +273,7 @@ class BookingServiceTest extends TestCase
         $this->service->book($course, $user);
     }
 
-    public function testUnbookPastCourseThrowsException(): void
+    public function test_unbook_past_course_throws_exception(): void
     {
         $user = new User();
         $course = $this->createMock(Course::class);
@@ -266,7 +285,7 @@ class BookingServiceTest extends TestCase
         $this->service->unbook($course, $user);
     }
 
-    public function testRemoveBookingIfExists(): void
+    public function test_remove_booking_if_exists(): void
     {
         $user = $this->createMock(User::class);
         $user->method('getId')->willReturn(1);

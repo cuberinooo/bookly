@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Doctrine;
 
 use App\Entity\CompanyAwareInterface;
@@ -12,18 +14,18 @@ class CompanyFilter extends SQLFilter
     {
         // Check if the entity implements CompanyAwareInterface
         if (!$targetEntity->reflClass->implementsInterface(CompanyAwareInterface::class)) {
-            return "";
+            return '';
         }
 
         try {
             $companyId = $this->getParameter('company_id');
             if (!$companyId) {
-                return "";
+                return '';
             }
         } catch (\InvalidArgumentException $e) {
-            return "";
+            return '';
         }
 
-        return $targetTableAlias . '.company_id = ' . $companyId;
+        return $targetTableAlias.'.company_id = '.$companyId;
     }
 }

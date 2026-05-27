@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Controller;
 
 use App\Entity\CycleAssignment;
@@ -32,9 +34,10 @@ class TrainingCycleController extends AbstractController
         $user = $this->getUser();
         $companyId = $user->getCompany()->getId();
 
-        $data = $this->apiCache->get('trainingcategory', $companyId, ['userId' => $user->getId()], function() use ($repository, $serializer, $user) {
-            $categories = $repository->findByTrainer($user->getId());
+        $data = $this->apiCache->get('trainingcategory', $companyId, ['userId' => $user->getId()], function () use ($repository, $serializer) {
+            $categories = $repository->findByCompany();
             $json = $serializer->serialize($categories, 'json', ['groups' => 'category:read']);
+
             return json_decode($json, true);
         }, 600);
 
@@ -48,7 +51,6 @@ class TrainingCycleController extends AbstractController
         $data = json_decode($request->getContent(), true);
 
         $category = new TrainingCategory();
-        $category->setTrainer($this->getUser());
         $category->setCompany($this->getUser()->getCompany());
         $category->setName($data['name']);
         $category->setColorHex($data['colorHex']);
@@ -64,14 +66,18 @@ class TrainingCycleController extends AbstractController
     public function updateCategory(TrainingCategory $category, Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
         $this->denyAccessUnlessGranted('ROLE_TRAINER');
-        if ($category->getTrainer() !== $this->getUser()) {
-            throw $this->createAccessDeniedException();
-        }
+        // No more trainer check, company filter handles access
 
         $data = json_decode($request->getContent(), true);
-        if (isset($data['name'])) $category->setName($data['name']);
-        if (isset($data['colorHex'])) $category->setColorHex($data['colorHex']);
-        if (array_key_exists('description', $data)) $category->setDescription($data['description']);
+        if (isset($data['name'])) {
+            $category->setName($data['name']);
+        }
+        if (isset($data['colorHex'])) {
+            $category->setColorHex($data['colorHex']);
+        }
+        if (array_key_exists('description', $data)) {
+            $category->setDescription($data['description']);
+        }
 
         $entityManager->flush();
 
@@ -82,9 +88,7 @@ class TrainingCycleController extends AbstractController
     public function deleteCategory(TrainingCategory $category, EntityManagerInterface $entityManager): JsonResponse
     {
         $this->denyAccessUnlessGranted('ROLE_TRAINER');
-        if ($category->getTrainer() !== $this->getUser()) {
-            throw $this->createAccessDeniedException();
-        }
+        // No more trainer check, company filter handles access
 
         $entityManager->remove($category);
         $entityManager->flush();
@@ -100,9 +104,10 @@ class TrainingCycleController extends AbstractController
         $user = $this->getUser();
         $companyId = $user->getCompany()->getId();
 
-        $data = $this->apiCache->get('trainingcycle', $companyId, ['userId' => $user->getId()], function() use ($repository, $serializer, $user) {
-            $cycles = $repository->findBy(['trainer' => $user], ['startDate' => 'DESC']);
+        $data = $this->apiCache->get('trainingcycle', $companyId, ['userId' => $user->getId()], function () use ($repository, $serializer) {
+            $cycles = $repository->findBy([], ['startDate' => 'DESC']);
             $json = $serializer->serialize($cycles, 'json', ['groups' => 'cycle:read']);
+
             return json_decode($json, true);
         }, 600);
 
@@ -118,11 +123,10 @@ class TrainingCycleController extends AbstractController
         /** @var \App\Entity\User $user */
         $user = $this->getUser();
 
-        // Get or create the single cycle for this trainer
-        $cycle = $entityManager->getRepository(TrainingCycle::class)->findOneBy(['trainer' => $user]);
+        // Get or create the single cycle for this company
+        $cycle = $entityManager->getRepository(TrainingCycle::class)->findOneBy([]);
         if (!$cycle) {
             $cycle = new TrainingCycle();
-            $cycle->setTrainer($user);
             $cycle->setCompany($user->getCompany());
         } else {
             // Clear existing assignments for replacement logic
@@ -139,7 +143,7 @@ class TrainingCycleController extends AbstractController
 
         foreach ($data['assignments'] ?? [] as $assignData) {
             $category = $categoryRepository->find($assignData['categoryId']);
-            if ($category && $category->getTrainer() === $user) {
+            if ($category) {
                 $assignment = new CycleAssignment();
                 $assignment->setWeekNumber($assignData['weekNumber']);
                 $assignment->setDayOfWeek($assignData['dayOfWeek']);
@@ -159,8 +163,8 @@ class TrainingCycleController extends AbstractController
     {
         $this->denyAccessUnlessGranted('ROLE_TRAINER');
         $data = json_decode($request->getContent(), true);
-        
-        $cycle = $entityManager->getRepository(TrainingCycle::class)->findOneBy(['trainer' => $this->getUser()]);
+
+        $cycle = $entityManager->getRepository(TrainingCycle::class)->findOneBy([]);
         if (!$cycle) {
             return new JsonResponse(['error' => 'No cycle found'], Response::HTTP_NOT_FOUND);
         }
@@ -175,9 +179,7 @@ class TrainingCycleController extends AbstractController
     public function deleteCycle(TrainingCycle $cycle, EntityManagerInterface $entityManager): JsonResponse
     {
         $this->denyAccessUnlessGranted('ROLE_TRAINER');
-        if ($cycle->getTrainer() !== $this->getUser()) {
-            throw $this->createAccessDeniedException();
-        }
+        // No more trainer check, company filter handles access
 
         $entityManager->remove($cycle);
         $entityManager->flush();

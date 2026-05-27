@@ -1,9 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Service;
 
 use App\Entity\User;
-use App\Service\PasswordValidator;
 use Aws\S3\S3ClientInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
@@ -19,7 +20,8 @@ class UserService
         private S3ClientInterface $s3Client,
         private string $s3Bucket,
         private SluggerInterface $slugger,
-    ) {}
+    ) {
+    }
 
     /**
      * Uploads a user's profile picture to S3 and updates the User entity.
@@ -34,10 +36,10 @@ class UserService
         $companySlug = $this->slugger->slug($company->getName())->lower();
         $extension = $file->guessExtension() ?? 'jpg';
         $filename = sprintf('profile_%s.%s', uniqid('', true), $extension);
-        $key = $companySlug . '/' . $user->getId() . '/' . $filename;
+        $key = $companySlug.'/'.$user->getId().'/'.$filename;
 
         // Clean up existing profile pictures
-        $prefix = $companySlug . '/' . $user->getId() . '/';
+        $prefix = $companySlug.'/'.$user->getId().'/';
         $this->s3Client->deleteMatchingObjects($this->s3Bucket, $prefix);
 
         // Upload new file
@@ -88,11 +90,11 @@ class UserService
 
             $totalMinutes = ($hours * 60) + $minutes;
 
-            if ($totalMinutes !== 0) {
+            if (0 !== $totalMinutes) {
                 if ($totalMinutes < 5) {
                     throw new \InvalidArgumentException('Notification must be at least 5 minutes.');
                 }
-                if ($totalMinutes % 5 !== 0) {
+                if (0 !== $totalMinutes % 5) {
                     throw new \InvalidArgumentException('Notification must be in 5-minute increments.');
                 }
             }

@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Tests\Integration;
 
 use App\Entity\Company;
 use App\Entity\Course;
-use App\Entity\User;
 use App\Entity\GlobalSettings;
+use App\Entity\User;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
@@ -22,10 +24,11 @@ class MailNotificationTest extends WebTestCase
     private function getMailhogMessages(): array
     {
         $response = $this->httpClient->request('GET', 'http://mailhog:8025/api/v2/messages');
+
         return $response->toArray()['items'] ?? [];
     }
 
-    public function testBookingSendsConfirmationEmail(): void
+    public function test_booking_sends_confirmation_email(): void
     {
         $client = static::createClient();
         $this->httpClient = static::getContainer()->get(HttpClientInterface::class);
@@ -37,7 +40,7 @@ class MailNotificationTest extends WebTestCase
         $suffix = uniqid();
 
         $company = new Company();
-        $company->setName('Email Test Company ' . $suffix);
+        $company->setName('Email Test Company '.$suffix);
         $entityManager->persist($company);
 
         $settings = new GlobalSettings();
@@ -46,7 +49,7 @@ class MailNotificationTest extends WebTestCase
         $company->setGlobalSettings($settings);
 
         $trainer = new User();
-        $trainer->setEmail('trainer_mail_' . $suffix . '@example.com');
+        $trainer->setEmail('trainer_mail_'.$suffix.'@example.com');
         $trainer->setName('Trainer');
         $trainer->setRoles(['ROLE_TRAINER']);
         $trainer->setPassword($hasher->hashPassword($trainer, 'password'));
@@ -55,7 +58,7 @@ class MailNotificationTest extends WebTestCase
         $entityManager->persist($trainer);
 
         $user = new User();
-        $user->setEmail('member_mail_' . $suffix . '@example.com');
+        $user->setEmail('member_mail_'.$suffix.'@example.com');
         $user->setName('Member');
         $user->setRoles(['ROLE_MEMBER']);
         $user->setPassword($hasher->hashPassword($user, 'password'));
@@ -79,18 +82,18 @@ class MailNotificationTest extends WebTestCase
             'PHP_AUTH_PW'   => 'password',
         ];
 
-        $client->request('POST', '/api/courses/' . $course->getId() . '/book', [], [], $authHeaders);
+        $client->request('POST', '/api/courses/'.$course->getId().'/book', [], [], $authHeaders);
         $this->assertEquals(Response::HTTP_CREATED, $client->getResponse()->getStatusCode());
 
         $messages = $this->getMailhogMessages();
         $this->assertCount(1, $messages, 'One email should have been sent to Mailhog');
-        
+
         $message = $messages[0];
         $this->assertEquals('Booking Confirmed: Email Course', $message['Content']['Headers']['Subject'][0]);
         $this->assertStringContainsString($user->getEmail(), $message['Content']['Headers']['To'][0]);
     }
 
-    public function testWaitlistPromotionSendsEmails(): void
+    public function test_waitlist_promotion_sends_emails(): void
     {
         $client = static::createClient();
         $this->httpClient = static::getContainer()->get(HttpClientInterface::class);
@@ -102,7 +105,7 @@ class MailNotificationTest extends WebTestCase
         $suffix = uniqid();
 
         $company = new Company();
-        $company->setName('Waitlist Test Company ' . $suffix);
+        $company->setName('Waitlist Test Company '.$suffix);
         $entityManager->persist($company);
 
         $settings = new GlobalSettings();
@@ -111,7 +114,7 @@ class MailNotificationTest extends WebTestCase
         $company->setGlobalSettings($settings);
 
         $trainer = new User();
-        $trainer->setEmail('trainer_wait_' . $suffix . '@example.com');
+        $trainer->setEmail('trainer_wait_'.$suffix.'@example.com');
         $trainer->setName('Trainer');
         $trainer->setRoles(['ROLE_TRAINER']);
         $trainer->setPassword($hasher->hashPassword($trainer, 'password'));
@@ -121,7 +124,7 @@ class MailNotificationTest extends WebTestCase
 
         // User 1 (Confirmed)
         $user1 = new User();
-        $user1->setEmail('user1_' . $suffix . '@example.com');
+        $user1->setEmail('user1_'.$suffix.'@example.com');
         $user1->setName('User 1');
         $user1->setRoles(['ROLE_MEMBER']);
         $user1->setPassword($hasher->hashPassword($user1, 'password'));
@@ -131,7 +134,7 @@ class MailNotificationTest extends WebTestCase
 
         // User 2 (Waitlisted)
         $user2 = new User();
-        $user2->setEmail('user2_' . $suffix . '@example.com');
+        $user2->setEmail('user2_'.$suffix.'@example.com');
         $user2->setName('User 2');
         $user2->setRoles(['ROLE_MEMBER']);
         $user2->setPassword($hasher->hashPassword($user2, 'password'));
@@ -152,14 +155,14 @@ class MailNotificationTest extends WebTestCase
         $entityManager->flush();
 
         // 1. User 1 books (Confirmed)
-        $client->request('POST', '/api/courses/' . $course->getId() . '/book', [], [], [
+        $client->request('POST', '/api/courses/'.$course->getId().'/book', [], [], [
             'PHP_AUTH_USER' => $user1->getEmail(),
             'PHP_AUTH_PW'   => 'password',
         ]);
         $this->assertEquals(Response::HTTP_CREATED, $client->getResponse()->getStatusCode());
 
         // 2. User 2 books (Waitlist)
-        $client->request('POST', '/api/courses/' . $course->getId() . '/book', [], [], [
+        $client->request('POST', '/api/courses/'.$course->getId().'/book', [], [], [
             'PHP_AUTH_USER' => $user2->getEmail(),
             'PHP_AUTH_PW'   => 'password',
         ]);
@@ -168,27 +171,27 @@ class MailNotificationTest extends WebTestCase
         $this->clearMailhogMessages();
 
         // 3. User 1 unbooks -> User 2 should be promoted and receive email
-        $client->request('DELETE', '/api/courses/' . $course->getId() . '/book', [], [], [
+        $client->request('DELETE', '/api/courses/'.$course->getId().'/book', [], [], [
             'PHP_AUTH_USER' => $user1->getEmail(),
             'PHP_AUTH_PW'   => 'password',
         ]);
         $this->assertEquals(Response::HTTP_OK, $client->getResponse()->getStatusCode());
 
         $messages = $this->getMailhogMessages();
-        
-        // We expect: 
+
+        // We expect:
         // 1. Cancellation email for User 1
         // 2. Waitlist Promotion email for User 2
         // 3. Booking Confirmation email for User 2
         $this->assertCount(3, $messages, 'Three emails should have been sent (1 cancellation, 2 promotion/confirmation)');
 
-        $subjects = array_map(fn($m) => $m['Content']['Headers']['Subject'][0], $messages);
+        $subjects = array_map(fn ($m) => $m['Content']['Headers']['Subject'][0], $messages);
         $this->assertContains('Booking Cancelled: Waitlist Course', $subjects);
         $this->assertContains('Spot Available: Waitlist Course', $subjects);
         $this->assertContains('Booking Confirmed: Waitlist Course', $subjects);
     }
 
-    public function testTrainerDeletingBookingSendsEmail(): void
+    public function test_trainer_deleting_booking_sends_email(): void
     {
         $client = static::createClient();
         $this->httpClient = static::getContainer()->get(HttpClientInterface::class);
@@ -200,11 +203,11 @@ class MailNotificationTest extends WebTestCase
         $suffix = uniqid();
 
         $company = new Company();
-        $company->setName('Trainer Delete Company ' . $suffix);
+        $company->setName('Trainer Delete Company '.$suffix);
         $entityManager->persist($company);
 
         $trainer = new User();
-        $trainer->setEmail('trainer_del_' . $suffix . '@example.com');
+        $trainer->setEmail('trainer_del_'.$suffix.'@example.com');
         $trainer->setRoles(['ROLE_TRAINER']);
         $trainer->setPassword($hasher->hashPassword($trainer, 'password'));
         $trainer->setName('Trainer');
@@ -213,7 +216,7 @@ class MailNotificationTest extends WebTestCase
         $entityManager->persist($trainer);
 
         $user = new User();
-        $user->setEmail('member_del_' . $suffix . '@example.com');
+        $user->setEmail('member_del_'.$suffix.'@example.com');
         $user->setRoles(['ROLE_MEMBER']);
         $user->setPassword($hasher->hashPassword($user, 'password'));
         $user->setName('Member');
@@ -233,11 +236,11 @@ class MailNotificationTest extends WebTestCase
         $entityManager->flush();
 
         // 1. User books
-        $client->request('POST', '/api/courses/' . $course->getId() . '/book', [], [], [
+        $client->request('POST', '/api/courses/'.$course->getId().'/book', [], [], [
             'PHP_AUTH_USER' => $user->getEmail(),
             'PHP_AUTH_PW'   => 'password',
         ]);
-        
+
         $bookingId = json_decode($client->getResponse()->getContent(), true); // Wait, book returns status msg
         // Need to find the booking ID
         $booking = $entityManager->getRepository(\App\Entity\Booking::class)->findOneBy(['user' => $user, 'course' => $course]);
@@ -257,7 +260,7 @@ class MailNotificationTest extends WebTestCase
         $this->assertStringContainsString($user->getEmail(), $messages[0]['Content']['Headers']['To'][0]);
     }
 
-    public function testAdminResettingPasswordSendsEmail(): void
+    public function test_admin_resetting_password_sends_email(): void
     {
         $client = static::createClient();
         $this->httpClient = static::getContainer()->get(HttpClientInterface::class);
@@ -269,11 +272,11 @@ class MailNotificationTest extends WebTestCase
         $suffix = uniqid();
 
         $company = new Company();
-        $company->setName('Password Reset Company ' . $suffix);
+        $company->setName('Password Reset Company '.$suffix);
         $entityManager->persist($company);
 
         $admin = new User();
-        $admin->setEmail('admin_reset_' . $suffix . '@example.com');
+        $admin->setEmail('admin_reset_'.$suffix.'@example.com');
         $admin->setName('Admin Name');
         $admin->setRoles(['ROLE_ADMIN']);
         $admin->setPassword($hasher->hashPassword($admin, 'password'));
@@ -282,7 +285,7 @@ class MailNotificationTest extends WebTestCase
         $entityManager->persist($admin);
 
         $user = new User();
-        $user->setEmail('athlete_reset_' . $suffix . '@example.com');
+        $user->setEmail('athlete_reset_'.$suffix.'@example.com');
         $user->setRoles(['ROLE_MEMBER']);
         $user->setPassword($hasher->hashPassword($user, 'old_password'));
         $user->setName('Athlete Name');
@@ -303,21 +306,21 @@ class MailNotificationTest extends WebTestCase
         // 2. Check Mailhog
         $messages = $this->getMailhogMessages();
         $this->assertCount(1, $messages, 'One email should have been sent for password reset');
-        
+
         $message = $messages[0];
         $this->assertEquals('Account Security: Password Reset by Administrator', $message['Content']['Headers']['Subject'][0]);
         $this->assertStringContainsString($user->getEmail(), $message['Content']['Headers']['To'][0]);
-        
+
         // 3. Verify user state in DB
         $entityManager->clear(); // Clear cache to get fresh state from DB
         /** @var User $updatedUser */
         $updatedUser = $entityManager->getRepository(User::class)->find($user->getId());
-        
+
         $this->assertTrue($updatedUser->isMustChangePassword(), 'User should be forced to change password');
         $this->assertNotEquals($initialPasswordHash, $updatedUser->getPassword(), 'Password hash should have changed in the database');
     }
 
-    public function testRegistrationNotifiesOnlyOwnCompanyAdmins(): void
+    public function test_registration_notifies_only_own_company_admins(): void
     {
         $client = static::createClient();
         $this->httpClient = static::getContainer()->get(HttpClientInterface::class);
@@ -330,11 +333,11 @@ class MailNotificationTest extends WebTestCase
 
         // 1. Setup Company A and its Admin
         $companyA = new Company();
-        $companyA->setName('Company A ' . $suffix);
+        $companyA->setName('Company A '.$suffix);
         $entityManager->persist($companyA);
 
         $adminA = new User();
-        $adminA->setEmail('adminA_' . $suffix . '@example.com');
+        $adminA->setEmail('adminA_'.$suffix.'@example.com');
         $adminA->setName('Admin A');
         $adminA->setRoles(['ROLE_ADMIN']);
         $adminA->setPassword($hasher->hashPassword($adminA, 'password'));
@@ -344,11 +347,11 @@ class MailNotificationTest extends WebTestCase
 
         // 2. Setup Company B and its Admin
         $companyB = new Company();
-        $companyB->setName('Company B ' . $suffix);
+        $companyB->setName('Company B '.$suffix);
         $entityManager->persist($companyB);
 
         $adminB = new User();
-        $adminB->setEmail('adminB_' . $suffix . '@example.com');
+        $adminB->setEmail('adminB_'.$suffix.'@example.com');
         $adminB->setName('Admin B');
         $adminB->setRoles(['ROLE_ADMIN']);
         $adminB->setPassword($hasher->hashPassword($adminB, 'password'));
@@ -360,10 +363,10 @@ class MailNotificationTest extends WebTestCase
 
         // 3. Register a new user for Company A
         $registrationData = [
-            'email' => 'newuser_' . $suffix . '@example.com',
+            'email' => 'newuser_'.$suffix.'@example.com',
             'password' => 'SecurePassword123!',
             'name' => 'New User',
-            'companyName' => $companyA->getName()
+            'companyName' => $companyA->getName(),
         ];
 
         $client->request('POST', '/api/register', [], [], [], json_encode($registrationData));
@@ -371,43 +374,43 @@ class MailNotificationTest extends WebTestCase
 
         // 4. Verify Mailhog messages
         $messages = $this->getMailhogMessages();
-        
+
         // We expect at least:
         // 1. Welcome email to the new user
         // 2. Admin notification email
-        
+
         $adminNotificationFound = false;
         foreach ($messages as $message) {
-            if ($message['Content']['Headers']['Subject'][0] === 'New User Registration: New User') {
+            if ('New User Registration: New User' === $message['Content']['Headers']['Subject'][0]) {
                 $recipients = $message['Content']['Headers']['To'][0];
                 $this->assertStringContainsString($adminA->getEmail(), $recipients, 'Admin A should be notified');
                 $this->assertStringNotContainsString($adminB->getEmail(), $recipients, 'Admin B should NOT be notified');
                 $adminNotificationFound = true;
             }
         }
-        
+
         $this->assertTrue($adminNotificationFound, 'Admin notification email was not found');
     }
 
-    public function testRegistrationWithGender(): void
+    public function test_registration_with_gender(): void
     {
         $client = static::createClient();
         $container = $client->getContainer();
         $entityManager = $container->get('doctrine.orm.entity_manager');
 
-        $email = 'gender_test' . uniqid() . '@example.com';
+        $email = 'gender_test'.uniqid().'@example.com';
         $registrationData = [
             'email' => $email,
             'password' => 'Password123!',
             'name' => 'Gender Athlete',
             'gender' => 'other',
-            'companyName' => 'Gender Gym'
+            'companyName' => 'Gender Gym',
         ];
 
         $client->request('POST', '/api/register', [], [], [], json_encode($registrationData));
         $this->assertEquals(201, $client->getResponse()->getStatusCode());
 
-        $user = $entityManager->getRepository(\App\Entity\User::class)->findOneBy(['email' => $email]);
+        $user = $entityManager->getRepository(User::class)->findOneBy(['email' => $email]);
         $this->assertNotNull($user);
         $this->assertEquals('other', $user->getGender()->value);
     }

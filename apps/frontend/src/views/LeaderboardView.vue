@@ -3,18 +3,13 @@ import { ref, onMounted, computed } from 'vue';
 import { useLeaderboardStore } from '../store/useLeaderboardStore';
 import { useAuthStore } from '../store/useAuthStore';
 import { useToast } from 'primevue/usetoast';
+import WorkoutRecordForm from '../components/WorkoutRecordForm.vue';
 
 const leaderboardStore = useLeaderboardStore();
 const authStore = useAuthStore();
 const toast = useToast();
 
 const showSubmitDialog = ref(false);
-const submitting = ref(false);
-
-const recordForm = ref({
-    exerciseName: null,
-    weightValue: null as number | null
-});
 
 onMounted(async () => {
     try {
@@ -23,25 +18,6 @@ onMounted(async () => {
         toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load leaderboard data', life: 3000 });
     }
 });
-
-const submitRecord = async () => {
-    if (!recordForm.value.exerciseName || !recordForm.value.weightValue) {
-        toast.add({ severity: 'warn', summary: 'Validation Error', detail: 'Please fill in all fields', life: 3000 });
-        return;
-    }
-
-    submitting.value = true;
-    try {
-        await leaderboardStore.submitRecord(recordForm.value.exerciseName, recordForm.value.weightValue);
-        toast.add({ severity: 'success', summary: 'Success', detail: 'Personal best logged successfully', life: 3000 });
-        showSubmitDialog.value = false;
-        recordForm.value = { exerciseName: null, weightValue: null };
-    } catch (error) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to log personal best', life: 3000 });
-    } finally {
-        submitting.value = false;
-    }
-};
 
 const groupedExercises = computed(() => {
     const groups: Record<string, string[]> = {};
@@ -209,7 +185,7 @@ const getProfilePictureUrl = (userId: number, filename: string | null) => {
                     class="text-center"
                   >
                     <template #body="slotProps">
-                      <div class="font-bold text-amber-400">
+                      <div class="font-bold text-white">
                         {{ slotProps.data.attendanceCount }}
                       </div>
                     </template>
@@ -281,12 +257,12 @@ const getProfilePictureUrl = (userId: number, filename: string | null) => {
                     v-for="(record, index) in leaderboardStore.records[ex][gender]"
                     :key="record.userId"
                     class="flex items-center justify-between p-3 rounded-lg"
-                    :class="index === 0 ? 'bg-amber-500/10 border border-amber-500/20' : 'bg-slate-700/30'"
+                    :class="index === 0 ? 'border bg-pb-card-first' : 'bg-pb-card'"
                   >
                     <div class="flex items-center gap-3">
                       <div
                         class="w-6 text-center font-bold"
-                        :class="index === 0 ? 'text-amber-400' : (index === 1 ? 'text-slate-300' : (index === 2 ? 'text-amber-700' : 'text-slate-500'))"
+                        :class="index === 0 ? 'text-white' : (index === 1 ? 'text-slate-300' : (index === 2 ? 'text-amber-700' : 'text-slate-500'))"
                       >
                         {{ index + 1 }}
                       </div>
@@ -305,17 +281,17 @@ const getProfilePictureUrl = (userId: number, filename: string | null) => {
                       />
                       <div>
                         <div
-                          class="font-bold text-primary text-sm"
-                          :class="{'text-amber-400': index === 0}"
+                          class="font-bold text-white text-sm"
+                          :class="{'text-white': index === 0}"
                         >
                           {{ record.name }}
                         </div>
-                        <div class="text-[10px] text-primary">
+                        <div class="text-[10px] text-white">
                           {{ new Date(record.dateAchieved).toLocaleDateString() }}
                         </div>
                       </div>
                     </div>
-                    <div class="font-black text-primary">
+                    <div class="font-black text-white">
                       {{ record.weightValue }}
                     </div>
                   </div>
@@ -334,63 +310,24 @@ const getProfilePictureUrl = (userId: number, filename: string | null) => {
       :style="{ width: '400px' }"
       class="p-fluid"
     >
-      <div class="space-y-6 pt-4">
-        <div class="field">
-          <label
-            for="exercise"
-            class="text-slate-300 font-bold mb-2 block"
-          >Exercise</label>
-          <Select
-            id="exercise"
-            v-model="recordForm.exerciseName"
-            :options="groupedExercises"
-            option-group-label="label"
-            option-group-children="items"
-            filter
-            :loading="leaderboardStore.loading"
-            placeholder="Select or search exercise"
-            class="w-full"
-          />
-        </div>
-
-        <div class="field">
-          <label
-            for="weight"
-            class="text-slate-300 font-bold mb-2 block"
-          >Weight (kg / reps / time)</label>
-          <InputNumber
-            id="weight"
-            v-model="recordForm.weightValue"
-            input-id="minmaxfraction"
-            :min-fraction-digits="0"
-            :max-fraction-digits="2"
-            placeholder="e.g., 100"
-            class="w-full"
-          />
-        </div>
-      </div>
-      <template #footer>
-        <div class="flex justify-end gap-2 mt-6">
-          <Button
-            label="Cancel"
-            icon="pi pi-times"
-            class="p-button-text p-button-secondary"
-            @click="showSubmitDialog = false"
-          />
-          <Button
-            label="Save PB"
-            icon="pi pi-check"
-            class="p-button-primary"
-            :loading="submitting"
-            @click="submitRecord"
-          />
-        </div>
-      </template>
+      <WorkoutRecordForm
+        @success="showSubmitDialog = false"
+        @cancel="showSubmitDialog = false"
+      />
     </Dialog>
   </div>
 </template>
 
 <style scoped>
+
+.bg-pb-card {
+  background-color: var(--bg-primary-color);
+}
+
+.bg-pb-card-first {
+  background-color: var(--primary-color);
+}
+
 /* Scoped styles to complement Tailwind and PrimeVue */
 :deep(.p-card-body) {
     padding: 1.5rem;

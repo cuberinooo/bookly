@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Entity;
 
 use App\Repository\UserRepository;
@@ -101,11 +103,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, Company
     #[Groups(['user:read', 'meetup:read', 'workout_record:read'])]
     private ?string $profilePicture = null;
 
-    #[ORM\Column(name: "gender", type: 'string', enumType: \App\Enum\Gender::class, nullable: true)]
+    #[ORM\Column(name: 'gender', type: 'string', enumType: \App\Enum\Gender::class, nullable: true)]
     #[Groups(['user:read'])]
     private ?\App\Enum\Gender $gender = null;
 
-    #[ORM\Column(name: "is_public", type: 'boolean', options: ['default' => false])]
+    #[ORM\Column(name: 'is_public', type: 'boolean', options: ['default' => false])]
     #[Groups(['user:read'])]
     private bool $isPublic = false;
 
@@ -120,6 +122,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, Company
     public function setGender(?\App\Enum\Gender $gender): static
     {
         $this->gender = $gender;
+
         return $this;
     }
 
@@ -131,6 +134,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, Company
     public function setIsPublic(bool $isPublic): static
     {
         $this->isPublic = $isPublic;
+
         return $this;
     }
 
@@ -148,6 +152,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, Company
     public function setPhoneNumber(?string $phoneNumber): static
     {
         $this->phoneNumber = $phoneNumber;
+
         return $this;
     }
 
@@ -159,6 +164,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, Company
     public function setEmergencyContactName(?string $emergencyContactName): static
     {
         $this->emergencyContactName = $emergencyContactName;
+
         return $this;
     }
 
@@ -170,6 +176,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, Company
     public function setEmergencyContactPhone(?string $emergencyContactPhone): static
     {
         $this->emergencyContactPhone = $emergencyContactPhone;
+
         return $this;
     }
 
@@ -191,6 +198,22 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, Company
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $stripeCustomerId = null;
+
+    #[ORM\Column(type: 'json', options: ['default' => '[]'])]
+    #[Groups(['user:read'])]
+    private array $onboardingState = [];
+
+    public function getOnboardingState(): array
+    {
+        return $this->onboardingState;
+    }
+
+    public function setOnboardingState(array $onboardingState): static
+    {
+        $this->onboardingState = $onboardingState;
+
+        return $this;
+    }
 
     public function isJoinUsMailSent(): bool
     {

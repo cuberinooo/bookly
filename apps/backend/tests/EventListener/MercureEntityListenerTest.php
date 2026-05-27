@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Tests\EventListener;
 
 use App\Entity\Meetup;
@@ -11,7 +13,7 @@ use PHPUnit\Framework\TestCase;
 
 class MercureEntityListenerTest extends TestCase
 {
-    public function testPostPersistPublishesEntityUpdate(): void
+    public function test_post_persist_publishes_entity_update(): void
     {
         $mercurePublisher = $this->createMock(MercurePublisherService::class);
         $listener = new MercureEntityListener($mercurePublisher);
@@ -27,7 +29,7 @@ class MercureEntityListenerTest extends TestCase
         $listener->postPersist($args);
     }
 
-    public function testMeetupRsvpPersistTriggersMeetupUpdate(): void
+    public function test_meetup_rsvp_persist_triggers_meetup_update(): void
     {
         $mercurePublisher = $this->createMock(MercurePublisherService::class);
         $listener = new MercureEntityListener($mercurePublisher);
@@ -44,9 +46,9 @@ class MercureEntityListenerTest extends TestCase
             ->method('publishEntityUpdate')
             ->willReturnCallback(function ($entity, $action) use ($rsvp, $meetup) {
                 static $callCount = 0;
-                $callCount++;
+                ++$callCount;
 
-                if ($callCount === 1) {
+                if (1 === $callCount) {
                     $this->assertSame($rsvp, $entity);
                     $this->assertSame('created', $action);
                 } else {

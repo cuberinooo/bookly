@@ -41,11 +41,11 @@ final class Version20260428114112 extends AbstractMigration
             FROM course_series cs
             WHERE c.series_id = cs.title -- This is slightly risky if titles match but series_ids differ, but let\'s use a better match
         ');
-        
+
         // Re-do 4 with a more reliable match: we need to join on the original series_id
         // Since we didn\'t store the old series_id in course_series, let\'s add it temporarily or use a subquery
         $this->addSql('ALTER TABLE course_series ADD temp_old_id VARCHAR(255)');
-        
+
         $this->addSql('DELETE FROM course_series'); // Start over with temp_old_id
         $this->addSql('
             INSERT INTO course_series (trainer_id, title, description, capacity, schedule_start_time, duration_minutes, frequency, created_at, active, temp_old_id, last_generated_date)
@@ -78,7 +78,7 @@ final class Version20260428114112 extends AbstractMigration
         $this->addSql('DROP INDEX IDX_169E6FB95278319C');
         $this->addSql('ALTER TABLE course RENAME COLUMN series_id TO series_rel_id');
         $this->addSql('ALTER TABLE course ADD series_id VARCHAR(255) DEFAULT NULL');
-        
+
         // Try to restore old series_id if possible
         $this->addSql('
             UPDATE course c

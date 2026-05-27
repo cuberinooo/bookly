@@ -1,9 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Controller;
 
 use App\Enum\BookingWindow;
-use App\Repository\GlobalSettingsRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -20,23 +21,24 @@ class GlobalSettingsController extends AbstractController
     {
         $user = $this->getUser();
         if (!$user instanceof \App\Entity\User || !$user->getCompany()) {
-             return new JsonResponse(['error' => 'Company not found'], Response::HTTP_NOT_FOUND);
+            return new JsonResponse(['error' => 'Company not found'], Response::HTTP_NOT_FOUND);
         }
 
         $settings = $user->getCompany()->getGlobalSettings();
         $json = $serializer->serialize($settings, 'json', ['groups' => 'settings:read']);
+
         return new JsonResponse($json, Response::HTTP_OK, [], true);
     }
 
     #[Route('', name: 'settings_update', methods: ['PATCH'])]
     public function updateSettings(
-        Request $request, 
+        Request $request,
         EntityManagerInterface $entityManager
     ): JsonResponse {
         $this->denyAccessUnlessGranted('ROLE_TRAINER');
         $user = $this->getUser();
         if (!$user instanceof \App\Entity\User || !$user->getCompany()) {
-             return new JsonResponse(['error' => 'Company not found'], Response::HTTP_NOT_FOUND);
+            return new JsonResponse(['error' => 'Company not found'], Response::HTTP_NOT_FOUND);
         }
 
         $settings = $user->getCompany()->getGlobalSettings();

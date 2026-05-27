@@ -10,12 +10,19 @@ import TheFooter from '../components/TheFooter.vue';
 import TheMobileNav from '../components/TheMobileNav.vue';
 import VersionUpdateToast from '../components/VersionUpdateToast.vue';
 import mercureService from '../services/mercure';
+import { useOnboarding } from '../composables/useOnboarding';
+import FloatingOnboardingWidget from '../components/FloatingOnboardingWidget.vue';
 
 const router = useRouter();
 const menu = ref();
 const toast = useToast();
 const authStore = useAuthStore();
 const settingsStore = useSettingsStore();
+const { initRouteTracking } = useOnboarding();
+
+onMounted(() => {
+  initRouteTracking();
+});
 
 const newPassword = ref('');
 const newPasswordTouched = ref(false);
@@ -101,6 +108,7 @@ const menuItems = computed(() => {
       label: 'My Account',
       items: [
         {label: 'Profile', icon: 'pi pi-user', command: () => router.push('/profile')},
+        {label: 'My Personal Bests', icon: 'pi pi-trophy', command: () => router.push('/personal-bests')},
         {label: 'Settings', icon: 'pi pi-cog', command: () => router.push('/settings')}
       ]
     }
@@ -419,6 +427,7 @@ onMounted(async () => {
     </Dialog>
     <VersionUpdateToast />
     <TheMobileNav />
+    <FloatingOnboardingWidget v-if="authStore.isLoggedIn" />
   </div>
 </template>
 

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Service;
 
 use Symfony\Contracts\Cache\ItemInterface;
@@ -14,8 +16,7 @@ class ApiCacheService
 
     /**
      * @param string $entityType e.g., 'course', 'meetup', 'user'
-     * @param int $companyId
-     * @param array $context Query params, filters, etc.
+     * @param array $context query params, filters, etc
      * @param callable $loader Function to load data if not in cache
      * @param int $ttl Lifetime in seconds
      */
@@ -28,7 +29,7 @@ class ApiCacheService
             $item->expiresAfter($ttl);
             $item->tag([
                 sprintf('entity.%s.company.%d', strtolower($entityType), $companyId),
-                sprintf('company.%d', $companyId)
+                sprintf('company.%d', $companyId),
             ]);
 
             return $loader();
@@ -38,14 +39,14 @@ class ApiCacheService
     public function invalidateEntity(string $entityType, int $companyId): void
     {
         $this->apiCachePool->invalidateTags([
-            sprintf('entity.%s.company.%d', strtolower($entityType), $companyId)
+            sprintf('entity.%s.company.%d', strtolower($entityType), $companyId),
         ]);
     }
 
     public function invalidateCompany(int $companyId): void
     {
         $this->apiCachePool->invalidateTags([
-            sprintf('company.%d', $companyId)
+            sprintf('company.%d', $companyId),
         ]);
     }
 }

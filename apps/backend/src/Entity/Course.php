@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Entity;
 
 use App\Enum\CourseFrequency;
@@ -56,11 +58,11 @@ class Course implements CompanyAwareInterface
     #[Groups(['course:read', 'course:write'])]
     private ?int $durationMinutes = null;
 
-    #[ORM\Column(type: "string", enumType: CourseFrequency::class)]
+    #[ORM\Column(type: 'string', enumType: CourseFrequency::class)]
     #[Groups(['course:read', 'course:write'])]
     private CourseFrequency $frequency = CourseFrequency::ONCE;
 
-    #[ORM\Column(type: "string", enumType: \App\Enum\CourseStatus::class, options: ['default' => 'active'])]
+    #[ORM\Column(type: 'string', enumType: \App\Enum\CourseStatus::class, options: ['default' => 'active'])]
     #[Groups(['course:read'])]
     private \App\Enum\CourseStatus $status = \App\Enum\CourseStatus::ACTIVE;
 

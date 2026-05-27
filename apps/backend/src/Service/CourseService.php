@@ -1,19 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Service;
 
 use App\Entity\Course;
 use App\Entity\CourseSeries;
-use App\Exception\ScheduleConflictException;
-use App\Repository\CourseRepository;
-
-use App\Repository\CourseSeriesRepository;
-use App\Repository\UserRepository;
-use App\Service\TrainingCycleService;
-use Symfony\Component\Serializer\SerializerInterface;
 use App\Entity\User;
 use App\Enum\CourseFrequency;
+use App\Exception\ScheduleConflictException;
+use App\Repository\CourseRepository;
+use App\Repository\CourseSeriesRepository;
+use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Serializer\SerializerInterface;
 
 class CourseService
 {
@@ -40,7 +40,7 @@ class CourseService
         $duration = (int) ($data['durationMinutes'] ?? 60);
         $recurrence = CourseFrequency::tryFrom($data['recurrence'] ?? '') ?? CourseFrequency::ONCE;
 
-        if ($recurrence === CourseFrequency::ONCE) {
+        if (CourseFrequency::ONCE === $recurrence) {
             $course = new Course();
             $course->setTitle($data['title']);
             $course->setDescription($data['description'] ?? '');
@@ -73,25 +73,27 @@ class CourseService
         $series->setCompany($trainer->getCompany());
 
         $this->entityManager->persist($series);
-
-        // Generate courses for the next 3 months
-        $courses = $this->generateCoursesForSeries($series, $startTime, (clone $startTime)->modify('+3 months'));
-
         $this->entityManager->flush();
-        return $courses;
+
+        // No longer pre-generating courses for 3 months here.
+        // The calendar will generate virtual occurrences on-the-fly.
+        return [];
     }
 
-    public function generateCoursesForSeries(\App\Entity\CourseSeries $series, \DateTimeInterface $start, \DateTimeInterface $end): array
+    /**
+     * Calculates occurrences for a series within a date range.
+     *
+     * @return array Array of occurrence objects with startTime and endTime
+     */
+    public function getVirtualOccurrences(CourseSeries $series, \DateTimeInterface $start, \DateTimeInterface $end): array
     {
-        $courses = [];
-        $trainer = $series->getUser();
+        $occurrences = [];
         $duration = $series->getDurationMinutes();
         $frequency = $series->getFrequency();
-        
-        // Calculate the first valid occurrence date >= $start based on $series->getScheduleStartTime()
+
         $scheduleStart = $series->getScheduleStartTime();
         $currentDate = clone $scheduleStart;
-        
+
         // Advance $currentDate until it is >= $start
         while ($currentDate < $start) {
             switch ($frequency) {
@@ -118,35 +120,10 @@ class CourseService
             $courseStartTime = clone $currentDate;
             $courseEndTime = (clone $courseStartTime)->modify("+$duration minutes");
 
-            // Check if course already exists for this series at this time
-            $existing = $this->courseRepository->findOneBy([
-                'series' => $series,
-                'startTime' => $courseStartTime
-            ]);
-
-            if (!$existing) {
-                try {
-                    $this->validateSchedule($courseStartTime, $courseEndTime, null, $trainer->getId());
-
-                    $course = new Course();
-                    $course->setTitle($series->getTitle());
-                    $course->setDescription($series->getDescription());
-                    $course->setCapacity($series->getCapacity());
-                    $course->setAllowTrial($series->isAllowTrial());
-                    $course->setStartTime($courseStartTime);
-                    $course->setDurationMinutes($duration);
-                    $course->setEndTime($courseEndTime);
-                    $course->setFrequency($series->getFrequency());
-                    $course->setSeries($series);
-                    $course->setUser($trainer);
-                    $course->setCompany($series->getCompany());
-
-                    $this->entityManager->persist($course);
-                    $courses[] = $course;
-                } catch (ScheduleConflictException $e) {
-                    // Skip conflicts for series generation
-                }
-            }
+            $occurrences[] = [
+                'startTime' => $courseStartTime,
+                'endTime' => $courseEndTime,
+            ];
 
             switch ($series->getFrequency()) {
                 case CourseFrequency::DAILY:
@@ -168,8 +145,61 @@ class CourseService
             }
         }
 
-        $series->setLastGeneratedDate($end);
-        return $courses;
+        return $occurrences;
+    }
+
+    /**
+     * Atomically instantiates a virtual course from a series and startTime.
+     */
+    public function instantiateVirtualCourse(int $seriesId, \DateTimeInterface $startTime): Course
+    {
+        // 1. Check if it already exists
+        $existing = $this->courseRepository->findOneBy([
+            'series' => $seriesId,
+            'startTime' => $startTime,
+        ]);
+
+        if ($existing) {
+            return $existing;
+        }
+
+        // 2. Load series
+        $series = $this->seriesRepository->find($seriesId);
+        if (!$series) {
+            throw new \InvalidArgumentException('Series not found');
+        }
+
+        // 3. Create new course
+        $course = new Course();
+        $course->setTitle($series->getTitle());
+        $course->setDescription($series->getDescription());
+        $course->setCapacity($series->getCapacity());
+        $course->setAllowTrial($series->isAllowTrial());
+        $course->setStartTime($startTime);
+        $course->setDurationMinutes($series->getDurationMinutes());
+        $course->setEndTime((clone $startTime)->modify("+{$series->getDurationMinutes()} minutes"));
+        $course->setFrequency($series->getFrequency());
+        $course->setSeries($series);
+        $course->setUser($series->getUser());
+        $course->setCompany($series->getCompany());
+
+        // Validate schedule (skip if already exists in DB but not loaded yet)
+        $this->validateSchedule($course->getStartTime(), $course->getEndTime(), null, $course->getUser()->getId());
+
+        try {
+            $this->entityManager->persist($course);
+            $this->entityManager->flush();
+
+            return $course;
+        } catch (\Doctrine\DBAL\Exception\UniqueConstraintViolationException $e) {
+            // Concurrent request created it first
+            $this->entityManager->detach($course);
+
+            return $this->courseRepository->findOneBy([
+                'series' => $seriesId,
+                'startTime' => $startTime,
+            ]);
+        }
     }
 
     /**
@@ -190,6 +220,7 @@ class CourseService
         $courses = $qb->getQuery()->getResult();
 
         foreach ($courses as $course) {
+            $this->unbookAll($course);
             $this->entityManager->remove($course);
         }
 
@@ -215,7 +246,22 @@ class CourseService
      */
     public function updateCourseSeries(string $seriesId, array $updates, ?\DateTimeInterface $fromTime = null): int
     {
+        $series = $this->seriesRepository->find((int) $seriesId);
+        if (!$series) {
+            return 0;
+        }
+
         $now = $fromTime ?? new \DateTime();
+        
+        // 1. Instantiate future occurrences for the next 3 months to make them "real" for the update
+        $threeMonthsLater = (clone $now)->modify('+3 months');
+        $occurrences = $this->getVirtualOccurrences($series, $now, $threeMonthsLater);
+        
+        foreach ($occurrences as $occ) {
+            $this->instantiateVirtualCourse($series->getId(), $occ['startTime']);
+        }
+
+        // 2. Fetch all real courses for this series that are in the future
         $courses = $this->courseRepository->createQueryBuilder('c')
             ->where('c.series = :seriesId')
             ->andWhere('c.startTime >= :now')
@@ -223,8 +269,6 @@ class CourseService
             ->setParameter('now', $now)
             ->getQuery()
             ->getResult();
-
-        $series = $this->seriesRepository->find((int) $seriesId);
 
         foreach ($courses as $course) {
             if (isset($updates['title'])) {
@@ -274,12 +318,24 @@ class CourseService
         }
 
         if ($series) {
-            if (isset($updates['title'])) $series->setTitle($updates['title']);
-            if (isset($updates['description'])) $series->setDescription($updates['description']);
-            if (isset($updates['capacity'])) $series->setCapacity($updates['capacity']);
-            if (isset($updates['allowTrial'])) $series->setAllowTrial($updates['allowTrial']);
-            if (isset($updates['trainer'])) $series->setUser($updates['trainer']);
-            if (isset($updates['durationMinutes'])) $series->setDurationMinutes($updates['durationMinutes']);
+            if (isset($updates['title'])) {
+                $series->setTitle($updates['title']);
+            }
+            if (isset($updates['description'])) {
+                $series->setDescription($updates['description']);
+            }
+            if (isset($updates['capacity'])) {
+                $series->setCapacity($updates['capacity']);
+            }
+            if (isset($updates['allowTrial'])) {
+                $series->setAllowTrial($updates['allowTrial']);
+            }
+            if (isset($updates['trainer'])) {
+                $series->setUser($updates['trainer']);
+            }
+            if (isset($updates['durationMinutes'])) {
+                $series->setDurationMinutes($updates['durationMinutes']);
+            }
             if (isset($updates['startTime'])) {
                 $newTime = $updates['startTime'];
                 $seriesStartTime = $series->getScheduleStartTime();
@@ -340,7 +396,7 @@ class CourseService
         $overlappingCourses = $this->courseRepository->findOverlappingCourses($startTime, $endTime, $excludeId, $trainerId);
 
         // Filter out postponed courses from conflict detection
-        $overlappingCourses = array_filter($overlappingCourses, fn(Course $c) => $c->getStatus() === \App\Enum\CourseStatus::ACTIVE);
+        $overlappingCourses = array_filter($overlappingCourses, fn (Course $c) => \App\Enum\CourseStatus::ACTIVE === $c->getStatus());
 
         if (!empty($overlappingCourses)) {
             $conflict = reset($overlappingCourses);
@@ -359,120 +415,186 @@ class CourseService
 
     public function postponeCourse(Course $course, User $trainer): void
     {
-        if ($course->getStatus() === \App\Enum\CourseStatus::POSTPONED) {
+        if (\App\Enum\CourseStatus::POSTPONED === $course->getStatus()) {
             throw new \LogicException('Course is already postponed.');
         }
 
         $course->setStatus(\App\Enum\CourseStatus::POSTPONED);
         $course->setPostponedBy($trainer);
 
-        // Unbook all members
-        $bookings = $course->getBookings();
-        foreach ($bookings as $booking) {
-            $this->bookingService->removeBookingIfExists($course, $booking->getUser());
+        $this->unbookAll($course);
+
+        $this->entityManager->flush();
+    }
+
+    public function deleteCourse(Course $course): void
+    {
+        $seriesId = $course->getSeriesId();
+
+        if ($seriesId) {
+            // Soft delete for series courses
+            $course->setStatus(\App\Enum\CourseStatus::DELETED);
+            $this->unbookAll($course);
+        } else {
+            // Hard delete for non-series courses
+            $this->entityManager->remove($course);
         }
 
         $this->entityManager->flush();
     }
 
-    /**
-     * Finds and formats courses with training cycle category enrichment.
-     */
+    private function unbookAll(Course $course): void
+    {
+        $bookings = $course->getBookings();
+        foreach ($bookings as $booking) {
+            $this->bookingService->removeBookingIfExists($course, $booking->getUser());
+        }
+    }
+
     public function listCourses(array $queryParams): array
     {
         $startDateStr = $queryParams['startDate'] ?? null;
         $endDateStr = $queryParams['endDate'] ?? null;
+        $memberId = isset($queryParams['memberId']) && '' !== $queryParams['memberId'] ? (int) $queryParams['memberId'] : null;
+
         $serverTz = new \DateTimeZone(date_default_timezone_get());
-        $startDate = $startDateStr ? (new \DateTime($startDateStr))->setTimezone($serverTz) : null;
-        $endDate = $endDateStr ? (new \DateTime($endDateStr))->setTimezone($serverTz) : null;
-        $futureOnly = (bool)($queryParams['futureOnly'] ?? false);
-        $trainerId = isset($queryParams['trainerId']) && $queryParams['trainerId'] !== '' ? (int)$queryParams['trainerId'] : null;
-        $memberId = isset($queryParams['memberId']) && $queryParams['memberId'] !== '' ? (int)$queryParams['memberId'] : null;
-        $all = (bool)($queryParams['all'] ?? false);
+        $startDate = $startDateStr ? (new \DateTime($startDateStr))->setTimezone($serverTz) : (new \DateTime())->setTime(0, 0, 0);
 
-        if ($all) {
-            $qb = $this->courseRepository->createQueryBuilder('c');
-            if ($futureOnly && !$startDate) {
-                $qb->andWhere('c.endTime >= :now')
-                   ->setParameter('now', new \DateTime());
-            } elseif ($startDate) {
-                $qb->andWhere('c.endTime >= :startDate')
-                   ->setParameter('startDate', $startDate);
-            }
+        // If memberId is provided, we default to a much larger range (1 year) to ensure all bookings are shown
+        $defaultDuration = $memberId ? '+1 year' : '+7 days';
+        $endDate = $endDateStr ? (new \DateTime($endDateStr))->setTimezone($serverTz) : (clone $startDate)->modify($defaultDuration)->setTime(23, 59, 59);
 
-            if ($endDate) {
-                $qb->andWhere('c.startTime <= :endDate')
-                   ->setParameter('endDate', $endDate);
-            }
+        $futureOnly = (bool) ($queryParams['futureOnly'] ?? false);
+        $trainerId = isset($queryParams['trainerId']) && '' !== $queryParams['trainerId'] ? (int) $queryParams['trainerId'] : null;
+        $page = (int) ($queryParams['page'] ?? 1);
+        $limit = (int) ($queryParams['limit'] ?? 20);
+        $all = (bool) ($queryParams['all'] ?? false);
 
-            if ($trainerId) {
-                $qb->andWhere('c.user = :trainerId')
-                   ->setParameter('trainerId', $trainerId);
-            }
+        // 1. Fetch real courses (all in range for merging)
+        $qb = $this->courseRepository->createQueryBuilder('c');
+        $qb->andWhere('c.startTime <= :endDate')
+           ->andWhere('c.endTime >= :startDate')
+           ->setParameter('startDate', $startDate)
+           ->setParameter('endDate', $endDate);
 
-            if ($memberId) {
-                $qb->join('c.bookings', 'b')
-                   ->andWhere('b.user = :memberId')
-                   ->setParameter('memberId', $memberId);
-            }
-
-            $courses = $qb->orderBy('c.startTime', 'ASC')
-               ->getQuery()
-               ->getResult();
-
-            $data = json_decode($this->serializer->serialize($courses, 'json', ['groups' => 'course:read']), true);
-
-            foreach ($data as &$courseData) {
-                $course = null;
-                foreach ($courses as $c) {
-                    if ($c->getId() === $courseData['id']) {
-                        $course = $c;
-                        break;
-                    }
-                }
-                if ($course) {
-                    $cycleCategory = $this->cycleService->getCategoryForDate($course->getUser(), $course->getStartTime());
-                    if ($cycleCategory) {
-                        $courseData['cycleCategory'] = $cycleCategory;
-                    }
-                }
-            }
-
-            $trainer = $trainerId ? $this->userRepository->find($trainerId) : null;
-            $cycleInfo = null;
-            if ($trainer) {
-                $cycleInfo = $this->cycleService->getCycleInfoForTrainer($trainer, $startDate ?? new \DateTime());
-            } else {
-                $cycleInfo = $this->cycleService->getCycleInfoForCompany($startDate ?? new \DateTime());
-            }
-            return [
-                'data' => $data,
-                'cycle' => $cycleInfo
-            ];
+        // If memberId is provided, we want to see ALL their bookings regardless of course status
+        // (so they see history, postponed ones, etc.), but NOT deleted ones.
+        // If NO memberId, we show ACTIVE and POSTPONED courses (for calendar/management)
+        if (!$memberId) {
+            $qb->andWhere('c.status IN (:statuses)')
+               ->setParameter('statuses', [
+                   \App\Enum\CourseStatus::ACTIVE,
+                   \App\Enum\CourseStatus::POSTPONED,
+               ]);
+        } else {
+            $qb->andWhere('c.status != :deletedStatus')
+               ->setParameter('deletedStatus', \App\Enum\CourseStatus::DELETED);
         }
 
-        $page = (int)($queryParams['page'] ?? 1);
-        $limit = (int)($queryParams['limit'] ?? 20);
+        if ($futureOnly) {
+            $qb->andWhere('c.endTime >= :now')
+               ->setParameter('now', new \DateTime());
+        }
 
-        $paginatedResults = $this->courseRepository->findPaginated($page, $limit, $startDate, $endDate, $futureOnly, $trainerId, $memberId);
+        if ($trainerId) {
+            $qb->andWhere('c.user = :trainerId')
+               ->setParameter('trainerId', $trainerId);
+        }
 
-        $courses = $paginatedResults['data'];
-        unset($paginatedResults['data']);
+        if ($memberId) {
+            $qb->join('c.bookings', 'b')
+               ->andWhere('b.user = :memberId')
+               ->setParameter('memberId', $memberId);
+        }
 
-        $enrichedData = json_decode($this->serializer->serialize($courses, 'json', ['groups' => 'course:read']), true);
+        $realCourses = $qb->orderBy('c.startTime', 'ASC')
+            ->getQuery()
+            ->getResult();
 
-        foreach ($enrichedData as &$courseData) {
-            $course = null;
-            foreach ($courses as $c) {
-                if ($c->getId() === $courseData['id']) {
-                    $course = $c;
-                    break;
+
+        // 2. Fetch all real courses (including non-active) to prevent virtual generation for them
+        $allRealCoursesInRange = $this->courseRepository->createQueryBuilder('c')
+            ->andWhere('c.startTime <= :endDate')
+            ->andWhere('c.endTime >= :startDate')
+            ->setParameter('startDate', $startDate)
+            ->setParameter('endDate', $endDate)
+            ->getQuery()
+            ->getResult();
+
+        // 3. Fetch active series and generate virtual occurrences
+        $virtualCourses = [];
+        if (!$memberId) {
+            $activeSeries = $this->seriesRepository->findActiveSeries();
+            foreach ($activeSeries as $series) {
+                if ($trainerId && $series->getUser()->getId() !== $trainerId) {
+                    continue;
+                }
+
+                $occurrences = $this->getVirtualOccurrences($series, $startDate, $endDate);
+                foreach ($occurrences as $occ) {
+                    // Check if ANY real course already exists for this occurrence
+                    $exists = false;
+                    foreach ($allRealCoursesInRange as $real) {
+                        if ($real->getSeries() && $real->getSeries()->getId() === $series->getId()
+                            && $real->getStartTime()->getTimestamp() === $occ['startTime']->getTimestamp()) {
+                            $exists = true;
+                            break;
+                        }
+                    }
+
+                    if (!$exists) {
+                        $virtualCourses[] = [
+                            'id' => 'v_'.$series->getId().'_'.$occ['startTime']->getTimestamp(),
+                            'seriesId' => (string) $series->getId(),
+                            'title' => $series->getTitle(),
+                            'description' => $series->getDescription(),
+                            'capacity' => $series->getCapacity(),
+                            'allowTrial' => $series->isAllowTrial(),
+                            'startTime' => $occ['startTime']->format(\DateTime::ATOM),
+                            'endTime' => $occ['endTime']->format(\DateTime::ATOM),
+                            'durationMinutes' => $series->getDurationMinutes(),
+                            'frequency' => $series->getFrequency()->value,
+                            'status' => 'active',
+                            'user' => [
+                                'id' => $series->getUser()->getId(),
+                                'name' => $series->getUser()->getName(),
+                            ],
+                            'bookings' => [],
+                            'isVirtual' => true,
+                        ];
+                    }
                 }
             }
-            if ($course) {
-                $cycleCategory = $this->cycleService->getCategoryForDate($course->getUser(), $course->getStartTime());
+        }
+
+
+        // 3. Serialize real courses
+        $data = json_decode($this->serializer->serialize($realCourses, 'json', ['groups' => 'course:read']), true);
+        foreach ($data as &$courseData) {
+            $courseData['isVirtual'] = false;
+        }
+
+        // 4. Merge and Sort
+        $merged = array_merge($data, $virtualCourses);
+        usort($merged, function ($a, $b) {
+            return strcmp($a['startTime'], $b['startTime']);
+        });
+
+        // 5. Pagination (only if not 'all')
+        $totalItems = count($merged);
+        if (!$all) {
+            $merged = array_slice($merged, ($page - 1) * $limit, $limit);
+        }
+
+        // 6. Enrich with cycle info
+        foreach ($merged as &$item) {
+            $tId = $item['user']['id'];
+            $sTime = new \DateTime($item['startTime']);
+            $trainer = $this->userRepository->find($tId);
+            if ($trainer) {
+                $cycleCategory = $this->cycleService->getCategoryForDate($trainer, $sTime);
                 if ($cycleCategory) {
-                    $courseData['cycleCategory'] = $cycleCategory;
+                    $item['cycleCategory'] = $cycleCategory;
                 }
             }
         }
@@ -480,15 +602,26 @@ class CourseService
         $trainer = $trainerId ? $this->userRepository->find($trainerId) : null;
         $cycleInfo = null;
         if ($trainer) {
-            $cycleInfo = $this->cycleService->getCycleInfoForTrainer($trainer, $startDate ?? new \DateTime());
+            $cycleInfo = $this->cycleService->getCycleInfoForTrainer($trainer, $startDate);
         } else {
-            $cycleInfo = $this->cycleService->getCycleInfoForCompany($startDate ?? new \DateTime());
+            $cycleInfo = $this->cycleService->getCycleInfoForCompany($startDate);
         }
-        return [
-            'data' => $enrichedData,
-            'meta' => $paginatedResults,
-            'cycle' => $cycleInfo
+
+        $response = [
+            'data' => $merged,
+            'cycle' => $cycleInfo,
         ];
+
+        if (!$all) {
+            $response['meta'] = [
+                'totalItems' => $totalItems,
+                'page' => $page,
+                'limit' => $limit,
+                'totalPages' => ceil($totalItems / $limit),
+            ];
+        }
+
+        return $response;
     }
 
     /**
@@ -504,7 +637,7 @@ class CourseService
         if (isset($data['startTime']) || isset($data['durationMinutes'])) {
             $serverTz = new \DateTimeZone(date_default_timezone_get());
             $startTime = isset($data['startTime']) ? (new \DateTime($data['startTime']))->setTimezone($serverTz) : $course->getStartTime();
-            $duration = (int) (isset($data['durationMinutes']) ? $data['durationMinutes'] : ($course->getDurationMinutes() ?? 60));
+            $duration = (int) ($data['durationMinutes'] ?? ($course->getDurationMinutes() ?? 60));
 
             $endTime = clone $startTime;
             $endTime->modify("+$duration minutes");

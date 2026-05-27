@@ -144,7 +144,7 @@ const handleSubmit = async (data: any) => {
       <TabPanels>
         <TabPanel :value="activeTab">
           <div
-            v-if="meetupStore.loading"
+            v-if="meetupStore.isLoading"
             class="flex justify-center py-12"
           >
             <ProgressSpinner />

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Tests\Controller;
 
 use App\Entity\Company;
@@ -15,6 +17,7 @@ class MultiTenancyTest extends WebTestCase
         $company = new Company();
         $company->setName($name);
         $em->persist($company);
+
         return $company;
     }
 
@@ -22,12 +25,13 @@ class MultiTenancyTest extends WebTestCase
     {
         $trainer = new User();
         $trainer->setEmail($email);
-        $trainer->setName('Trainer ' . $email);
+        $trainer->setName('Trainer '.$email);
         $trainer->setRoles(['ROLE_TRAINER']);
         $trainer->setPassword('password');
         $trainer->setIsVerified(true);
         $trainer->setCompany($company);
         $em->persist($trainer);
+
         return $trainer;
     }
 
@@ -38,15 +42,15 @@ class MultiTenancyTest extends WebTestCase
             ->create($user);
     }
 
-    public function testCourseIsolationBetweenCompanies(): void
+    public function test_course_isolation_between_companies(): void
     {
         $client = static::createClient();
         $entityManager = static::getContainer()->get('doctrine.orm.entity_manager');
 
         // 1. Setup Company A with a course
-        $companyA = $this->createCompany($entityManager, 'Company A ' . uniqid());
-        $trainerA = $this->createTrainer($entityManager, $companyA, 'trainerA' . uniqid() . '@example.com');
-        
+        $companyA = $this->createCompany($entityManager, 'Company A '.uniqid());
+        $trainerA = $this->createTrainer($entityManager, $companyA, 'trainerA'.uniqid().'@example.com');
+
         $courseA = new Course();
         $courseA->setTitle('Company A Course');
         $courseA->setUser($trainerA);
@@ -57,8 +61,8 @@ class MultiTenancyTest extends WebTestCase
         $entityManager->persist($courseA);
 
         // 2. Setup Company B with a course
-        $companyB = $this->createCompany($entityManager, 'Company B ' . uniqid());
-        $trainerB = $this->createTrainer($entityManager, $companyB, 'trainerB' . uniqid() . '@example.com');
+        $companyB = $this->createCompany($entityManager, 'Company B '.uniqid());
+        $trainerB = $this->createTrainer($entityManager, $companyB, 'trainerB'.uniqid().'@example.com');
 
         $courseB = new Course();
         $courseB->setTitle('Company B Course');
@@ -80,53 +84,53 @@ class MultiTenancyTest extends WebTestCase
 
         // 3. Login as Trainer A and check courses
         $client->request('GET', '/api/courses', [], [], [
-            'HTTP_AUTHORIZATION' => 'Bearer ' . $tokenA
+            'HTTP_AUTHORIZATION' => 'Bearer '.$tokenA,
         ]);
         $this->assertEquals(Response::HTTP_OK, $client->getResponse()->getStatusCode());
-        
+
         $data = json_decode($client->getResponse()->getContent(), true);
-        $courseTitles = array_map(fn($c) => $c['title'], $data['data']);
-        
+        $courseTitles = array_map(fn ($c) => $c['title'], $data['data']);
+
         $this->assertContains('Company A Course', $courseTitles);
         $this->assertNotContains('Company B Course', $courseTitles);
 
         // 4. Try to access Course B directly as Trainer A
-        $client->request('GET', '/api/courses/' . $courseBId, [], [], [
-            'HTTP_AUTHORIZATION' => 'Bearer ' . $tokenA
+        $client->request('GET', '/api/courses/'.$courseBId, [], [], [
+            'HTTP_AUTHORIZATION' => 'Bearer '.$tokenA,
         ]);
         $this->assertEquals(Response::HTTP_NOT_FOUND, $client->getResponse()->getStatusCode(), 'Trainer A should not see Course B');
 
         // 5. Login as Trainer B and check courses
         $client->request('GET', '/api/courses', [], [], [
-            'HTTP_AUTHORIZATION' => 'Bearer ' . $tokenB
+            'HTTP_AUTHORIZATION' => 'Bearer '.$tokenB,
         ]);
         $this->assertEquals(Response::HTTP_OK, $client->getResponse()->getStatusCode());
 
         $data = json_decode($client->getResponse()->getContent(), true);
-        $courseTitles = array_map(fn($c) => $c['title'], $data['data']);
-        
+        $courseTitles = array_map(fn ($c) => $c['title'], $data['data']);
+
         $this->assertContains('Company B Course', $courseTitles);
         $this->assertNotContains('Company A Course', $courseTitles);
 
         // 6. Try to access Course A directly as Trainer B
-        $client->request('GET', '/api/courses/' . $courseAId, [], [], [
-            'HTTP_AUTHORIZATION' => 'Bearer ' . $tokenB
+        $client->request('GET', '/api/courses/'.$courseAId, [], [], [
+            'HTTP_AUTHORIZATION' => 'Bearer '.$tokenB,
         ]);
         $this->assertEquals(Response::HTTP_NOT_FOUND, $client->getResponse()->getStatusCode(), 'Trainer B should not see Course A');
     }
 
-    public function testTrainerSearchIsolationBetweenCompanies(): void
+    public function test_trainer_search_isolation_between_companies(): void
     {
         $client = static::createClient();
         $entityManager = static::getContainer()->get('doctrine.orm.entity_manager');
 
         // 1. Setup Company A with Trainer A
-        $companyA = $this->createCompany($entityManager, 'Company A ' . uniqid());
-        $trainerA = $this->createTrainer($entityManager, $companyA, 'trainerA' . uniqid() . '@example.com');
+        $companyA = $this->createCompany($entityManager, 'Company A '.uniqid());
+        $trainerA = $this->createTrainer($entityManager, $companyA, 'trainerA'.uniqid().'@example.com');
 
         // 2. Setup Company B with Trainer B
-        $companyB = $this->createCompany($entityManager, 'Company B ' . uniqid());
-        $trainerB = $this->createTrainer($entityManager, $companyB, 'trainerB' . uniqid() . '@example.com');
+        $companyB = $this->createCompany($entityManager, 'Company B '.uniqid());
+        $trainerB = $this->createTrainer($entityManager, $companyB, 'trainerB'.uniqid().'@example.com');
 
         $entityManager->flush();
         $entityManager->clear();
@@ -135,12 +139,12 @@ class MultiTenancyTest extends WebTestCase
 
         // 3. Login as Trainer A and search for trainers
         $client->request('GET', '/api/user/trainers', [], [], [
-            'HTTP_AUTHORIZATION' => 'Bearer ' . $tokenA
+            'HTTP_AUTHORIZATION' => 'Bearer '.$tokenA,
         ]);
         $this->assertEquals(Response::HTTP_OK, $client->getResponse()->getStatusCode());
 
         $data = json_decode($client->getResponse()->getContent(), true);
-        $emails = array_map(fn($u) => $u['email'], $data);
+        $emails = array_map(fn ($u) => $u['email'], $data);
 
         $this->assertContains($trainerA->getEmail(), $emails);
         $this->assertNotContains($trainerB->getEmail(), $emails, 'Trainer B should not be visible to Trainer A');

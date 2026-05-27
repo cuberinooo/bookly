@@ -6,6 +6,7 @@ export const useLeaderboardStore = defineStore('leaderboard', () => {
     const monthlyStats = ref<any[]>([]);
     const exercises = ref<any[]>([]);
     const records = ref<Record<string, any[]>>({});
+    const myRecords = ref<any[]>([]);
     const loading = ref(false);
 
     const fetchMonthlyStats = async () => {
@@ -38,15 +39,41 @@ export const useLeaderboardStore = defineStore('leaderboard', () => {
         }
     };
 
+    const fetchMyRecords = async () => {
+        try {
+            const response = await api.get('/leaderboard/my-records');
+            myRecords.value = response.data;
+        } catch (error) {
+            console.error('Failed to fetch my records:', error);
+            throw error;
+        }
+    };
+
     const submitRecord = async (exerciseName: string, weightValue: number) => {
         try {
             await api.post('/leaderboard/workout-records', {
                 exerciseName,
                 weightValue,
             });
-            await fetchRecords(); // Refresh the board after submission
+            await Promise.all([
+                fetchRecords(),
+                fetchMyRecords()
+            ]);
         } catch (error) {
             console.error('Failed to submit workout record:', error);
+            throw error;
+        }
+    };
+
+    const deleteRecord = async (id: number) => {
+        try {
+            await api.delete(`/leaderboard/workout-records/${id}`);
+            await Promise.all([
+                fetchRecords(),
+                fetchMyRecords()
+            ]);
+        } catch (error) {
+            console.error('Failed to delete workout record:', error);
             throw error;
         }
     };
@@ -57,7 +84,8 @@ export const useLeaderboardStore = defineStore('leaderboard', () => {
             await Promise.all([
                 fetchMonthlyStats(),
                 fetchExercises(),
-                fetchRecords()
+                fetchRecords(),
+                fetchMyRecords()
             ]);
         } finally {
             loading.value = false;
@@ -68,11 +96,14 @@ export const useLeaderboardStore = defineStore('leaderboard', () => {
         monthlyStats,
         exercises,
         records,
+        myRecords,
         loading,
         fetchMonthlyStats,
         fetchExercises,
         fetchRecords,
+        fetchMyRecords,
         submitRecord,
+        deleteRecord,
         loadAll
     };
 });

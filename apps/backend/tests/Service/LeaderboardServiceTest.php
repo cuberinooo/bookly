@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Tests\Service;
 
 use App\Entity\Exercise;
@@ -8,7 +10,6 @@ use App\Entity\UserWorkoutRecord;
 use App\Repository\UserRepository;
 use App\Repository\UserWorkoutRecordRepository;
 use App\Service\LeaderboardService;
-use Doctrine\ORM\AbstractQuery;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Query;
@@ -27,7 +28,7 @@ class LeaderboardServiceTest extends TestCase
         $this->entityManager = $this->createMock(EntityManagerInterface::class);
         $this->userRepository = $this->createMock(UserRepository::class);
         $this->recordRepository = $this->createMock(UserWorkoutRecordRepository::class);
-        
+
         $this->service = new LeaderboardService(
             $this->entityManager,
             $this->userRepository,
@@ -35,12 +36,12 @@ class LeaderboardServiceTest extends TestCase
         );
     }
 
-    public function testGetMonthlyStats(): void
+    public function test_get_monthly_stats(): void
     {
         // Mock for attendance query
         $attendanceQb = $this->createMock(QueryBuilder::class);
         $attendanceQuery = $this->createMock(Query::class);
-        
+
         $attendanceQb->method('select')->willReturnSelf();
         $attendanceQb->method('from')->willReturnSelf();
         $attendanceQb->method('leftJoin')->willReturnSelf();
@@ -50,13 +51,13 @@ class LeaderboardServiceTest extends TestCase
         $attendanceQb->method('getQuery')->willReturn($attendanceQuery);
         $attendanceQuery->method('getArrayResult')->willReturn([
             ['userId' => 1, 'attendanceCount' => 5],
-            ['userId' => 2, 'attendanceCount' => 3]
+            ['userId' => 2, 'attendanceCount' => 3],
         ]);
 
         // Mock for streak query
         $streakQb = $this->createMock(QueryBuilder::class);
         $streakQuery = $this->createMock(Query::class);
-        
+
         $streakQb->method('select')->willReturnSelf();
         $streakQb->method('from')->willReturnSelf();
         $streakQb->method('join')->willReturnSelf();
@@ -68,12 +69,12 @@ class LeaderboardServiceTest extends TestCase
         $streakQuery->method('getArrayResult')->willReturn([]);
 
         $this->entityManager->method('createQueryBuilder')->willReturnOnConsecutiveCalls($attendanceQb, $streakQb);
-        
+
         $user1 = $this->createMock(User::class);
         $user1->method('getId')->willReturn(1);
         $user1->method('getName')->willReturn('Athlete A');
         $user1->method('getGender')->willReturn(\App\Enum\Gender::MALE);
-        
+
         $user2 = $this->createMock(User::class);
         $user2->method('getId')->willReturn(2);
         $user2->method('getName')->willReturn('Athlete B');
@@ -89,7 +90,7 @@ class LeaderboardServiceTest extends TestCase
         $this->assertEquals('male', $stats[0]['gender']);
     }
 
-    public function testGetWorkoutRecords(): void
+    public function test_get_workout_records(): void
     {
         $this->recordRepository->method('findTopRecordsByExercise')->willReturn([
             [
@@ -99,7 +100,7 @@ class LeaderboardServiceTest extends TestCase
                 'profilePicture' => 'john.jpg',
                 'gender' => 'male',
                 'maxWeight' => 200.0,
-                'dateAchieved' => new \DateTime()
+                'dateAchieved' => new \DateTime(),
             ],
             [
                 'exerciseName' => 'Deadlift',
@@ -108,14 +109,14 @@ class LeaderboardServiceTest extends TestCase
                 'profilePicture' => null,
                 'gender' => null,
                 'maxWeight' => 150.0,
-                'dateAchieved' => new \DateTime()
-            ]
+                'dateAchieved' => new \DateTime(),
+            ],
         ]);
 
         $exercise = new Exercise();
         $exercise->setName('Deadlift');
         $exercise->setUnit('kg');
-        
+
         $exerciseRepo = $this->createMock(EntityRepository::class);
         $this->entityManager->method('getRepository')->with(Exercise::class)->willReturn($exerciseRepo);
         $exerciseRepo->method('findAll')->willReturn([$exercise]);
@@ -132,7 +133,7 @@ class LeaderboardServiceTest extends TestCase
         $this->assertEquals(150.0, $records['Deadlift']['other'][0]['weightValue']);
     }
 
-    public function testSubmitRecord(): void
+    public function test_submit_record(): void
     {
         $user = new User();
         $exerciseName = 'Snatch';
@@ -140,7 +141,7 @@ class LeaderboardServiceTest extends TestCase
 
         $exercise = new Exercise();
         $exercise->setName($exerciseName);
-        
+
         $exerciseRepo = $this->createMock(EntityRepository::class);
         $this->entityManager->method('getRepository')->with(Exercise::class)->willReturn($exerciseRepo);
         $exerciseRepo->method('findOneBy')->with(['name' => $exerciseName])->willReturn($exercise);
@@ -156,10 +157,10 @@ class LeaderboardServiceTest extends TestCase
         $this->assertSame($user, $record->getUser());
     }
 
-    public function testSubmitInvalidExerciseThrowsException(): void
+    public function test_submit_invalid_exercise_throws_exception(): void
     {
         $user = new User();
-        
+
         $exerciseRepo = $this->createMock(EntityRepository::class);
         $this->entityManager->method('getRepository')->with(Exercise::class)->willReturn($exerciseRepo);
         $exerciseRepo->method('findOneBy')->willReturn(null);

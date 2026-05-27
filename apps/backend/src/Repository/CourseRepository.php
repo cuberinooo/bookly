@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Repository;
 
 use App\Entity\Course;
@@ -105,7 +107,7 @@ class CourseRepository extends ServiceEntityRepository
             'totalItems' => $totalItems,
             'page' => $page,
             'limit' => $limit,
-            'totalPages' => ceil($totalItems / $limit)
+            'totalPages' => ceil($totalItems / $limit),
         ];
     }
 }

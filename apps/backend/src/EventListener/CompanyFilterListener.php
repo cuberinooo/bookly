@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\EventListener;
 
 use App\Entity\User;
@@ -14,7 +16,8 @@ class CompanyFilterListener
     public function __construct(
         private TokenStorageInterface $tokenStorage,
         private EntityManagerInterface $entityManager
-    ) {}
+    ) {
+    }
 
     public function onKernelRequest(RequestEvent $event): void
     {

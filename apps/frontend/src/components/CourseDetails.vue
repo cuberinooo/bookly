@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue';
 import { formatTime, formatDateWithDay } from '../services/date-utils';
 import { useAuthStore } from '../store/useAuthStore';
+import { useOnboarding, ONBOARDING_TASKS } from '../composables/useOnboarding';
 import api from '../services/api';
 import { useToast } from 'primevue/usetoast';
 
@@ -18,6 +19,7 @@ const props = defineProps<{
 const emit = defineEmits(['booked', 'unbooked']);
 
 const authStore = useAuthStore();
+const { markTaskComplete } = useOnboarding();
 const toast = useToast();
 const submitting = ref(false);
 
@@ -32,6 +34,7 @@ async function bookCourse() {
   try {
     await api.post(`/courses/${props.course.id}/book`);
     toast.add({ severity: 'success', summary: 'Confirmed', detail: 'Booking confirmed!', life: 5000 });
+    markTaskComplete(ONBOARDING_TASKS.FIRST_BOOKING);
     emit('booked');
   } catch (err: any) {
     toast.add({ severity: 'error', summary: 'Error', detail: err.response?.data?.error || 'Booking failed', life: 5000 });
@@ -157,7 +160,7 @@ const bookingLabel = computed(() => {
       class="action-footer"
     >
       <template v-if="course.user?.id !== authStore.user?.id">
-        <template v-if="!isOutsideBookingWindow && !isTrialRestricted">
+        <template v-if="!isOutsideBookingWindow && !isTrialRestricted && course.status !== 'postponed'">
           <Button
             v-if="!isBookedByUser"
             :label="bookingLabel"
@@ -181,10 +184,10 @@ const bookingLabel = computed(() => {
           class="text-center p-4 bg-slate-50 rounded-lg border border-slate-200"
         >
           <p class="font-bold text-slate-600 uppercase tracking-widest text-xs mb-2">
-            <i class="pi pi-lock" /> Booking Restricted
+            <i class="pi pi-lock" /> {{ course.status === 'postponed' ? 'Session Postponed' : 'Booking Restricted' }}
           </p>
           <p class="text-xs text-slate-500 font-medium">
-            {{ bookingWindowMessage }}
+            {{ course.status === 'postponed' ? 'This session has been postponed and is currently not bookable.' : bookingWindowMessage }}
           </p>
         </div>
       </template>

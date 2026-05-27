@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -21,11 +23,11 @@ class SecurityController extends AbstractController
                 null,
                 1,
                 '/api/token/refresh',
-                null,
+                $this->getParameter('cookie_domain'),
                 true, // Secure
                 true, // HttpOnly
                 false,
-                'none' // SameSite
+                'lax' // SameSite
             )
         );
 

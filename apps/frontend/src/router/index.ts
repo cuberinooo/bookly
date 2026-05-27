@@ -84,6 +84,12 @@ const router = createRouter({
       component: () => import('../views/LeaderboardView.vue'),
       meta: { requiresAuth: true, roles: ['ROLE_MEMBER', 'ROLE_TRAINER', 'ROLE_ADMIN'] }
     },
+    {
+      path: '/personal-bests',
+      name: 'personal-bests',
+      component: () => import('../views/PersonalBestsView.vue'),
+      meta: { requiresAuth: true }
+    },
   ],
 });
 

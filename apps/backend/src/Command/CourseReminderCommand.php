@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Command;
 
 use App\Repository\CourseRepository;
@@ -30,7 +32,7 @@ class CourseReminderCommand extends Command
     {
         $io = new SymfonyStyle($input, $output);
         $now = new \DateTime();
-        
+
         // Find all future courses where reminder hasn't been sent
         $qb = $this->courseRepository->createQueryBuilder('c')
             ->join('c.user', 'u')
@@ -59,7 +61,7 @@ class CourseReminderCommand extends Command
             if ($now >= $reminderTime) {
                 $this->sendReminder($course);
                 $course->setReminderSent(true);
-                $sentCount++;
+                ++$sentCount;
             }
         }
 
@@ -90,7 +92,7 @@ class CourseReminderCommand extends Command
         $email = (new TemplatedEmail())
             ->from($_ENV['NO_REPLY_MAIL'] ?? 'noreply@example.com')
             ->to($trainer->getEmail())
-            ->subject('Course Reminder: ' . $course->getTitle())
+            ->subject('Course Reminder: '.$course->getTitle())
             ->htmlTemplate('emails/course_reminder.html.twig')
             ->context([
                 'course' => $course,

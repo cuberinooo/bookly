@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Repository;
 
 use App\Entity\UserWorkoutRecord;
@@ -11,8 +13,8 @@ use Doctrine\Persistence\ManagerRegistry;
  *
  * @method UserWorkoutRecord|null find($id, $lockMode = null, $lockVersion = null)
  * @method UserWorkoutRecord|null findOneBy(array $criteria, array $orderBy = null)
- * @method UserWorkoutRecord[]    findAll()
- * @method UserWorkoutRecord[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
+ * @method UserWorkoutRecord[] findAll()
+ * @method UserWorkoutRecord[] findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  */
 class UserWorkoutRecordRepository extends ServiceEntityRepository
 {

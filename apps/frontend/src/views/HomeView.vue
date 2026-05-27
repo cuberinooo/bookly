@@ -290,7 +290,7 @@ onUnmounted(() => {
           :courses="courses"
           :cycle-info="cycleInfo"
           :user-id="authStore.user?.id"
-          :loading="courseStore.loading"
+          :loading="courseStore.isLoading"
           @course-click="handleCourseClick"
         />
       </div>
@@ -301,7 +301,7 @@ onUnmounted(() => {
           :cycle-info="cycleInfo"
           :is-compact-view="isCompactView"
           :user-id="authStore.user?.id"
-          :loading="courseStore.loading"
+          :loading="courseStore.isLoading"
           @course-click="handleCourseClick"
           @cell-click="handleCellClick"
         />

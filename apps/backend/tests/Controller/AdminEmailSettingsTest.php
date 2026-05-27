@@ -1,13 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Tests\Controller;
 
+use App\Entity\AdminSettings;
 use App\Entity\Company;
 use App\Entity\User;
-use App\Entity\AdminSettings;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 class AdminEmailSettingsTest extends WebTestCase
 {
@@ -15,7 +16,7 @@ class AdminEmailSettingsTest extends WebTestCase
     {
         $suffix = uniqid();
         $company = new Company();
-        $company->setName('Test Company ' . $suffix);
+        $company->setName('Test Company '.$suffix);
         $entityManager->persist($company);
 
         $settings = new AdminSettings();
@@ -23,7 +24,7 @@ class AdminEmailSettingsTest extends WebTestCase
         $entityManager->persist($settings);
 
         $admin = new User();
-        $admin->setEmail('admin_' . $suffix . '@example.com');
+        $admin->setEmail('admin_'.$suffix.'@example.com');
         $admin->setName('Admin');
         $admin->setRoles(['ROLE_ADMIN']);
         $admin->setPassword('password');
@@ -32,6 +33,7 @@ class AdminEmailSettingsTest extends WebTestCase
         $entityManager->persist($admin);
 
         $entityManager->flush();
+
         return $admin;
     }
 
@@ -42,7 +44,7 @@ class AdminEmailSettingsTest extends WebTestCase
             ->create($user);
     }
 
-    public function testUpdateEmailSettings(): void
+    public function test_update_email_settings(): void
     {
         $client = static::createClient();
         $entityManager = $client->getContainer()->get('doctrine.orm.entity_manager');
@@ -51,10 +53,10 @@ class AdminEmailSettingsTest extends WebTestCase
 
         $client->request('PATCH', '/api/admin-settings', [], [], [
             'CONTENT_TYPE' => 'application/json',
-            'HTTP_AUTHORIZATION' => 'Bearer ' . $token
+            'HTTP_AUTHORIZATION' => 'Bearer '.$token,
         ], json_encode([
             'welcomeMailMarkdown' => 'Welcome member',
-            'joinUsMailMarkdown' => 'Join us trial'
+            'joinUsMailMarkdown' => 'Join us trial',
         ]));
 
         $this->assertEquals(Response::HTTP_OK, $client->getResponse()->getStatusCode());
@@ -65,7 +67,7 @@ class AdminEmailSettingsTest extends WebTestCase
         $this->assertEquals('Join us trial', $settings->getJoinUsMailMarkdown());
     }
 
-    public function testSendWelcomeMailToMemberAndTrial(): void
+    public function test_send_welcome_mail_to_member_and_trial(): void
     {
         $client = static::createClient();
         $entityManager = $client->getContainer()->get('doctrine.orm.entity_manager');
@@ -75,7 +77,7 @@ class AdminEmailSettingsTest extends WebTestCase
         $suffix = uniqid();
         // Create a Trial User
         $trialUser = new User();
-        $trialUser->setEmail('trial_' . $suffix . '@example.com');
+        $trialUser->setEmail('trial_'.$suffix.'@example.com');
         $trialUser->setName('Trial');
         $trialUser->setRoles(['ROLE_TRIAL']);
         $trialUser->setPassword('password');
@@ -84,7 +86,7 @@ class AdminEmailSettingsTest extends WebTestCase
 
         // Create a Member
         $memberUser = new User();
-        $memberUser->setEmail('member_' . $suffix . '@example.com');
+        $memberUser->setEmail('member_'.$suffix.'@example.com');
         $memberUser->setName('Member');
         $memberUser->setRoles(['ROLE_MEMBER']);
         $memberUser->setPassword('password');
@@ -94,14 +96,14 @@ class AdminEmailSettingsTest extends WebTestCase
         $entityManager->flush();
 
         // 1. Send to Trial
-        $client->request('POST', '/api/admin/users/' . $trialUser->getId() . '/send-join-us', [], [], [
-            'HTTP_AUTHORIZATION' => 'Bearer ' . $token
+        $client->request('POST', '/api/admin/users/'.$trialUser->getId().'/send-join-us', [], [], [
+            'HTTP_AUTHORIZATION' => 'Bearer '.$token,
         ]);
         $this->assertEquals(Response::HTTP_OK, $client->getResponse()->getStatusCode());
 
         // 2. Send to Member
-        $client->request('POST', '/api/admin/users/' . $memberUser->getId() . '/send-join-us', [], [], [
-            'HTTP_AUTHORIZATION' => 'Bearer ' . $token
+        $client->request('POST', '/api/admin/users/'.$memberUser->getId().'/send-join-us', [], [], [
+            'HTTP_AUTHORIZATION' => 'Bearer '.$token,
         ]);
         $this->assertEquals(Response::HTTP_OK, $client->getResponse()->getStatusCode());
 

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Entity;
 
 use App\Enum\CourseFrequency;
@@ -43,7 +45,7 @@ class CourseSeries implements CompanyAwareInterface
     #[Groups(['course:read'])]
     private ?int $durationMinutes = null;
 
-    #[ORM\Column(type: "string", enumType: CourseFrequency::class)]
+    #[ORM\Column(type: 'string', enumType: CourseFrequency::class)]
     #[Groups(['course:read'])]
     private CourseFrequency $frequency = CourseFrequency::ONCE;
 
@@ -51,9 +53,6 @@ class CourseSeries implements CompanyAwareInterface
     #[ORM\JoinColumn(nullable: false)]
     #[Groups(['course:read'])]
     private ?User $user = null;
-
-    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
-    private ?\DateTimeInterface $lastGeneratedDate = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     private ?\DateTimeInterface $createdAt = null;
@@ -90,6 +89,7 @@ class CourseSeries implements CompanyAwareInterface
     public function setTitle(string $title): static
     {
         $this->title = $title;
+
         return $this;
     }
 
@@ -101,6 +101,7 @@ class CourseSeries implements CompanyAwareInterface
     public function setDescription(?string $description): static
     {
         $this->description = $description;
+
         return $this;
     }
 
@@ -112,6 +113,7 @@ class CourseSeries implements CompanyAwareInterface
     public function setCapacity(int $capacity): static
     {
         $this->capacity = $capacity;
+
         return $this;
     }
 
@@ -123,6 +125,7 @@ class CourseSeries implements CompanyAwareInterface
     public function setScheduleStartTime(\DateTimeInterface $scheduleStartTime): static
     {
         $this->scheduleStartTime = $scheduleStartTime;
+
         return $this;
     }
 
@@ -134,6 +137,7 @@ class CourseSeries implements CompanyAwareInterface
     public function setDurationMinutes(int $durationMinutes): static
     {
         $this->durationMinutes = $durationMinutes;
+
         return $this;
     }
 
@@ -145,6 +149,7 @@ class CourseSeries implements CompanyAwareInterface
     public function setFrequency(CourseFrequency $frequency): static
     {
         $this->frequency = $frequency;
+
         return $this;
     }
 
@@ -156,17 +161,7 @@ class CourseSeries implements CompanyAwareInterface
     public function setUser(?User $user): static
     {
         $this->user = $user;
-        return $this;
-    }
 
-    public function getLastGeneratedDate(): ?\DateTimeInterface
-    {
-        return $this->lastGeneratedDate;
-    }
-
-    public function setLastGeneratedDate(?\DateTimeInterface $lastGeneratedDate): static
-    {
-        $this->lastGeneratedDate = $lastGeneratedDate;
         return $this;
     }
 
@@ -183,6 +178,7 @@ class CourseSeries implements CompanyAwareInterface
     public function setActive(bool $active): static
     {
         $this->active = $active;
+
         return $this;
     }
 
@@ -194,6 +190,7 @@ class CourseSeries implements CompanyAwareInterface
     public function setAllowTrial(bool $allowTrial): static
     {
         $this->allowTrial = $allowTrial;
+
         return $this;
     }
 
@@ -211,6 +208,7 @@ class CourseSeries implements CompanyAwareInterface
             $this->courses->add($course);
             $course->setSeries($this);
         }
+
         return $this;
     }
 
@@ -221,6 +219,7 @@ class CourseSeries implements CompanyAwareInterface
                 $course->setSeries(null);
             }
         }
+
         return $this;
     }
 
@@ -232,6 +231,7 @@ class CourseSeries implements CompanyAwareInterface
     public function setCompany(?Company $company): static
     {
         $this->company = $company;
+
         return $this;
     }
 }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\EventListener;
 
 use Lexik\Bundle\JWTAuthenticationBundle\Event\AuthenticationSuccessEvent;
@@ -8,10 +10,12 @@ use Symfony\Component\HttpFoundation\Cookie;
 class AuthenticationSuccessListener
 {
     private int $tokenTtl;
+    private ?string $cookieDomain;
 
-    public function __construct(int $tokenTtl)
+    public function __construct(int $tokenTtl, ?string $cookieDomain = null)
     {
         $this->tokenTtl = $tokenTtl;
+        $this->cookieDomain = $cookieDomain;
     }
 
     public function onAuthenticationSuccessResponse(AuthenticationSuccessEvent $event): void
@@ -21,7 +25,7 @@ class AuthenticationSuccessListener
 
         if (isset($data['refresh_token'])) {
             $refreshToken = $data['refresh_token'];
-            
+
             // Remove refresh token from response body
             unset($data['refresh_token']);
             $event->setData($data);
@@ -33,11 +37,11 @@ class AuthenticationSuccessListener
                     $refreshToken,
                     time() + $this->tokenTtl,
                     '/api/token/refresh', // Only send to refresh endpoint
-                    null,
+                    $this->cookieDomain,
                     true, // Secure
                     true, // HttpOnly
                     false,
-                    'strict' // SameSite
+                    'lax' // SameSite
                 )
             );
         }

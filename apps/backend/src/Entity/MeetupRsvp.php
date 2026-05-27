@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Entity;
 
 use App\Enum\RsvpStatus;
@@ -31,7 +33,7 @@ class MeetupRsvp implements CompanyAwareInterface
     #[Groups(['meetup:read', 'rsvp:read'])]
     private ?User $user = null;
 
-    #[ORM\Column(type: "string", enumType: RsvpStatus::class)]
+    #[ORM\Column(type: 'string', enumType: RsvpStatus::class)]
     #[Groups(['meetup:read', 'rsvp:read'])]
     private RsvpStatus $status = RsvpStatus::GOING;
 

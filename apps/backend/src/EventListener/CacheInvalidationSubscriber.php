@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\EventListener;
 
 use App\Entity\Booking;
@@ -47,14 +49,14 @@ class CacheInvalidationSubscriber
 
         if ($entity instanceof CompanyAwareInterface && $entity->getCompany()) {
             $companyId = $entity->getCompany()->getId();
-            
+
             $typesToInvalidate = $this->getInvalidationTypes($entity);
             foreach ($typesToInvalidate as $type) {
                 $this->apiCache->invalidateEntity($type, $companyId);
             }
         } elseif ($entity instanceof User && $entity->getCompany()) {
-             $companyId = $entity->getCompany()->getId();
-             $this->apiCache->invalidateEntity('user', $companyId);
+            $companyId = $entity->getCompany()->getId();
+            $this->apiCache->invalidateEntity('user', $companyId);
         }
     }
 

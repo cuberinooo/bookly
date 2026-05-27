@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Twig;
 
 use App\Entity\User;
@@ -11,7 +13,8 @@ class GlobalSettingsExtension extends AbstractExtension implements GlobalsInterf
 {
     public function __construct(
         private TokenStorageInterface $tokenStorage
-    ) {}
+    ) {
+    }
 
     public function getGlobals(): array
     {

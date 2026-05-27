@@ -34,7 +34,8 @@ const submitting = ref(false);
 const participantsDialog = ref(false);
 const selectedCourse = ref<any>(null);
 
-const loading = ref(true);
+const localLoading = ref(false);
+const isLoading = computed(() => courseStore.isLoading || localLoading.value);
 
 const settings = ref<any>({
   showParticipantNames: true,
@@ -50,44 +51,8 @@ const trialInfo = ref({
 
 const isTrialMember = computed(() => authStore.user?.roles.includes('ROLE_TRIAL'));
 
-function isOutsideBookingWindow(course: any) {
-    if (!settings.value || settings.value.bookingWindow === BookingWindow.OFF) {
-        return false;
-    }
-
-    const start = new Date(course.startTime);
-    const now = new Date();
-    const deadline = new Date();
-
-    switch (settings.value.bookingWindow) {
-        case BookingWindow.CURRENT_WEEK:
-            // End of current week (Sunday)
-            const day = now.getDay();
-            const daysToSunday = day === 0 ? 0 : 7 - day;
-            deadline.setDate(now.getDate() + daysToSunday);
-            deadline.setHours(23, 59, 59, 999);
-            break;
-        case BookingWindow.TWO_WEEKS:
-            deadline.setDate(now.getDate() + 14);
-            break;
-        case BookingWindow.MONTH:
-            deadline.setMonth(now.getMonth() + 1);
-            break;
-    }
-
-    return start > deadline;
-}
-
-function getBookingWindowMessage() {
-    switch (settings.value?.bookingWindow) {
-        case BookingWindow.CURRENT_WEEK: return 'Bookings only for current week.';
-        case BookingWindow.TWO_WEEKS: return 'Bookings only for next 2 weeks.';
-        case BookingWindow.MONTH: return 'Bookings only for next month.';
-        default: return 'Outside booking window.';
-    }
-}
-
 async function fetchData() {
+    localLoading.value = true;
     try {
         let params: any = { all: true, futureOnly: true };
         if (isTrainerMode.value) {
@@ -102,7 +67,6 @@ async function fetchData() {
             trainerDashboard.value?.refreshTable();
         }
 
-        loading.value = true;
         const [responseSettings, responseMe] = await Promise.all([
             api.get('/settings'),
             api.get('/user/me')
@@ -124,7 +88,7 @@ async function fetchData() {
     } catch (e) {
         toast.add({ severity: 'error', summary: 'Error', detail: `Failed to fetch ${dashboardLabel.value.toLowerCase()} data`, life: 5000 });
     } finally {
-        loading.value = false;
+        localLoading.value = false;
     }
 }
 
@@ -230,128 +194,142 @@ onMounted(fetchData);
       />
     </div>
 
+    <!-- Loading State -->
     <div
-      v-if="isTrainerMode"
-      class="trainer-layout-wrapper"
+      v-if="isLoading"
+      class="flex flex-col items-center justify-center py-20"
     >
-      <TrainerDashboard
-        ref="trainerDashboard"
-        @edit-course="editCourse"
-      />
+      <i class="pi pi-spin pi-spinner text-4xl text-primary mb-4" />
+      <p class="font-bold uppercase tracking-widest text-slate-500">
+        Syncing your dashboard...
+      </p>
     </div>
 
-    <div
-      v-else
-      class="member-layout"
-    >
-      <section>
-        <div class="pb-4">
-          <h2>My Scheduled Bookings</h2>
-          <Button
-            label="View Schedule"
-            icon="pi pi-calendar"
-            variant="text"
-            @click="$router.push('/')"
-          />
-        </div>
+    <div v-show="!isLoading">
+      <div
+        v-if="isTrainerMode"
+        class="trainer-layout-wrapper"
+      >
+        <TrainerDashboard
+          ref="trainerDashboard"
+          @edit-course="editCourse"
+        />
+      </div>
 
-        <div
-          v-if="courses.length === 0"
-          class="empty-state"
-        >
-          <i class="pi pi-calendar-plus" />
-          <p>Ready to train? Your schedule is empty.</p>
-          <Button
-            severity="primary"
-            label="Explore Courses"
-            icon="pi pi-search"
-            size="large"
-            class="mt-4"
-            @click="$router.push('/')"
-          />
-        </div>
+      <div
+        v-else
+        class="member-layout"
+      >
+        <section>
+          <div class="pb-4">
+            <h2>My Scheduled Bookings</h2>
+            <Button
+              label="View Schedule"
+              icon="pi pi-calendar"
+              variant="text"
+              @click="$router.push('/')"
+            />
+          </div>
 
-        <div
-          v-else
-          class="bookings-grid"
-        >
-          <Card
-            v-for="course in courses"
-            :key="course.id"
-            class="booking-card"
+          <div
+            v-if="courses.length === 0"
+            class="empty-state"
           >
-            <template #title>
-              <div class="flex text-black justify-content-between align-items-start">
-                <div class="flex flex-col">
-                  <span>{{ course.title }}</span>
-                  <span
-                    v-if="course.bookings.find(b => b.user.email === authStore.user?.email)?.isWaitlist"
-                    class="waitlist-indicator"
-                  >WAITLIST QUEUE</span>
-                </div>
-                <span class="duration-tag ml-2">{{ formatDuration(course.durationMinutes) }}</span>
-              </div>
-            </template>
-            <template #content>
-              <div class="flex flex-col gap-4 py-3">
-                <div class="info-row">
-                  <i class="pi pi-user" />
-                  <div>
-                    <label>TRAINER</label>
-                    <span>{{ course.user.name }}</span>
-                  </div>
-                </div>
+            <i class="pi pi-calendar-plus" />
+            <p>Ready to train? Your schedule is empty.</p>
+            <Button
+              severity="primary"
+              label="Explore Courses"
+              icon="pi pi-search"
+              size="large"
+              class="mt-4"
+              @click="$router.push('/')"
+            />
+          </div>
 
-                <div class="schedule-focus-row">
-                  <div class="focus-item">
-                    <i class="pi pi-calendar" />
+          <div
+            v-else
+            class="bookings-grid"
+          >
+            <Card
+              v-for="course in courses"
+              :key="course.id"
+              class="booking-card"
+            >
+              <template #title>
+                <div class="flex text-black justify-content-between align-items-start">
+                  <div class="flex flex-col">
+                    <span>{{ course.title }}</span>
+                    <span
+                      v-if="course.bookings.find(b => b.user.email === authStore.user?.email)?.isWaitlist"
+                      class="waitlist-indicator"
+                    >WAITLIST QUEUE</span>
+                  </div>
+                  <span class="duration-tag ml-2">{{ formatDuration(course.durationMinutes) }}</span>
+                </div>
+              </template>
+              <template #content>
+                <div class="flex flex-col gap-4 py-3">
+                  <div class="info-row">
+                    <i class="pi pi-user" />
                     <div>
-                      <label>DATE & TIME</label>
-                      <span>{{ formatDateWithDay(course.startTime) }} @ {{ formatTime(course.startTime) }}</span>
+                      <label>TRAINER</label>
+                      <span>{{ course.user.name }}</span>
                     </div>
                   </div>
-                  <div class="focus-item border-left pl-3">
-                    <i class="pi pi-clock" />
+
+                  <div class="schedule-focus-row">
+                    <div class="focus-item">
+                      <i class="pi pi-calendar" />
+                      <div>
+                        <label>DATE & TIME</label>
+                        <span>{{ formatDateWithDay(course.startTime) }} @ {{ formatTime(course.startTime) }}</span>
+                      </div>
+                    </div>
+                    <div class="focus-item border-left pl-3">
+                      <i class="pi pi-clock" />
+                      <div>
+                        <label>DURATION</label>
+                        <span>{{ formatDuration(course.durationMinutes) }}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="info-row">
+                    <i class="pi pi-users" />
                     <div>
-                      <label>DURATION</label>
-                      <span>{{ formatDuration(course.durationMinutes) }}</span>
+                      <label>AVAILABLE SLOTS</label>
+                      <span>{{ course.bookings.filter(b => !b.isWaitlist).length }} / {{ course.capacity }}</span>
                     </div>
                   </div>
                 </div>
-
-                <div class="info-row">
-                  <i class="pi pi-users" />
-                  <div>
-                    <label>AVAILABLE SLOTS</label>
-                    <span>{{ course.bookings.filter(b => !b.isWaitlist).length }} / {{ course.capacity }}</span>
-                  </div>
+              </template>
+              <template #footer>
+                <div class="flex flex-col gap-2 w-full">
+                  <Button
+                    v-if="settings.isWaitlistVisible"
+                    label="SHOW PARTICIPANTS"
+                    icon="pi pi-users"
+                    variant="outlined"
+                    class="w-full show-btn"
+                    @click="selectedCourse = course; participantsDialog = true"
+                  />
+                  <Button
+                    label="CANCEL BOOKING"
+                    severity="danger"
+                    variant="text"
+                    icon="pi pi-times"
+                    class="w-full cancel-btn"
+                    @click="unbookCourse(course.id)"
+                  />
                 </div>
-              </div>
-            </template>
-            <template #footer>
-              <div class="flex flex-col gap-2 w-full">
-                <Button
-                  v-if="settings.isWaitlistVisible"
-                  label="SHOW PARTICIPANTS"
-                  icon="pi pi-users"
-                  variant="outlined"
-                  class="w-full show-btn"
-                  @click="selectedCourse = course; participantsDialog = true"
-                />
-                <Button
-                  label="CANCEL BOOKING"
-                  severity="danger"
-                  variant="text"
-                  icon="pi pi-times"
-                  class="w-full cancel-btn"
-                  @click="unbookCourse(course.id)"
-                />
-              </div>
-            </template>
-          </Card>
-        </div>
-      </section>
+              </template>
+            </Card>
+          </div>
+        </section>
+      </div>
     </div>
+
 
     <!-- Course Form Dialog -->
     <Dialog

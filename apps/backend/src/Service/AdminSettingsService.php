@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Service;
 
 use App\Entity\AdminSettings;
@@ -17,7 +19,8 @@ class AdminSettingsService
         private SluggerInterface $slugger,
         private S3ClientInterface $s3Client,
         private string $s3Bucket
-    ) {}
+    ) {
+    }
 
     public function getSettingsByCompanyName(string $companyName): ?AdminSettings
     {
@@ -41,12 +44,12 @@ class AdminSettingsService
             'legalNoticeMarkdown',
             'termsAndConditionsMarkdown',
             'welcomeMailMarkdown',
-            'joinUsMailMarkdown'
+            'joinUsMailMarkdown',
         ];
 
         foreach ($fields as $field) {
             if (array_key_exists($field, $data)) {
-                $setter = 'set' . ucfirst($field);
+                $setter = 'set'.ucfirst($field);
                 $settings->$setter($data[$field]);
             }
         }
@@ -59,7 +62,7 @@ class AdminSettingsService
     public function uploadPrivacyPolicy(\App\Entity\Company $company, UploadedFile $file): string
     {
         $companySlug = $this->slugger->slug($company->getName())->lower();
-        $key = $companySlug . '/legal/' . $this->slugger->slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME)) . '-' . uniqid('legal', true) . '.' . $file->guessExtension();
+        $key = $companySlug.'/legal/'.$this->slugger->slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME)).'-'.uniqid('legal', true).'.'.$file->guessExtension();
 
         try {
             $this->s3Client->putObject([
@@ -68,7 +71,7 @@ class AdminSettingsService
                 'Body'   => fopen($file->getRealPath(), 'r'),
             ]);
         } catch (\Exception $e) {
-            throw new \RuntimeException('Failed to upload file to S3: ' . $e->getMessage());
+            throw new \RuntimeException('Failed to upload file to S3: '.$e->getMessage());
         }
 
         $settings = $company->getAdminSettings();
@@ -91,7 +94,7 @@ class AdminSettingsService
     private function uploadAttachment(\App\Entity\Company $company, UploadedFile $file, string $type): array
     {
         $companySlug = $this->slugger->slug($company->getName())->lower();
-        $key = $companySlug . '/company_assets/' . $this->slugger->slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME)) . '-' . uniqid('asset', true) . '.' . $file->guessExtension();
+        $key = $companySlug.'/company_assets/'.$this->slugger->slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME)).'-'.uniqid('asset', true).'.'.$file->guessExtension();
 
         try {
             $this->s3Client->putObject([
@@ -100,12 +103,12 @@ class AdminSettingsService
                 'Body'   => fopen($file->getRealPath(), 'r'),
             ]);
         } catch (\Exception $e) {
-            throw new \RuntimeException('Failed to upload file to S3: ' . $e->getMessage());
+            throw new \RuntimeException('Failed to upload file to S3: '.$e->getMessage());
         }
 
         $settings = $company->getAdminSettings();
-        
-        if ($type === 'welcome') {
+
+        if ('welcome' === $type) {
             $attachments = $settings->getWelcomeMailAttachments() ?? [];
         } else {
             $attachments = $settings->getJoinUsMailAttachments() ?? [];
@@ -113,11 +116,11 @@ class AdminSettingsService
 
         $attachment = [
             'name' => $file->getClientOriginalName(),
-            'path' => $key
+            'path' => $key,
         ];
         $attachments[] = $attachment;
 
-        if ($type === 'welcome') {
+        if ('welcome' === $type) {
             $settings->setWelcomeMailAttachments($attachments);
         } else {
             $settings->setJoinUsMailAttachments($attachments);
@@ -141,7 +144,7 @@ class AdminSettingsService
     private function deleteAttachment(\App\Entity\Company $company, string $path, string $type): void
     {
         $settings = $company->getAdminSettings();
-        if ($type === 'welcome') {
+        if ('welcome' === $type) {
             $attachments = $settings->getWelcomeMailAttachments() ?? [];
         } else {
             $attachments = $settings->getJoinUsMailAttachments() ?? [];
@@ -163,7 +166,7 @@ class AdminSettingsService
             }
         }
 
-        if ($type === 'welcome') {
+        if ('welcome' === $type) {
             $settings->setWelcomeMailAttachments($newAttachments);
         } else {
             $settings->setJoinUsMailAttachments($newAttachments);

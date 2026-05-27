@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Controller;
 
 use App\Entity\User;
@@ -27,12 +29,13 @@ class AdminUserController extends AbstractController
     #[Route('', name: 'admin_user_index', methods: ['GET'])]
     public function index(UserRepository $userRepository, SerializerInterface $serializer): JsonResponse
     {
-        /** @var \App\Entity\User $user */
+        /** @var User $user */
         $user = $this->getUser();
         $companyId = $user->getCompany()->getId();
 
-        $data = $this->apiCache->get('user', $companyId, [], function() use ($userRepository, $serializer) {
+        $data = $this->apiCache->get('user', $companyId, [], function () use ($userRepository, $serializer) {
             $users = $userRepository->findAll();
+
             return $serializer->serialize($users, 'json', ['groups' => 'user:read']);
         }, 300);
 
@@ -52,9 +55,10 @@ class AdminUserController extends AbstractController
             $registrationService->register($data, true);
         } catch (\Exception $e) {
             $statusCode = Response::HTTP_BAD_REQUEST;
-            if ($e->getMessage() === 'Email already registered') {
+            if ('Email already registered' === $e->getMessage()) {
                 $statusCode = Response::HTTP_CONFLICT;
             }
+
             return new JsonResponse(['error' => $e->getMessage()], $statusCode);
         }
 
@@ -64,7 +68,7 @@ class AdminUserController extends AbstractController
     #[Route('/{id}/toggle-active', name: 'admin_user_toggle_active', methods: ['PATCH'])]
     public function toggleActive(User $user, EntityManagerInterface $entityManager): JsonResponse
     {
-        if (in_array('ROLE_ADMIN', $user->getRoles())) {
+        if (in_array('ROLE_ADMIN', $user->getRoles(), true)) {
             return new JsonResponse(['error' => 'Cannot deactivate admin accounts'], Response::HTTP_FORBIDDEN);
         }
 
@@ -77,7 +81,7 @@ class AdminUserController extends AbstractController
     #[Route('/{id}/reset-password', name: 'admin_user_reset_password', methods: ['POST'])]
     public function resetPassword(User $user, \App\Service\AdminUserService $adminUserService): JsonResponse
     {
-        if (in_array('ROLE_ADMIN', $user->getRoles())) {
+        if (in_array('ROLE_ADMIN', $user->getRoles(), true)) {
             // Optional: prevent resetting other admins if you want, or just allow it.
             // For now, let's just proceed.
         }
@@ -93,7 +97,7 @@ class AdminUserController extends AbstractController
         $allowedRoles = ['ROLE_TRIAL', 'ROLE_MEMBER'];
         $hasAllowedRole = false;
         foreach ($allowedRoles as $role) {
-            if (in_array($role, $user->getRoles())) {
+            if (in_array($role, $user->getRoles(), true)) {
                 $hasAllowedRole = true;
                 break;
             }
@@ -118,7 +122,7 @@ class AdminUserController extends AbstractController
     #[Route('/{id}', name: 'admin_user_delete', methods: ['DELETE'])]
     public function delete(User $user, \App\Service\AdminUserService $adminUserService): JsonResponse
     {
-        if (in_array('ROLE_ADMIN', $user->getRoles())) {
+        if (in_array('ROLE_ADMIN', $user->getRoles(), true)) {
             return new JsonResponse(['error' => 'Cannot delete admin accounts'], Response::HTTP_FORBIDDEN);
         }
 
@@ -139,7 +143,9 @@ class AdminUserController extends AbstractController
 
         $data = json_decode($request->getContent(), true);
 
-        if (isset($data['name'])) $user->setName($data['name']);
+        if (isset($data['name'])) {
+            $user->setName($data['name']);
+        }
 
         // Handle multiple roles
         if (isset($data['roles']) && is_array($data['roles'])) {
@@ -154,6 +160,7 @@ class AdminUserController extends AbstractController
         }
 
         $entityManager->flush();
+
         return new JsonResponse(['status' => 'User updated']);
     }
 }

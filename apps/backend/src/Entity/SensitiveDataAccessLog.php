@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Entity;
 
 use App\Repository\SensitiveDataAccessLogRepository;
@@ -45,6 +47,7 @@ class SensitiveDataAccessLog
     public function setViewer(?User $viewer): static
     {
         $this->viewer = $viewer;
+
         return $this;
     }
 
@@ -56,6 +59,7 @@ class SensitiveDataAccessLog
     public function setTargetUser(?User $targetUser): static
     {
         $this->targetUser = $targetUser;
+
         return $this;
     }
 
@@ -72,6 +76,7 @@ class SensitiveDataAccessLog
     public function setReason(string $reason): static
     {
         $this->reason = $reason;
+
         return $this;
     }
 }

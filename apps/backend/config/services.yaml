@@ -9,6 +9,7 @@
 parameters:
     timezone: 'Europe/Berlin'
     aws_s3_bucket: '%env(AWS_S3_BUCKET_NAME)%'
+    cookie_domain: '%env(COOKIE_DOMAIN)%'
 
 services:
     # default configuration for services in *this* file
@@ -20,6 +21,7 @@ services:
             $stripeSecretKey: '%env(STRIPE_SECRET_KEY)%'
             $stripeWebhookSecret: '%env(STRIPE_WEBHOOK_SECRET)%'
             $frontendUrl: '%env(FRONTEND_URL)%'
+            $apiCachePool: '@api_cache.pool'
 
     Aws\S3\S3Client:
         arguments:

@@ -2,7 +2,7 @@ import { defineStore } from 'pinia';
 import api from '../services/api';
 
 export interface Course {
-  id: number;
+  id: string | number;
   title: string;
   description: string | null;
   startTime: string;
@@ -35,10 +35,10 @@ export interface CourseFilters {
 
 export const useCourseStore = defineStore('course', {
   state: () => ({
-    courses: new Map<number, Course>(),
-    courseListOrder: [] as number[],
+    courses: new Map<string | number, Course>(),
+    courseListOrder: [] as (string | number)[],
     cycleInfo: null as any,
-    loading: false,
+    isLoading: false,
     lastFetched: null as number | null,
     filters: {} as CourseFilters,
     loadedRange: { start: null as string | null, end: null as string | null },
@@ -51,13 +51,18 @@ export const useCourseStore = defineStore('course', {
   }),
 
   getters: {
-    courseList: (state) => state.courseListOrder.map(id => state.courses.get(id)).filter(Boolean) as Course[],
-    getCourseById: (state) => (id: number) => state.courses.get(id),
+    courseList: (state) => state.courseListOrder
+        .map(id => state.courses.get(id))
+        .filter((c): c is Course => !!c && c.status !== 'deleted'),
+    getCourseById: (state) => (id: string | number) => state.courses.get(id),
   },
 
   actions: {
-    async fetchCourses(filters: CourseFilters = this.filters) {
-      this.loading = true;
+    async fetchCourses(filters: CourseFilters = this.filters, forceLoading = false) {
+      if (forceLoading || this.courseListOrder.length === 0) {
+        this.isLoading = true;
+      }
+      
       this.filters = { ...filters };
       try {
         const response = await api.get('/courses', { params: filters });
@@ -66,14 +71,14 @@ export const useCourseStore = defineStore('course', {
         
         if (response.data.meta) {
             this.pagination = {
-                page: response.data.meta.currentPage,
-                limit: response.data.meta.itemsPerPage,
+                page: response.data.meta.page,
+                limit: response.data.meta.limit,
                 totalItems: response.data.meta.totalItems,
                 totalPages: response.data.meta.totalPages
             };
         }
 
-        // Reset order but keep the Map for O(1) lookups
+        // Populate new data
         this.courseListOrder = data.map(c => c.id);
         data.forEach(c => this.courses.set(c.id, c));
         
@@ -84,11 +89,12 @@ export const useCourseStore = defineStore('course', {
         console.error('Failed to fetch courses', err);
         throw err;
       } finally {
-        this.loading = false;
+        this.isLoading = false;
       }
     },
 
-    async fetchCourse(id: number) {
+    async fetchCourse(id: string | number) {
+      this.isLoading = true;
       try {
         const response = await api.get(`/courses/${id}`);
         const course = response.data as Course;
@@ -97,6 +103,8 @@ export const useCourseStore = defineStore('course', {
       } catch (err) {
         console.error(`Failed to fetch course ${id}`, err);
         throw err;
+      } finally {
+        this.isLoading = false;
       }
     },
 
@@ -111,7 +119,7 @@ export const useCourseStore = defineStore('course', {
       }
     },
 
-    async updateCourse(id: number, data: any, transferAll = false) {
+    async updateCourse(id: string | number, data: any, transferAll = false) {
       try {
         const url = transferAll ? `/courses/${id}?transferAll=true` : `/courses/${id}`;
         const response = await api.patch(url, data);
@@ -123,7 +131,7 @@ export const useCourseStore = defineStore('course', {
       }
     },
 
-    async deleteCourse(id: number, deleteAll = false) {
+    async deleteCourse(id: string | number, deleteAll = false) {
       try {
         const url = deleteAll ? `/courses/${id}?deleteAll=true` : `/courses/${id}`;
         await api.delete(url);
@@ -134,7 +142,7 @@ export const useCourseStore = defineStore('course', {
       }
     },
 
-    async postponeCourse(id: number) {
+    async postponeCourse(id: string | number) {
       try {
         await api.post(`/courses/${id}/postpone`);
         await this.fetchCourses();
@@ -144,7 +152,7 @@ export const useCourseStore = defineStore('course', {
       }
     },
 
-    async bookCourse(id: number) {
+    async bookCourse(id: string | number) {
         try {
             await api.post(`/courses/${id}/book`);
             await this.fetchCourses();
@@ -154,7 +162,7 @@ export const useCourseStore = defineStore('course', {
         }
     },
 
-    async unbookCourse(id: number) {
+    async unbookCourse(id: string | number) {
         try {
             await api.delete(`/courses/${id}/book`);
             await this.fetchCourses();

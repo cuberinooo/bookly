@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Entity;
 
 use App\Repository\TrainingCycleRepository;
@@ -21,10 +23,6 @@ class TrainingCycle implements CompanyAwareInterface
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
     private ?Company $company = null;
-
-    #[ORM\ManyToOne]
-    #[ORM\JoinColumn(nullable: false)]
-    private ?User $trainer = null;
 
     #[ORM\Column(length: 255)]
     #[Groups(['cycle:read'])]
@@ -67,18 +65,6 @@ class TrainingCycle implements CompanyAwareInterface
     public function setCompany(?Company $company): static
     {
         $this->company = $company;
-
-        return $this;
-    }
-
-    public function getTrainer(): ?User
-    {
-        return $this->trainer;
-    }
-
-    public function setTrainer(?User $trainer): static
-    {
-        $this->trainer = $trainer;
 
         return $this;
     }

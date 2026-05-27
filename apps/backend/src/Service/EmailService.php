@@ -1,9 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Service;
 
 use App\Entity\User;
-use App\Entity\AdminSettings;
 use Aws\S3\S3ClientInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\Mailer\MailerInterface;
@@ -15,7 +16,8 @@ class EmailService
         private MailerInterface $mailer,
         private S3ClientInterface $s3Client,
         private string $s3Bucket
-    ) {}
+    ) {
+    }
 
     public function sendVerificationEmail(User $user, bool $isAdminCreation = false, ?string $temporaryPassword = null): void
     {
@@ -126,12 +128,14 @@ class EmailService
     private function getVerificationUrl(User $user): string
     {
         $frontendUrl = $_ENV['FRONTEND_URL'] ?? 'http://localhost:4200';
-        return $frontendUrl . '/verify-email?token=' . $user->getVerificationToken();
+
+        return $frontendUrl.'/verify-email?token='.$user->getVerificationToken();
     }
 
     private function getLoginUrl(): string
     {
         $frontendUrl = $_ENV['FRONTEND_URL'] ?? 'http://localhost:4200';
-        return $frontendUrl . '/login';
+
+        return $frontendUrl.'/login';
     }
 }

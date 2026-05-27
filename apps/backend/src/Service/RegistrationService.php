@@ -1,15 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Service;
 
 use App\Entity\User;
 use App\Repository\AdminSettingsRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
+use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Uid\Uuid;
-use Symfony\Bundle\SecurityBundle\Security;
 
 class RegistrationService
 {
@@ -105,7 +107,7 @@ class RegistrationService
 
         $this->emailService->sendVerificationEmail($user, $isAdminCreation, $password);
 
-        if(!$isNewCompany) {
+        if (!$isNewCompany) {
             $this->emailService->sendCompanySpecificWelcomeEmail($user);
 
             if (!$isAdminCreation) {
@@ -119,7 +121,7 @@ class RegistrationService
     private function sendAdminNotificationEmail(User $user): void
     {
         $admins = $this->entityManager->getRepository(User::class)->findByRole('ROLE_ADMIN', $user->getCompany());
-        $adminEmails = array_map(fn(User $admin) => $admin->getEmail(), $admins);
+        $adminEmails = array_map(fn (User $admin) => $admin->getEmail(), $admins);
 
         if (empty($adminEmails)) {
             // Fallback to a configured admin email if no admin users found in DB
@@ -130,13 +132,13 @@ class RegistrationService
         $email = (new TemplatedEmail())
             ->from($_ENV['NO_REPLY_MAIL'] ?? 'noreply@example.com')
             ->to(...$adminEmails)
-            ->subject('New User Registration: ' . $user->getName())
+            ->subject('New User Registration: '.$user->getName())
             ->htmlTemplate('emails/admin_new_user.html.twig')
             ->context([
                 'name' => $user->getName(),
                 'userEmail' => $user->getEmail(),
-                'siteName' =>$user->getCompany()->getName(),
-                'role' => implode(', ', array_map(fn($r) => str_replace('ROLE_', '', $r), $user->getRoles())),
+                'siteName' => $user->getCompany()->getName(),
+                'role' => implode(', ', array_map(fn ($r) => str_replace('ROLE_', '', $r), $user->getRoles())),
             ]);
 
         $this->mailer->send($email);

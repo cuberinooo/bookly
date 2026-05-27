@@ -1,17 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Tests\Controller;
 
 use App\Entity\Company;
 use App\Entity\Course;
-use App\Entity\User;
 use App\Entity\GlobalSettings;
+use App\Entity\User;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\HttpFoundation\Response;
 
 class BookingTrialTest extends WebTestCase
 {
-    public function testTrialMemberCanBookAndUnbook(): void
+    public function test_trial_member_can_book_and_unbook(): void
     {
         $client = static::createClient();
         $entityManager = static::getContainer()->get('doctrine.orm.entity_manager');
@@ -20,7 +22,7 @@ class BookingTrialTest extends WebTestCase
 
         // Create Company and Settings
         $company = new Company();
-        $company->setName('Trial Test Company ' . $suffix);
+        $company->setName('Trial Test Company '.$suffix);
         $entityManager->persist($company);
 
         $settings = new GlobalSettings();
@@ -31,7 +33,7 @@ class BookingTrialTest extends WebTestCase
 
         // Create Trainer
         $trainer = new User();
-        $trainer->setEmail('trainer_trial_' . $suffix . '@example.com');
+        $trainer->setEmail('trainer_trial_'.$suffix.'@example.com');
         $trainer->setName('Trainer');
         $trainer->setRoles(['ROLE_TRAINER']);
         $trainer->setPassword('password'); // Note: in real app this would be hashed, but http_basic works with plaintext in tests if provider is entity
@@ -41,7 +43,7 @@ class BookingTrialTest extends WebTestCase
 
         // Create Trial User
         $trialUser = new User();
-        $trialUser->setEmail('trial_' . $suffix . '@example.com');
+        $trialUser->setEmail('trial_'.$suffix.'@example.com');
         $trialUser->setName('Trial Athlete');
         $trialUser->setRoles(['ROLE_TRIAL']);
         // Hash the password so http_basic can verify it
@@ -69,15 +71,15 @@ class BookingTrialTest extends WebTestCase
         ];
 
         // 1. Attempt to book
-        $client->request('POST', '/api/courses/' . $course->getId() . '/book', [], [], $authHeaders);
+        $client->request('POST', '/api/courses/'.$course->getId().'/book', [], [], $authHeaders);
         $this->assertEquals(Response::HTTP_CREATED, $client->getResponse()->getStatusCode(), 'Trial user should be able to book');
 
         // 2. Attempt to unbook
-        $client->request('DELETE', '/api/courses/' . $course->getId() . '/book', [], [], $authHeaders);
+        $client->request('DELETE', '/api/courses/'.$course->getId().'/book', [], [], $authHeaders);
         $this->assertEquals(Response::HTTP_OK, $client->getResponse()->getStatusCode(), 'Trial user should be able to unbook');
     }
 
-    public function testTrialBookingLimitEnforcement(): void
+    public function test_trial_booking_limit_enforcement(): void
     {
         $client = static::createClient();
         $entityManager = static::getContainer()->get('doctrine.orm.entity_manager');
@@ -86,7 +88,7 @@ class BookingTrialTest extends WebTestCase
 
         // Create Company and Settings (Limit = 1)
         $company = new Company();
-        $company->setName('Limit Test Company ' . $suffix);
+        $company->setName('Limit Test Company '.$suffix);
         $entityManager->persist($company);
 
         $settings = new GlobalSettings();
@@ -97,7 +99,7 @@ class BookingTrialTest extends WebTestCase
 
         // Create Trial User
         $trialUser = new User();
-        $trialUser->setEmail('trial_limit_' . $suffix . '@example.com');
+        $trialUser->setEmail('trial_limit_'.$suffix.'@example.com');
         $trialUser->setName('Trial Athlete');
         $trialUser->setRoles(['ROLE_TRIAL']);
         $hasher = static::getContainer()->get('security.password_hasher');
@@ -108,7 +110,7 @@ class BookingTrialTest extends WebTestCase
 
         // Create Trainer
         $trainer = new User();
-        $trainer->setEmail('trainer_limit_' . $suffix . '@example.com');
+        $trainer->setEmail('trainer_limit_'.$suffix.'@example.com');
         $trainer->setName('Trainer');
         $trainer->setRoles(['ROLE_TRAINER']);
         $trainer->setPassword('password');
@@ -143,18 +145,18 @@ class BookingTrialTest extends WebTestCase
         ];
 
         // 1. Book Course 1 (Should succeed)
-        $client->request('POST', '/api/courses/' . $course1->getId() . '/book', [], [], $authHeaders);
+        $client->request('POST', '/api/courses/'.$course1->getId().'/book', [], [], $authHeaders);
         $this->assertEquals(Response::HTTP_CREATED, $client->getResponse()->getStatusCode());
 
         // 2. Book Course 2 (Should fail due to limit)
-        $client->request('POST', '/api/courses/' . $course2->getId() . '/book', [], [], $authHeaders);
+        $client->request('POST', '/api/courses/'.$course2->getId().'/book', [], [], $authHeaders);
         $this->assertEquals(Response::HTTP_BAD_REQUEST, $client->getResponse()->getStatusCode());
-        
+
         $response = json_decode($client->getResponse()->getContent(), true);
         $this->assertStringContainsString('Trial limit reached', $response['error']);
     }
 
-    public function testTrialBookingRestrictionEnforcement(): void
+    public function test_trial_booking_restriction_enforcement(): void
     {
         $client = static::createClient();
         $container = $client->getContainer();
@@ -165,12 +167,12 @@ class BookingTrialTest extends WebTestCase
 
         // Create Company
         $company = new Company();
-        $company->setName('Restricted Test Company ' . $suffix);
+        $company->setName('Restricted Test Company '.$suffix);
         $entityManager->persist($company);
 
         // Create Trainer
         $trainer = new User();
-        $trainer->setEmail('trainer_restricted_' . $suffix . '@example.com');
+        $trainer->setEmail('trainer_restricted_'.$suffix.'@example.com');
         $trainer->setRoles(['ROLE_TRAINER']);
         $trainer->setPassword($hasher->hashPassword($trainer, 'password'));
         $trainer->setName('Trainer');
@@ -180,7 +182,7 @@ class BookingTrialTest extends WebTestCase
 
         // Create Trial User
         $trialUser = new User();
-        $trialUser->setEmail('trial_restricted_' . $suffix . '@example.com');
+        $trialUser->setEmail('trial_restricted_'.$suffix.'@example.com');
         $trialUser->setName('Trial Athlete');
         $trialUser->setRoles(['ROLE_TRIAL']);
         $trialUser->setPassword($hasher->hashPassword($trialUser, 'password'));
