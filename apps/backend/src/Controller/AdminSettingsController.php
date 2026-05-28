@@ -38,12 +38,12 @@ class AdminSettingsController extends AbstractController
 
         $data = json_decode($this->serializer->serialize($settings, 'json', ['groups' => 'admin:read']), true);
         $data['name'] = $company->getName();
-        $data['stripeOnboardingComplete'] = $company->isStripeOnboardingComplete();
-        $data['stripeAccountId'] = $company->getStripeAccountId();
-        $data['stripePriceSetupFeeId'] = $company->getStripePriceSetupFeeId();
-        $data['stripePriceMembershipId'] = $company->getStripePriceMembershipId();
-        $data['billingCycleAnchorDay'] = $company->getBillingCycleAnchorDay();
-        $data['yearlyFeeEnabled'] = $company->isYearlyFeeEnabled();
+        $data['stripeOnboardingComplete'] = $company->getStripeConfig()->isStripeOnboardingComplete();
+        $data['stripeAccountId'] = $company->getStripeConfig()->getStripeAccountId();
+        $data['stripePriceSetupFeeId'] = $company->getStripeConfig()->getStripePriceSetupFeeId();
+        $data['stripePriceMembershipId'] = $company->getStripeConfig()->getStripePriceMembershipId();
+        $data['billingCycleAnchorDay'] = $company->getStripeConfig()->getBillingCycleAnchorDay();
+        $data['yearlyFeeEnabled'] = $company->getStripeConfig()->isYearlyFeeEnabled();
 
         return new JsonResponse($data);
     }

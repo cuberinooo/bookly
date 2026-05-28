@@ -75,14 +75,14 @@ class StripeWebhookController extends AbstractController
 
                     // SILENT YEARLY SUBSCRIPTION CREATION
                     $company = $user->getCompany();
-                    if ($company && $company->isYearlyFeeEnabled() && $company->getStripePriceYearlyRecurringId() && isset($session->customer)) {
+                    if ($company && $company->getStripeConfig()->isYearlyFeeEnabled() && $company->getStripeConfig()->getStripePriceYearlyRecurringId() && isset($session->customer)) {
                         try {
-                            $stripeAccountHeader = ['stripe_account' => $company->getStripeAccountId()];
+                            $stripeAccountHeader = ['stripe_account' => $company->getStripeConfig()->getStripeAccountId()];
                             $oneYearFromNow = (new \DateTime('+1 year'))->getTimestamp();
 
                             Subscription::create([
                                 'customer' => $session->customer,
-                                'items' => [['price' => $company->getStripePriceYearlyRecurringId()]],
+                                'items' => [['price' => $company->getStripeConfig()->getStripePriceYearlyRecurringId()]],
                                 'trial_end' => $oneYearFromNow,
                                 'description' => 'Jährliche Verwaltungsgebühr (Folgejahre)',
                                 'metadata' => [

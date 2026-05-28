@@ -192,11 +192,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, Company
         return $this;
     }
 
-    #[ORM\Column(options: ['default' => false])]
-    #[Groups(['user:read'])]
-    private bool $joinUsMailSent = false;
-
     #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['user:read'])]
     private ?string $stripeCustomerId = null;
 
     #[ORM\Column(type: 'json', options: ['default' => '[]'])]
@@ -211,18 +208,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, Company
     public function setOnboardingState(array $onboardingState): static
     {
         $this->onboardingState = $onboardingState;
-
-        return $this;
-    }
-
-    public function isJoinUsMailSent(): bool
-    {
-        return $this->joinUsMailSent;
-    }
-
-    public function setJoinUsMailSent(bool $joinUsMailSent): static
-    {
-        $this->joinUsMailSent = $joinUsMailSent;
 
         return $this;
     }

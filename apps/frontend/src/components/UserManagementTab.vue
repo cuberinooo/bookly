@@ -38,7 +38,6 @@ const editingUser = ref<any>({ name: '', email: '', roles: ['ROLE_MEMBER'], pass
 const submitting = ref(false);
 const submitted = ref(false);
 const resettingPassword = ref(false);
-const sendingJoinUs = ref(false);
 
 const getSortedRoles = (roles: string[]) => {
   const roleOrder = ['ROLE_ADMIN', 'ROLE_TRAINER', 'ROLE_MEMBER', 'ROLE_TRIAL'];
@@ -166,19 +165,6 @@ async function resetPassword() {
     });
 }
 
-async function sendJoinUsMail(user: any) {
-    sendingJoinUs.value = true;
-    try {
-        await api.post(`/admin/users/${user.id}/send-join-us`);
-        user.joinUsMailSent = true;
-        toast.add({ severity: 'success', summary: 'Success', detail: 'Join us mail sent successfully', life: 5000 });
-    } catch (e: any) {
-        toast.add({ severity: 'error', summary: 'Error', detail: e.response?.data?.error || 'Failed to send join us mail', life: 5000 });
-    } finally {
-        sendingJoinUs.value = false;
-    }
-}
-
 async function toggleActive(user: any) {
     try {
         await api.patch(`/admin/users/${user.id}/toggle-active`);
@@ -272,8 +258,22 @@ onMounted(fetchUsers);
           sortable
         >
           <template #body="{ data }">
-            <div class="font-bold text-slate-900">
-              {{ data.name }}
+            <div class="flex items-center gap-2">
+              <div class="font-bold text-slate-900">
+                {{ data.name }}
+              </div>
+              <Tag
+                v-if="data.stripeCustomerId"
+                v-tooltip.top="'Active Subscription'"
+                severity="success"
+                rounded
+                class="px-2 py-0.5 text-[10px] uppercase font-black"
+              >
+                <div class="flex items-center gap-1">
+                  <i class="pi pi-credit-card text-[10px]" />
+                  <span>Paid</span>
+                </div>
+              </Tag>
             </div>
             <div class="text-xs text-slate-500">
               {{ data.email }}
@@ -310,32 +310,12 @@ onMounted(fetchUsers);
             />
           </template>
         </Column>
-        <Column header="MAIL">
-          <template #body="{ data }">
-            <div v-if="(data.roles.includes('ROLE_TRIAL'))">
-              <i
-                v-tooltip.top="data.joinUsMailSent ? 'Join us Mail Sent' : 'Not Sent'"
-                class="pi"
-                :class="data.joinUsMailSent ? 'pi-send text-accent' : 'pi-minus text-slate-300'"
-              />
-            </div>
-          </template>
-        </Column>
         <Column
           header="ACTIONS"
           class="w-48"
         >
           <template #body="{ data }">
             <div class="flex gap-2">
-              <Button
-                v-if="data.roles.includes('ROLE_TRIAL') && !data.joinUsMailSent"
-                v-tooltip.top="'Send Join Us Mail'"
-                icon="pi pi-envelope"
-                variant="text"
-                rounded
-                :loading="sendingJoinUs"
-                @click="sendJoinUsMail(data)"
-              />
               <Button
                 icon="pi pi-pencil"
                 variant="text"
@@ -384,9 +364,19 @@ onMounted(fetchUsers);
           >
             <div class="flex justify-between items-start mb-4">
               <div>
-                <h3 class="font-black text-lg text-slate-900 leading-tight">
-                  {{ user.name }}
-                </h3>
+                <div class="flex items-center gap-2 mb-1">
+                  <h3 class="font-black text-lg text-slate-900 leading-tight">
+                    {{ user.name }}
+                  </h3>
+                  <Tag
+                    v-if="user.stripeCustomerId"
+                    severity="success"
+                    rounded
+                    class="px-2 py-0.5 text-[9px] uppercase font-black"
+                  >
+                    Paid
+                  </Tag>
+                </div>
                 <p class="text-xs text-slate-500 font-medium mb-2">
                   {{ user.email }}
                 </p>
@@ -398,13 +388,6 @@ onMounted(fetchUsers);
                     :value="role.replace('ROLE_', '')"
                     :severity="role === 'ROLE_ADMIN' ? 'danger' : (role === 'ROLE_TRAINER' ? 'warn' : (role === 'ROLE_TRIAL' ? 'secondary' : 'info'))"
                     class="text-[10px] uppercase font-black"
-                  />
-                  <Tag
-                    v-if="user.roles.includes('ROLE_TRIAL') && user.joinUsMailSent"
-                    value="Join us mail sent"
-                    severity="success"
-                    class="text-[10px] uppercase font-black"
-                    icon="pi pi-send"
                   />
                 </div>
               </div>
@@ -426,15 +409,6 @@ onMounted(fetchUsers);
                 />
               </div>
               <div class="flex gap-1">
-                <Button
-                  v-if="user.roles.includes('ROLE_TRIAL') && !user.joinUsMailSent"
-                  icon="pi pi-envelope"
-                  severity="secondary"
-                  variant="text"
-                  rounded
-                  :loading="sendingJoinUs"
-                  @click="sendJoinUsMail(user)"
-                />
                 <Button
                   icon="pi pi-pencil"
                   severity="secondary"
