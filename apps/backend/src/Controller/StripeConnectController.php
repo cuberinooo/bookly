@@ -558,8 +558,8 @@ class StripeConnectController extends AbstractController
 
         $stripeAccountHeader = ['stripe_account' => $company->getStripeConfig()->getStripeAccountId()];
 
-        $successUrl = $this->frontendUrl . '/profile?upgrade=success';
-        $cancelUrl = $this->frontendUrl . '/profile?upgrade=cancelled';
+        $successUrl = $this->frontendUrl . '/profile?tab=abo&upgrade=success';
+        $cancelUrl = $this->frontendUrl . '/profile?tab=abo&upgrade=cancelled';
 
         $lineItems = [];
         // Yearly Fee is added as a ONE-TIME line item

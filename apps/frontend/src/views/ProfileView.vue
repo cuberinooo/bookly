@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import { useAuthStore } from '../store/useAuthStore';
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
@@ -18,6 +18,29 @@ const { markTaskComplete } = useOnboarding();
 
 const isAthlete = computed(() => !authStore.isAdmin);
 const activeTab = ref('0');
+
+// Watch for tab query parameter changes
+watch(
+  () => route.query.tab,
+  (newTab) => {
+    if (newTab === 'abo' && isAthlete.value) {
+      activeTab.value = 'abo';
+    } else if (!newTab || newTab === 'account') {
+      activeTab.value = '0';
+    }
+  },
+  { immediate: true }
+);
+
+// Also watch isAthlete to ensure tab switches if it was delayed by loading
+watch(
+  isAthlete,
+  (val) => {
+    if (val && route.query.tab === 'abo') {
+      activeTab.value = 'abo';
+    }
+  }
+);
 
 const user = ref({
     name: '',
@@ -169,9 +192,6 @@ async function updateProfile() {
 
 onMounted(() => {
     fetchProfile();
-    if (route.query.tab === 'abo' && isAthlete.value) {
-        activeTab.value = 'abo';
-    }
 });
 </script>
 
