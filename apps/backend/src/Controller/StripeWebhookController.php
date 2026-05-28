@@ -58,13 +58,15 @@ class StripeWebhookController extends AbstractController
                 $user = $this->em->getRepository(User::class)->find($userId);
 
                 if ($user) {
-                    // Update user's roles: remove ROLE_TRIAL, add ROLE_MEMBER
+                    // Promotion: Only if the user is currently a TRIAL user
                     $roles = $user->getRoles();
-                    $roles = array_diff($roles, ['ROLE_TRIAL']);
-                    if (!in_array('ROLE_MEMBER', $roles)) {
-                        $roles[] = 'ROLE_MEMBER';
+                    if (in_array('ROLE_TRIAL', $roles)) {
+                        $roles = array_diff($roles, ['ROLE_TRIAL']);
+                        if (!in_array('ROLE_MEMBER', $roles)) {
+                            $roles[] = 'ROLE_MEMBER';
+                        }
+                        $user->setRoles(array_values($roles));
                     }
-                    $user->setRoles(array_values($roles));
 
                     // Save stripe customer ID for future reference
                     if (isset($session->customer)) {
@@ -113,9 +115,9 @@ class StripeWebhookController extends AbstractController
 
             $user = $this->em->getRepository(User::class)->findOneBy(['stripeCustomerId' => $customerId]);
             if ($user) {
-                // Downgrade back to trial or basic role
+                // Downgrade: Remove MEMBER and TRAINER roles, set to TRIAL
                 $roles = $user->getRoles();
-                $roles = array_diff($roles, ['ROLE_MEMBER']);
+                $roles = array_diff($roles, ['ROLE_MEMBER', 'ROLE_TRAINER']);
                 if (!in_array('ROLE_TRIAL', $roles)) {
                     $roles[] = 'ROLE_TRIAL';
                 }

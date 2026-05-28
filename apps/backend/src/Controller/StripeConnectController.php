@@ -93,7 +93,7 @@ class StripeConnectController extends AbstractController
     public function onboardRefresh(Request $request): RedirectResponse
     {
         // Just redirect them back to the settings page, they can click "Set up Payments" again
-        return new RedirectResponse($this->frontendUrl . '/settings?tab=stripe');
+        return new RedirectResponse($this->frontendUrl . '/payments');
     }
 
     #[Route('/portal-session', name: 'stripe_portal_session', methods: ['POST'])]
@@ -159,7 +159,7 @@ class StripeConnectController extends AbstractController
                 if (!isset($groupedByCustomer[$customerId])) {
                     // Try to find the local user once per customer
                     $localUser = $this->em->getRepository(User::class)->findOneBy(['stripeCustomerId' => $customerId]);
-                    
+
                     $groupedByCustomer[$customerId] = [
                         'customer' => [
                             'id' => $customer->id,
@@ -178,7 +178,7 @@ class StripeConnectController extends AbstractController
                 }
 
                 $planName = $sub->plan->product->name ?? 'Unknown Plan';
-                
+
                 // Map status: if trialing but has an anchor, it's basically active in our context
                 $displayStatus = $sub->status;
                 if ($sub->status === 'trialing' && $sub->billing_cycle_anchor > time()) {
@@ -315,7 +315,7 @@ class StripeConnectController extends AbstractController
             // Find all non-canceled subscriptions for this customer
             $subscriptions = \Stripe\Subscription::all([
                 'customer' => $customerId,
-                'status' => 'all', 
+                'status' => 'all',
             ], $stripeAccountHeader);
 
             if (empty($subscriptions->data)) {
@@ -325,7 +325,7 @@ class StripeConnectController extends AbstractController
             $cancelledCount = 0;
             foreach ($subscriptions->data as $sub) {
                 if ($sub->status === 'canceled') continue;
-                
+
                 // Cancel at the end of the period
                 \Stripe\Subscription::update($sub->id, [
                     'cancel_at_period_end' => true,
