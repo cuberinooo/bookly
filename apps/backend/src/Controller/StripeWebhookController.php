@@ -97,12 +97,11 @@ class StripeWebhookController extends AbstractController
                         }
                     }
 
-                    // strict rule: trigger the standard "welcome mail" to the user.
-                    // Do not create or send a special role-restricted version.
+                    // Trigger Membership Welcome Email
                     try {
-                        $this->emailService->sendCompanySpecificWelcomeEmail($user);
+                        $this->emailService->sendMembershipWelcomeEmail($user);
                     } catch (\Exception $e) {
-                        $this->logger->error('Failed to send welcome mail after stripe upgrade: ' . $e->getMessage());
+                        $this->logger->error('Failed to send membership welcome mail after stripe upgrade: ' . $e->getMessage());
                     }
                 }
             }
@@ -122,10 +121,10 @@ class StripeWebhookController extends AbstractController
                     $roles[] = 'ROLE_TRIAL';
                 }
                 $user->setRoles(array_values($roles));
-                
+
                 // Clear the stripe customer ID as the subscription is completely gone
                 $user->setStripeCustomerId(null);
-                
+
                 $this->em->flush();
                 $this->logger->info(sprintf('User %s subscription ended and was downgraded to ROLE_TRIAL', $user->getEmail()));
             }

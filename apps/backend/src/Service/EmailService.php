@@ -42,7 +42,7 @@ class EmailService
         $this->mailer->send($email);
     }
 
-    public function sendTrialJoinUsEmail(User $user): void
+    public function sendMembershipWelcomeEmail(User $user): void
     {
         $company = $user->getCompany();
         $settings = $company ? $company->getAdminSettings() : null;
@@ -51,7 +51,7 @@ class EmailService
             ->from(new Address($_ENV['NO_REPLY_MAIL'] ?? 'noreply@example.com', $company->getName()))
             ->to($user->getEmail());
 
-        $markdown = $settings->getJoinUsMailMarkdown() ?? '';
+        $markdown = $settings->getMembershipWelcomeMailMarkdown() ?? '';
         $siteName = $user->getCompany()->getName();
         $placeholders = [
             '{user_name}' => $user->getName(),
@@ -60,7 +60,7 @@ class EmailService
 
         $content = str_replace(array_keys($placeholders), array_values($placeholders), $markdown);
 
-        $email->subject(sprintf('Join us at %s!', $siteName))
+        $email->subject(sprintf('Welcome to the community at %s!', $siteName))
             ->htmlTemplate('emails/company_welcome.html.twig')
             ->context([
                 'content' => $content,
@@ -70,7 +70,7 @@ class EmailService
             ]);
 
         // Attach files
-        $attachments = $settings->getJoinUsMailAttachments() ?? [];
+        $attachments = $settings->getMembershipWelcomeMailAttachments() ?? [];
         $this->attachFiles($email, $attachments);
 
         $this->mailer->send($email);

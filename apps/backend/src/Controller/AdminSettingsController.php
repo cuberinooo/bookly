@@ -128,8 +128,8 @@ class AdminSettingsController extends AbstractController
         return new JsonResponse(['status' => 'Attachment deleted']);
     }
 
-    #[Route('/join-us-attachment', name: 'admin_settings_upload_join_us_attachment', methods: ['POST'])]
-    public function uploadJoinUsMailAttachment(Request $request): JsonResponse
+    #[Route('/membership-welcome-attachment', name: 'admin_settings_upload_membership_welcome_attachment', methods: ['POST'])]
+    public function uploadMembershipWelcomeMailAttachment(Request $request): JsonResponse
     {
         $this->denyAccessUnlessGranted('ROLE_ADMIN');
         $user = $this->getUser();
@@ -143,7 +143,7 @@ class AdminSettingsController extends AbstractController
         }
 
         try {
-            $attachment = $this->adminSettingsService->uploadJoinUsMailAttachment($user->getCompany(), $file);
+            $attachment = $this->adminSettingsService->uploadMembershipWelcomeMailAttachment($user->getCompany(), $file);
 
             return new JsonResponse($attachment);
         } catch (\RuntimeException $e) {
@@ -151,8 +151,8 @@ class AdminSettingsController extends AbstractController
         }
     }
 
-    #[Route('/join-us-attachment', name: 'admin_settings_delete_join_us_attachment', methods: ['DELETE'])]
-    public function deleteJoinUsMailAttachment(Request $request): JsonResponse
+    #[Route('/membership-welcome-attachment', name: 'admin_settings_delete_membership_welcome_attachment', methods: ['DELETE'])]
+    public function deleteMembershipWelcomeMailAttachment(Request $request): JsonResponse
     {
         $this->denyAccessUnlessGranted('ROLE_ADMIN');
         $user = $this->getUser();
@@ -165,7 +165,7 @@ class AdminSettingsController extends AbstractController
             return new JsonResponse(['error' => 'No path provided'], Response::HTTP_BAD_REQUEST);
         }
 
-        $this->adminSettingsService->deleteJoinUsMailAttachment($user->getCompany(), $path);
+        $this->adminSettingsService->deleteMembershipWelcomeMailAttachment($user->getCompany(), $path);
 
         return new JsonResponse(['status' => 'Attachment deleted']);
     }
@@ -234,8 +234,8 @@ class AdminSettingsController extends AbstractController
 
         $settings = $user->getCompany()->getAdminSettings();
         $welcomeAttachments = $settings->getWelcomeMailAttachments() ?? [];
-        $joinUsAttachments = $settings->getJoinUsMailAttachments() ?? [];
-        $attachments = array_merge($welcomeAttachments, $joinUsAttachments);
+        $membershipWelcomeAttachments = $settings->getMembershipWelcomeMailAttachments() ?? [];
+        $attachments = array_merge($welcomeAttachments, $membershipWelcomeAttachments);
 
         $found = false;
         $fileName = 'attachment';

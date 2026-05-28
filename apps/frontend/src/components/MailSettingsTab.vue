@@ -9,13 +9,13 @@ const toast = useToast();
 const settings = ref({
     welcomeMailMarkdown: '',
     welcomeMailAttachments: [] as { name: string, path: string }[],
-    joinUsMailMarkdown: '',
-    joinUsMailAttachments: [] as { name: string, path: string }[]
+    membershipWelcomeMailMarkdown: '',
+    membershipWelcomeMailAttachments: [] as { name: string, path: string }[]
 });
 const loading = ref(true);
 const saving = ref(false);
 const uploadingWelcome = ref(false);
-const uploadingJoinUs = ref(false);
+const uploadingMembershipWelcome = ref(false);
 
 async function fetchSettings() {
     loading.value = true;
@@ -24,8 +24,8 @@ async function fetchSettings() {
         settings.value = {
             welcomeMailMarkdown: response.data.welcomeMailMarkdown || '',
             welcomeMailAttachments: response.data.welcomeMailAttachments || [],
-            joinUsMailMarkdown: response.data.joinUsMailMarkdown || '',
-            joinUsMailAttachments: response.data.joinUsMailAttachments || []
+            membershipWelcomeMailMarkdown: response.data.membershipWelcomeMailMarkdown || '',
+            membershipWelcomeMailAttachments: response.data.membershipWelcomeMailAttachments || []
         };
     } catch (e) {
         toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load email settings', life: 5000 });
@@ -39,7 +39,7 @@ async function updateSettings() {
     try {
         await api.patch('/admin-settings', {
             welcomeMailMarkdown: settings.value.welcomeMailMarkdown,
-            joinUsMailMarkdown: settings.value.joinUsMailMarkdown
+            membershipWelcomeMailMarkdown: settings.value.membershipWelcomeMailMarkdown
         });
         toast.add({ severity: 'success', summary: 'Updated', detail: 'Email templates saved', life: 5000 });
     } catch (e) {
@@ -49,17 +49,17 @@ async function updateSettings() {
     }
 }
 
-async function onUpload(event: any, type: 'welcome' | 'join-us') {
+async function onUpload(event: any, type: 'welcome' | 'membership-welcome') {
     const file = event.files[0];
     if (!file) return;
 
     if (type === 'welcome') uploadingWelcome.value = true;
-    else uploadingJoinUs.value = true;
+    else uploadingMembershipWelcome.value = true;
 
     const formData = new FormData();
     formData.append('file', file);
 
-    const endpoint = type === 'welcome' ? '/admin-settings/welcome-attachment' : '/admin-settings/join-us-attachment';
+    const endpoint = type === 'welcome' ? '/admin-settings/welcome-attachment' : '/admin-settings/membership-welcome-attachment';
 
     try {
         const response = await api.post(endpoint, formData, {
@@ -70,19 +70,19 @@ async function onUpload(event: any, type: 'welcome' | 'join-us') {
         if (type === 'welcome') {
             settings.value.welcomeMailAttachments.push(response.data);
         } else {
-            settings.value.joinUsMailAttachments.push(response.data);
+            settings.value.membershipWelcomeMailAttachments.push(response.data);
         }
         toast.add({ severity: 'success', summary: 'Uploaded', detail: 'Attachment added successfully', life: 5000 });
     } catch (e) {
         toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to upload attachment', life: 5000 });
     } finally {
         if (type === 'welcome') uploadingWelcome.value = false;
-        else uploadingJoinUs.value = false;
+        else uploadingMembershipWelcome.value = false;
     }
 }
 
-async function deleteAttachment(path: string, type: 'welcome' | 'join-us') {
-    const endpoint = type === 'welcome' ? '/admin-settings/welcome-attachment' : '/admin-settings/join-us-attachment';
+async function deleteAttachment(path: string, type: 'welcome' | 'membership-welcome') {
+    const endpoint = type === 'welcome' ? '/admin-settings/welcome-attachment' : '/admin-settings/membership-welcome-attachment';
     try {
         await api.delete(endpoint, {
             params: { path }
@@ -90,7 +90,7 @@ async function deleteAttachment(path: string, type: 'welcome' | 'join-us') {
         if (type === 'welcome') {
             settings.value.welcomeMailAttachments = settings.value.welcomeMailAttachments.filter(a => a.path !== path);
         } else {
-            settings.value.joinUsMailAttachments = settings.value.joinUsMailAttachments.filter(a => a.path !== path);
+            settings.value.membershipWelcomeMailAttachments = settings.value.membershipWelcomeMailAttachments.filter(a => a.path !== path);
         }
         toast.add({ severity: 'info', summary: 'Deleted', detail: 'Attachment removed', life: 3000 });
     } catch (e) {
@@ -216,35 +216,35 @@ onMounted(fetchSettings);
         </div>
       </section>
 
-      <!-- Join Us Mail Section -->
+      <!-- Membership Welcome Mail Section -->
       <section class="flex flex-col gap-6">
         <div class="settings-card phoenix-card">
           <div class="flex flex-col gap-1 mb-6">
             <h3 class="settings-title mb-0 border-b-0 pb-0">
-              Join Us Mail (Trial Members)
+              Membership Welcome Mail (Subscribers)
             </h3>
             <p class="text-sm text-slate-500">
-              This email is specifically for trial members (ROLE_TRIAL). Use this to encourage them to sign up for a full membership and provide trial-specific information.
+              This email is automatically sent when a user successfully subscribes to a paid membership. Use this to provide essential onboarding information, studio rules, or access details.
             </p>
           </div>
 
           <div class="field">
             <label
               class="secondary-text"
-              for="joinUsMarkdown"
+              for="membershipWelcomeMarkdown"
             >Email Body (Markdown)</label>
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Textarea
-                id="joinUsMarkdown"
-                v-model="settings.joinUsMailMarkdown"
+                id="membershipWelcomeMarkdown"
+                v-model="settings.membershipWelcomeMailMarkdown"
                 rows="15"
-                placeholder="Dear {user_name},&#10;&#10;How was your trial session at {company_name}?..."
+                placeholder="Dear {user_name},&#10;&#10;Welcome to {company_name}! We are thrilled to have you as a full member..."
                 class="w-full font-mono text-sm"
               />
               <MarkdownPreview
-                :content="settings.joinUsMailMarkdown"
-                title="Join Us Email Preview"
-                placeholder="Your trial email content will appear here..."
+                :content="settings.membershipWelcomeMailMarkdown"
+                title="Membership Welcome Email Preview"
+                placeholder="Your membership welcome email content will appear here..."
                 css-style="background-color: white !important"
               />
             </div>
@@ -252,11 +252,11 @@ onMounted(fetchSettings);
 
           <div class="mt-8">
             <h4 class="font-bold uppercase text-xs text-slate-400 mb-4 tracking-widest">
-              Join Us Mail Attachments
+              Membership Welcome Mail Attachments
             </h4>
             <div class="flex flex-col gap-4 mb-6">
               <div
-                v-for="att in settings.joinUsMailAttachments"
+                v-for="att in settings.membershipWelcomeMailAttachments"
                 :key="att.path"
                 class="p-4 bg-slate-50 border border-slate-200 rounded-lg flex items-center justify-between"
               >
@@ -282,17 +282,17 @@ onMounted(fetchSettings);
                     severity="danger"
                     variant="text"
                     rounded
-                    @click="deleteAttachment(att.path, 'join-us')"
+                    @click="deleteAttachment(att.path, 'membership-welcome')"
                   />
                 </div>
               </div>
 
               <div
-                v-if="settings.joinUsMailAttachments.length === 0"
+                v-if="settings.membershipWelcomeMailAttachments.length === 0"
                 class="text-center py-6 border-2 border-dashed border-slate-200 rounded-xl"
               >
                 <p class="text-slate-400 italic">
-                  No attachments for Join Us Mail.
+                  No attachments for Membership Welcome Mail.
                 </p>
               </div>
             </div>
@@ -302,10 +302,10 @@ onMounted(fetchSettings);
               name="file"
               :auto="true"
               custom-upload
-              choose-label="Upload Join Us Attachment"
-              :disabled="uploadingJoinUs"
+              choose-label="Upload Membership Welcome Attachment"
+              :disabled="uploadingMembershipWelcome"
               class="w-full"
-              @uploader="onUpload($event, 'join-us')"
+              @uploader="onUpload($event, 'membership-welcome')"
             />
           </div>
         </div>
