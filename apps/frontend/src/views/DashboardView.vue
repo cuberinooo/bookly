@@ -268,7 +268,6 @@ onMounted(fetchData);
                       class="waitlist-indicator"
                     >WAITLIST QUEUE</span>
                   </div>
-                  <span class="duration-tag ml-2">{{ formatDuration(course.durationMinutes) }}</span>
                 </div>
               </template>
               <template #content>

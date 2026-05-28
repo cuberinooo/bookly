@@ -80,17 +80,23 @@ const lazyParams = ref({
     page: 1,
     startDate: (() => {
         const d = new Date();
-        const day = d.getDay();
-        const diff = (day === 0 ? 6 : day - 1);
-        d.setDate(d.getDate() - diff);
+        if (window.innerWidth <= 768) {
+            const day = d.getDay();
+            const diff = (day === 0 ? 6 : day - 1);
+            d.setDate(d.getDate() - diff);
+        }
         d.setHours(0, 0, 0, 0);
         return d;
     })(),
     endDate: (() => {
         const d = new Date();
-        const day = d.getDay();
-        const diff = (day === 0 ? 0 : 7 - day);
-        d.setDate(d.getDate() + diff);
+        if (window.innerWidth <= 768) {
+            const day = d.getDay();
+            const diff = (day === 0 ? 0 : 7 - day);
+            d.setDate(d.getDate() + diff);
+        } else {
+            d.setMonth(d.getMonth() + 1);
+        }
         d.setHours(23, 59, 59, 999);
         return d;
     })()
@@ -98,38 +104,29 @@ const lazyParams = ref({
 
 const isMobile = ref(window.innerWidth <= 768);
 
-const currentWeekStart = computed(() => {
-    const d = new Date(lazyParams.value.startDate);
-    const day = d.getDay();
-    const diff = (day === 0 ? 6 : day - 1);
-    d.setDate(d.getDate() - diff);
-    d.setHours(0, 0, 0, 0);
-    return d;
-});
-
-const currentWeekEnd = computed(() => {
-    const d = new Date(currentWeekStart.value);
-    d.setDate(d.getDate() + 6);
-    d.setHours(23, 59, 59, 999);
-    return d;
-});
-
-const weekLabel = computed(() => {
-    const start = currentWeekStart.value;
-    const end = currentWeekEnd.value;
+const rangeLabel = computed(() => {
+    const start = lazyParams.value.startDate;
+    const end = lazyParams.value.endDate;
+    
     return `${start.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })} - ${end.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })}`;
 });
 
-function navigateWeek(direction: number) {
-    const newDate = new Date(currentWeekStart.value);
-    newDate.setDate(newDate.getDate() + (direction * 7));
+function navigateRange(direction: number) {
+    const start = new Date(lazyParams.value.startDate);
+    const end = new Date(lazyParams.value.endDate);
+
+    if (isMobile.value) {
+        start.setDate(start.getDate() + (direction * 7));
+        end.setDate(end.getDate() + (direction * 7));
+    } else {
+        start.setMonth(start.getMonth() + direction);
+        end.setMonth(end.getMonth() + direction);
+    }
 
     transitionName.value = direction > 0 ? 'slide-left' : 'slide-right';
 
-    lazyParams.value.startDate = newDate;
-    lazyParams.value.endDate = new Date(newDate);
-    lazyParams.value.endDate.setDate(newDate.getDate() + 6);
-    lazyParams.value.endDate.setHours(23, 59, 59, 999);
+    lazyParams.value.startDate = start;
+    lazyParams.value.endDate = end;
 
     onFilter();
 }
@@ -137,6 +134,21 @@ function navigateWeek(direction: number) {
 function handleResize() {
     isMobile.value = window.innerWidth <= 768;
 }
+
+watch(isMobile, () => {
+    clearFilters();
+});
+
+watch(
+  () => lazyParams.value.startDate,
+  (newStart) => {
+    if (newStart > lazyParams.value.endDate) {
+      const newEnd = new Date(newStart);
+      newEnd.setHours(23, 59, 59, 999);
+      lazyParams.value.endDate = newEnd;
+    }
+  }
+);
 
 watch(
   () => authStore.user?.id,
@@ -199,7 +211,7 @@ function handleTouchEnd(e: TouchEvent) {
         if (deltaX < 0) {
             // Swipe Left -> Next Page
             if (isMobile.value) {
-                navigateWeek(1);
+                navigateRange(1);
             } else {
                 const nextFirst = lazyParams.value.first + lazyParams.value.rows;
                 if (nextFirst < totalRecords.value) {
@@ -214,7 +226,7 @@ function handleTouchEnd(e: TouchEvent) {
         } else {
             // Swipe Right -> Prev Page
             if (isMobile.value) {
-                navigateWeek(-1);
+                navigateRange(-1);
             } else {
                 const prevFirst = lazyParams.value.first - lazyParams.value.rows;
                 if (prevFirst >= 0) {
@@ -238,15 +250,21 @@ function onFilter() {
 
 function clearFilters() {
     const d = new Date();
-    const day = d.getDay();
-    const diff = (day === 0 ? 6 : day - 1);
-    d.setDate(d.getDate() - diff);
+    if (isMobile.value) {
+        const day = d.getDay();
+        const diff = (day === 0 ? 6 : day - 1);
+        d.setDate(d.getDate() - diff);
+    }
     d.setHours(0, 0, 0, 0);
 
     lazyParams.value.startDate = d;
 
     const end = new Date(d);
-    end.setDate(d.getDate() + 6);
+    if (isMobile.value) {
+        end.setDate(d.getDate() + 6);
+    } else {
+        end.setMonth(d.getMonth() + 1);
+    }
     end.setHours(23, 59, 59, 999);
     lazyParams.value.endDate = end;
 
@@ -365,6 +383,8 @@ onUnmounted(() => {
               size="small"
               date-format="dd.mm.yy"
               fluid
+              show-other-months
+              select-other-months
               @date-select="onFilter"
             />
           </div>
@@ -383,6 +403,9 @@ onUnmounted(() => {
               size="small"
               date-format="dd.mm.yy"
               fluid
+              show-other-months
+              select-other-months
+              :min-date="lazyParams.startDate"
               @date-select="onFilter"
             />
           </div>
@@ -398,7 +421,7 @@ onUnmounted(() => {
       </div>
     </div>
 
-    <!-- Mobile Week Navigation -->
+    <!-- Mobile Range Navigation -->
     <div
       v-if="isMobile"
       class="mobile-week-nav mb-6"
@@ -409,18 +432,18 @@ onUnmounted(() => {
           variant="text"
           rounded
           class="!text-white"
-          @click="navigateWeek(-1)"
+          @click="navigateRange(-1)"
         />
         <div class="flex flex-col items-center">
           <span class="text-[10px] font-black text-amber-500 uppercase tracking-widest">Selected Week</span>
-          <span class="text-sm font-black font-['Barlow_Condensed']">{{ weekLabel }}</span>
+          <span class="text-sm font-black font-['Barlow_Condensed']">{{ rangeLabel }}</span>
         </div>
         <Button
           icon="pi pi-chevron-right"
           variant="text"
           rounded
           class="!text-white"
-          @click="navigateWeek(1)"
+          @click="navigateRange(1)"
         />
       </div>
     </div>
