@@ -148,8 +148,16 @@ onMounted(() => {
       v-else-if="stats"
       class="stats-container"
     >
-      <!-- KPI Cards -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+      <!-- Section: Your Performance -->
+      <div class="section-header mb-6">
+        <h2 class="text-2xl font-black text-slate-800 uppercase tracking-tight flex items-center gap-3">
+          <i class="pi pi-user text-amber-500" />
+          Your Performance
+        </h2>
+        <p class="text-slate-400 text-sm font-bold uppercase tracking-widest mt-1">Personal coaching metrics and volume</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
         <Card class="stat-card">
           <template #title>
             <div class="flex items-center gap-2 text-slate-400 text-xs uppercase font-bold tracking-widest mb-2">
@@ -183,30 +191,9 @@ onMounted(() => {
             </p>
           </template>
         </Card>
-
-        <Card class="stat-card">
-          <template #title>
-            <div class="flex items-center gap-2 text-slate-400 text-xs uppercase font-bold tracking-widest mb-2">
-              <i class="pi pi-chart-line" />
-              <span>Avg. Fill Rate</span>
-            </div>
-          </template>
-          <template #content>
-            <div
-              class="text-5xl font-black"
-              :class="stats.averageFillRate > 80 ? 'text-green-500' : 'text-amber-500'"
-            >
-              {{ stats.averageFillRate }}%
-            </div>
-            <p class="text-slate-400 text-xs mt-3">
-              Class capacity utilization
-            </p>
-          </template>
-        </Card>
       </div>
 
-      <!-- Charts Section -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
+      <div class="grid grid-cols-1 gap-8 mb-16">
         <Card class="chart-card overflow-hidden">
           <template #title>
             <div class="text-sm font-bold uppercase tracking-wider text-slate-600 mb-4">
@@ -222,8 +209,39 @@ onMounted(() => {
             />
           </template>
         </Card>
+      </div>
 
-        <Card class="chart-card overflow-hidden">
+      <!-- Section: Global Insights -->
+      <div class="section-header mb-6">
+        <h2 class="text-2xl font-black text-slate-800 uppercase tracking-tight flex items-center gap-3">
+          <i class="pi pi-globe text-amber-500" />
+          Global Insights
+        </h2>
+        <p class="text-slate-400 text-sm font-bold uppercase tracking-widest mt-1">Gym-wide trends and community behavior</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+        <Card class="stat-card col-span-1 md:col-span-1">
+          <template #title>
+            <div class="flex items-center gap-2 text-slate-400 text-xs uppercase font-bold tracking-widest mb-2">
+              <i class="pi pi-chart-line" />
+              <span>Avg. Fill Rate</span>
+            </div>
+          </template>
+          <template #content>
+            <div
+              class="text-5xl font-black"
+              :class="stats.averageFillRate > 80 ? 'text-green-500' : 'text-amber-500'"
+            >
+              {{ stats.averageFillRate }}%
+            </div>
+            <p class="text-slate-400 text-xs mt-3">
+              Overall class capacity utilization
+            </p>
+          </template>
+        </Card>
+
+        <Card class="chart-card overflow-hidden col-span-1 md:col-span-2">
           <template #title>
             <div class="text-sm font-bold uppercase tracking-wider text-slate-600 mb-4">
               Popular Time Slots
@@ -234,13 +252,47 @@ onMounted(() => {
               type="bar"
               :data="barData"
               :options="barOptions"
-              class="h-[350px] w-full"
+              class="h-[120px] w-full"
             />
           </template>
         </Card>
       </div>
 
-      <div class="grid grid-cols-1 gap-8">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <Card class="chart-card">
+          <template #title>
+            <div class="text-sm font-bold uppercase tracking-wider text-slate-600 mb-6">
+              Popularity by Day of the Week
+            </div>
+          </template>
+          <template #content>
+            <div class="flex flex-col gap-6">
+              <div
+                v-for="(dayStat, index) in stats.popularDaysOfWeek"
+                :key="index"
+                class="popular-item"
+              >
+                <div class="flex justify-between items-center mb-2">
+                  <span class="font-bold text-slate-800">{{ dayStat.day }}</span>
+                  <span class="text-xs font-bold bg-slate-100 text-slate-600 px-3 py-1 rounded-full">{{ dayStat.count }} sessions</span>
+                </div>
+                <div class="w-full bg-slate-100 rounded-full h-3">
+                  <div
+                    class="bg-primary-gradient rounded-full h-3 transition-all duration-1000 ease-out"
+                    :style="{ width: (dayStat.count / stats.popularDaysOfWeek[0].count * 100) + '%' }"
+                  />
+                </div>
+              </div>
+              <div
+                v-if="!stats.popularDaysOfWeek || stats.popularDaysOfWeek.length === 0"
+                class="text-center py-10 text-slate-400 italic"
+              >
+                No course data available yet.
+              </div>
+            </div>
+          </template>
+        </Card>
+
         <Card class="chart-card">
           <template #title>
             <div class="text-sm font-bold uppercase tracking-wider text-slate-600 mb-6">
@@ -259,8 +311,8 @@ onMounted(() => {
                   <span class="text-xs font-bold bg-slate-100 text-slate-600 px-3 py-1 rounded-full">{{ course.count }} sessions</span>
                 </div>
                 <div class="w-full bg-slate-100 rounded-full h-3">
-                  <div 
-                    class="bg-primary-gradient rounded-full h-3 transition-all duration-1000 ease-out" 
+                  <div
+                    class="bg-primary-gradient rounded-full h-3 transition-all duration-1000 ease-out"
                     :style="{ width: (course.count / stats.popularCourseTypes[0].count * 100) + '%' }"
                   />
                 </div>

@@ -33,10 +33,10 @@ class TrainerStatisticsController extends AbstractController
             'trainerId' => $trainerId,
         ];
 
-        $data = $this->apiCache->get('course', $companyId, $context, function () use ($trainerId, $courseRepository, $bookingRepository) {
+        $data = $this->apiCache->get('course', $companyId, $context, function () use ($trainerId, $companyId, $courseRepository, $bookingRepository) {
             $now = new \DateTime();
 
-            // 1. Total courses coached (All-time past)
+            // 1. Total courses coached (All-time past) - TRAINER SPECIFIC
             $totalCourses = $courseRepository->createQueryBuilder('c')
                 ->select('COUNT(c.id)')
                 ->where('c.user = :trainerId')
@@ -48,7 +48,7 @@ class TrainerStatisticsController extends AbstractController
                 ->getQuery()
                 ->getSingleScalarResult();
 
-            // 2. Courses coached per month (Last 12 months)
+            // 2. Courses coached per month (Last 12 months) - TRAINER SPECIFIC
             $twelveMonthsAgo = (new \DateTime())->modify('-12 months');
             $pastCourses = $courseRepository->createQueryBuilder('c')
                 ->where('c.user = :trainerId')
@@ -60,6 +60,19 @@ class TrainerStatisticsController extends AbstractController
                 ->setParameter('now', $now)
                 ->setParameter('status', \App\Enum\CourseStatus::ACTIVE)
                 ->orderBy('c.startTime', 'ASC')
+                ->getQuery()
+                ->getResult();
+
+            // General Company Courses (Last 12 months) - FOR GLOBAL INSIGHTS
+            $allPastCourses = $courseRepository->createQueryBuilder('c')
+                ->where('c.company = :companyId')
+                ->andWhere('c.startTime >= :twelveMonthsAgo')
+                ->andWhere('c.startTime < :now')
+                ->andWhere('c.status = :status')
+                ->setParameter('companyId', $companyId)
+                ->setParameter('twelveMonthsAgo', $twelveMonthsAgo)
+                ->setParameter('now', $now)
+                ->setParameter('status', \App\Enum\CourseStatus::ACTIVE)
                 ->getQuery()
                 ->getResult();
 
@@ -83,9 +96,9 @@ class TrainerStatisticsController extends AbstractController
                 $formattedMonthlyStats[] = ['month' => $month, 'count' => $count];
             }
 
-            // 3. Average class capacity/fill rate
+            // 3. Average class capacity/fill rate (GENERAL)
             $fillRates = [];
-            foreach ($pastCourses as $course) {
+            foreach ($allPastCourses as $course) {
                 if ($course->getCapacity() > 0) {
                     // Only consider courses that actually have a capacity set
                     $fillRates[] = count($course->getBookings()) / $course->getCapacity();
@@ -93,7 +106,7 @@ class TrainerStatisticsController extends AbstractController
             }
             $averageFillRate = count($fillRates) > 0 ? array_sum($fillRates) / count($fillRates) : 0;
 
-            // 4. Total unique members coached
+            // 4. Total unique members coached (TRAINER SPECIFIC)
             $uniqueMembers = $bookingRepository->createQueryBuilder('b')
                 ->select('COUNT(DISTINCT u.id)')
                 ->join('b.course', 'c')
@@ -105,9 +118,9 @@ class TrainerStatisticsController extends AbstractController
                 ->getQuery()
                 ->getSingleScalarResult();
 
-            // 5. Most popular time slot (hour of day)
+            // 5. Most popular time slot (hour of day) (GENERAL)
             $timeSlots = [];
-            foreach ($pastCourses as $course) {
+            foreach ($allPastCourses as $course) {
                 $hour = $course->getStartTime()->format('H');
                 if (!isset($timeSlots[$hour])) {
                     $timeSlots[$hour] = 0;
@@ -120,9 +133,9 @@ class TrainerStatisticsController extends AbstractController
                 $popularTimeSlots[] = ['hour' => (int) $hour.':00', 'count' => $count];
             }
 
-            // 6. Most popular course types (by title)
+            // 6. Most popular course types (by title) (GENERAL)
             $courseTypes = [];
-            foreach ($pastCourses as $course) {
+            foreach ($allPastCourses as $course) {
                 $title = $course->getTitle();
                 if (!isset($courseTypes[$title])) {
                     $courseTypes[$title] = 0;
@@ -135,6 +148,21 @@ class TrainerStatisticsController extends AbstractController
                 $popularCourseTypes[] = ['title' => $title, 'count' => $count];
             }
 
+            // 7. Most popular days of the week (GENERAL)
+            $daysOfWeek = [];
+            foreach ($allPastCourses as $course) {
+                $day = $course->getStartTime()->format('l'); // 'Monday', 'Tuesday', etc.
+                if (!isset($daysOfWeek[$day])) {
+                    $daysOfWeek[$day] = 0;
+                }
+                ++$daysOfWeek[$day];
+            }
+            arsort($daysOfWeek);
+            $popularDaysOfWeek = [];
+            foreach ($daysOfWeek as $day => $count) {
+                $popularDaysOfWeek[] = ['day' => $day, 'count' => $count];
+            }
+
             return [
                 'totalCourses' => (int) $totalCourses,
                 'monthlyStats' => $formattedMonthlyStats,
@@ -142,6 +170,7 @@ class TrainerStatisticsController extends AbstractController
                 'uniqueMembers' => (int) $uniqueMembers,
                 'popularTimeSlots' => $popularTimeSlots,
                 'popularCourseTypes' => $popularCourseTypes,
+                'popularDaysOfWeek' => $popularDaysOfWeek,
             ];
         }, 600);
 
