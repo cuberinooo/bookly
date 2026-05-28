@@ -9,6 +9,7 @@ import { useConfirm } from 'primevue/useconfirm';
 import { BookingWindow } from '../app/enums/BookingWindow';
 import WeeklyCalendar from '../components/WeeklyCalendar.vue';
 import MobileCalendar from '../components/MobileCalendar.vue';
+import TrainerCourseManageDialog from '../components/TrainerCourseManageDialog.vue';
 import CourseForm from '../components/CourseForm.vue';
 import CourseDetails from '../components/CourseDetails.vue';
 
@@ -331,8 +332,20 @@ onUnmounted(() => {
       />
     </Dialog>
 
-    <!-- Create/Edit Dialog -->
+    <!-- Create/Edit Dialog (Trainer Mode) -->
+    <TrainerCourseManageDialog
+      v-if="isTrainerMode"
+      v-model:visible="formVisible"
+      :course="editingCourse"
+      :submitting="submitting"
+      @save="onSaveCourse"
+      @delete="onDeleteCourse"
+      @refresh="fetchCourses"
+    />
+
+    <!-- Create/Edit Dialog (Legacy/Member mode - though members usually don't see this) -->
     <Dialog
+      v-if="!isTrainerMode"
       v-model:visible="formVisible"
       :header="editingCourse?.id ? 'Modify Workout' : 'Launch New Workout'"
       :modal="true"

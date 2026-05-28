@@ -9,6 +9,7 @@ import { useToast } from 'primevue/usetoast';
 const props = defineProps<{
     visible: boolean;
     course: any;
+    embedded?: boolean;
 }>();
 
 const emit = defineEmits(['update:visible', 'remove-participant']);
@@ -40,7 +41,7 @@ watch(() => props.visible, (isVisible) => {
     if (isVisible && props.course?.bookings) {
         fetchProfilePictures();
     }
-});
+}, { immediate: true });
 
 async function fetchProfilePictures() {
     const userIds = props.course.bookings.map((b: any) => b.user.id);
@@ -97,7 +98,7 @@ async function toggleAttendance(booking: any) {
         toast.add({
             severity: 'success',
             summary: 'Success',
-            detail: booking.attended ? 'Athlete marked as attended' : 'Athlete marked as no-show',
+            detail: booking.attended ? 'Participant marked as attended' : 'Participant marked as no-show',
             life: 3000
         });
     } catch (e: any) {
@@ -131,26 +132,32 @@ function close() {
 }
 </script>
 <template>
-  <Dialog
-    :visible="visible"
-    :header="'Squad List: ' + course?.title"
-    :modal="true"
-    class="w-full max-w-xl squad-dialog"
+  <component
+    :is="embedded ? 'div' : 'Dialog'"
+    v-bind="embedded ? {} : {
+      visible: visible,
+      header: 'Squad List: ' + course?.title,
+      modal: true,
+      class: 'w-full max-w-xl squad-dialog'
+    }"
     @update:visible="close"
   >
-    <div class="dialog-content-wrapper p-4">
+    <div
+      class="dialog-content-wrapper"
+      :class="{ 'p-4': !embedded }"
+    >
       <div
         v-if="confirmedParticipants.length > 0"
         class="participant-section"
       >
         <h3 class="section-title">
-          <i class="pi pi-check-circle text-accent mr-2" />Confirmed Athletes
+          <i class="pi pi-check-circle text-accent mr-2" />Confirmed Participants
         </h3>
         <DataTable
           :value="confirmedParticipants"
           class="participants-table"
         >
-          <Column header="Athlete">
+          <Column header="Participant">
             <template #body="slotProps">
               <div class="flex items-center gap-3">
                 <div class="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 border border-slate-200 transition-transform duration-200 ease-out hover:scale-125 hover:z-10 hover:shadow-lg hover:border-amber-400 cursor-pointer group relative">
@@ -233,7 +240,7 @@ function close() {
           :value="waitlistParticipants"
           class="participants-table waitlist"
         >
-          <Column header="Athlete">
+          <Column header="Participant">
             <template #body="slotProps">
               <div class="flex items-center gap-3">
                 <div class="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 border border-slate-200 transition-transform duration-200 ease-out hover:scale-125 hover:z-10 hover:shadow-lg hover:border-amber-400 cursor-pointer group relative">
@@ -301,7 +308,7 @@ function close() {
         class="empty-squad"
       >
         <i class="pi pi-users text-4xl mb-4 opacity-20" />
-        <p>No athletes have joined this squad yet.</p>
+        <p>No participants have joined this squad yet.</p>
       </div>
     </div>
 
@@ -316,7 +323,7 @@ function close() {
         class="flex flex-col gap-6 py-4"
       >
         <div class="flex flex-col gap-1">
-          <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Athlete</label>
+          <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Participant</label>
           <span class="text-xl font-bold">{{ emergencyInfo.userName }}</span>
         </div>
         <div
@@ -363,7 +370,7 @@ function close() {
             v-if="!emergencyInfo.emergencyContactName && !emergencyInfo.emergencyContactPhone"
             class="text-slate-400 italic text-sm"
           >
-            No emergency contact provided by athlete.
+            No emergency contact provided by participant.
           </div>
         </div>
       </div>
@@ -376,7 +383,7 @@ function close() {
         />
       </template>
     </Dialog>
-  </Dialog>
+  </component>
 </template>
 
 <style lang="scss" scoped>
