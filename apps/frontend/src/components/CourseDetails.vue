@@ -79,6 +79,8 @@ const isBookedByUser = computed(() => {
   return props.course.bookings.some((b: any) => b.user?.id === authStore.user?.id);
 });
 
+const isInactive = computed(() => authStore.user?.isActive === false);
+
 const bookingLabel = computed(() => {
   const registered = props.course.bookings.filter((b: any) => !b.isWaitlist).length;
   return registered < props.course.capacity ? 'RESERVE SPOT' : 'JOIN WAITLIST';
@@ -95,6 +97,19 @@ const bookingLabel = computed(() => {
         <small>HEAD COACH</small>
         <span class="trainer-name">{{ course.user?.name }}</span>
       </div>
+    </div>
+
+    <div
+      v-if="isInactive && !isPastCourse"
+      class="mb-6 p-4 bg-red-50 border-2 border-red-200 rounded-xl animate-fadein"
+    >
+      <div class="flex items-center gap-2 mb-2">
+        <i class="pi pi-exclamation-circle text-red-600" />
+        <span class="text-[10px] font-black uppercase text-red-700 tracking-widest">Account Inactive</span>
+      </div>
+      <p class="text-sm font-bold text-slate-800 leading-relaxed">
+        Your account is currently inactive. You can view course details, but booking and unbooking is disabled.
+      </p>
     </div>
 
     <div class="schedule-detail-box">
@@ -160,7 +175,7 @@ const bookingLabel = computed(() => {
       class="action-footer"
     >
       <template v-if="course.user?.id !== authStore.user?.id">
-        <template v-if="!isOutsideBookingWindow && !isTrialRestricted && course.status !== 'postponed'">
+        <template v-if="!isOutsideBookingWindow && !isTrialRestricted && course.status !== 'postponed' && !isInactive">
           <Button
             v-if="!isBookedByUser"
             :label="bookingLabel"
@@ -179,6 +194,17 @@ const bookingLabel = computed(() => {
             @click="unbookCourse"
           />
         </template>
+        <div
+          v-else-if="isInactive && !isPastCourse"
+          class="text-center p-4 bg-slate-50 rounded-lg border border-slate-200"
+        >
+          <p class="font-bold text-slate-600 uppercase tracking-widest text-xs mb-2">
+            <i class="pi pi-info-circle" /> Booking Restricted
+          </p>
+          <p class="text-xs text-slate-500 font-medium">
+            Your account is currently inactive and cannot book or unbook sessions.
+          </p>
+        </div>
         <div
           v-else
           class="text-center p-4 bg-slate-50 rounded-lg border border-slate-200"

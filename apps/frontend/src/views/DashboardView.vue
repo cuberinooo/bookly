@@ -10,6 +10,7 @@ import CourseForm from '../components/CourseForm.vue';
 import ParticipantsDialog from '../components/ParticipantsDialog.vue';
 import TrialStatusCard from '../components/TrialStatusCard.vue';
 import TrainerDashboard from '../components/TrainerDashboard.vue';
+import InactiveAccountAlert from '../components/InactiveAccountAlert.vue';
 import { useRoute } from 'vue-router';
 import { useCourseDeletion } from '../composables/useCourseDeletion';
 
@@ -194,6 +195,8 @@ onMounted(fetchData);
       />
     </div>
 
+    <InactiveAccountAlert class="mb-12" />
+
     <!-- Loading State -->
     <div
       v-if="isLoading"
@@ -315,6 +318,7 @@ onMounted(fetchData);
                     @click="selectedCourse = course; participantsDialog = true"
                   />
                   <Button
+                    v-if="authStore.user?.isActive !== false"
                     label="CANCEL BOOKING"
                     severity="danger"
                     variant="text"

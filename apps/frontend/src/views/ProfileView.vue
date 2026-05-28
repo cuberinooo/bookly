@@ -6,6 +6,7 @@ import { useConfirm } from 'primevue/useconfirm';
 import { useRouter } from 'vue-router';
 import { useOnboarding, ONBOARDING_TASKS } from '../composables/useOnboarding';
 import OnboardingChecklist from '../components/OnboardingChecklist.vue';
+import InactiveAccountAlert from '../components/InactiveAccountAlert.vue';
 import api from '../services/api';
 
 const toast = useToast();
@@ -173,6 +174,8 @@ onMounted(fetchProfile);
         Manage your personal information and preferences
       </p>
     </div>
+
+    <InactiveAccountAlert class="mb-8" />
 
     <Tabs value="0" class="mb-8">
       <TabList class="mb-6">

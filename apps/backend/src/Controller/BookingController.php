@@ -98,10 +98,14 @@ class BookingController extends AbstractController
             throw $this->createAccessDeniedException();
         }
 
+        /** @var \App\Entity\User $user */
+        $user = $this->getUser();
+        if (!$user->isActive()) {
+            return new JsonResponse(['error' => 'Inactive users cannot book courses.'], Response::HTTP_FORBIDDEN);
+        }
+
         try {
             $course = $this->resolveCourse($id, $courseRepository, $courseService);
-            /** @var \App\Entity\User $user */
-            $user = $this->getUser();
             [$booking, $isWaitlist] = $bookingService->book($course, $user);
         } catch (\Exception $e) {
             return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
@@ -119,10 +123,14 @@ class BookingController extends AbstractController
             throw $this->createAccessDeniedException();
         }
 
+        /** @var \App\Entity\User $user */
+        $user = $this->getUser();
+        if (!$user->isActive()) {
+            return new JsonResponse(['error' => 'Inactive users cannot unbook courses.'], Response::HTTP_FORBIDDEN);
+        }
+
         try {
             $course = $this->resolveCourse($id, $courseRepository, $courseService);
-            /** @var \App\Entity\User $user */
-            $user = $this->getUser();
             $bookingService->unbook($course, $user);
         } catch (\Exception $e) {
             return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_NOT_FOUND);
