@@ -12,8 +12,12 @@ import VersionUpdateToast from '../components/VersionUpdateToast.vue';
 import mercureService from '../services/mercure';
 import { useOnboarding } from '../composables/useOnboarding';
 import FloatingOnboardingWidget from '../components/FloatingOnboardingWidget.vue';
+import { useI18n } from 'vue-i18n';
+import { usePrimeVue } from 'primevue/config';
 
 const router = useRouter();
+const { t, locale } = useI18n();
+const primevue = usePrimeVue();
 const menu = ref();
 const toast = useToast();
 const authStore = useAuthStore();
@@ -22,6 +26,35 @@ const { initRouteTracking } = useOnboarding();
 
 onMounted(() => {
   initRouteTracking();
+});
+
+watch(locale, (newLocale) => {
+  localStorage.setItem('app_locale', newLocale);
+  if (newLocale === 'de') {
+    primevue.config.locale = {
+        dayNames: ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"],
+        dayNamesShort: ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"],
+        dayNamesMin: ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"],
+        monthNames: ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"],
+        monthNamesShort: ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"],
+        today: 'Heute',
+        clear: 'Löschen',
+        dateFormat: 'dd.mm.yy',
+        firstDayOfWeek: 1
+    };
+  } else {
+    primevue.config.locale = {
+        dayNames: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+        dayNamesShort: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+        dayNamesMin: ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"],
+        monthNames: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
+        monthNamesShort: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+        today: 'Today',
+        clear: 'Clear',
+        dateFormat: 'mm/dd/yy',
+        firstDayOfWeek: 0
+    };
+  }
 });
 
 const newPassword = ref('');
@@ -74,7 +107,7 @@ async function updatePassword() {
   changingPassword.value = true;
   try {
     const response = await api.post('/user/change-password', {password: newPassword.value});
-    toast.add({severity: 'success', summary: 'Success', detail: 'Password updated successfully', life: 5000});
+    toast.add({severity: 'success', summary: t('app.success'), detail: t('app.passwordUpdated'), life: 5000});
 
     if (response.data.token) {
       authStore.setToken(response.data.token);
@@ -84,8 +117,8 @@ async function updatePassword() {
   } catch (e: any) {
     toast.add({
       severity: 'error',
-      summary: 'Error',
-      detail: e.response?.data?.error || 'Failed to update password',
+      summary: t('app.error'),
+      detail: e.response?.data?.error || t('app.failedToUpdatePassword'),
       life: 5000
     });
   } finally {
@@ -94,7 +127,7 @@ async function updatePassword() {
 }
 
 const dashboardLabel = computed(() => {
-  return authStore.isTrainer && authStore.viewMode === 'trainer' ? 'Dashboard' : 'My bookings';
+  return authStore.isTrainer && authStore.viewMode === 'trainer' ? t('app.dashboard') : t('app.myBookings');
 });
 
 const canSeeLeaderboard = computed(() => {
@@ -105,27 +138,27 @@ const canSeeLeaderboard = computed(() => {
 const menuItems = computed(() => {
   const items = [
     {
-      label: 'My Account',
+      label: t('app.myAccount'),
       items: [
-        {label: 'Profile', icon: 'pi pi-user', command: () => router.push('/profile')},
-        {label: 'My Personal Bests', icon: 'pi pi-trophy', command: () => router.push('/personal-bests')},
-        {label: 'Settings', icon: 'pi pi-cog', command: () => router.push('/settings')}
+        {label: t('app.profile'), icon: 'pi pi-user', command: () => router.push('/profile')},
+        {label: t('app.myPersonalBests'), icon: 'pi pi-trophy', command: () => router.push('/personal-bests')},
+        {label: t('app.settings'), icon: 'pi pi-cog', command: () => router.push('/settings')}
       ]
     }
   ];
 
   if (authStore.isTrainer) {
     items[0].items.push({
-      label: 'Statistics',
+      label: t('app.statistics'),
       icon: 'pi pi-chart-bar',
       command: () => router.push('/statistics')
     });
   }
 
   items.push({
-    label: 'Account Action',
+    label: t('app.accountAction'),
     items: [
-      {label: 'Logout', icon: 'pi pi-sign-out', command: () => logout()}
+      {label: t('app.logout'), icon: 'pi pi-sign-out', command: () => logout()}
     ]
   });
 
@@ -200,7 +233,7 @@ onMounted(async () => {
             to="/"
             class="desktop-only"
           >
-            Courses
+            {{ t('app.courses') }}
           </RouterLink>
           <template v-if="authStore.isLoggedIn">
             <RouterLink
@@ -213,15 +246,27 @@ onMounted(async () => {
               to="/meetups"
               class="desktop-only"
             >
-              Meetups
+              {{ t('app.meetups') }}
             </RouterLink>
             <RouterLink
               v-if="canSeeLeaderboard"
               to="/leaderboard"
               class="desktop-only"
             >
-              Rankings
+              {{ t('app.rankings') }}
             </RouterLink>
+
+            <div class="lang-switcher">
+              <Select
+                v-model="locale"
+                :options="[{label: 'EN', value: 'en', flag: '🇺🇸'}, {label: 'DE', value: 'de', flag: '🇩🇪'}]"
+                optionLabel="label"
+                optionValue="value"
+                class="lang-select"
+              >
+              </Select>
+            </div>
+
             <div class="profile-dropdown-wrapper">
               <Button
                 type="button"
@@ -266,8 +311,8 @@ onMounted(async () => {
                       class="toggle-container"
                     >
                       <ToggleButton
-                        on-label="Trainer Mode"
-                        off-label="Member Mode"
+                        :on-label="t('app.trainerMode')"
+                        :off-label="t('app.memberMode')"
                         on-icon="pi pi-star-fill"
                         off-icon="pi pi-user"
                         :model-value="authStore.viewMode === 'trainer'"
@@ -281,10 +326,10 @@ onMounted(async () => {
           </template>
           <template v-else>
             <RouterLink to="/login">
-              Login
+              {{ t('app.login') }}
             </RouterLink>
             <RouterLink to="/register">
-              Register
+              {{ t('app.register') }}
             </RouterLink>
           </template>
         </div>
@@ -307,7 +352,7 @@ onMounted(async () => {
     <Dialog
       v-if="authStore.user"
       v-model:visible="authStore.user.mustChangePassword"
-      header="Action Required: Update Password"
+      :header="t('app.securityUpdateRequired')"
       :modal="true"
       :closable="false"
       class="w-full max-w-md"
@@ -315,16 +360,16 @@ onMounted(async () => {
       <div class="flex flex-col gap-6 py-4">
         <div class="p-4 bg-amber-50 border-l-4 border-amber-500 text-amber-900 text-sm mb-2">
           <p class="font-bold mb-1">
-            Security Update Required
+            {{ t('app.securityUpdateRequired') }}
           </p>
-          <p>Your account was created with a temporary password. Please set a new secure password to continue.</p>
+          <p>{{ t('app.tempPasswordInstruction') }}</p>
         </div>
 
         <div class="flex flex-col gap-2">
           <label
             for="newPassword"
             class="font-bold text-sm uppercase tracking-wider text-slate-500"
-          >New Password</label>
+          >{{ t('app.newPassword') }}</label>
           <Password
             v-model="newPassword"
             input-id="newPassword"
@@ -338,23 +383,23 @@ onMounted(async () => {
             <template #footer>
               <Divider />
               <p class="mt-2 font-bold text-xs uppercase tracking-wider">
-                Requirements
+                {{ t('app.requirements') }}
               </p>
               <ul class="pl-2 ml-2 mt-2 list-disc flex flex-col gap-1 text-xs">
                 <li :class="passwordValidation.minLength ? 'text-green-600' : 'text-slate-400'">
-                  At least 8 characters
+                  {{ t('app.atLeast8Chars') }}
                 </li>
                 <li :class="passwordValidation.uppercase ? 'text-green-600' : 'text-slate-400'">
-                  At least one uppercase
+                  {{ t('app.atLeastOneUppercase') }}
                 </li>
                 <li :class="passwordValidation.lowercase ? 'text-green-600' : 'text-slate-400'">
-                  At least one lowercase
+                  {{ t('app.atLeastOneLowercase') }}
                 </li>
                 <li :class="passwordValidation.number ? 'text-green-600' : 'text-slate-400'">
-                  At least one number
+                  {{ t('app.atLeastOneNumber') }}
                 </li>
                 <li :class="passwordValidation.special ? 'text-green-600' : 'text-slate-400'">
-                  At least one special character
+                  {{ t('app.atLeastOneSpecial') }}
                 </li>
               </ul>
             </template>
@@ -367,31 +412,31 @@ onMounted(async () => {
               v-if="!passwordValidation.minLength"
               class="text-red-500"
             >
-              • At least 8 characters
+              • {{ t('app.atLeast8Chars') }}
             </li>
             <li
               v-if="!passwordValidation.uppercase"
               class="text-red-500"
             >
-              • At least one uppercase
+              • {{ t('app.atLeastOneUppercase') }}
             </li>
             <li
               v-if="!passwordValidation.lowercase"
               class="text-red-500"
             >
-              • At least one lowercase
+              • {{ t('app.atLeastOneLowercase') }}
             </li>
             <li
               v-if="!passwordValidation.number"
               class="text-red-500"
             >
-              • At least one number
+              • {{ t('app.atLeastOneNumber') }}
             </li>
             <li
               v-if="!passwordValidation.special"
               class="text-red-500"
             >
-              • At least one special character
+              • {{ t('app.atLeastOneSpecial') }}
             </li>
           </ul>
         </div>
@@ -400,7 +445,7 @@ onMounted(async () => {
           <label
             for="confirmNewPassword"
             class="font-bold text-sm uppercase tracking-wider text-slate-500"
-          >Confirm New Password</label>
+          >{{ t('app.confirmNewPassword') }}</label>
           <InputText
             id="confirmNewPassword"
             v-model="confirmNewPassword"
@@ -411,12 +456,12 @@ onMounted(async () => {
           <small
             v-if="confirmNewPassword && !passwordValidation.match"
             class="text-red-500 font-bold"
-          >Passwords do not match</small>
+          >{{ t('app.passwordsDoNotMatch') }}</small>
         </div>
       </div>
       <template #footer>
         <Button
-          label="Update Password & Continue"
+          :label="t('app.updatePasswordAndContinue')"
           severity="primary"
           class="w-full py-3"
           :loading="changingPassword"
@@ -521,6 +566,35 @@ html, body, #app {
 
     a {
       font-size: 0.85rem;
+    }
+  }
+
+  .lang-switcher {
+    .lang-select {
+      background: rgba(255, 255, 255, 0.05) !important;
+      border: 1px solid rgba(255, 255, 255, 0.1) !important;
+      border-radius: 20px !important;
+      height: 40px !important;
+      width: 90px !important;
+      color: white !important;
+      transition: all 0.2s ease;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.1) !important;
+        border-color: var(--primary-color) !important;
+      }
+
+      :deep(.p-select-label) {
+        padding: 0 !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      :deep(.p-select-dropdown) {
+        width: 1.5rem !important;
+        color: rgba(255, 255, 255, 0.5);
+      }
     }
   }
 
@@ -693,3 +767,4 @@ html, body, #app {
   transform: translateX(-20px);
 }
 </style>
+

@@ -38,10 +38,12 @@ import Chart from 'primevue/chart';
 import Message from 'primevue/message';
 import {Checkbox, Divider, FileUpload, Paginator, Panel, Password, Tag, ToggleButton, Tooltip} from "primevue";
 import {createPinia} from "pinia";
+import i18n from './i18n';
 
 const app = createApp(App);
 const pinia = createPinia();
 
+app.use(i18n);
 app.use(pinia);
 app.use(PrimeVue, {
     theme: {

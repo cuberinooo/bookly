@@ -1,13 +1,15 @@
 {% extends 'emails/base.html.twig' %}
 
+{% block title %}{{ 'email.meetup_invitation.subject'|trans({'%meetupTitle%': meetup.title}) }}{% endblock %}
+
 {% block body %}
-    <h1>New Meetup: {{ meetup.title }}</h1>
-    <p>Hi {{ user.name }},</p>
-    <p>A new community meetup has been organized!</p>
+    <h1>{{ 'email.meetup_invitation.title'|trans({'%meetupTitle%': meetup.title}) }}</h1>
+    <p>{{ 'email.meetup_invitation.greeting'|trans({'%userName%': user.name}) }}</p>
+    <p>{{ 'email.meetup_invitation.message'|trans }}</p>
     <p>
-        <strong>What:</strong> {{ meetup.title }}<br>
-        <strong>When:</strong> {{ meetup.meetupDate|date('d.m.Y H:i') }}<br>
-        <strong>Where:</strong> 
+        <strong>{{ 'email.meetup_invitation.what'|trans }}</strong> {{ meetup.title }}<br>
+        <strong>{{ 'email.meetup_invitation.when'|trans }}</strong> {{ meetup.meetupDate|date('d.m.Y H:i') }}<br>
+        <strong>{{ 'email.meetup_invitation.where'|trans }}</strong> 
         {% if meetup.location starts with 'http' %}
             <a href="{{ meetup.location }}">{{ meetup.location }}</a>
         {% else %}
@@ -15,8 +17,8 @@
         {% endif %}
     </p>
     <p>{{ meetup.description }}</p>
-    <p>RSVP Deadline: {{ meetup.rsvpDeadline|date('d.m.Y H:i') }}</p>
+    <p>{{ 'email.meetup_invitation.rsvp_deadline'|trans({'%deadline%': meetup.rsvpDeadline|date('d.m.Y H:i')}) }}</p>
     <p>
-        <a href="{{ loginUrl }}" class="button">View and RSVP</a>
+        <a href="{{ loginUrl }}" class="button">{{ 'email.meetup_invitation.view_and_rsvp'|trans }}</a>
     </p>
 {% endblock %}

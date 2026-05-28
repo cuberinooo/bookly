@@ -4,11 +4,13 @@ import { useAuthStore } from '../store/useAuthStore';
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { useOnboarding, ONBOARDING_TASKS } from '../composables/useOnboarding';
 import OnboardingChecklist from '../components/OnboardingChecklist.vue';
 import InactiveAccountAlert from '../components/InactiveAccountAlert.vue';
 import api from '../services/api';
 
+const { t } = useI18n();
 const toast = useToast();
 const confirm = useConfirm();
 const router = useRouter();
@@ -33,11 +35,11 @@ const uploading = ref(false);
 const deleting = ref(false);
 const fileInput = ref<HTMLInputElement | null>(null);
 
-const genderOptions = [
-    { label: 'Male', value: 'male' },
-    { label: 'Female', value: 'female' },
-    { label: 'Other', value: 'other' }
-];
+const genderOptions = computed(() => [
+    { label: t('auth.genderMale'), value: 'male' },
+    { label: t('auth.genderFemale'), value: 'female' },
+    { label: t('auth.genderOther'), value: 'other' }
+]);
 
 const profilePictureUrl = computed(() => {
   if (user.value.profilePicture && user.value.id) {
@@ -56,7 +58,7 @@ async function fetchProfile() {
             ...response.data
         } as any;
     } catch (e) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load profile', life: 5000 });
+        toast.add({ severity: 'error', summary: t('app.error'), detail: t('profile.loadFailed'), life: 5000 });
     } finally {
         fetching.value = false;
     }
@@ -64,12 +66,12 @@ async function fetchProfile() {
 
 function confirmDelete() {
     confirm.require({
-        message: 'Are you sure you want to delete your account? This action is permanent and all your data (including bookings) will be lost.',
-        header: 'Delete Account',
+        message: t('profile.deleteAccountConfirmMessage'),
+        header: t('profile.deleteAccountConfirmHeader'),
         icon: 'pi pi-exclamation-triangle',
         acceptClass: 'p-button-danger',
         rejectProps: {
-          label: 'Cancel',
+          label: t('app.cancel'),
           severity: 'secondary',
           text: true
         },
@@ -83,12 +85,12 @@ async function deleteAccount() {
     deleting.value = true;
     try {
         await api.delete('/user/me');
-        toast.add({ severity: 'success', summary: 'Deleted', detail: 'Your account has been deleted.', life: 5000 });
+        toast.add({ severity: 'success', summary: t('app.success'), detail: t('profile.accountDeleted'), life: 5000 });
         await authStore.logout();
         router.push('/login');
     } catch (e: any) {
-        const message = e.response?.data?.error || 'Failed to delete account';
-        toast.add({ severity: 'error', summary: 'Error', detail: message, life: 7000 });
+        const message = e.response?.data?.error || t('profile.deleteFailed');
+        toast.add({ severity: 'error', summary: t('app.error'), detail: message, life: 7000 });
     } finally {
         deleting.value = false;
     }
@@ -121,8 +123,8 @@ async function handleFileUpload(event: Event) {
     }
 
     markTaskComplete(ONBOARDING_TASKS.PROFILE_UPDATE);
-    toast.add({ severity: 'success', summary: 'Success', detail: 'Profile picture updated', life: 5000 });  } catch (e) {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'Upload failed', life: 5000 });
+    toast.add({ severity: 'success', summary: t('app.success'), detail: t('profile.avatarUpdated'), life: 5000 });  } catch (e) {
+    toast.add({ severity: 'error', summary: t('app.error'), detail: t('profile.uploadFailed'), life: 5000 });
   } finally {
     uploading.value = false;
     if (target) target.value = ''; // Reset input
@@ -131,7 +133,7 @@ async function handleFileUpload(event: Event) {
 
 async function updateProfile() {
     if ((user.value.emergencyContactName || user.value.emergencyContactPhone) && !hasConsentedToEmergency.value) {
-        toast.add({ severity: 'warn', summary: 'Consent Required', detail: 'Please confirm you have consent from your emergency contact.', life: 5000 });
+        toast.add({ severity: 'warn', summary: t('profile.consentRequired'), detail: t('profile.consentRequiredNote'), life: 5000 });
         return;
     }
 
@@ -153,9 +155,9 @@ async function updateProfile() {
             };
         }
         markTaskComplete(ONBOARDING_TASKS.PROFILE_UPDATE);
-        toast.add({ severity: 'success', summary: 'Updated', detail: 'Profile saved successfully', life: 5000 });
+        toast.add({ severity: 'success', summary: t('app.success'), detail: t('profile.updateSuccess'), life: 5000 });
     } catch (e) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Update failed', life: 5000 });
+        toast.add({ severity: 'error', summary: t('app.error'), detail: t('profile.updateError'), life: 5000 });
     } finally {
         loading.value = false;
     }
@@ -168,10 +170,10 @@ onMounted(fetchProfile);
   <div class="max-w-4xl mx-auto py-12 px-2 md:px-4">
     <div class="mb-10">
       <h1 class="text-4xl font-extrabold tracking-tight">
-        Athlete Profile
+        {{ t('profile.title') }}
       </h1>
       <p class="text-slate-600 mt-2 font-medium">
-        Manage your personal information and preferences
+        {{ t('profile.subtitle') }}
       </p>
     </div>
 
@@ -181,11 +183,11 @@ onMounted(fetchProfile);
       <TabList class="mb-6">
         <Tab value="0" class="flex items-center gap-2">
           <i class="pi pi-user" />
-          <span>My Account</span>
+          <span>{{ t('profile.myAccount') }}</span>
         </Tab>
         <Tab value="1" class="flex items-center gap-2">
           <i class="pi pi-list-check" />
-          <span>Onboarding Guide</span>
+          <span>{{ t('profile.onboardingGuide') }}</span>
         </Tab>
       </TabList>
 
@@ -228,7 +230,7 @@ onMounted(fetchProfile);
                 >
 
                 <Button
-                  label="Change Picture"
+                  :label="t('profile.changePicture')"
                   icon="pi pi-camera"
                   severity="secondary"
                   text
@@ -263,7 +265,7 @@ onMounted(fetchProfile);
                     <label
                       for="profileName"
                       class="form-label-base"
-                    >Full Name</label>
+                    >{{ t('auth.fullName') }}</label>
                     <InputText
                       id="profileName"
                       v-model="user.name"
@@ -274,7 +276,7 @@ onMounted(fetchProfile);
                     <label
                       for="profileEmail"
                       class="form-label-base"
-                    >Email Address</label>
+                    >{{ t('auth.email') }}</label>
                     <InputText
                       id="profileEmail"
                       v-model="user.email"
@@ -282,7 +284,7 @@ onMounted(fetchProfile);
                       disabled
                       class="opacity-70 cursor-not-allowed"
                     />
-                    <small class="text-slate-400 mt-1">Email cannot be changed</small>
+                    <small class="text-slate-400 mt-1">{{ t('profile.emailNote') }}</small>
                   </div>
 
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -290,7 +292,7 @@ onMounted(fetchProfile);
                       <label
                         for="phoneNumber"
                         class="form-label-base"
-                      >Your Phone Number</label>
+                      >{{ t('profile.phoneNumber') }}</label>
                       <InputText
                         id="phoneNumber"
                         v-model="user.phoneNumber"
@@ -298,13 +300,13 @@ onMounted(fetchProfile);
                       />
                     </div>
                     <div class="flex flex-col">
-                      <label class="form-label-base">Gender</label>
+                      <label class="form-label-base">{{ t('auth.gender') }}</label>
                       <Select
                         v-model="user.gender"
                         :options="genderOptions"
                         option-label="label"
                         option-value="value"
-                        placeholder="Select Gender"
+                        :placeholder="t('auth.selectGender')"
                       />
                     </div>
                   </div>
@@ -312,10 +314,10 @@ onMounted(fetchProfile);
                   <div class="flex items-center gap-4 p-4 bg-slate-50 rounded-xl border border-slate-200">
                     <div class="flex-1">
                       <h4 class="font-bold text-slate-900">
-                        Public Profile
+                        {{ t('profile.publicProfile') }}
                       </h4>
                       <p class="text-sm text-slate-600">
-                        Show your personal bests (PBs) and monthly attendance on the leaderboard. If disabled, your stats will be hidden from other athletes.
+                        {{ t('profile.publicProfileNote') }}
                       </p>
                     </div>
                     <ToggleSwitch v-model="user.isPublic" />
@@ -324,7 +326,7 @@ onMounted(fetchProfile);
                   <div class="border-t border-slate-100 pt-6 mt-2">
                     <h3 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
                       <i class="pi pi-shield text-amber-500" />
-                      Safety & Emergency Info
+                      {{ t('profile.safetyEmergencyInfo') }}
                     </h3>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
@@ -332,18 +334,18 @@ onMounted(fetchProfile);
                         <label
                           for="emergencyName"
                           class="form-label-base"
-                        >Emergency Contact Name</label>
+                        >{{ t('profile.emergencyContactName') }}</label>
                         <InputText
                           id="emergencyName"
                           v-model="user.emergencyContactName"
-                          placeholder="Next of Kin Name"
+                          :placeholder="t('profile.placeholderEmergencyName')"
                         />
                       </div>
                       <div class="flex flex-col">
                         <label
                           for="emergencyPhone"
                           class="form-label-base"
-                        >Emergency Contact Phone</label>
+                        >{{ t('profile.emergencyContactPhone') }}</label>
                         <InputText
                           id="emergencyPhone"
                           v-model="user.emergencyContactPhone"
@@ -362,7 +364,7 @@ onMounted(fetchProfile);
                         for="consent"
                         class="text-xs text-slate-600 font-medium leading-relaxed"
                       >
-                        I confirm that I have obtained the express consent of the person named above to share their contact details with {{ authStore.user?.company?.name || 'this app' }} for emergency purposes only. This data will only be accessed by trainers in the event of a medical emergency during a session.
+                        {{ t('profile.emergencyConsent', { company: authStore.user?.company?.name || 'this app' }) }}
                       </label>
                     </div>
                   </div>
@@ -371,7 +373,7 @@ onMounted(fetchProfile);
                     <Button
                       severity="primary"
                       type="submit"
-                      label="Save Changes"
+                      :label="t('app.save')"
                       :loading="loading"
                       class="btn-primary"
                     />
@@ -381,13 +383,13 @@ onMounted(fetchProfile);
 
               <div class="phoenix-card mt-8 border-red-100 bg-red-50/30">
                 <h3 class="text-red-600 font-bold uppercase tracking-wider text-sm mb-4">
-                  Danger Zone
+                  {{ t('profile.dangerZone') }}
                 </h3>
                 <p class="text-slate-600 text-sm mb-6">
-                  Deleting your account will permanently remove all your data, including your profile picture and bookings. This action cannot be undone.
+                  {{ t('profile.deleteAccountWarning') }}
                 </p>
                 <Button
-                  label="Delete My Account"
+                  :label="t('profile.deleteAccount')"
                   severity="danger"
                   outlined
                   icon="pi pi-trash"

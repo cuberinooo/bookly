@@ -2,6 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import { formatDate, formatTime } from '../services/date-utils';
 import { useAuthStore } from '../store/useAuthStore';
+import { useI18n } from 'vue-i18n';
 
 const props = defineProps<{
     courses: any[];
@@ -13,6 +14,7 @@ const props = defineProps<{
 
 const emit = defineEmits(['course-click', 'update:baseDate']);
 
+const { t, locale } = useI18n();
 const authStore = useAuthStore();
 const internalBaseDate = ref(new Date(props.baseDate || new Date()));
 const transitionName = ref('slide-left');
@@ -71,7 +73,7 @@ const currentWeek = computed(() => {
 const currentWeekLabel = computed(() => {
     const start = currentWeek.value[0];
     const end = currentWeek.value[6];
-    return `${start.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })} - ${end.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })}`;
+    return `${start.toLocaleDateString(locale.value, { day: '2-digit', month: '2-digit' })} - ${end.toLocaleDateString(locale.value, { day: '2-digit', month: '2-digit', year: 'numeric' })}`;
 });
 
 function handleTouchStart(e: TouchEvent) {
@@ -145,7 +147,7 @@ function isPastCourse(course: any) {
 }
 
 function formatDayName(date: Date) {
-    return date.toLocaleDateString('de-DE', { weekday: 'long' });
+    return date.toLocaleDateString(locale.value, { weekday: 'long' });
 }
 </script>
 
@@ -163,7 +165,7 @@ function formatDayName(date: Date) {
         <i class="pi pi-sync text-amber-400 animate-spin-slow text-xs" />
         <span class="text-[10px] font-black text-white uppercase tracking-widest">{{ cycleInfo.name }}</span>
       </div>
-      <span class="text-[10px] font-black text-amber-400 uppercase">WEEK {{ displayedCycleWeek }} / {{ cycleInfo.totalWeeks }}</span>
+      <span class="text-[10px] font-black text-amber-400 uppercase">{{ t('calendar.week') }} {{ displayedCycleWeek }} / {{ cycleInfo.totalWeeks }}</span>
     </div>
 
     <div class="mobile-nav">
@@ -178,7 +180,7 @@ function formatDayName(date: Date) {
           @click="navigate(-1)"
         />
         <Button
-          label="TODAY"
+          :label="t('home.today')"
           variant="outlined"
           size="small"
           class="today-btn"
@@ -210,7 +212,7 @@ function formatDayName(date: Date) {
           >
             <div class="day-header-sticky">
               <span class="day-name">{{ formatDayName(date) }}</span>
-              <span class="day-date">{{ date.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' }) }}</span>
+              <span class="day-date">{{ date.toLocaleDateString(locale.value, { day: '2-digit', month: '2-digit' }) }}</span>
             </div>
 
             <div class="courses-stack">
@@ -232,7 +234,7 @@ function formatDayName(date: Date) {
                   v-if="getCoursesForDay(date).length === 0"
                   class="empty-day"
                 >
-                  No sessions scheduled
+                  {{ t('calendar.noSessions') }}
                 </div>
                 <div
                   v-for="course in getCoursesForDay(date)"
@@ -258,7 +260,7 @@ function formatDayName(date: Date) {
                       {{ formatTime(course.startTime) }}
                     </div>
                     <div class="course-duration">
-                      {{ course.durationMinutes }} MIN
+                      {{ course.durationMinutes }} {{ t('course.minutes').toUpperCase() }}
                     </div>
                   </div>
 
@@ -269,17 +271,17 @@ function formatDayName(date: Date) {
                         v-if="isRestrictedForTrial(course)"
                         class="ml-2 text-[10px] text-slate-500 font-black"
                       >
-                        <i class="pi pi-lock" /> RESTRICTED
+                        <i class="pi pi-lock" /> {{ t('calendar.restricted') }}
                       </span>
                       <span
                         v-if="isPastCourse(course)"
                         class="ml-2 text-[10px] text-slate-400 font-black"
                       >
-                        <i class="pi pi-history" /> PAST
+                        <i class="pi pi-history" /> {{ t('calendar.past') }}
                       </span>
                     </div>
                     <div class="course-coach">
-                      Coach: {{ course.user?.name }}
+                      {{ t('calendar.coach') }}: {{ course.user?.name }}
                     </div>
                   </div>
 

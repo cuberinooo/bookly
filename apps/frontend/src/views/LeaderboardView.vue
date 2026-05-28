@@ -3,8 +3,10 @@ import { ref, onMounted, computed } from 'vue';
 import { useLeaderboardStore } from '../store/useLeaderboardStore';
 import { useAuthStore } from '../store/useAuthStore';
 import { useToast } from 'primevue/usetoast';
+import { useI18n } from 'vue-i18n';
 import WorkoutRecordForm from '../components/WorkoutRecordForm.vue';
 
+const { t } = useI18n();
 const leaderboardStore = useLeaderboardStore();
 const authStore = useAuthStore();
 const toast = useToast();
@@ -15,7 +17,7 @@ onMounted(async () => {
     try {
         await leaderboardStore.loadAll();
     } catch (error) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load leaderboard data', life: 3000 });
+        toast.add({ severity: 'error', summary: t('app.error'), detail: t('participants.fetchError'), life: 3000 });
     }
 });
 
@@ -95,14 +97,14 @@ const getProfilePictureUrl = (userId: number, filename: string | null) => {
     <div class="flex justify-between items-center mb-8">
       <div>
         <h1 class="text-4xl font-extrabold text-white mb-2 tracking-tight">
-          Leaderboard
+          {{ t('leaderboard.title') }}
         </h1>
         <p class="text-slate-400 text-lg">
-          Push your limits and see how you stack up.
+          {{ t('leaderboard.subtitle') }}
         </p>
       </div>
       <Button
-        label="Log New PB"
+        :label="t('leaderboard.logNewPB')"
         icon="pi pi-plus"
         class="p-button-primary"
         @click="showSubmitDialog = true"
@@ -117,12 +119,12 @@ const getProfilePictureUrl = (userId: number, filename: string | null) => {
       icon="pi pi-eye-slash"
     >
       <div class="flex items-center gap-2">
-        <span>Your profile is currently <strong>private</strong>. Your stats and PBs are hidden from other athletes.</span>
+        <span v-html="t('leaderboard.privateProfileNotice')" />
         <router-link
           to="/profile"
           class="text-amber-500 font-bold hover:underline"
         >
-          Adjust Settings
+          {{ t('leaderboard.adjustSettings') }}
         </router-link>
       </div>
     </Message>
@@ -141,7 +143,7 @@ const getProfilePictureUrl = (userId: number, filename: string | null) => {
       <!-- Section 1: Monthly Stats & Streaks -->
       <section>
         <h2 class="text-3xl font-bold text-white flex items-center gap-3 mb-6">
-          <i class="pi pi-calendar text-amber-500" /> Monthly Stats & Streaks
+          <i class="pi pi-calendar text-amber-500" /> {{ t('leaderboard.monthlyStatsTitle') }}
         </h2>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -152,7 +154,7 @@ const getProfilePictureUrl = (userId: number, filename: string | null) => {
           >
             <h3 class="text-xl font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
               <i :class="gender === 'male' ? 'pi pi-mars text-blue-400' : (gender === 'female' ? 'pi pi-venus text-pink-400' : 'pi pi-users text-slate-400')" />
-              {{ gender.charAt(0).toUpperCase() + gender.slice(1) }} Rankings
+              {{ t('leaderboard.rankingsByGender', { gender: t(`leaderboard.genders.${gender}`) }) }}
             </h3>
             <Card class="bg-slate-800 border border-slate-700 shadow-xl overflow-hidden">
               <template #content>
@@ -161,7 +163,7 @@ const getProfilePictureUrl = (userId: number, filename: string | null) => {
                   class="p-datatable-sm"
                   responsive-layout="scroll"
                 >
-                  <Column header="Athlete">
+                  <Column :header="t('leaderboard.athlete')">
                     <template #body="slotProps">
                       <div class="flex items-center gap-3">
                         <Avatar
@@ -181,7 +183,7 @@ const getProfilePictureUrl = (userId: number, filename: string | null) => {
                   </Column>
                   <Column
                     field="attendanceCount"
-                    header="Att."
+                    :header="t('leaderboard.attendanceShort')"
                     class="text-center"
                   >
                     <template #body="slotProps">
@@ -192,7 +194,7 @@ const getProfilePictureUrl = (userId: number, filename: string | null) => {
                   </Column>
                   <Column
                     field="streak"
-                    header="Streak"
+                    :header="t('leaderboard.streak')"
                     class="text-center"
                   >
                     <template #body="slotProps">
@@ -215,7 +217,7 @@ const getProfilePictureUrl = (userId: number, filename: string | null) => {
       <!-- Section 2: Personal Bests -->
       <section>
         <h2 class="text-3xl font-bold text-white flex items-center gap-3 mb-6">
-          <i class="pi pi-trophy text-amber-500" /> Personal Bests (PBs)
+          <i class="pi pi-trophy text-amber-500" /> {{ t('leaderboard.pbTitle') }}
         </h2>
 
         <div
@@ -224,7 +226,7 @@ const getProfilePictureUrl = (userId: number, filename: string | null) => {
         >
           <i class="pi pi-inbox text-5xl mb-4 opacity-50" />
           <p class="text-xl">
-            No personal bests logged yet. Be the first!
+            {{ t('leaderboard.noRecords') }}
           </p>
         </div>
 
@@ -250,7 +252,7 @@ const getProfilePictureUrl = (userId: number, filename: string | null) => {
               >
                 <h4 class="text-sm font-bold text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2">
                   <i :class="gender === 'male' ? 'pi pi-mars text-blue-400' : (gender === 'female' ? 'pi pi-venus text-pink-400' : 'pi pi-users text-slate-400')" />
-                  {{ gender.charAt(0).toUpperCase() + gender.slice(1) }}
+                  {{ t(`leaderboard.genders.${gender}`) }}
                 </h4>
                 <div class="space-y-3">
                   <div
@@ -306,7 +308,7 @@ const getProfilePictureUrl = (userId: number, filename: string | null) => {
     <Dialog
       v-model:visible="showSubmitDialog"
       modal
-      header="Log Personal Best"
+      :header="t('leaderboard.logPB')"
       :style="{ width: '400px' }"
       class="p-fluid"
     >

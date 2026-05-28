@@ -4,7 +4,9 @@ import api from '../services/api';
 import { useToast } from 'primevue/usetoast';
 import MarkdownPreview from './MarkdownPreview.vue';
 import { downloadWelcomeAttachment } from '../services/download';
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n();
 const toast = useToast();
 const settings = ref({
     welcomeMailMarkdown: '',
@@ -28,7 +30,7 @@ async function fetchSettings() {
             joinUsMailAttachments: response.data.joinUsMailAttachments || []
         };
     } catch (e) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load email settings', life: 5000 });
+        toast.add({ severity: 'error', summary: t('app.error'), detail: t('admin.mail.loadFailed'), life: 5000 });
     } finally {
         loading.value = false;
     }
@@ -41,9 +43,9 @@ async function updateSettings() {
             welcomeMailMarkdown: settings.value.welcomeMailMarkdown,
             joinUsMailMarkdown: settings.value.joinUsMailMarkdown
         });
-        toast.add({ severity: 'success', summary: 'Updated', detail: 'Email templates saved', life: 5000 });
+        toast.add({ severity: 'success', summary: t('app.updated'), detail: t('admin.mail.templatesSaved'), life: 5000 });
     } catch (e) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to update settings', life: 5000 });
+        toast.add({ severity: 'error', summary: t('app.error'), detail: t('app.error'), life: 5000 });
     } finally {
         saving.value = false;
     }
@@ -72,9 +74,9 @@ async function onUpload(event: any, type: 'welcome' | 'join-us') {
         } else {
             settings.value.joinUsMailAttachments.push(response.data);
         }
-        toast.add({ severity: 'success', summary: 'Uploaded', detail: 'Attachment added successfully', life: 5000 });
+        toast.add({ severity: 'success', summary: t('app.uploaded'), detail: t('app.success'), life: 5000 });
     } catch (e) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to upload attachment', life: 5000 });
+        toast.add({ severity: 'error', summary: t('app.error'), detail: t('app.error'), life: 5000 });
     } finally {
         if (type === 'welcome') uploadingWelcome.value = false;
         else uploadingJoinUs.value = false;
@@ -92,9 +94,9 @@ async function deleteAttachment(path: string, type: 'welcome' | 'join-us') {
         } else {
             settings.value.joinUsMailAttachments = settings.value.joinUsMailAttachments.filter(a => a.path !== path);
         }
-        toast.add({ severity: 'info', summary: 'Deleted', detail: 'Attachment removed', life: 3000 });
+        toast.add({ severity: 'info', summary: t('app.deleted'), detail: t('admin.cycle.categoryRemoved'), life: 3000 });
     } catch (e) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to delete attachment', life: 5000 });
+        toast.add({ severity: 'error', summary: t('app.error'), detail: t('app.error'), life: 5000 });
     }
 }
 
@@ -116,9 +118,9 @@ onMounted(fetchSettings);
     >
       <div class="p-4 bg-blue-50 border-l-4 border-blue-500 text-blue-900 text-sm">
         <p class="font-bold mb-1">
-          Dynamic Placeholders
+          {{ $t('admin.mail.placeholders') }}
         </p>
-        <p>Use <code>{user_name}</code> for the athlete's name and <code>{company_name}</code> for your company name in any template.</p>
+        <p>{{ $t('admin.mail.placeholdersNote') }}</p>
       </div>
 
       <!-- Welcome Mail Section -->
@@ -126,10 +128,10 @@ onMounted(fetchSettings);
         <div class="settings-card phoenix-card">
           <div class="flex flex-col gap-1 mb-6">
             <h3 class="settings-title mb-0 border-b-0 pb-0">
-              Welcome Mail (New Users)
+              {{ $t('admin.mail.welcomeMailTitle') }}
             </h3>
             <p class="text-sm text-slate-500">
-              This email is sent to newly registered users as a welcome message.
+              {{ $t('admin.mail.welcomeMailNote') }}
             </p>
           </div>
 
@@ -137,7 +139,7 @@ onMounted(fetchSettings);
             <label
               class="secondary-text"
               for="welcomeMarkdown"
-            >Email Body (Markdown)</label>
+            >{{ $t('admin.mail.bodyMarkdown') }}</label>
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Textarea
                 id="welcomeMarkdown"
@@ -148,8 +150,8 @@ onMounted(fetchSettings);
               />
               <MarkdownPreview
                 :content="settings.welcomeMailMarkdown"
-                title="Welcome Email Preview"
-                placeholder="Your welcome email content will appear here..."
+                :title="$t('admin.mail.welcomePreview')"
+                :placeholder="$t('admin.mail.previewPlaceholder')"
                 css-style="background-color: white !important"
               />
             </div>
@@ -157,7 +159,7 @@ onMounted(fetchSettings);
 
           <div class="mt-8">
             <h4 class="font-bold uppercase text-xs text-slate-400 mb-4 tracking-widest">
-              Welcome Mail Attachments
+              {{ $t('admin.mail.attachments') }}
             </h4>
             <div class="flex flex-col gap-4 mb-6">
               <div
@@ -197,7 +199,7 @@ onMounted(fetchSettings);
                 class="text-center py-6 border-2 border-dashed border-slate-200 rounded-xl"
               >
                 <p class="text-slate-400 italic">
-                  No attachments for Welcome Mail.
+                  {{ $t('admin.mail.noAttachments') }}
                 </p>
               </div>
             </div>
@@ -207,7 +209,7 @@ onMounted(fetchSettings);
               name="file"
               :auto="true"
               custom-upload
-              choose-label="Upload Welcome Attachment"
+              :choose-label="$t('admin.mail.welcomeUpload')"
               :disabled="uploadingWelcome"
               class="w-full"
               @uploader="onUpload($event, 'welcome')"
@@ -221,10 +223,10 @@ onMounted(fetchSettings);
         <div class="settings-card phoenix-card">
           <div class="flex flex-col gap-1 mb-6">
             <h3 class="settings-title mb-0 border-b-0 pb-0">
-              Join Us Mail (Trial Members)
+              {{ $t('admin.mail.joinUsMailTitle') }}
             </h3>
             <p class="text-sm text-slate-500">
-              This email is specifically for trial members (ROLE_TRIAL). Use this to encourage them to sign up for a full membership and provide trial-specific information.
+              {{ $t('admin.mail.joinUsMailNote') }}
             </p>
           </div>
 
@@ -232,7 +234,7 @@ onMounted(fetchSettings);
             <label
               class="secondary-text"
               for="joinUsMarkdown"
-            >Email Body (Markdown)</label>
+            >{{ $t('admin.mail.bodyMarkdown') }}</label>
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Textarea
                 id="joinUsMarkdown"
@@ -243,8 +245,8 @@ onMounted(fetchSettings);
               />
               <MarkdownPreview
                 :content="settings.joinUsMailMarkdown"
-                title="Join Us Email Preview"
-                placeholder="Your trial email content will appear here..."
+                :title="$t('admin.mail.joinUsPreview')"
+                :placeholder="$t('admin.mail.previewPlaceholder')"
                 css-style="background-color: white !important"
               />
             </div>
@@ -252,7 +254,7 @@ onMounted(fetchSettings);
 
           <div class="mt-8">
             <h4 class="font-bold uppercase text-xs text-slate-400 mb-4 tracking-widest">
-              Join Us Mail Attachments
+              {{ $t('admin.mail.attachments') }}
             </h4>
             <div class="flex flex-col gap-4 mb-6">
               <div
@@ -292,7 +294,7 @@ onMounted(fetchSettings);
                 class="text-center py-6 border-2 border-dashed border-slate-200 rounded-xl"
               >
                 <p class="text-slate-400 italic">
-                  No attachments for Join Us Mail.
+                  {{ $t('admin.mail.noAttachments') }}
                 </p>
               </div>
             </div>
@@ -302,7 +304,7 @@ onMounted(fetchSettings);
               name="file"
               :auto="true"
               custom-upload
-              choose-label="Upload Join Us Attachment"
+              :choose-label="$t('admin.mail.joinUsUpload')"
               :disabled="uploadingJoinUs"
               class="w-full"
               @uploader="onUpload($event, 'join-us')"
@@ -314,7 +316,7 @@ onMounted(fetchSettings);
       <div class="fixed-save-bar sticky bottom-6 z-10 flex justify-center">
         <Button
           severity="primary"
-          label="Save All Templates"
+          :label="$t('admin.mail.saveTemplates')"
           icon="pi pi-save"
           size="large"
           class="shadow-xl px-10 rounded-full"

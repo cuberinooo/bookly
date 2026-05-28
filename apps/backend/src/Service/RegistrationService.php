@@ -12,6 +12,7 @@ use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Uid\Uuid;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 class RegistrationService
 {
@@ -22,7 +23,8 @@ class RegistrationService
         private PasswordValidator $passwordValidator,
         private AdminSettingsRepository $adminSettingsRepository,
         private Security $security,
-        private EmailService $emailService
+        private EmailService $emailService,
+        private TranslatorInterface $translator
     ) {
     }
 
@@ -30,7 +32,7 @@ class RegistrationService
     {
         $existingUser = $this->entityManager->getRepository(User::class)->findOneBy(['email' => $data['email']]);
         if ($existingUser) {
-            throw new \Exception('Email already registered');
+            throw new \Exception($this->translator->trans('error.email_already_registered'));
         }
 
         $password = $data['password'] ?? '';
@@ -149,11 +151,11 @@ class RegistrationService
         $user = $this->entityManager->getRepository(User::class)->findOneBy(['verificationToken' => $token]);
 
         if (!$user) {
-            throw new \Exception('Invalid token');
+            throw new \Exception($this->translator->trans('error.invalid_token'));
         }
 
         if ($user->getVerificationTokenExpiresAt() < new \DateTime()) {
-            throw new \Exception('Token expired');
+            throw new \Exception($this->translator->trans('error.token_expired'));
         }
 
         $user->setIsVerified(true);

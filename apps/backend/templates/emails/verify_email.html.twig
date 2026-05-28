@@ -1,32 +1,32 @@
 {% extends 'emails/base.html.twig' %}
 
-{% block title %}Verify your email{% endblock %}
+{% block title %}{{ 'email.verify_email.subject'|trans }}{% endblock %}
 
 {% block body %}
-    <h2>Welcome to {{ siteName }}!</h2>
-    <p>Hello {{ name }},</p>
+    <h2>{{ 'email.verify_email.title'|trans({'%siteName%': siteName}) }}</h2>
+    <p>{{ 'email.verify_email.greeting'|trans({'%name%': name}) }}</p>
 
     {% if isAdminCreation %}
-        <p>An administrator has created an account for you in our booking system.</p>
+        <p>{{ 'email.verify_email.admin_creation_message'|trans }}</p>
 
         <div style="background-color: #f1f5f9; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center; border: 1px dashed #cbd5e1;">
-            <p style="margin: 0 0 10px 0; font-size: 14px; color: #64748b; font-weight: 600;">TEMPORARY PASSWORD</p>
+            <p style="margin: 0 0 10px 0; font-size: 14px; color: #64748b; font-weight: 600;">{{ 'email.verify_email.temp_password'|trans }}</p>
             <code style="font-family: 'Courier New', Courier, monospace; font-size: 24px; color: #0f172a; font-weight: 700; letter-spacing: 0.1em; display: block; margin: 10px 0;">{{ temporaryPassword }}</code>
-            <p style="margin: 10px 0 0 0; font-size: 12px; color: #94a3b8;">(Copy and paste this password exactly)</p>
+            <p style="margin: 10px 0 0 0; font-size: 12px; color: #94a3b8;">{{ 'email.verify_email.copy_paste'|trans }}</p>
         </div>
 
-        <p>For security reasons, you will be required to change this password upon your first login.</p>
+        <p>{{ 'email.verify_email.security_instruction'|trans }}</p>
 
         <p style="text-align: center;">
-            <a href="{{ loginUrl }}" class="button">Login Now</a>
+            <a href="{{ loginUrl }}" class="button">{{ 'email.verify_email.login_now'|trans }}</a>
         </p>
     {% else %}
-        <p>Please click the button below to verify your email address and activate your account.</p>
+        <p>{{ 'email.verify_email.verify_message'|trans }}</p>
 
         <p style="text-align: center;">
-            <a href="{{ url }}" class="button">Verify Account</a>
+            <a href="{{ url }}" class="button">{{ 'email.verify_email.verify_account'|trans }}</a>
         </p>
     {% endif %}
 
-    <p>See you on the mats!</p>
+    <p>{{ 'email.verify_email.closing'|trans }}</p>
 {% endblock %}

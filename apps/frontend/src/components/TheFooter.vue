@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useSettingsStore } from '../store/useSettingsStore';
+import { useI18n } from 'vue-i18n';
 import api from '../services/api';
 import { downloadPrivacyPolicy } from "../services/download";
 import LegalDialog from "./LegalDialog.vue";
 
+const { t } = useI18n();
 const showLegalDialog = ref(false);
 const dialogType = ref<'terms' | 'legal'>('legal');
 const legalSettings = ref<any>(null);
@@ -54,7 +56,7 @@ onMounted(fetchSettings);
           class="footer-title collapsible-trigger"
           @click="toggleSection('legal')"
         >
-          Legal
+          {{ t('footer.legal') }}
           <i :class="['pi', expandedSections.legal ? 'pi-chevron-up' : 'pi-chevron-down', 'mobile-only']" />
         </h4>
         <ul :class="['footer-list', { 'mobile-hidden': !expandedSections.legal }]">
@@ -64,7 +66,7 @@ onMounted(fetchSettings);
               class="footer-link"
               @click="downloadPrivacyPolicy()"
             >
-              <i class="pi pi-download" /> Privacy Policy
+              <i class="pi pi-download" /> {{ t('settings.privacyPolicy') }}
             </a>
           </li>
           <li>
@@ -73,7 +75,7 @@ onMounted(fetchSettings);
               class="footer-link"
               @click="onClickShowLegal"
             >
-              <i class="pi pi-info-circle" /> Legal Notice
+              <i class="pi pi-info-circle" /> {{ t('settings.legalNotice') }}
             </a>
           </li>
           <li>
@@ -82,7 +84,7 @@ onMounted(fetchSettings);
               class="footer-link"
               @click="onClickShowTerms"
             >
-              <i class="pi pi-file-text" /> Terms & Conditions
+              <i class="pi pi-file-text" /> {{ t('settings.termsAndConditions') }}
             </a>
           </li>
         </ul>
@@ -93,12 +95,12 @@ onMounted(fetchSettings);
           class="footer-title collapsible-trigger"
           @click="toggleSection('hosting')"
         >
-          Hosting
+          {{ t('footer.hosting') }}
           <i :class="['pi', expandedSections.hosting ? 'pi-chevron-up' : 'pi-chevron-down', 'mobile-only']" />
         </h4>
         <div :class="['hosting-content', { 'mobile-hidden': !expandedSections.hosting }]">
           <p class="footer-text">
-            This App is hosted by
+            {{ t('footer.hostedBy') }}
             <a
               href="https://codingcube.de/"
               target="_blank"

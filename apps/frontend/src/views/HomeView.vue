@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { formatDate, formatTime, formatDateWithDay } from '../services/date-utils';
 import api from '../services/api';
 import { useAuthStore } from '../store/useAuthStore';
@@ -13,6 +14,7 @@ import TrainerCourseManageDialog from '../components/TrainerCourseManageDialog.v
 import CourseForm from '../components/CourseForm.vue';
 import CourseDetails from '../components/CourseDetails.vue';
 
+const { t } = useI18n();
 const toast = useToast();
 const confirm = useConfirm();
 const authStore = useAuthStore();
@@ -74,14 +76,14 @@ const isTrialRestricted = computed(() => {
 });
 
 const bookingWindowMessage = computed(() => {
-    if (isTrialRestricted.value) return 'This course is not available for trial members.';
+    if (isTrialRestricted.value) return t('course.trialRestricted');
     if (!isOutsideBookingWindow.value) return '';
 
     switch (settings.value?.bookingWindow) {
-        case BookingWindow.CURRENT_WEEK: return 'Only current week bookings are allowed.';
-        case BookingWindow.TWO_WEEKS: return 'Bookings only allowed for the next 2 weeks.';
-        case BookingWindow.MONTH: return 'Bookings only allowed for the next month.';
-        default: return 'Outside allowed booking window.';
+        case BookingWindow.CURRENT_WEEK: return t('course.bookingWindowWeek');
+        case BookingWindow.TWO_WEEKS: return t('course.bookingWindowTwoWeeks');
+        case BookingWindow.MONTH: return t('course.bookingWindowMonth');
+        default: return t('course.bookingWindowOutside');
     }
 });
 
@@ -149,7 +151,7 @@ async function fetchCourses() {
     });
   } catch (err) {
     console.error('Failed to fetch courses', err);
-    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load courses', life: 5000 });
+    toast.add({ severity: 'error', summary: t('app.error'), detail: t('course.loadError'), life: 5000 });
   }
 }
 
@@ -180,14 +182,14 @@ async function onSaveCourse(formData: any, transferAll: boolean = false) {
     try {
         if (editingCourse.value?.id) {
             await courseStore.updateCourse(editingCourse.value.id, formData, transferAll);
-            toast.add({ severity: 'success', summary: 'Updated', detail: 'Course updated successfully', life: 5000 });
+            toast.add({ severity: 'success', summary: t('app.updated'), detail: t('course.updateSuccess'), life: 5000 });
         } else {
             await courseStore.createCourse(formData);
-            toast.add({ severity: 'success', summary: 'Created', detail: 'Course created successfully', life: 5000 });
+            toast.add({ severity: 'success', summary: t('app.created'), detail: t('course.createSuccess'), life: 5000 });
         }
         formVisible.value = false;
     } catch (err: any) {
-        toast.add({ severity: 'error', summary: 'Error', detail: err.response?.data?.error || 'Failed to save course', life: 5000 });
+        toast.add({ severity: 'error', summary: t('app.error'), detail: err.response?.data?.error || t('course.saveError'), life: 5000 });
     } finally {
         submitting.value = false;
     }
@@ -198,35 +200,35 @@ async function onDeleteCourse(course: any) {
 
     confirm.require({
         message: isSeries
-            ? `Do you want to delete only this instance or all upcoming workouts in this series?`
-            : `Delete "${course.title}"? This cannot be undone.`,
-        header: isSeries ? 'Series Detected' : 'Dangerous Action',
+            ? t('course.deleteConfirmSeries')
+            : t('course.deleteConfirmSingle', { title: course.title }),
+        header: isSeries ? t('course.seriesDetected') : t('course.dangerousAction'),
         icon: 'pi pi-exclamation-triangle',
         acceptProps: {
-            label: isSeries ? 'Delete Series' : 'Delete',
+            label: isSeries ? t('course.deleteSeries') : t('app.delete'),
             severity: 'danger'
         },
         rejectProps: {
-          label: isSeries ? 'Delete Only This' : 'Cancel',
+          label: isSeries ? t('course.deleteOnlyThis') : t('app.cancel'),
           severity: isSeries ? 'warn' : 'primary',
         },
         accept: async () => {
             try {
                 await courseStore.deleteCourse(course.id, isSeries);
-                toast.add({ severity: 'warn', summary: 'Deleted', detail: isSeries ? 'Series removed' : 'Course removed', life: 5000 });
+                toast.add({ severity: 'warn', summary: t('app.deleted'), detail: isSeries ? t('course.seriesRemoved') : t('course.courseRemoved'), life: 5000 });
                 formVisible.value = false;
             } catch (e) {
-                toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to delete', life: 5000 });
+                toast.add({ severity: 'error', summary: t('app.error'), detail: t('course.deleteError'), life: 5000 });
             }
         },
         reject: async () => {
             if (isSeries) {
                 try {
                     await courseStore.deleteCourse(course.id, false);
-                    toast.add({ severity: 'warn', summary: 'Deleted', detail: 'Single course removed', life: 5000 });
+                    toast.add({ severity: 'warn', summary: t('app.deleted'), detail: t('course.singleRemoved'), life: 5000 });
                     formVisible.value = false;
                 } catch (e) {
-                    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to delete', life: 5000 });
+                    toast.add({ severity: 'error', summary: t('app.error'), detail: t('course.deleteError'), life: 5000 });
                 }
             }
         }
@@ -267,9 +269,9 @@ onUnmounted(() => {
           v-if="!isMobile"
           class="header-left"
         >
-          <h1>Athletic Schedule</h1>
+          <h1>{{ t('home.title') }}</h1>
           <p class="text-muted">
-            Master your discipline. Book your next session.
+            {{ t('home.subtitle') }}
           </p>
         </div>
 
@@ -278,9 +280,9 @@ onUnmounted(() => {
             v-if="!isMobile"
             class="view-toggle"
           >
-            <span :class="{ active: !isCompactView }">STANDARD</span>
+            <span :class="{ active: !isCompactView }">{{ t('home.viewStandard') }}</span>
             <ToggleSwitch v-model="isCompactView" />
-            <span :class="{ active: isCompactView }">COMPACT</span>
+            <span :class="{ active: isCompactView }">{{ t('home.viewCompact') }}</span>
           </div>
         </div>
       </header>
@@ -347,7 +349,7 @@ onUnmounted(() => {
     <Dialog
       v-if="!isTrainerMode"
       v-model:visible="formVisible"
-      :header="editingCourse?.id ? 'Modify Workout' : 'Launch New Workout'"
+      :header="editingCourse?.id ? t('course.modifyWorkout') : t('course.launchWorkout')"
       :modal="true"
       :position="isMobile ? 'bottom' : 'center'"
       class="w-full max-w-lg"

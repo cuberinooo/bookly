@@ -5,7 +5,9 @@ import { useAuthStore } from '../store/useAuthStore';
 import { useOnboarding, ONBOARDING_TASKS } from '../composables/useOnboarding';
 import api from '../services/api';
 import { useToast } from 'primevue/usetoast';
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n();
 const props = defineProps<{
   course: any;
   settings: any;
@@ -27,17 +29,17 @@ const activeCategoryDescription = computed(() => props.course?.cycleCategory?.de
 
 async function bookCourse() {
   if (!authStore.isLoggedIn) {
-    toast.add({ severity: 'info', summary: 'Login Required', detail: 'Please login to book a course', life: 5000 });
+    toast.add({ severity: 'info', summary: t('course.loginRequired'), detail: t('course.loginToBook'), life: 5000 });
     return;
   }
   submitting.value = true;
   try {
     await api.post(`/courses/${props.course.id}/book`);
-    toast.add({ severity: 'success', summary: 'Confirmed', detail: 'Booking confirmed!', life: 5000 });
+    toast.add({ severity: 'success', summary: t('app.success'), detail: t('course.bookingConfirmed'), life: 5000 });
     markTaskComplete(ONBOARDING_TASKS.FIRST_BOOKING);
     emit('booked');
   } catch (err: any) {
-    toast.add({ severity: 'error', summary: 'Error', detail: err.response?.data?.error || 'Booking failed', life: 5000 });
+    toast.add({ severity: 'error', summary: t('app.error'), detail: err.response?.data?.error || t('course.bookingFailed'), life: 5000 });
   } finally {
     submitting.value = false;
   }
@@ -47,10 +49,10 @@ async function unbookCourse() {
   submitting.value = true;
   try {
     await api.delete(`/courses/${props.course.id}/book`);
-    toast.add({ severity: 'success', summary: 'Cancelled', detail: 'Booking cancelled', life: 5000 });
+    toast.add({ severity: 'success', summary: t('course.bookingCancelled'), detail: t('course.bookingCancelled'), life: 5000 });
     emit('unbooked');
   } catch (err: any) {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to cancel booking', life: 5000 });
+    toast.add({ severity: 'error', summary: t('app.error'), detail: t('course.cancelBookingFailed'), life: 5000 });
   } finally {
     submitting.value = false;
   }
@@ -60,15 +62,15 @@ function formatDuration(min: number) {
   if (min < 60) return `${min}min`;
   const h = Math.floor(min / 60);
   const m = min % 60;
-  return m > 0 ? `${h}h ${m}min` : `${h} hour${h > 1 ? 's' : ''}`;
+  return m > 0 ? `${h}h ${m}min` : `${h} ${t('course.hour')}${h > 1 ? 's' : ''}`;
 }
 
 const spotsLeft = computed(() => {
   const registered = props.course.bookings.filter((b: any) => !b.isWaitlist).length;
   if (registered < props.course.capacity) {
-    return (props.course.capacity - registered) + ' SPOTS LEFT';
+    return t('course.spotsLeft', { count: props.course.capacity - registered }).toUpperCase();
   }
-  return 'WAITLIST ACTIVE';
+  return t('course.waitlistActive').toUpperCase();
 });
 
 const registeredCount = computed(() => {
@@ -83,7 +85,7 @@ const isInactive = computed(() => authStore.user?.isActive === false);
 
 const bookingLabel = computed(() => {
   const registered = props.course.bookings.filter((b: any) => !b.isWaitlist).length;
-  return registered < props.course.capacity ? 'RESERVE SPOT' : 'JOIN WAITLIST';
+  return registered < props.course.capacity ? t('course.reserveSpot').toUpperCase() : t('course.joinWaitlist').toUpperCase();
 });
 </script>
 
@@ -94,7 +96,7 @@ const bookingLabel = computed(() => {
         <i class="pi pi-user" />
       </div>
       <div>
-        <small>HEAD COACH</small>
+        <small>{{ t('course.headCoach') }}</small>
         <span class="trainer-name">{{ course.user?.name }}</span>
       </div>
     </div>
@@ -105,21 +107,21 @@ const bookingLabel = computed(() => {
     >
       <div class="flex items-center gap-2 mb-2">
         <i class="pi pi-exclamation-circle text-red-600" />
-        <span class="text-[10px] font-black uppercase text-red-700 tracking-widest">Account Inactive</span>
+        <span class="text-[10px] font-black uppercase text-red-700 tracking-widest">{{ t('course.accountInactive') }}</span>
       </div>
       <p class="text-sm font-bold text-slate-800 leading-relaxed">
-        Your account is currently inactive. You can view course details, but booking and unbooking is disabled.
+        {{ t('course.inactiveAccountRestricted') }}
       </p>
     </div>
 
     <div class="schedule-detail-box">
       <div class="detail-row">
         <div class="detail-item">
-          <small>DATE & TIME</small>
-          <span class="value">{{ formatDateWithDay(course.startTime) }} at {{ formatTime(course.startTime) }}</span>
+          <small>{{ t('course.dateTime') }}</small>
+          <span class="value">{{ formatDateWithDay(course.startTime) }} {{ t('course.at') }} {{ formatTime(course.startTime) }}</span>
         </div>
         <div class="detail-item duration-item">
-          <small>DURATION</small>
+          <small>{{ t('course.duration') }}</small>
           <span class="value">{{ formatDuration(course.durationMinutes) }}</span>
         </div>
       </div>
@@ -127,33 +129,33 @@ const bookingLabel = computed(() => {
     </div>
 
     <div class="field">
-      <label>Workout Brief</label>
+      <label>{{ t('course.workoutBrief') }}</label>
       <div
         v-if="activeCategoryDescription"
         class="mb-3 p-4 bg-amber-50 border-2 border-amber-200 rounded-xl animate-fadein"
       >
         <div class="flex items-center gap-2 mb-2">
           <i class="pi pi-info-circle text-amber-600" />
-          <span class="text-[10px] font-black uppercase text-amber-700 tracking-widest">Training Cycle Focus Override</span>
+          <span class="text-[10px] font-black uppercase text-amber-700 tracking-widest">{{ t('course.trainingCycleOverride') }}</span>
         </div>
         <p class="text-sm font-bold text-slate-800 leading-relaxed italic">
           "{{ activeCategoryDescription }}"
         </p>
         <div class="mt-2 text-[9px] font-bold text-amber-600 uppercase">
-          Category: {{ course.cycleCategory.name }}
+          {{ t('admin.cycle.matrixTitle') }}: {{ course.cycleCategory.name }}
         </div>
       </div>
       <Textarea
         v-else
         disabled
         class="w-full"
-        :model-value="course.description || 'No description provided.'"
+        :model-value="course.description || t('course.noDescription')"
       />
     </div>
 
     <div class="specs-grid">
       <div class="field">
-        <label>CAPACITY</label>
+        <label>{{ t('course.capacity') }}</label>
         <InputText
           disabled
           class="w-full"
@@ -161,7 +163,7 @@ const bookingLabel = computed(() => {
         />
       </div>
       <div class="field">
-        <label>REGISTERED</label>
+        <label>{{ t('course.registered') }}</label>
         <InputText
           disabled
           class="w-full"
@@ -186,7 +188,7 @@ const bookingLabel = computed(() => {
           />
           <Button
             v-else
-            label="CANCEL RESERVATION"
+            :label="t('course.cancelReservation')"
             severity="primary"
             variant="text"
             class="w-full p-4 cancel-btn"
@@ -199,10 +201,10 @@ const bookingLabel = computed(() => {
           class="text-center p-4 bg-slate-50 rounded-lg border border-slate-200"
         >
           <p class="font-bold text-slate-600 uppercase tracking-widest text-xs mb-2">
-            <i class="pi pi-info-circle" /> Booking Restricted
+            <i class="pi pi-info-circle" /> {{ t('course.bookingRestricted') }}
           </p>
           <p class="text-xs text-slate-500 font-medium">
-            Your account is currently inactive and cannot book or unbook sessions.
+            {{ t('course.inactiveAccountRestricted') }}
           </p>
         </div>
         <div
@@ -210,10 +212,10 @@ const bookingLabel = computed(() => {
           class="text-center p-4 bg-slate-50 rounded-lg border border-slate-200"
         >
           <p class="font-bold text-slate-600 uppercase tracking-widest text-xs mb-2">
-            <i class="pi pi-lock" /> {{ course.status === 'postponed' ? 'Session Postponed' : 'Booking Restricted' }}
+            <i class="pi pi-lock" /> {{ course.status === 'postponed' ? t('course.sessionCancelled') : t('course.bookingRestricted') }}
           </p>
           <p class="text-xs text-slate-500 font-medium">
-            {{ course.status === 'postponed' ? 'This session has been postponed and is currently not bookable.' : bookingWindowMessage }}
+            {{ course.status === 'postponed' ? t('course.cancelledNotBookable') : bookingWindowMessage }}
           </p>
         </div>
       </template>
@@ -221,7 +223,7 @@ const bookingLabel = computed(() => {
         v-else
         class="text-center font-bold text-slate-500 uppercase tracking-widest text-xs"
       >
-        <i class="pi pi-info-circle" /> You are the coach for this session.
+        <i class="pi pi-info-circle" /> {{ t('course.youAreCoach') }}
       </div>
     </div>
 
@@ -230,7 +232,7 @@ const bookingLabel = computed(() => {
       class="action-footer past-course-info"
     >
       <p class="text-center font-bold text-slate-500 uppercase tracking-widest text-xs">
-        <i class="pi pi-lock" /> This session has already finished.
+        <i class="pi pi-lock" /> {{ t('course.sessionFinished') }}
       </p>
     </div>
   </div>

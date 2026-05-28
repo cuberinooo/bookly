@@ -1,15 +1,15 @@
 {% extends 'emails/base.html.twig' %}
 
-{% block title %}Course Reminder: {{ course.title }}{% endblock %}
+{% block title %}{{ 'email.course_reminder.subject'|trans({'%courseTitle%': course.title}) }}{% endblock %}
 
 {% block body %}
-    <h2>Your class is starting soon!</h2>
-    <p>Hello <strong>{{ course.trainer.name }}</strong>,</p>
-    <p>This is a reminder for your upcoming course <strong>{{ course.title }}</strong> starting at <strong>{{ course.startTime|date('H:i') }}</strong> today.</p>
+    <h2>{{ 'email.course_reminder.title'|trans }}</h2>
+    <p>{{ 'email.course_reminder.greeting'|trans({'%trainerName%': course.trainer.name})|raw }}</p>
+    <p>{{ 'email.course_reminder.message'|trans({'%courseTitle%': course.title, '%startTime%': course.startTime|date('H:i')})|raw }}</p>
 
     <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; border-left: 4px solid #ffc107; margin-bottom: 30px;">
-        <h3 style="margin-top: 0; font-family: 'Barlow Condensed', sans-serif; font-size: 16px;">SQUAD OVERVIEW</h3>
-        <p style="margin-bottom: 10px;">Confirmed Participants: <strong>{{ participants|length }} / {{ course.capacity }}</strong></p>
+        <h3 style="margin-top: 0; font-family: 'Barlow Condensed', sans-serif; font-size: 16px;">{{ 'email.course_reminder.squad_overview'|trans }}</h3>
+        <p style="margin-bottom: 10px;">{{ 'email.course_reminder.confirmed_participants'|trans({'%count%': participants|length, '%capacity%': course.capacity})|raw }}</p>
         
         {% if participants|length > 0 %}
             <ul style="padding-left: 20px; margin: 0;">
@@ -18,9 +18,9 @@
                 {% endfor %}
             </ul>
         {% else %}
-            <p style="font-style: italic; color: #94a3b8; margin: 0;">No participants booked yet.</p>
+            <p style="font-style: italic; color: #94a3b8; margin: 0;">{{ 'email.course_reminder.no_participants'|trans }}</p>
         {% endif %}
     </div>
 
-    <p>Good luck with your training session!</p>
+    <p>{{ 'email.course_reminder.good_luck'|trans }}</p>
 {% endblock %}

@@ -2,10 +2,12 @@
 import { ref, computed } from 'vue';
 import { useLeaderboardStore } from '../store/useLeaderboardStore';
 import { useToast } from 'primevue/usetoast';
+import { useI18n } from 'vue-i18n';
 import Button from 'primevue/button';
 import Select from 'primevue/select';
 import InputNumber from 'primevue/inputnumber';
 
+const { t } = useI18n();
 const emit = defineEmits(['success', 'cancel']);
 
 const leaderboardStore = useLeaderboardStore();
@@ -38,18 +40,18 @@ const groupedExercises = computed(() => {
 
 async function submitRecord() {
     if (!recordForm.value.exerciseName || recordForm.value.weightValue === null) {
-        toast.add({ severity: 'warn', summary: 'Warning', detail: 'Please fill in all fields', life: 3000 });
+        toast.add({ severity: 'warn', summary: t('app.warning'), detail: t('pb.fillFields'), life: 3000 });
         return;
     }
 
     submitting.value = true;
     try {
         await leaderboardStore.submitRecord(recordForm.value.exerciseName, recordForm.value.weightValue);
-        toast.add({ severity: 'success', summary: 'Success', detail: 'Personal best logged successfully', life: 3000 });
+        toast.add({ severity: 'success', summary: t('app.success'), detail: t('pb.saveSuccess'), life: 3000 });
         recordForm.value = { exerciseName: '', weightValue: null };
         emit('success');
     } catch (e) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to log personal best', life: 3000 });
+        toast.add({ severity: 'error', summary: t('app.error'), detail: t('pb.logFailed'), life: 3000 });
     } finally {
         submitting.value = false;
     }
@@ -62,7 +64,7 @@ async function submitRecord() {
       <label
         for="exercise"
         class="text-slate-300 font-bold mb-2 block uppercase text-xs tracking-widest"
-      >Exercise</label>
+      >{{ $t('pb.exercise') }}</label>
       <Select
         id="exercise"
         v-model="recordForm.exerciseName"
@@ -73,7 +75,7 @@ async function submitRecord() {
         option-value="value"
         filter
         :loading="leaderboardStore.loading"
-        placeholder="Select or search exercise"
+        :placeholder="$t('pb.exercisePlaceholder')"
         class="w-full"
       />
     </div>
@@ -82,27 +84,27 @@ async function submitRecord() {
       <label
         for="weight"
         class="text-slate-300 font-bold mb-2 block uppercase text-xs tracking-widest"
-      >Weight (kg / reps / time)</label>
+      >{{ $t('pb.weightRepsTime') }}</label>
       <InputNumber
         id="weight"
         v-model="recordForm.weightValue"
         :min-fraction-digits="0"
         :max-fraction-digits="2"
-        placeholder="e.g., 100"
+        :placeholder="$t('pb.weightPlaceholder')"
         class="w-full"
       />
     </div>
 
     <div class="flex justify-end gap-3 mt-8">
       <Button
-        label="Cancel"
+        :label="$t('app.cancel')"
         severity="secondary"
         text
         class="font-bold uppercase tracking-tight"
         @click="emit('cancel')"
       />
       <Button
-        label="Save PB"
+        :label="$t('pb.savePB')"
         icon="pi pi-check"
         class="p-button-primary font-black uppercase tracking-tight"
         :loading="submitting"

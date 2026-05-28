@@ -3,6 +3,10 @@ import { computed } from 'vue';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
+
 const props = defineProps<{
   visible: boolean;
   type: 'terms' | 'legal';
@@ -18,7 +22,9 @@ const show = computed({
 });
 
 const header = computed(() => {
-  return props.type === 'terms' ? `Terms & Conditions - ${props.companyName}` : `Legal Notice - ${props.companyName}`;
+  return props.type === 'terms' 
+    ? t('settings.termsHeader', { company: props.companyName }) 
+    : t('settings.legalHeader', { company: props.companyName });
 });
 
 const renderedMarkdown = computed(() => {
@@ -44,7 +50,7 @@ const renderedMarkdown = computed(() => {
         <div v-if="data?.legalNoticeRepresentative">
           <section>
             <h3 class="primary-text">
-              Angaben gemäß § 5 TMG
+              {{ $t('settings.angabenTmg') }}
             </h3>
             <p>
               {{ data.legalNoticeRepresentative }}<br v-if="data.legalNoticeRepresentative">
@@ -58,11 +64,11 @@ const renderedMarkdown = computed(() => {
             class="mt-4"
           >
             <h3 class="primary-text">
-              Kontakt
+              {{ $t('settings.kontakt') }}
             </h3>
             <p>
-              <span v-if="data.legalNoticePhone">Telefon: {{ data.legalNoticePhone }}<br></span>
-              <span v-if="data.legalNoticeEmail">E-Mail: <a :href="'mailto:' + data.legalNoticeEmail">{{ data.legalNoticeEmail }}</a></span>
+              <span v-if="data.legalNoticePhone">{{ $t('settings.telefon') }} {{ data.legalNoticePhone }}<br></span>
+              <span v-if="data.legalNoticeEmail">{{ $t('settings.email') }} <a :href="'mailto:' + data.legalNoticeEmail">{{ data.legalNoticeEmail }}</a></span>
             </p>
           </section>
 
@@ -71,11 +77,11 @@ const renderedMarkdown = computed(() => {
             class="mt-4"
           >
             <h3 class="primary-text">
-              Steuern
+              {{ $t('settings.steuern') }}
             </h3>
             <p>
-              <span v-if="data.legalNoticeTaxId">Steuernummer: {{ data.legalNoticeTaxId }}<br></span>
-              <span v-if="data.legalNoticeVatId">Umsatzsteuer-Identifikationsnummer gemäß § 27 a Umsatzsteuergesetz: {{ data.legalNoticeVatId }}</span>
+              <span v-if="data.legalNoticeTaxId">{{ $t('settings.steuernummer') }} {{ data.legalNoticeTaxId }}<br></span>
+              <span v-if="data.legalNoticeVatId">{{ $t('settings.vatIdNote') }} {{ data.legalNoticeVatId }}</span>
             </p>
           </section>
         </div>
@@ -83,22 +89,22 @@ const renderedMarkdown = computed(() => {
           <!-- Placeholders -->
           <section>
             <h3 class="primary-text">
-              Angaben gemäß § 5 TMG
+              {{ $t('settings.angabenTmg') }}
             </h3>
             <p>
-              [Name/Company Name]<br>
-              [Representative]<br>
-              [Street] [Number]<br>
-              [Zip Code] [City]
+              [{{ $t('admin.users.athleteName') }}]<br>
+              [{{ $t('settings.representative') }}]<br>
+              [{{ $t('settings.street') }}] [{{ $t('settings.number') }}]<br>
+              [{{ $t('settings.zipCode') }}] [{{ $t('settings.city') }}]
             </p>
           </section>
           <section class="mt-4">
             <h3 class="primary-text">
-              Kontakt
+              {{ $t('settings.kontakt') }}
             </h3>
             <p>
-              Telefon: [Phone Number]<br>
-              E-Mail: [Email Address]
+              {{ $t('settings.telefon') }} [{{ $t('settings.phone') }}]<br>
+              {{ $t('settings.email') }} [{{ $t('auth.email') }}]
             </p>
           </section>
         </div>
@@ -116,7 +122,7 @@ const renderedMarkdown = computed(() => {
         class="text-center py-8"
       >
         <p class="text-slate-500 italic">
-          No terms and conditions have been defined yet.
+          {{ $t('settings.noTermsDefined') }}
         </p>
       </div>
     </div>
@@ -127,11 +133,11 @@ const renderedMarkdown = computed(() => {
           v-if="type === 'terms'"
           class="text-xs text-slate-500 italic"
         >
-          Please read carefully before accepting.
+          {{ $t('settings.readCarefully') }}
         </p>
         <div v-else />
         <Button
-          label="Close"
+          :label="$t('app.close')"
           severity="primary"
           icon="pi pi-check"
           class="btn-primary"

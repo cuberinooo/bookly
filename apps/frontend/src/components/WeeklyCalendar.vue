@@ -2,6 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import { formatDate, formatTime } from '../services/date-utils';
 import { useAuthStore } from '../store/useAuthStore';
+import { useI18n } from 'vue-i18n';
 
 const props = withDefaults(defineProps<{
     courses: any[];
@@ -20,6 +21,7 @@ const props = withDefaults(defineProps<{
 
 const emit = defineEmits(['course-click', 'cell-click', 'update:baseDate']);
 
+const { t, locale } = useI18n();
 const authStore = useAuthStore();
 const internalBaseDate = ref(new Date(props.baseDate));
 
@@ -56,7 +58,15 @@ const displayedCycleWeek = computed(() => {
     return (weeksElapsed % props.cycleInfo.totalWeeks) + 1;
 });
 
-const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+const days = computed(() => [
+    t('app.days.monday'),
+    t('app.days.tuesday'),
+    t('app.days.wednesday'),
+    t('app.days.thursday'),
+    t('app.days.friday'),
+    t('app.days.saturday'),
+    t('app.days.sunday')
+]);
 const hours = Array.from({ length: 16 }, (_, i) => i + 6); // 6:00 to 22:00
 
 const currentWeek = computed(() => {
@@ -76,7 +86,7 @@ const currentWeek = computed(() => {
 const currentWeekLabel = computed(() => {
     const start = currentWeek.value[0];
     const end = currentWeek.value[6];
-    return `${start.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })} - ${end.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })}`;
+    return `${start.toLocaleDateString(locale.value, { day: '2-digit', month: '2-digit' })} - ${end.toLocaleDateString(locale.value, { day: '2-digit', month: '2-digit', year: 'numeric' })}`;
 });
 
 function navigate(direction: number) {
@@ -154,13 +164,13 @@ function onSlotClick(day: Date, hour: number) {
           <i class="pi pi-sync text-amber-600 animate-spin-slow" />
         </div>
         <div class="flex flex-col">
-          <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Active Programming</span>
+          <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">{{ t('calendar.activeProgramming') }}</span>
           <span class="text-lg font-black text-slate-900 font-barlow uppercase">{{ cycleInfo.name }}</span>
         </div>
       </div>
       <div class="flex items-center gap-2 bg-white px-4 py-2 rounded-lg border border-slate-200 shadow-sm">
-        <span class="text-xs font-bold text-slate-400 uppercase">Cycle Progress</span>
-        <span class="text-sm font-black text-amber-600">WEEK {{ displayedCycleWeek }} / {{ cycleInfo.totalWeeks }}</span>
+        <span class="text-xs font-bold text-slate-400 uppercase">{{ t('calendar.cycleProgress') }}</span>
+        <span class="text-sm font-black text-amber-600">{{ t('calendar.week') }} {{ displayedCycleWeek }} / {{ cycleInfo.totalWeeks }}</span>
       </div>
     </div>
 
@@ -176,7 +186,7 @@ function onSlotClick(day: Date, hour: number) {
             @click="navigate(-1)"
           />
           <Button
-            label="TODAY"
+            :label="t('home.today')"
             variant="outlined"
             size="small"
             class="today-btn"
@@ -298,27 +308,27 @@ function onSlotClick(day: Date, hour: number) {
                       v-if="course.status === 'postponed'"
                       class="postponed-badge"
                     >
-                      <i class="pi pi-clock" /> POSTPONED
+                      <i class="pi pi-clock" /> {{ t('calendar.postponed') }}
                     </div>
                     <div class="flex justify-between items-start w-full gap-1">
                       <div
                         v-if="isBookedByUser(course)"
                         class="booked-badge"
                       >
-                        <i class="pi pi-check" /> BOOKED
+                        <i class="pi pi-check" /> {{ t('calendar.booked') }}
                       </div>
                       <div
                         v-if="isRestrictedForTrial(course)"
                         class="restricted-badge"
-                        title="Restricted for Trial Members"
+                        :title="t('calendar.restrictedTooltip')"
                       >
-                        <i class="pi pi-lock" /> TRIAL RESTRICTED
+                        <i class="pi pi-lock" /> {{ t('calendar.restricted') }}
                       </div>
                       <div
                         v-if="isPastCourse(course)"
                         class="past-badge"
                       >
-                        <i class="pi pi-history" /> PAST
+                        <i class="pi pi-history" /> {{ t('calendar.past') }}
                       </div>
                     </div>
                   </div>
@@ -327,7 +337,7 @@ function onSlotClick(day: Date, hour: number) {
                     <span
                       v-if="!isCompactView"
                       class="duration-tag"
-                    >/ {{ course.durationMinutes }} MIN</span>
+                    >/ {{ course.durationMinutes }} {{ t('app.minutesShort').toUpperCase() }}</span>
                   </div>
                   <div class="course-title">
                     {{ course.title }}
@@ -338,7 +348,7 @@ function onSlotClick(day: Date, hour: number) {
                       v-if="course.status === 'postponed' && course.postponedBy"
                       class="coach-line !text-red-500 font-bold"
                     >
-                      POSTPONED BY {{ course.postponedBy.name }}
+                      {{ t('course.postponedByLabel') }} {{ course.postponedBy.name }}
                     </div>
                     <div class="coach-line">
                       <i class="pi pi-user text-[10px]" /> {{ course.user?.name }}
@@ -348,7 +358,7 @@ function onSlotClick(day: Date, hour: number) {
                         {{ course.bookings.filter(b => !b.isWaitlist).length }} / {{ course.capacity }} <i class="pi pi-users text-[10px]" />
                       </template>
                       <template v-else>
-                        <span class="text-amber-500">FULL</span>
+                        <span class="text-amber-500">{{ t('calendar.full') }}</span>
                       </template>
                     </div>
                   </div>

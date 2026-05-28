@@ -1,15 +1,15 @@
 {% extends 'emails/base.html.twig' %}
 
-{% block title %}New User Registered{% endblock %}
+{% block title %}{{ 'email.admin_new_user.subject'|trans }}{% endblock %}
 
 {% block body %}
-    <h2>New Registration</h2>
-    <p>Hello Admin,</p>
-    <p>A new user has registered on {{ siteName }}:</p>
+    <h2>{{ 'email.admin_new_user.title'|trans }}</h2>
+    <p>{{ 'email.admin_new_user.greeting'|trans }}</p>
+    <p>{{ 'email.admin_new_user.message'|trans({'%siteName%': siteName}) }}</p>
     <ul>
-        <li><strong>Name:</strong> {{ name }}</li>
-        <li><strong>Email:</strong> {{ userEmail }}</li>
-        <li><strong>Account Type:</strong> {{ role }}</li>
+        <li><strong>{{ 'email.admin_new_user.name'|trans }}</strong> {{ name }}</li>
+        <li><strong>{{ 'email.admin_new_user.email'|trans }}</strong> {{ userEmail }}</li>
+        <li><strong>{{ 'email.admin_new_user.account_type'|trans }}</strong> {{ role }}</li>
     </ul>
-    <p>Regards,<br>{{ siteName }} Team</p>
+    <p>{{ 'email.admin_new_user.regards'|trans }}<br>{{ 'email.admin_new_user.team'|trans({'%siteName%': siteName}) }}</p>
 {% endblock %}

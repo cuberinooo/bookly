@@ -4,6 +4,9 @@ import { CourseFrequency } from '@/app/enums/CourseFrequency';
 import api from '../services/api';
 import { useToast } from 'primevue/usetoast';
 import { useAuthStore } from '../store/useAuthStore';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{
     course?: any;
@@ -18,7 +21,12 @@ const authStore = useAuthStore();
 
 const activeCategoryDescription = computed(() => props.course?.cycleCategory?.description);
 
-const workoutTypes = ['Functional Training', 'Run Training', 'Team WOD', 'Other'];
+const workoutTypes = computed(() => [
+  { label: t('course.types.functionalTraining'), value: 'Functional Training' },
+  { label: t('course.types.runTraining'), value: 'Run Training' },
+  { label: t('course.types.teamWod'), value: 'Team WOD' },
+  { label: t('course.types.other'), value: 'Other' }
+]);
 
 const timeOptions = ref<string[]>([]);
 
@@ -94,20 +102,29 @@ const selectedTime = computed({
 });
 
 const recurrenceOptions = computed(() => {
-    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const days = [
+      t('app.days.sunday'),
+      t('app.days.monday'),
+      t('app.days.tuesday'),
+      t('app.days.wednesday'),
+      t('app.days.thursday'),
+      t('app.days.friday'),
+      t('app.days.saturday')
+    ];
     const dayName = days[form.value.startTime.getDay()];
 
     return [
-        { label: 'Einmalig (Once)', value: CourseFrequency.ONCE },
-        { label: 'Täglich (Daily)', value: CourseFrequency.DAILY },
-        { label: `Jeden ${dayName} (Weekly)`, value: CourseFrequency.WEEKLY },
-        { label: 'Montag bis Freitag (Weekdays)', value: CourseFrequency.WEEKDAYS }
+        { label: t('course.recurrenceOptions.once'), value: CourseFrequency.ONCE },
+        { label: t('course.recurrenceOptions.daily'), value: CourseFrequency.DAILY },
+        { label: t('course.recurrenceOptions.weekly', { day: dayName }), value: CourseFrequency.WEEKLY },
+        { label: t('course.recurrenceOptions.weekdays'), value: CourseFrequency.WEEKDAYS }
     ];
 });
 
 watch(() => props.course, (newVal) => {
     if (newVal) {
-        const isPreset = workoutTypes.includes(newVal.title) && newVal.title !== 'Other';
+        const presetValues = ['Functional Training', 'Run Training', 'Team WOD', 'Other'];
+        const isPreset = presetValues.includes(newVal.title) && newVal.title !== 'Other';
         form.value = {
             title: isPreset ? newVal.title : 'Other',
             customTitle: isPreset ? '' : newVal.title,
@@ -127,9 +144,7 @@ const isChanged = computed(() => {
     if (!props.course) return false;
 
     const finalTitle = form.value.title === 'Other' ? form.value.customTitle : form.value.title;
-    const isPreset = workoutTypes.includes(props.course.title) && props.course.title !== 'Other';
-    const originalTitle = isPreset ? props.course.title : props.course.title; // wait, this is same
-
+    
     const timeChanged = new Date(form.value.startTime).getTime() !== new Date(props.course.startTime).getTime();
     const trainerChanged = form.value.trainerId !== (props.course.user?.id || null);
     const titleChanged = finalTitle !== props.course.title;
@@ -157,11 +172,13 @@ function handleSubmit() {
 <template>
   <div class="course-form-athletic">
     <div class="form-group">
-      <label for="workoutType">Workout Type</label>
+      <label for="workoutType">{{ t('course.workoutType') }}</label>
       <Select
         v-model="form.title"
         input-id="workoutType"
         :options="workoutTypes"
+        option-label="label"
+        option-value="value"
         fluid
         class="athletic-input"
       />
@@ -171,11 +188,11 @@ function handleSubmit() {
       v-if="form.title === 'Other'"
       class="form-group animate-fadein"
     >
-      <label for="customTitle">Custom Course Name</label>
+      <label for="customTitle">{{ t('course.customName') }}</label>
       <InputText
         id="customTitle"
         v-model="form.customTitle"
-        placeholder="e.g. Spartan Strength"
+        :placeholder="t('course.customNamePlaceholder')"
         fluid
         class="athletic-input"
       />
@@ -184,7 +201,7 @@ function handleSubmit() {
     <div class="schedule-accent-box">
       <div class="form-row">
         <div class="form-group flex-2">
-          <label for="startDate">Date</label>
+          <label for="startDate">{{ t('course.date') }}</label>
           <DatePicker
             v-model="selectedDate"
             input-id="startDate"
@@ -195,7 +212,7 @@ function handleSubmit() {
           />
         </div>
         <div class="form-group flex-1">
-          <label for="startTime">Time</label>
+          <label for="startTime">{{ t('course.time') }}</label>
           <Select
             v-model="selectedTime"
             input-id="startTime"
@@ -208,7 +225,7 @@ function handleSubmit() {
       </div>
       <div class="form-row">
         <div class="form-group flex-1">
-          <label for="duration">Duration (Min)</label>
+          <label for="duration">{{ t('dashboard.duration') }} (Min)</label>
           <InputNumber
             v-model="form.durationMinutes"
             input-id="duration"
@@ -221,13 +238,13 @@ function handleSubmit() {
       </div>
       <div class="schedule-summary">
         <i class="pi pi-clock" />
-        <span>Starts <strong>{{ form.startTime.toLocaleString([], { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' }) }}</strong> for <strong>{{ form.durationMinutes }} minutes</strong></span>
+        <span>{{ t('course.starts') }} <strong>{{ form.startTime.toLocaleString([], { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' }) }}</strong> {{ t('course.for') }} <strong>{{ form.durationMinutes }} {{ t('course.minutes') }}</strong></span>
       </div>
     </div>
 
     <div class="form-row">
       <div class="form-group flex-1">
-        <label for="recurrence">Recurrence</label>
+        <label for="recurrence">{{ t('course.recurrence') }}</label>
         <Select
           v-model="form.recurrence"
           input-id="recurrence"
@@ -242,41 +259,41 @@ function handleSubmit() {
           v-if="course?.id"
           class="text-slate-400 mt-1 block"
         >
-          <i class="pi pi-lock text-xs" /> Fixed after creation.
+          <i class="pi pi-lock text-xs" /> {{ t('course.recurrenceFixed') }}
         </small>
       </div>
 
       <div
         class="form-group flex-1"
       >
-        <label for="trainer">Head Coach</label>
+        <label for="trainer">{{ t('course.headCoach') }}</label>
         <Select
           v-model="form.trainerId"
           input-id="trainer"
           :options="trainers"
           option-label="name"
           option-value="id"
-          placeholder="Select Trainer"
+          :placeholder="t('course.selectTrainer')"
           fluid
           class="athletic-input"
         />
       </div>
     </div>
     <div class="form-group">
-      <label for="description">Workout Description</label>
+      <label for="description">{{ t('course.description') }}</label>
       <div
         v-if="activeCategoryDescription"
         class="mb-3 p-4 bg-amber-50 border-2 border-amber-200 rounded-xl animate-fadein"
       >
         <div class="flex items-center gap-2 mb-2">
           <i class="pi pi-info-circle text-amber-600" />
-          <span class="text-[10px] font-black uppercase text-amber-700 tracking-widest">Training Cycle Focus Override</span>
+          <span class="text-[10px] font-black uppercase text-amber-700 tracking-widest">{{ t('course.trainingCycleOverride') }}</span>
         </div>
         <p class="text-sm font-bold text-slate-800 leading-relaxed italic">
           "{{ activeCategoryDescription }}"
         </p>
         <div class="mt-2 text-[9px] font-bold text-amber-600 uppercase">
-          Category: {{ course.cycleCategory.name }}
+          {{ t('course.category') }}: {{ course.cycleCategory.name }}
         </div>
       </div>
       <Textarea
@@ -284,7 +301,7 @@ function handleSubmit() {
         id="description"
         v-model="form.description"
         rows="4"
-        placeholder="What should athletes expect?"
+        :placeholder="t('course.descriptionPlaceholder')"
         fluid
         class="athletic-input"
       />
@@ -292,7 +309,7 @@ function handleSubmit() {
 
     <div class="form-row">
       <div class="form-group flex-1">
-        <label for="capacity">Max Capacity</label>
+        <label for="capacity">{{ t('course.maxCapacity') }}</label>
         <InputNumber
           v-model="form.capacity"
           input-id="capacity"
@@ -313,7 +330,7 @@ function handleSubmit() {
             for="allowTrial"
             class="text-sm font-bold text-slate-700 cursor-pointer uppercase tracking-tight"
           >
-            Allow Trial Athletes
+            {{ t('course.allowTrial') }}
           </label>
         </div>
       </div>
@@ -332,13 +349,13 @@ function handleSubmit() {
           for="transferAll"
           class="text-sm font-bold text-amber-900 cursor-pointer"
         >
-          Apply to all future workouts in this series
+          {{ t('course.applyToSeries') }}
         </label>
       </div>
     </div>
     <div class="form-actions mt-6">
       <Button
-        label="Cancel"
+        :label="t('app.cancel')"
         severity="primary"
         variant="text"
         :disabled="loading"
@@ -346,7 +363,7 @@ function handleSubmit() {
         @click="$emit('cancel')"
       />
       <Button
-        :label="course?.id ? 'Update Workout' : 'Launch Course'"
+        :label="course?.id ? t('course.update') : t('course.launch')"
         severity="primary"
         :loading="loading"
         class="submit-btn"
@@ -355,6 +372,7 @@ function handleSubmit() {
     </div>
   </div>
 </template>
+
 
 <style lang="scss" scoped>
 .course-form-athletic {

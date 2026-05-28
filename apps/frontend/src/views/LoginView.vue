@@ -4,7 +4,9 @@ import { useRouter } from 'vue-router';
 import api from '../services/api';
 import { useAuthStore } from '../store/useAuthStore';
 import { useToast } from 'primevue/usetoast';
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n();
 const email = ref('');
 const password = ref('');
 const loading = ref(false);
@@ -23,14 +25,14 @@ async function login() {
       password: password.value,
     });
     authStore.setToken(response.data.token);
-    toast.add({ severity: 'success', summary: 'Welcome back!', detail: 'Login successful', life: 5000 });
+    toast.add({ severity: 'success', summary: t('auth.welcomeBack'), detail: t('auth.loginSuccessful'), life: 5000 });
     router.push({ name: 'home' });
   } catch (err: any) {
-    const message = err.response?.data?.message || 'Check your credentials';
+    const message = err.response?.data?.message || t('auth.invalidCredentials');
     if (message.includes('verified')) {
         showResend.value = true;
     }
-    toast.add({ severity: 'error', summary: 'Login Failed', detail: message, life: 5000 });
+    toast.add({ severity: 'error', summary: t('auth.loginFailed'), detail: message, life: 5000 });
   } finally {
     loading.value = false;
   }
@@ -40,10 +42,10 @@ async function resendVerification() {
     resending.value = true;
     try {
         await api.post('/resend-verification', { email: email.value });
-        toast.add({ severity: 'info', summary: 'Email Sent', detail: 'A new verification link has been sent to your email.', life: 5000 });
+        toast.add({ severity: 'info', summary: t('auth.emailSent'), detail: t('auth.verificationLinkResent'), life: 5000 });
         showResend.value = false;
     } catch (err) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Could not resend email', life: 5000 });
+        toast.add({ severity: 'error', summary: t('app.error'), detail: t('auth.couldNotResendEmail'), life: 5000 });
     } finally {
         resending.value = false;
     }
@@ -54,7 +56,7 @@ async function resendVerification() {
   <div class="auth-container">
     <Card class="auth-card">
       <template #title>
-        Login
+        {{ t('auth.login') }}
       </template>
       <template #content>
         <form
@@ -62,7 +64,7 @@ async function resendVerification() {
           @submit.prevent="login"
         >
           <div class="field">
-            <label for="email">Email</label>
+            <label for="email">{{ t('auth.email') }}</label>
             <InputText
               id="email"
               v-model="email"
@@ -76,12 +78,12 @@ async function resendVerification() {
               <label
                 for="password"
                 class="mb-0"
-              >Password</label>
+              >{{ t('auth.password') }}</label>
               <RouterLink
                 to="/forgot-password"
                 class="text-xs text-accent font-bold uppercase tracking-tight"
               >
-                Forgot password?
+                {{ t('auth.forgotPassword') }}
               </RouterLink>
             </div>
             <InputText
@@ -94,7 +96,7 @@ async function resendVerification() {
           <Button
             severity="primary"
             type="submit"
-            label="Sign In"
+            :label="t('auth.login')"
             :loading="loading"
             class="mt-2"
           />
@@ -104,10 +106,10 @@ async function resendVerification() {
             class="bg-amber-50 border border-amber-200 rounded-lg p-4 mt-2"
           >
             <p class="text-xs text-amber-800 mb-2 font-medium">
-              Didn't get the email? We can send it again.
+              {{ t('auth.didNotGetEmail') }}
             </p>
             <Button 
-              label="Resend Verification Link" 
+              :label="t('auth.resendVerification')" 
               size="small" 
               severity="warn" 
               variant="text"
@@ -120,11 +122,11 @@ async function resendVerification() {
       </template>
       <template #footer>
         <p class="text-center text-sm">
-          Don't have an account? <RouterLink
+          {{ t('auth.dontHaveAccount') }} <RouterLink
             to="/register"
             class="text-accent font-bold"
           >
-            Register here
+            {{ t('auth.registerHere') }}
           </RouterLink>
         </p>
       </template>

@@ -9,7 +9,9 @@ import DatePicker from 'primevue/datepicker';
 import InputNumber from 'primevue/inputnumber';
 import Checkbox from 'primevue/checkbox';
 import FileUpload from 'primevue/fileupload';
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n();
 const props = defineProps<{
   meetup?: Meetup;
   loading?: boolean;
@@ -120,22 +122,22 @@ const handleSubmit = async () => {
     @submit.prevent="handleSubmit"
   >
     <div class="field">
-      <label for="title">Title *</label>
+      <label for="title">{{ t('meetup.title') }}</label>
       <InputText
         id="title"
         v-model="formData.title"
         required
-        placeholder="Who wants to go hiking?"
+        :placeholder="t('meetup.placeholderTitle')"
       />
     </div>
 
     <div class="field">
-      <label for="description">Description</label>
+      <label for="description">{{ t('meetup.description') }}</label>
       <Textarea
         id="description"
         v-model="formData.description"
         rows="3"
-        placeholder="Tell us more about the activity..."
+        :placeholder="t('meetup.placeholderDescription')"
       />
     </div>
 
@@ -143,7 +145,7 @@ const handleSubmit = async () => {
       <div class="field">
         <label
           for="meetupDate"
-        >Event Date & Time *</label>
+        >{{ t('meetup.eventDateTime') }}</label>
         <DatePicker
           id="meetupDate"
           v-model="formData.meetupDate"
@@ -179,26 +181,26 @@ const handleSubmit = async () => {
     </div>
 
     <div class="field">
-      <label for="location">Location *</label>
+      <label for="location">{{ t('meetup.location') }}</label>
       <InputText
         id="location"
         v-model="formData.location"
         required
-        placeholder="Physical address or Link (e.g. Google Maps)"
+        :placeholder="t('meetup.placeholderLocation')"
       />
     </div>
 
     <div class="field">
-      <label for="link">External Link (Optional)</label>
+      <label for="link">{{ t('meetup.externalLink') }}</label>
       <InputText
         id="link"
         v-model="formData.link"
-        placeholder="e.g. https://hotel.com or Google Maps link"
+        :placeholder="t('meetup.placeholderLink')"
       />
     </div>
 
     <div class="field">
-      <label>Meetup Banner (Optional)</label>
+      <label>{{ t('meetup.banner') }}</label>
       <FileUpload
         ref="fileUploadRef"
         mode="basic"
@@ -252,7 +254,7 @@ const handleSubmit = async () => {
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div class="field">
-        <label for="minParticipants">Min Participants</label>
+        <label for="minParticipants">{{ t('meetup.minParticipants') }}</label>
         <InputNumber
           id="minParticipants"
           v-model="formData.minParticipants"
@@ -260,7 +262,7 @@ const handleSubmit = async () => {
         />
       </div>
       <div class="field">
-        <label for="maxParticipants">Max Participants</label>
+        <label for="maxParticipants">{{ t('meetup.maxParticipants') }}</label>
         <InputNumber
           id="maxParticipants"
           v-model="formData.maxParticipants"
@@ -281,20 +283,20 @@ const handleSubmit = async () => {
       <label
         for="sendNotification"
         class="mb-0"
-      >Notify all community members via email</label>
+      >{{ t('meetup.notifyMembers') }}</label>
     </div>
 
     <div class="flex justify-end gap-2 mt-4">
       <Button
         type="button"
-        label="Cancel"
+        :label="t('meetup.cancel')"
         class="p-button-text"
         :disabled="loading || isUploading"
         @click="emit('cancel')"
       />
       <Button
         type="submit"
-        :label="meetup ? 'Update Meetup' : 'Create Meetup'"
+        :label="meetup ? t('meetup.update') : t('meetup.create')"
         :loading="loading || isUploading"
         class="p-button-primary"
       />
@@ -308,4 +310,9 @@ const handleSubmit = async () => {
     margin-bottom: 1.25rem;
   }
 }
+
+:deep(.p-button-icon-only) {
+  color: var(--bg-primary-color) !important;
+}
+
 </style>

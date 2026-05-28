@@ -14,6 +14,7 @@ use App\Repository\CourseSeriesRepository;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 class CourseService
 {
@@ -22,6 +23,7 @@ class CourseService
         private CourseSeriesRepository $seriesRepository,
         private EntityManagerInterface $entityManager,
         private BookingService $bookingService,
+        private TranslatorInterface $translator,
         private ?SerializerInterface $serializer = null,
         private ?TrainingCycleService $cycleService = null,
         private ?UserRepository $userRepository = null
@@ -400,14 +402,13 @@ class CourseService
 
         if (!empty($overlappingCourses)) {
             $conflict = reset($overlappingCourses);
-            $message = sprintf(
-                'Scheduling conflict: The proposed time (%s - %s) overlaps with an existing course "%s" (%s - %s).',
-                $startTime->format('d.m.Y H:i'),
-                $endTime->format('H:i'),
-                $conflict->getTitle(),
-                $conflict->getStartTime()->format('H:i'),
-                $conflict->getEndTime()->format('H:i')
-            );
+            $message = $this->translator->trans('error.schedule_conflict', [
+                '%start%' => $startTime->format('d.m.Y H:i'),
+                '%end%' => $endTime->format('H:i'),
+                '%title%' => $conflict->getTitle(),
+                '%conflict_start%' => $conflict->getStartTime()->format('H:i'),
+                '%conflict_end%' => $conflict->getEndTime()->format('H:i'),
+            ]);
 
             throw new ScheduleConflictException($message);
         }
@@ -416,7 +417,7 @@ class CourseService
     public function postponeCourse(Course $course, User $trainer): void
     {
         if (\App\Enum\CourseStatus::POSTPONED === $course->getStatus()) {
-            throw new \LogicException('Course is already postponed.');
+            throw new \LogicException($this->translator->trans('error.course_already_postponed'));
         }
 
         $course->setStatus(\App\Enum\CourseStatus::POSTPONED);

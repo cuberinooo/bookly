@@ -4,7 +4,9 @@ import api from '../services/api';
 import { useAuthStore } from '../store/useAuthStore';
 import { useToast } from 'primevue/usetoast';
 import { BookingWindow } from '../app/enums/BookingWindow';
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n();
 const toast = useToast();
 const authStore = useAuthStore();
 const settings = ref({
@@ -21,17 +23,17 @@ const saving = ref(false);
 const notificationError = computed(() => {
     const totalMinutes = (settings.value.courseStartNotificationHours * 60) + settings.value.courseStartNotificationMinutes;
     if (totalMinutes === 0) return null;
-    if (totalMinutes < 5) return 'Minimum notification time is 5 minutes';
-    if (totalMinutes % 5 !== 0) return 'Notification must be in 5-minute increments';
+    if (totalMinutes < 5) return t('settings.notificationMinError');
+    if (totalMinutes % 5 !== 0) return t('settings.notificationStepError');
     return null;
 });
 
-const windowOptions = [
-    { label: 'Anytime (No Restriction)', value: BookingWindow.OFF },
-    { label: 'Current Week Only', value: BookingWindow.CURRENT_WEEK },
-    { label: 'Next 2 Weeks', value: BookingWindow.TWO_WEEKS },
-    { label: 'Next Month', value: BookingWindow.MONTH }
-];
+const windowOptions = computed(() => [
+    { label: t('settings.windowOptions.off'), value: BookingWindow.OFF },
+    { label: t('settings.windowOptions.currentWeek'), value: BookingWindow.CURRENT_WEEK },
+    { label: t('settings.windowOptions.twoWeeks'), value: BookingWindow.TWO_WEEKS },
+    { label: t('settings.windowOptions.month'), value: BookingWindow.MONTH }
+]);
 
 async function fetchSettings() {
     loading.value = true;
@@ -47,7 +49,7 @@ async function fetchSettings() {
             courseStartNotificationMinutes: userResponse.data.courseStartNotificationMinutes ?? 0
         };
     } catch (e) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load settings', life: 5000 });
+        toast.add({ severity: 'error', summary: t('app.error'), detail: t('profile.loadFailed'), life: 5000 });
     } finally {
         loading.value = false;
     }
@@ -62,9 +64,9 @@ async function updateGlobalSettings() {
             bookingWindow: settings.value.bookingWindow,
             trialBookingLimit: settings.value.trialBookingLimit
         });
-        toast.add({ severity: 'success', summary: 'Updated', detail: 'Global settings updated', life: 3000 });
+        toast.add({ severity: 'success', summary: t('app.updated'), detail: t('profile.updateSuccess'), life: 3000 });
     } catch (e) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to update global settings', life: 5000 });
+        toast.add({ severity: 'error', summary: t('app.error'), detail: t('profile.updateError'), life: 5000 });
     } finally {
         saving.value = false;
     }
@@ -77,9 +79,9 @@ async function updatePersonalSettings() {
             courseStartNotificationHours: settings.value.courseStartNotificationHours,
             courseStartNotificationMinutes: settings.value.courseStartNotificationMinutes
         });
-        toast.add({ severity: 'success', summary: 'Updated', detail: 'Personal notification preferences saved', life: 3000 });
+        toast.add({ severity: 'success', summary: t('app.updated'), detail: t('profile.updateSuccess'), life: 3000 });
     } catch (e) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to update personal settings', life: 5000 });
+        toast.add({ severity: 'error', summary: t('app.error'), detail: t('profile.updateError'), life: 5000 });
     } finally {
         saving.value = false;
     }
@@ -105,26 +107,26 @@ onMounted(fetchSettings);
       <section class="settings-section">
         <div class="section-header mb-6">
           <h2 class="text-2xl font-black text-slate-900 tracking-tight font-barlow uppercase">
-            Global Operations
+            {{ $t('settings.operations') }}
           </h2>
           <p class="text-sm text-slate-500 font-medium">
-            Configure organization-wide rules for bookings and privacy.
+            {{ $t('settings.operationsNote') }}
           </p>
         </div>
 
         <div class="flex flex-col gap-6">
           <div class="settings-card phoenix-card">
             <h3 class="settings-title">
-              Squad Privacy
+              {{ $t('settings.squadPrivacy') }}
             </h3>
             <div class="setting-row">
               <div class="setting-info">
                 <label
                   for="showNames"
                   class="form-label"
-                >Show Confirmed Participant Names</label>
+                >{{ $t('settings.showNames') }}</label>
                 <p class="text-xs text-slate-500">
-                  If disabled, members see "Athlete #ID" instead of names.
+                  {{ $t('settings.showNamesNote') }}
                 </p>
               </div>
               <ToggleSwitch
@@ -138,16 +140,16 @@ onMounted(fetchSettings);
 
           <div class="settings-card phoenix-card">
             <h3 class="settings-title">
-              Waitlist Control
+              {{ $t('settings.waitlistControl') }}
             </h3>
             <div class="setting-row">
               <div class="setting-info">
                 <label
                   for="waitlistVisible"
                   class="form-label"
-                >Make Waitlist Visible to Members</label>
+                >{{ $t('settings.showWaitlist') }}</label>
                 <p class="text-xs text-slate-500">
-                  Enable if you want members to see how many people are waiting.
+                  {{ $t('settings.showWaitlistNote') }}
                 </p>
               </div>
               <ToggleSwitch
@@ -161,16 +163,16 @@ onMounted(fetchSettings);
 
           <div class="settings-card phoenix-card">
             <h3 class="settings-title">
-              Booking Restriction
+              {{ $t('settings.bookingRestriction') }}
             </h3>
             <div class="setting-row">
               <div class="setting-info">
                 <label
                   for="bookingWindow"
                   class="form-label"
-                >Member Booking Window</label>
+                >{{ $t('settings.memberWindow') }}</label>
                 <p class="text-xs text-slate-500">
-                  Restrict how far in advance members can book their workouts.
+                  {{ $t('settings.memberWindowNote') }}
                 </p>
               </div>
               <Select
@@ -179,7 +181,7 @@ onMounted(fetchSettings);
                 :options="windowOptions"
                 option-label="label"
                 option-value="value"
-                placeholder="Select Window"
+                :placeholder="$t('settings.selectWindow')"
                 class="w-64"
                 @change="updateGlobalSettings"
               />
@@ -188,16 +190,16 @@ onMounted(fetchSettings);
 
           <div class="settings-card phoenix-card">
             <h3 class="settings-title">
-              Trial Membership
+              {{ $t('settings.trialMembership') }}
             </h3>
             <div class="setting-row">
               <div class="setting-info">
                 <label
                   for="trialLimit"
                   class="form-label"
-                >Trial Booking Limit</label>
+                >{{ $t('settings.trialLimit') }}</label>
                 <p class="text-xs text-slate-500">
-                  How many total classes a trial member can book before needing an upgrade.
+                  {{ $t('settings.trialLimitNote') }}
                 </p>
               </div>
               <InputNumber
@@ -220,22 +222,22 @@ onMounted(fetchSettings);
       >
         <div class="section-header mb-6">
           <h2 class="text-2xl font-black text-slate-900 tracking-tight font-barlow uppercase">
-            Trainer Alerts
+            {{ $t('settings.trainerAlerts') }}
           </h2>
           <p class="text-sm text-slate-500 font-medium">
-            Individual settings specific to your account.
+            {{ $t('settings.trainerAlertsNote') }}
           </p>
         </div>
 
         <div class="settings-card phoenix-card">
           <h3 class="settings-title">
-            Course Start Notification
+            {{ $t('settings.startNotification') }}
           </h3>
           <div class="setting-row mb-8">
             <div class="setting-info">
-              <label class="form-label">Notify me before class</label>
+              <label class="form-label">{{ $t('settings.notifyBefore') }}</label>
               <p class="text-xs text-slate-500">
-                Receive an email with the participant list before your class starts.
+                {{ $t('settings.notifyBeforeNote') }}
               </p>
             </div>
             <div class="flex flex-col items-end gap-2">
@@ -244,7 +246,7 @@ onMounted(fetchSettings);
                   <label
                     for="notifyHours"
                     class="text-[10px] font-bold text-slate-400 uppercase"
-                  >Hours</label>
+                  >{{ $t('settings.hours') }}</label>
                   <InputNumber
                     v-model="settings.courseStartNotificationHours"
                     input-id="notifyHours"
@@ -258,7 +260,7 @@ onMounted(fetchSettings);
                   <label
                     for="notifyMinutes"
                     class="text-[10px] font-bold text-slate-400 uppercase"
-                  >Minutes</label>
+                  >{{ $t('settings.minutes') }}</label>
                   <InputNumber
                     v-model="settings.courseStartNotificationMinutes"
                     input-id="notifyMinutes"
@@ -281,14 +283,14 @@ onMounted(fetchSettings);
                   v-else
                   class="text-[10px] text-slate-400 font-bold uppercase tracking-widest"
                 >
-                  Min. 5m / 5m steps (0 = disabled)
+                  {{ $t('settings.minNotificationNote') }}
                 </p>
               </div>
             </div>
           </div>
           <div class="flex justify-end pt-4 border-t border-slate-100">
             <Button
-              label="Save Notification Settings"
+              :label="$t('settings.saveNotification')"
               icon="pi pi-check"
               severity="primary"
               :loading="saving"

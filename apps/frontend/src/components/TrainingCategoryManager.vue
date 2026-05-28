@@ -7,6 +7,9 @@ import Textarea from 'primevue/textarea';
 import ColorPicker from 'primevue/colorpicker';
 import Dialog from 'primevue/dialog';
 import { useConfirm } from 'primevue/useconfirm';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{
     categories: TrainingCategory[];
@@ -28,15 +31,15 @@ const form = ref({
 
 function confirmDelete(cat: TrainingCategory) {
     confirm.require({
-        message: `Delete "${cat.name}"? This cannot be undone and may affect courses using this category.`,
-        header: 'Dangerous Action',
+        message: t('admin.cycle.deleteConfirm', { name: cat.name }),
+        header: t('pb.deleteConfirmHeader'),
         icon: 'pi pi-exclamation-triangle',
         acceptProps: {
-            label: 'Delete',
+            label: t('app.delete'),
             severity: 'danger'
         },
         rejectProps: {
-            label: 'Cancel',
+            label: t('app.cancel'),
             severity: 'primary'
         },
         accept: () => {
@@ -85,7 +88,7 @@ function handleSave() {
     <div>
       <div class="flex items-center justify-between mb-4">
         <h3 class="text-lg font-black uppercase tracking-tight">
-          Focus Categories
+          {{ $t('admin.cycle.focusCategories') }}
         </h3>
         <Button
           icon="pi pi-plus"
@@ -144,7 +147,7 @@ function handleSave() {
           @click="$emit('select', null)"
         >
           <i class="pi pi-eraser text-slate-400" />
-          <span class="font-bold text-sm text-slate-400">Eraser Tool</span>
+          <span class="font-bold text-sm text-slate-400">{{ $t('admin.cycle.eraserTool') }}</span>
         </div>
       </div>
     </div>
@@ -152,24 +155,24 @@ function handleSave() {
     <!-- Create/Edit Dialogs -->
     <Dialog
       v-model:visible="showCreateDialog"
-      header="Create Category"
+      :header="$t('admin.cycle.createCategory')"
       modal
       class="w-full max-w-md"
     >
       <div class="flex flex-col gap-4 py-2">
         <div class="flex flex-col gap-1">
-          <label class="text-[10px] font-bold uppercase text-slate-500">Name</label>
+          <label class="text-[10px] font-bold uppercase text-slate-500">{{ $t('admin.cycle.categoryName') }}</label>
           <InputText v-model="form.name" />
         </div>
         <div class="flex flex-col gap-1">
-          <label class="text-[10px] font-bold uppercase text-slate-500">Color</label>
+          <label class="text-[10px] font-bold uppercase text-slate-500">{{ $t('admin.cycle.color') }}</label>
           <div class="flex items-center gap-3 p-2 bg-slate-50 rounded-lg">
             <ColorPicker v-model="form.colorHex" />
             <span class="text-xs font-mono text-slate-600">#{{ form.colorHex }}</span>
           </div>
         </div>
         <div class="flex flex-col gap-1">
-          <label class="text-[10px] font-bold uppercase text-slate-500">Description (displayed on course)</label>
+          <label class="text-[10px] font-bold uppercase text-slate-500">{{ $t('admin.cycle.descriptionNote') }}</label>
           <Textarea
             v-model="form.description"
             rows="3"
@@ -178,7 +181,7 @@ function handleSave() {
         </div>
         <Button
           severity="primary"
-          label="Create Category"
+          :label="$t('admin.cycle.createCategory')"
           class="mt-2"
           @click="handleSave"
         />
@@ -187,24 +190,24 @@ function handleSave() {
 
     <Dialog
       v-model:visible="showEditDialog"
-      header="Edit Category"
+      :header="$t('admin.cycle.editCategory')"
       modal
       class="w-full max-w-md"
     >
       <div class="flex flex-col gap-4 py-2">
         <div class="flex flex-col gap-1">
-          <label class="text-[10px] font-bold uppercase text-slate-500">Name</label>
+          <label class="text-[10px] font-bold uppercase text-slate-500">{{ $t('admin.cycle.categoryName') }}</label>
           <InputText v-model="form.name" />
         </div>
         <div class="flex flex-col gap-1">
-          <label class="text-[10px] font-bold uppercase text-slate-500">Color</label>
+          <label class="text-[10px] font-bold uppercase text-slate-500">{{ $t('admin.cycle.color') }}</label>
           <div class="flex items-center gap-3 p-2 bg-slate-50 rounded-lg">
             <ColorPicker v-model="form.colorHex" />
             <span class="text-xs font-mono text-slate-600">#{{ form.colorHex }}</span>
           </div>
         </div>
         <div class="flex flex-col gap-1">
-          <label class="text-[10px] font-bold uppercase text-slate-500">Description (displayed on course)</label>
+          <label class="text-[10px] font-bold uppercase text-slate-500">{{ $t('admin.cycle.descriptionNote') }}</label>
           <Textarea
             v-model="form.description"
             rows="3"
@@ -213,7 +216,7 @@ function handleSave() {
         </div>
         <Button
           severity="primary"
-          label="Save Changes"
+          :label="$t('settings.saveChanges')"
           class="mt-2"
           @click="handleSave"
         />

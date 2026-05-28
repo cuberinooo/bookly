@@ -3,7 +3,9 @@ import { useOnboarding, TASK_METADATA } from '../composables/useOnboarding';
 import Button from 'primevue/button';
 import { ref, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n();
 const route = useRoute();
 const router = useRouter();
 const {
@@ -72,7 +74,7 @@ function navigateToTask(task: any) {
                     </div>
                     <div class="flex flex-col pr-2 overflow-hidden">
                         <div class="text-xs font-bold text-gray-900 tracking-tight whitespace-nowrap overflow-hidden text-ellipsis max-w-[12rem]">
-                            {{ isContextual ? 'Here: ' + displayedTask.title : 'Next: ' + displayedTask.title }}
+                            {{ (isContextual ? t('onboarding.activeHere') : 'Next') + ': ' + displayedTask.title }}
                         </div>
                         <div v-if="isContextual" class="text-[9px] text-gray-600 leading-none mt-0.5 whitespace-nowrap overflow-hidden text-ellipsis max-w-[12rem]">
                             {{ displayedTask.description }}
@@ -91,7 +93,7 @@ function navigateToTask(task: any) {
                 <div class="panel-header p-3 flex items-center justify-between bg-primary-50 border-b border-primary-100">
                     <div class="flex items-center gap-2">
                         <i class="pi pi-compass text-primary font-bold"></i>
-                        <h3 class="m-0 text-sm font-black text-primary-800 uppercase tracking-widest">Training Guide</h3>
+                        <h3 class="m-0 text-sm font-black text-primary-800 uppercase tracking-widest">{{ t('onboarding.trainingGuide') }}</h3>
                     </div>
                     <Button
                         icon="pi pi-minus"
@@ -133,9 +135,9 @@ function navigateToTask(task: any) {
                                             <h5 class="m-0 text-sm font-bold" :class="task.isDone ? 'text-gray-500 line-through' : 'text-gray-900'">
                                                 {{ index + 1 }}. {{ task.title }}
                                             </h5>
-                                            <span v-if="!task.isDone && task.isCurrentRoute" class="bg-green-100 text-green-700 text-[8px] px-1 rounded font-black uppercase">Active Here</span>
+                                            <span v-if="!task.isDone && task.isCurrentRoute" class="bg-green-100 text-green-700 text-[8px] px-1 rounded font-black uppercase">{{ t('onboarding.activeHere') }}</span>
                                         </div>
-                                        <span v-if="task.isDone" class="text-[9px] font-black text-green-600 uppercase">Done</span>
+                                        <span v-if="task.isDone" class="text-[9px] font-black text-green-600 uppercase">{{ t('onboarding.done') }}</span>
                                     </div>
                                     <p class="m-0 text-xs leading-relaxed" :class="task.isDone ? 'text-gray-400' : 'text-gray-600'">
                                         {{ task.description }}
@@ -150,7 +152,7 @@ function navigateToTask(task: any) {
                 <div class="panel-footer p-3 bg-white border-t border-gray-100 flex items-center justify-between">
                     <div class="flex-grow mr-4">
                         <div class="flex justify-between mb-1">
-                            <span class="text-[10px] font-bold text-gray-500 uppercase">{{ completedTasksCount }}/{{ totalTasksCount }} Tasks</span>
+                            <span class="text-[10px] font-bold text-gray-500 uppercase">{{ completedTasksCount }}/{{ totalTasksCount }} {{ t('onboarding.tasks') }}</span>
                             <span class="text-[10px] font-bold text-primary">{{ Math.round((completedTasksCount / totalTasksCount) * 100) }}%</span>
                         </div>
                         <div class="w-full bg-gray-100 rounded overflow-hidden" style="height: 4px">
@@ -161,7 +163,7 @@ function navigateToTask(task: any) {
                         </div>
                     </div>
                     <Button
-                        label="Skip"
+                        :label="t('onboarding.skip')"
                         size="small"
                         text
                         severity="secondary"

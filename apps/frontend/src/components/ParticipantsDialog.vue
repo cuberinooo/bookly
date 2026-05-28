@@ -5,6 +5,7 @@ import api from '../services/api';
 
 import { useConfirm } from 'primevue/useconfirm';
 import { useToast } from 'primevue/usetoast';
+import { useI18n } from 'vue-i18n';
 
 const props = defineProps<{
     visible: boolean;
@@ -14,6 +15,7 @@ const props = defineProps<{
 
 const emit = defineEmits(['update:visible', 'remove-participant']);
 
+const { t } = useI18n();
 const confirm = useConfirm();
 const toast = useToast();
 const authStore = useAuthStore();
@@ -59,13 +61,13 @@ async function fetchProfilePictures() {
 
 function confirmEmergencyAccess(user: any) {
     confirm.require({
-        message: 'GDPR WARNING: You are about to access sensitive emergency contact info. This action IS LOGGED for compliance. Use this ONLY if a medical emergency has occurred during this session.',
-        header: 'Sensitive Data Access',
+        message: t('participants.gdprWarning'),
+        header: t('participants.sensitiveDataAccess'),
         icon: 'pi pi-exclamation-triangle',
-        acceptLabel: 'Access & Log Action',
+        acceptLabel: t('participants.accessAndLog'),
         acceptClass: 'p-button-danger',
         rejectProps: {
-          label: 'Cancel',
+          label: t('app.cancel'),
           severity: 'secondary',
         },
         accept: () => {
@@ -84,8 +86,8 @@ async function fetchEmergencyInfo(user: any) {
         };
         showEmergencyDialog.value = true;
     } catch (e: any) {
-        const msg = e.response?.data?.error || 'Failed to fetch info';
-        toast.add({ severity: 'error', summary: 'Error', detail: msg, life: 5000 });
+        const msg = e.response?.data?.error || t('participants.fetchError');
+        toast.add({ severity: 'error', summary: t('app.error'), detail: msg, life: 5000 });
     } finally {
         loadingEmergency.value = false;
     }
@@ -97,15 +99,15 @@ async function toggleAttendance(booking: any) {
         booking.attended = response.data.attended;
         toast.add({
             severity: 'success',
-            summary: 'Success',
-            detail: booking.attended ? 'Participant marked as attended' : 'Participant marked as no-show',
+            summary: t('app.success'),
+            detail: booking.attended ? t('participants.markedAttended') : t('participants.markedNoShow'),
             life: 3000
         });
     } catch (e: any) {
         toast.add({
             severity: 'error',
-            summary: 'Error',
-            detail: e.response?.data?.error || 'Failed to update attendance',
+            summary: t('app.error'),
+            detail: e.response?.data?.error || t('participants.attendanceError'),
             life: 5000
         });
     }
@@ -136,7 +138,7 @@ function close() {
     :is="embedded ? 'div' : 'Dialog'"
     v-bind="embedded ? {} : {
       visible: visible,
-      header: 'Squad List: ' + course?.title,
+      header: t('participants.squadList', { title: course?.title }),
       modal: true,
       class: 'w-full max-w-xl squad-dialog'
     }"
@@ -151,13 +153,13 @@ function close() {
         class="participant-section"
       >
         <h3 class="section-title">
-          <i class="pi pi-check-circle text-accent mr-2" />Confirmed Participants
+          <i class="pi pi-check-circle text-accent mr-2" />{{ t('participants.confirmed') }}
         </h3>
         <DataTable
           :value="confirmedParticipants"
           class="participants-table"
         >
-          <Column header="Participant">
+          <Column :header="t('participants.participant')">
             <template #body="slotProps">
               <div class="flex items-center gap-3">
                 <div class="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 border border-slate-200 transition-transform duration-200 ease-out hover:scale-125 hover:z-10 hover:shadow-lg hover:border-amber-400 cursor-pointer group relative">
@@ -191,14 +193,14 @@ function close() {
             </template>
           </Column>
           <Column
-            header="Actions"
+            :header="t('participants.actions')"
             class="text-right"
           >
             <template #body="slotProps">
               <div class="flex justify-end gap-2">
                 <Button
                   v-if="isTrainerOrAdmin && isCourseFinished"
-                  v-tooltip="slotProps.data.attended ? 'Mark as No-Show' : 'Mark as Attended'"
+                  v-tooltip="slotProps.data.attended ? t('participants.markNoShow') : t('participants.markAttended')"
                   :icon="slotProps.data.attended ? 'pi pi-user-minus' : 'pi pi-user-plus'"
                   :severity="slotProps.data.attended ? 'secondary' : 'success'"
                   variant="text"
@@ -207,7 +209,7 @@ function close() {
                 />
                 <Button
                   v-if="isTrainerOrAdmin && !isAnonymized(slotProps.data.user.name)"
-                  v-tooltip="'Emergency Info'"
+                  v-tooltip="t('participants.emergencyInfo')"
                   icon="pi pi-shield"
                   severity="warn"
                   variant="text"
@@ -216,7 +218,7 @@ function close() {
                 />
                 <Button
                   v-if="$attrs['onRemoveParticipant']"
-                  v-tooltip="'Remove Member'"
+                  v-tooltip="t('participants.removeMember')"
                   icon="pi pi-user-minus"
                   severity="danger"
                   variant="text"
@@ -234,13 +236,13 @@ function close() {
         class="participant-section mt-8"
       >
         <h3 class="section-title">
-          <i class="pi pi-clock text-amber-500 mr-2" />Waitlist (Chronological)
+          <i class="pi pi-clock text-amber-500 mr-2" />{{ t('participants.waitlistChronological') }}
         </h3>
         <DataTable
           :value="waitlistParticipants"
           class="participants-table waitlist"
         >
-          <Column header="Participant">
+          <Column :header="t('participants.participant')">
             <template #body="slotProps">
               <div class="flex items-center gap-3">
                 <div class="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 border border-slate-200 transition-transform duration-200 ease-out hover:scale-125 hover:z-10 hover:shadow-lg hover:border-amber-400 cursor-pointer group relative">
@@ -268,20 +270,20 @@ function close() {
               </div>
             </template>
           </Column>
-          <Column header="Queue Pos">
+          <Column :header="t('participants.queuePos')">
             <template #body="slotProps">
               <span class="waitlist-badge">#{{ waitlistParticipants.indexOf(slotProps.data) + 1 }}</span>
             </template>
           </Column>
           <Column
-            header="Actions"
+            :header="t('participants.actions')"
             class="text-right"
           >
             <template #body="slotProps">
               <div class="flex justify-end gap-2">
                 <Button
                   v-if="isTrainerOrAdmin && !isAnonymized(slotProps.data.user.name)"
-                  v-tooltip="'Emergency Info'"
+                  v-tooltip="t('participants.emergencyInfo')"
                   icon="pi pi-shield"
                   severity="warn"
                   variant="text"
@@ -290,7 +292,7 @@ function close() {
                 />
                 <Button
                   v-if="$attrs['onRemoveParticipant']"
-                  v-tooltip="'Remove Member'"
+                  v-tooltip="t('participants.removeMember')"
                   icon="pi pi-user-minus"
                   severity="danger"
                   variant="text"
@@ -308,13 +310,13 @@ function close() {
         class="empty-squad"
       >
         <i class="pi pi-users text-4xl mb-4 opacity-20" />
-        <p>No participants have joined this squad yet.</p>
+        <p>{{ t('participants.empty') }}</p>
       </div>
     </div>
 
     <Dialog
       v-model:visible="showEmergencyDialog"
-      header="EMERGENCY CONTACT INFO"
+      :header="t('participants.emergencyContactInfo')"
       :modal="true"
       class="w-full max-w-sm"
     >
@@ -323,14 +325,14 @@ function close() {
         class="flex flex-col gap-6 py-4"
       >
         <div class="flex flex-col gap-1">
-          <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Participant</label>
+          <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest">{{ t('participants.participant') }}</label>
           <span class="text-xl font-bold">{{ emergencyInfo.userName }}</span>
         </div>
         <div
           v-if="emergencyInfo.phoneNumber"
           class="flex flex-col gap-1"
         >
-          <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Phone</label>
+          <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest">{{ t('participants.phone') }}</label>
           <a
             :href="'tel:' + emergencyInfo.phoneNumber"
             class="text-xl font-black text-slate-900 flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-100"
@@ -344,20 +346,20 @@ function close() {
 
         <div class="flex flex-col gap-4">
           <h4 class="text-sm font-black !text-red-500 uppercase tracking-tighter">
-            Primary Contact
+            {{ t('participants.primaryContact') }}
           </h4>
           <div
             v-if="emergencyInfo.emergencyContactName"
             class="flex flex-col gap-1"
           >
-            <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Name</label>
+            <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest">{{ t('participants.name') }}</label>
             <span class="font-bold">{{ emergencyInfo.emergencyContactName }}</span>
           </div>
           <div
             v-if="emergencyInfo.emergencyContactPhone"
             class="flex flex-col gap-1"
           >
-            <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Phone</label>
+            <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest">{{ t('participants.phone') }}</label>
             <a
               :href="'tel:' + emergencyInfo.emergencyContactPhone"
               class="text-xl font-black text-slate-900 flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-100"
@@ -370,13 +372,13 @@ function close() {
             v-if="!emergencyInfo.emergencyContactName && !emergencyInfo.emergencyContactPhone"
             class="text-slate-400 italic text-sm"
           >
-            No emergency contact provided by participant.
+            {{ t('participants.noEmergencyContact') }}
           </div>
         </div>
       </div>
       <template #footer>
         <Button
-          label="Close"
+          :label="t('app.close')"
           severity="primary"
           class="w-full"
           @click="showEmergencyDialog = false"

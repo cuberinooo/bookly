@@ -2,11 +2,13 @@
 import { RouterLink } from 'vue-router';
 import { useAuthStore } from '../store/useAuthStore';
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 
 const authStore = useAuthStore();
+const { t } = useI18n();
 
 const dashboardLabel = computed(() => {
-  return authStore.isTrainer && authStore.viewMode === 'trainer' ? 'Dashboard' : 'Bookings';
+  return authStore.isTrainer && authStore.viewMode === 'trainer' ? t('app.dashboard') : t('app.myBookings');
 });
 </script>
 
@@ -20,7 +22,7 @@ const dashboardLabel = computed(() => {
       class="mobile-nav-item"
     >
       <i class="pi pi-calendar" />
-      <span>Courses</span>
+      <span>{{ t('app.courses') }}</span>
     </RouterLink>
     
     <RouterLink
@@ -36,7 +38,7 @@ const dashboardLabel = computed(() => {
       class="mobile-nav-item"
     >
       <i class="pi pi-users" />
-      <span>Meetups</span>
+      <span>{{ t('app.meetups') }}</span>
     </RouterLink>
     
     <RouterLink
@@ -44,7 +46,7 @@ const dashboardLabel = computed(() => {
       class="mobile-nav-item"
     >
       <i class="pi pi-trophy" />
-      <span>Rankings</span>
+      <span>{{ t('app.rankings') }}</span>
     </RouterLink>
   </nav>
 </template>

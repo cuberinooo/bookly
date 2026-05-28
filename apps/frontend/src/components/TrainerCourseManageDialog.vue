@@ -4,6 +4,9 @@ import CourseForm from './CourseForm.vue';
 import ParticipantsDialog from './ParticipantsDialog.vue';
 import api from '../services/api';
 import { useToast } from 'primevue/usetoast';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{
     visible: boolean;
@@ -29,10 +32,10 @@ const isNewCourse = computed(() => !props.course?.id);
 async function removeParticipant(bookingId: number) {
     try {
         await api.delete(`/courses/${props.course.id}/bookings/${bookingId}`);
-        toast.add({ severity: 'success', summary: 'Removed', detail: 'Participant removed', life: 5000 });
+        toast.add({ severity: 'success', summary: t('app.success'), detail: t('course.participantRemoved'), life: 5000 });
         emit('refresh');
     } catch (e) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to remove participant', life: 5000 });
+        toast.add({ severity: 'error', summary: t('app.error'), detail: t('course.removeParticipantFailed'), life: 5000 });
     }
 }
 
@@ -48,7 +51,7 @@ function close() {
 <template>
   <Dialog
     :visible="visible"
-    :header="isNewCourse ? 'Launch New Workout' : 'Manage Workout: ' + course?.title"
+    :header="isNewCourse ? t('course.launchNew') : t('course.manageWorkout', { title: course?.title })"
     :modal="true"
     class="w-full max-w-2xl"
     :class="{ 'max-w-lg': isNewCourse }"
@@ -67,7 +70,7 @@ function close() {
           >
             <div class="flex items-center">
               <i class="pi pi-users mr-2" />
-              PARTICIPANTS
+              {{ t('course.participants').toUpperCase() }}
             </div>
           </Tab>
           <Tab
@@ -76,7 +79,7 @@ function close() {
           >
             <div class="flex items-center">
               <i class="pi pi-pencil mr-2" />
-              DETAILS
+              {{ t('course.details').toUpperCase() }}
             </div>
           </Tab>
         </TabList>

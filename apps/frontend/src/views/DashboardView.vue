@@ -15,8 +15,10 @@ import { useRoute } from 'vue-router';
 import { useCourseDeletion } from '../composables/useCourseDeletion';
 
 import { formatDateWithDay, formatTime } from '../services/date-utils';
+import {useI18n} from "vue-i18n";
 
 const toast = useToast();
+const { t, locale } = useI18n();
 const confirm = useConfirm();
 const route = useRoute();
 const authStore = useAuthStore();
@@ -25,7 +27,7 @@ const { confirmDeleteCourse } = useCourseDeletion();
 const courses = computed(() => courseStore.courseList);
 const notifications = ref<any[]>([]);
 const isTrainerMode = computed(() => authStore.isTrainer && authStore.viewMode === 'trainer');
-const dashboardLabel = computed(() => isTrainerMode.value ? (authStore.isAdmin ? 'Admin Dashboard' : 'Trainer Dashboard') : 'My bookings');
+const dashboardLabel = computed(() => isTrainerMode.value ? (authStore.isAdmin ? t('dashboard.admin') : t('dashboard.trainerDashboard')) : t('app.myBookings'));
 
 const trainerDashboard = ref<any>(null);
 const courseDialog = ref(false);
@@ -87,7 +89,7 @@ async function fetchData() {
             };
         }
     } catch (e) {
-        toast.add({ severity: 'error', summary: 'Error', detail: `Failed to fetch ${dashboardLabel.value.toLowerCase()} data`, life: 5000 });
+        toast.add({ severity: 'error', summary: t('app.error'), detail: t('dashboard.fetchError', { dashboard: dashboardLabel.value.toLowerCase() }), life: 5000 });
     } finally {
         localLoading.value = false;
     }
@@ -99,7 +101,7 @@ watch(() => authStore.viewMode, () => {
 
 function openNewCourse() {
     editingCourse.value = {
-        title: 'Functional Training',
+        title: t('course.defaultTitle'),
         capacity: 10,
         startTime: new Date(),
         durationMinutes: 60,
@@ -118,18 +120,18 @@ async function onSaveCourse(formData: any, transferAll: boolean = false) {
     try {
         if (editingCourse.value?.id) {
             await courseStore.updateCourse(editingCourse.value.id, formData, transferAll);
-            toast.add({ severity: 'success', summary: 'Updated', detail: 'Course updated', life: 5000 });
+            toast.add({ severity: 'success', summary: t('app.updated'), detail: t('course.updateSuccess'), life: 5000 });
         } else {
             await courseStore.createCourse(formData);
-            toast.add({ severity: 'success', summary: 'Created', detail: 'Course created', life: 5000 });
+            toast.add({ severity: 'success', summary: t('app.created'), detail: t('course.createSuccess'), life: 5000 });
         }
         courseDialog.value = false;
         if (isTrainerMode.value) {
             trainerDashboard.value?.refreshTable();
         }
     } catch (e: any) {
-        const errorDetail = e.response?.data?.error || 'Operation failed';
-        toast.add({ severity: 'error', summary: 'Error', detail: errorDetail, life: 5000 });
+        const errorDetail = e.response?.data?.error || t('app.error');
+        toast.add({ severity: 'error', summary: t('app.error'), detail: errorDetail, life: 5000 });
     } finally {
         submitting.value = false;
     }
@@ -137,30 +139,32 @@ async function onSaveCourse(formData: any, transferAll: boolean = false) {
 
 async function unbookCourse(courseId: number) {
     confirm.require({
-        message: 'Cancel this booking?',
-        header: 'Confirmation',
+        message: t('dashboard.cancelConfirm'),
+        header: t('app.confirmation'),
         icon: 'pi pi-calendar-times',
-        acceptProps: { severity: 'danger', label: 'Yes, cancel' },
+        acceptProps: { severity: 'danger', label: t('app.yes') },
         rejectProps: {
-          label: 'Cancel',
+          label: t('app.cancel'),
           severity: 'primary', // Use base styling
         },
         accept: async () => {
             try {
                 await courseStore.unbookCourse(courseId);
-                toast.add({ severity: 'info', summary: 'Cancelled', detail: 'Booking removed', life: 5000 });
+                toast.add({ severity: 'info', summary: t('dashboard.cancelled'), detail: t('dashboard.cancelBookingSuccess'), life: 5000 });
             } catch (e) {
-                toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to cancel booking', life: 5000 });
+                toast.add({ severity: 'error', summary: t('app.error'), detail: t('dashboard.cancelBookingError'), life: 5000 });
             }
         }
     });
 }
 
 function formatDuration(min: number) {
-    if (min < 60) return `${min}min`;
-    const hours = Math.floor(min / 60);
+    if (min < 60) return `${min}${t('app.minutesShort')}`;
+    const hoursCount = Math.floor(min / 60);
     const remaining = min % 60;
-    return remaining > 0 ? `${hours}h ${remaining}min` : `${hours} hour${hours > 1 ? 's' : ''}`;
+    return remaining > 0 
+        ? `${hoursCount}${t('app.hourShort')} ${remaining}${t('app.minutesShort')}` 
+        : `${hoursCount}${t('app.hourShort')}`;
 }
 
 onMounted(fetchData);
@@ -174,12 +178,12 @@ onMounted(fetchData);
           {{ dashboardLabel }}
         </h1>
         <p class="text-muted text-sm md:text-lg">
-          Manage your athletic journey
+          {{ t('dashboard.subtitle') }}
         </p>
       </div>
       <Button
         v-if="isTrainerMode"
-        label="New Course"
+        :label="t('dashboard.newCourse')"
         icon="pi pi-plus"
         severity="primary"
         size="large"
@@ -204,7 +208,7 @@ onMounted(fetchData);
     >
       <i class="pi pi-spin pi-spinner text-4xl text-primary mb-4" />
       <p class="font-bold uppercase tracking-widest text-slate-500">
-        Syncing your dashboard...
+        {{ t('dashboard.syncing') }}
       </p>
     </div>
 
@@ -225,9 +229,9 @@ onMounted(fetchData);
       >
         <section>
           <div class="pb-4">
-            <h2>My Scheduled Bookings</h2>
+            <h2>{{ t('dashboard.myScheduledBookings') }}</h2>
             <Button
-              label="View Schedule"
+              :label="t('dashboard.viewSchedule')"
               icon="pi pi-calendar"
               variant="text"
               @click="$router.push('/')"
@@ -239,10 +243,10 @@ onMounted(fetchData);
             class="empty-state"
           >
             <i class="pi pi-calendar-plus" />
-            <p>Ready to train? Your schedule is empty.</p>
+            <p>{{ t('dashboard.emptySchedule') }}</p>
             <Button
               severity="primary"
-              label="Explore Courses"
+              :label="t('dashboard.exploreCourses')"
               icon="pi pi-search"
               size="large"
               class="mt-4"
@@ -266,7 +270,7 @@ onMounted(fetchData);
                     <span
                       v-if="course.bookings.find(b => b.user.email === authStore.user?.email)?.isWaitlist"
                       class="waitlist-indicator"
-                    >WAITLIST QUEUE</span>
+                    >{{ t('dashboard.waitlistQueue') }}</span>
                   </div>
                 </div>
               </template>
@@ -275,7 +279,7 @@ onMounted(fetchData);
                   <div class="info-row">
                     <i class="pi pi-user" />
                     <div>
-                      <label>TRAINER</label>
+                      <label>{{ t('dashboard.trainer') }}</label>
                       <span>{{ course.user.name }}</span>
                     </div>
                   </div>
@@ -284,14 +288,14 @@ onMounted(fetchData);
                     <div class="focus-item">
                       <i class="pi pi-calendar" />
                       <div>
-                        <label>DATE & TIME</label>
-                        <span>{{ formatDateWithDay(course.startTime) }} @ {{ formatTime(course.startTime) }}</span>
+                        <label>{{ t('dashboard.dateTime') }}</label>
+                        <span>{{ formatDateWithDay(course.startTime, false, locale) }} @ {{ formatTime(course.startTime, locale) }}</span>
                       </div>
                     </div>
                     <div class="focus-item border-left pl-3">
                       <i class="pi pi-clock" />
                       <div>
-                        <label>DURATION</label>
+                        <label>{{ t('dashboard.duration') }}</label>
                         <span>{{ formatDuration(course.durationMinutes) }}</span>
                       </div>
                     </div>
@@ -300,7 +304,7 @@ onMounted(fetchData);
                   <div class="info-row">
                     <i class="pi pi-users" />
                     <div>
-                      <label>AVAILABLE SLOTS</label>
+                      <label>{{ t('dashboard.availableSlots') }}</label>
                       <span>{{ course.bookings.filter(b => !b.isWaitlist).length }} / {{ course.capacity }}</span>
                     </div>
                   </div>
@@ -310,7 +314,7 @@ onMounted(fetchData);
                 <div class="flex flex-col gap-2 w-full">
                   <Button
                     v-if="settings.isWaitlistVisible"
-                    label="SHOW PARTICIPANTS"
+                    :label="t('dashboard.showParticipants')"
                     icon="pi pi-users"
                     variant="outlined"
                     class="w-full show-btn"
@@ -318,7 +322,7 @@ onMounted(fetchData);
                   />
                   <Button
                     v-if="authStore.user?.isActive !== false"
-                    label="CANCEL BOOKING"
+                    :label="t('course.cancelReservation')"
                     severity="danger"
                     variant="text"
                     icon="pi pi-times"
@@ -337,7 +341,7 @@ onMounted(fetchData);
     <!-- Course Form Dialog -->
     <Dialog
       v-model:visible="courseDialog"
-      :header="editingCourse?.id ? 'Modify Course' : 'Create New Course'"
+      :header="editingCourse?.id ? t('dashboard.modifyCourse') : t('dashboard.createNewCourse')"
       :modal="true"
       class="w-full max-w-lg"
     >

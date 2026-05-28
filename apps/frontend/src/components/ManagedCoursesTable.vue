@@ -2,6 +2,7 @@
 import { ref, onMounted, onUnmounted, watch, computed } from 'vue';
 import { useConfirm } from 'primevue/useconfirm';
 import { useToast } from 'primevue/usetoast';
+import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '../store/useAuthStore';
 import { useCourseStore } from '../store/useCourseStore';
 import { useCourseDeletion } from '../composables/useCourseDeletion';
@@ -16,6 +17,7 @@ const props = defineProps<{
 
 const emit = defineEmits(['edit']);
 
+const { t } = useI18n();
 const confirm = useConfirm();
 const toast = useToast();
 const authStore = useAuthStore();
@@ -38,7 +40,7 @@ const menuItems = computed(() => {
 
     return [
         {
-            label: 'Participants',
+            label: t('course.participants'),
             icon: 'pi pi-users',
             disabled: activeCourse.value.status === 'postponed',
             command: () => {
@@ -47,13 +49,13 @@ const menuItems = computed(() => {
             }
         },
         {
-            label: 'Postpone',
+            label: t('course.postpone'),
             icon: 'pi pi-clock',
             disabled: activeCourse.value.status === 'postponed',
             command: () => confirmPostponeCourse(activeCourse.value)
         },
         {
-            label: 'Edit',
+            label: t('app.edit'),
             icon: 'pi pi-pencil',
             command: () => emit('edit', activeCourse.value)
         },
@@ -61,7 +63,7 @@ const menuItems = computed(() => {
             separator: true
         },
         {
-            label: 'Delete',
+            label: t('app.delete'),
             icon: 'pi pi-trash',
             class: 'delete-menu-item',
             command: () => confirmDeleteCourse(activeCourse.value)
@@ -179,7 +181,7 @@ async function loadLazyData() {
 
         await courseStore.fetchCourses(params);
     } catch (e) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to fetch courses', life: 5000 });
+        toast.add({ severity: 'error', summary: t('app.error'), detail: t('course.fetchFailed'), life: 5000 });
     }
 }
 
@@ -274,31 +276,33 @@ function clearFilters() {
 defineExpose({ refresh: loadLazyData });
 
 function formatDuration(min: number) {
-    if (min < 60) return `${min}min`;
+    if (min < 60) return `${min}${t('course.minutes').substring(0, 3)}`;
     const hours = Math.floor(min / 60);
     const remaining = min % 60;
-    return remaining > 0 ? `${hours}h ${remaining}min` : `${hours} hour${hours > 1 ? 's' : ''}`;
+    return remaining > 0 
+        ? `${hours}h ${remaining}${t('course.minutes').substring(0, 3)}` 
+        : `${hours} ${hours > 1 ? t('course.hours') : t('course.hour')}`;
 }
 function confirmPostponeCourse(course: any) {
     confirm.require({
-        message: `Are you sure you want to postpone "${course.title}"? This will automatically unbook all participants and mark the course as postponed.`,
-        header: 'Confirm Postponement',
+        message: t('course.postponeConfirm', { title: course.title }),
+        header: t('course.postpone'),
         icon: 'pi pi-clock',
         acceptProps: {
-            label: 'Postpone Course',
+            label: t('course.postpone'),
             severity: 'warn'
         },
         rejectProps: {
-            label: 'Cancel',
+            label: t('app.cancel'),
             severity: 'secondary'
         },
         accept: async () => {
             try {
                 await courseStore.postponeCourse(course.id);
-                toast.add({ severity: 'success', summary: 'Postponed', detail: 'Course postponed and members unbooked', life: 5000 });
+                toast.add({ severity: 'success', summary: t('course.postpone'), detail: t('course.postponedSummary'), life: 5000 });
                 loadLazyData();
             } catch (e: any) {
-                toast.add({ severity: 'error', summary: 'Error', detail: e.response?.data?.error || 'Failed to postpone course', life: 5000 });
+                toast.add({ severity: 'error', summary: t('app.error'), detail: e.response?.data?.error || t('course.postponeError'), life: 5000 });
             }
         }
     });
@@ -306,28 +310,24 @@ function confirmPostponeCourse(course: any) {
 
 async function removeParticipant(bookingId: number) {
     confirm.require({
-        message: 'Remove this participant from the course?',
-        header: 'Confirm Removal',
+        message: t('course.removeParticipantConfirm'),
+        header: t('course.removeParticipantHeader'),
         icon: 'pi pi-user-minus',
         acceptProps: { severity: 'danger' },
         rejectProps: {
-          label: 'Cancel',
-          severity: 'primary', // Use base styling
+          label: t('app.cancel'),
+          severity: 'primary',
         },
         accept: async () => {
             try {
-                await api.delete(`/courses/0/bookings/${bookingId}`); // Note: ID 0 is placeholder as it's not strictly used for single booking delete if route is handled
-                // Wait, let's check the route for deleteBooking
-                // Route is #[Route('/api/courses/{id}/bookings/{bookingId}', methods: ['DELETE'])]
-                // So we need the course ID.
                 if (selectedCourse.value) {
                     await api.delete(`/courses/${selectedCourse.value.id}/bookings/${bookingId}`);
-                    toast.add({ severity: 'success', summary: 'Removed', detail: 'Participant removed', life: 5000 });
+                    toast.add({ severity: 'success', summary: t('app.success'), detail: t('course.participantRemoved'), life: 5000 });
                     loadLazyData();
                     participantsDialog.value = false;
                 }
             } catch (e) {
-                toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to remove participant', life: 5000 });
+                toast.add({ severity: 'error', summary: t('app.error'), detail: t('course.removeParticipantFailed'), life: 5000 });
             }
         }
     });
@@ -355,7 +355,7 @@ onUnmounted(() => {
 
     <div class="section-header mb-6">
       <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
-        <h2>Managed Courses</h2>
+        <h2>{{ t('dashboard.managedCourses') }}</h2>
         <div class="flex flex-wrap items-end gap-3 md:gap-4">
           <div
             v-if="authStore.isTrainer"
@@ -366,7 +366,7 @@ onUnmounted(() => {
               size="small"
               @change="onFilter"
             />
-            <span class="text-[10px] font-bold uppercase text-slate-600 whitespace-nowrap">Show All</span>
+            <span class="text-[10px] font-bold uppercase text-slate-600 whitespace-nowrap">{{ t('course.showAll') }}</span>
           </div>
           <div
             v-if="!isMobile"
@@ -375,11 +375,11 @@ onUnmounted(() => {
             <label
               for="filterFrom"
               class="text-[10px] md:text-xs font-bold uppercase text-slate-500"
-            >From</label>
+            >{{ t('course.from') }}</label>
             <DatePicker
               v-model="lazyParams.startDate"
               input-id="filterFrom"
-              placeholder="Start"
+              :placeholder="t('course.from')"
               size="small"
               date-format="dd.mm.yy"
               fluid
@@ -395,11 +395,11 @@ onUnmounted(() => {
             <label
               for="filterTo"
               class="text-[10px] md:text-xs font-bold uppercase text-slate-500"
-            >To</label>
+            >{{ t('course.to') }}</label>
             <DatePicker
               v-model="lazyParams.endDate"
               input-id="filterTo"
-              placeholder="End"
+              :placeholder="t('course.to')"
               size="small"
               date-format="dd.mm.yy"
               fluid
@@ -411,7 +411,7 @@ onUnmounted(() => {
           </div>
           <Button
             v-if="!isMobile"
-            v-tooltip="'Clear Filters'"
+            v-tooltip="t('course.clearFilters')"
             icon="pi pi-filter-slash"
             variant="text"
             class="h-10 w-10 md:h-8 md:w-8"
@@ -435,7 +435,7 @@ onUnmounted(() => {
           @click="navigateRange(-1)"
         />
         <div class="flex flex-col items-center">
-          <span class="text-[10px] font-black text-amber-500 uppercase tracking-widest">Selected Week</span>
+          <span class="text-[10px] font-black text-amber-500 uppercase tracking-widest">{{ t('course.selectedWeek') }}</span>
           <span class="text-sm font-black font-['Barlow_Condensed']">{{ rangeLabel }}</span>
         </div>
         <Button
@@ -463,7 +463,7 @@ onUnmounted(() => {
       >
         <Column
           field="title"
-          header="Course"
+          :header="t('app.courses').substring(0, t('app.courses').length - 1)"
         >
           <template #body="slotProps">
             <Skeleton
@@ -480,12 +480,12 @@ onUnmounted(() => {
                 severity="secondary"
                 class="w-fit text-[8px] uppercase font-black tracking-widest mt-1"
               >
-                Postponed by {{ slotProps.data.postponedBy?.name || 'Trainer' }}
+                {{ t('course.postponedBy', { name: slotProps.data.postponedBy?.name || t('dashboard.trainer') }) }}
               </Tag>
             </div>
           </template>
         </Column>
-        <Column header="Schedule">
+        <Column :header="t('dashboard.courseSchedule')">
           <template #body="slotProps">
             <div
               v-if="loading"
@@ -504,7 +504,7 @@ onUnmounted(() => {
           </template>
         </Column>
         <Column
-          header="Trainer"
+          :header="t('dashboard.trainer')"
         >
           <template #body="slotProps">
             <Skeleton
@@ -516,11 +516,11 @@ onUnmounted(() => {
               class="text-sm font-medium"
               :class="{ 'text-amber-600_ font-bold': slotProps.data.user?.id === authStore.user?.id }"
             >
-              {{ slotProps.data.user?.id === authStore.user?.id ? 'YOU' : slotProps.data.user?.name }}
+              {{ slotProps.data.user?.id === authStore.user?.id ? t('course.you') : slotProps.data.user?.name }}
             </span>
           </template>
         </Column>
-        <Column header="Duration">
+        <Column :header="t('dashboard.duration')">
           <template #body="slotProps">
             <Skeleton
               v-if="loading"
@@ -531,7 +531,7 @@ onUnmounted(() => {
             </span>
           </template>
         </Column>
-        <Column header="Slots">
+        <Column :header="t('course.capacity')">
           <template #body="slotProps">
             <Skeleton
               v-if="loading"
@@ -549,7 +549,7 @@ onUnmounted(() => {
           </template>
         </Column>
         <Column
-          header="Actions"
+          :header="t('app.actions')"
           class="text-right"
         >
           <template #body="slotProps">
@@ -567,7 +567,7 @@ onUnmounted(() => {
               class="flex justify-end"
             >
               <Button
-                label="Manage"
+                :label="t('course.manage')"
                 icon="pi pi-cog"
                 variant="text"
                 size="small"
@@ -648,7 +648,7 @@ onUnmounted(() => {
                       severity="secondary"
                       class="w-fit text-[8px] uppercase font-black tracking-widest mb-2"
                     >
-                      Postponed by {{ course.postponedBy?.name || 'Trainer' }}
+                      {{ t('course.postponedBy', { name: course.postponedBy?.name || t('dashboard.trainer') }) }}
                     </Tag>
                     <div class="flex items-center gap-2 text-xs font-bold text-slate-500">
                       <i class="pi pi-calendar text-[10px]" />
@@ -660,7 +660,7 @@ onUnmounted(() => {
                     >
                       <i class="pi pi-user text-[10px]" />
 
-                      {{ course.user?.id === authStore.user?.id ? 'YOU' : course.user?.name }}
+                      {{ course.user?.id === authStore.user?.id ? t('course.you') : course.user?.name }}
                     </div>
                   </div>
                   <span :class="['slot-badge !py-1 !px-2', { 'is-full': course.bookings.length >= course.capacity }]">
@@ -673,10 +673,10 @@ onUnmounted(() => {
                     class="text-[10px] font-black uppercase text-slate-400"
                     style="font-family: 'Barlow Condensed', sans-serif;"
                   >
-                    Duration: {{ formatDuration(course.durationMinutes) }}
+                    {{ t('dashboard.duration') }}: {{ formatDuration(course.durationMinutes) }}
                   </div>
                   <Button
-                    label="Manage"
+                    :label="t('course.manage')"
                     icon="pi pi-cog"
                     severity="secondary"
                     outlined
@@ -693,7 +693,7 @@ onUnmounted(() => {
               >
                 <i class="pi pi-calendar-slash text-4xl mb-2" />
                 <p class="font-bold uppercase text-sm">
-                  No courses found
+                  {{ t('course.noCoursesFound') }}
                 </p>
               </div>
             </template>

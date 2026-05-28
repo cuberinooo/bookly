@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { Meetup } from '../services/meetup.service';
 import { MeetupStatus } from '../app/enums/MeetupStatus';
 import { RsvpStatus } from '../app/enums/RsvpStatus';
@@ -22,6 +23,7 @@ const emit = defineEmits<{
   (e: 'edit'): void;
 }>();
 
+const { t } = useI18n();
 const timeStore = useTimeStore();
 const authStore = useAuthStore();
 
@@ -31,10 +33,10 @@ const isRsvpLocked = computed(() => timeStore.now > rsvpDeadline.value || props.
 const isPast = computed(() => timeStore.now > meetupDate.value);
 
 const displayStatus = computed(() => {
-  if (props.meetup.status === MeetupStatus.CANCELLED) return 'CANCELLED';
-  if (isPast.value) return 'CLOSED';
-  if (timeStore.now > rsvpDeadline.value) return 'LOCKED';
-  return props.meetup.status.toUpperCase();
+  if (props.meetup.status === MeetupStatus.CANCELLED) return t('meetup.status.cancelled');
+  if (isPast.value) return t('meetup.status.closed');
+  if (timeStore.now > rsvpDeadline.value) return t('meetup.status.locked');
+  return t(`meetup.status.${props.meetup.status}`);
 });
 
 const isOwner = computed(() => authStore.user?.id === props.meetup.creator.id);
@@ -53,7 +55,7 @@ const myRsvp = computed(() => {
 
 const countdown = computed(() => {
   const diff = rsvpDeadline.value.getTime() - timeStore.now.getTime();
-  if (diff <= 0) return 'LOCKED';
+  if (diff <= 0) return t('meetup.status.locked');
 
   const days = Math.floor(diff / (1000 * 60 * 60 * 24));
   const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
@@ -63,9 +65,9 @@ const countdown = computed(() => {
   const pad = (n: number) => n.toString().padStart(2, '0');
 
   if (days > 0) {
-    return `${days}d ${pad(hours)}h ${pad(minutes)}m ${pad(seconds)}s`;
+    return `${days}${t('app.dayUnit')} ${pad(hours)}${t('app.hourShort')} ${pad(minutes)}${t('app.minutesShort')} ${pad(seconds)}${t('app.secondsShort')}`;
   }
-  return `${pad(hours)}h ${pad(minutes)}m ${pad(seconds)}s`;
+  return `${pad(hours)}${t('app.hourShort')} ${pad(minutes)}${t('app.minutesShort')} ${pad(seconds)}${t('app.secondsShort')}`;
 });
 
 const statusSeverity = computed(() => {
@@ -106,7 +108,7 @@ const handleRsvp = (status: RsvpStatus) => {
     >
       <img
         :src="meetup.imageUrl"
-        alt="Meetup Banner"
+        :alt="t('meetup.bannerAlt')"
         class="meetup-banner"
       >
     </template>
@@ -168,7 +170,7 @@ const handleRsvp = (status: RsvpStatus) => {
           target="_blank"
           rel="noopener noreferrer"
           icon="pi pi-external-link"
-          label="More Info"
+          :label="t('meetup.moreInfo')"
           class="p-button-link p-0 font-bold"
         />
       </div>
@@ -181,11 +183,11 @@ const handleRsvp = (status: RsvpStatus) => {
         <div class="flex flex-col">
           <span
             v-memo="[]"
-            v-tooltip.top="'Répondez s\'il vous plaît - Please respond by this date to help the organizer plan better.'"
+            v-tooltip.top="t('meetup.rsvpDeadlineTooltip')"
             tabindex="0"
             class="text-xs uppercase font-bold text-slate-400 cursor-help flex items-center gap-1 focus:outline-none focus:text-slate-600 transition-colors"
           >
-            RSVP Deadline
+            {{ t('meetup.rsvpDeadline') }}
             <i class="pi pi-info-circle text-[10px]" />
           </span>
           <span
@@ -196,7 +198,7 @@ const handleRsvp = (status: RsvpStatus) => {
           </span>
         </div>
         <div class="flex flex-col items-end">
-          <span class="text-xs uppercase font-bold text-slate-400">Participants</span>
+          <span class="text-xs uppercase font-bold text-slate-400">{{ t('meetup.participants') }}</span>
           <span class="font-bold">{{ meetup.goingCount }} / {{ meetup.maxParticipants || '∞' }}</span>
         </div>
       </div>
@@ -221,7 +223,7 @@ const handleRsvp = (status: RsvpStatus) => {
         <span
           v-else
           class="text-xs text-slate-400 italic"
-        >No participants yet</span>
+        >{{ t('meetup.noParticipants') }}</span>
       </div>
 
       <div class="flex items-center gap-2 text-xs text-slate-500">
@@ -231,7 +233,7 @@ const handleRsvp = (status: RsvpStatus) => {
           shape="circle"
           size="small"
         />
-        <span>Organized by <strong>{{ meetup.creator.name }}</strong></span>
+        <span>{{ t('meetup.organizedBy') }} <strong>{{ meetup.creator.name }}</strong></span>
       </div>
     </template>
 
@@ -240,14 +242,14 @@ const handleRsvp = (status: RsvpStatus) => {
         <template v-if="canEdit">
           <Button
             icon="pi pi-pencil"
-            label="Edit"
+            :label="t('meetup.edit')"
             class="p-button-secondary p-button-sm"
             @click="emit('edit')"
           />
           <Button
             v-if="meetup.status === MeetupStatus.OPEN"
             icon="pi pi-times"
-            label="Cancel"
+            :label="t('meetup.cancel')"
             class="p-button-danger p-button-sm"
             @click="emit('cancel')"
           />
@@ -257,14 +259,14 @@ const handleRsvp = (status: RsvpStatus) => {
           <Button
             v-if="myRsvp !== RsvpStatus.GOING"
             icon="pi pi-check"
-            label="Going"
+            :label="t('meetup.going')"
             class="p-button-primary p-button-sm"
             @click="handleRsvp(RsvpStatus.GOING)"
           />
           <Button
             v-else
             icon="pi pi-times"
-            label="Not Going"
+            :label="t('meetup.notGoing')"
             class="p-button-secondary p-button-sm"
             @click="handleRsvp(RsvpStatus.NOT_GOING)"
           />
@@ -272,17 +274,17 @@ const handleRsvp = (status: RsvpStatus) => {
         <template v-else>
           <Tag
             v-if="myRsvp === RsvpStatus.GOING"
-            value="You're going!"
+            :value="t('meetup.youAreGoing')"
             severity="success"
           />
           <Tag
             v-else-if="myRsvp === RsvpStatus.NOT_GOING"
-            value="You're not going"
+            :value="t('meetup.youAreNotGoing')"
             severity="secondary"
           />
           <Tag
             v-else
-            value="Registration Closed"
+            :value="t('meetup.registrationClosed')"
             severity="secondary"
           />
         </template>

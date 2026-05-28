@@ -14,12 +14,14 @@ use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Address;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 class MeetupService
 {
     public function __construct(
         private EntityManagerInterface $entityManager,
-        private MailerInterface $mailer
+        private MailerInterface $mailer,
+        private TranslatorInterface $translator
     ) {
     }
 
@@ -32,7 +34,7 @@ class MeetupService
         $rsvpDeadline->setTimezone(new \DateTimeZone(date_default_timezone_get()));
 
         if ($rsvpDeadline > $meetupDate) {
-            throw new \LogicException('The RSVP deadline cannot be after the meetup date.');
+            throw new \LogicException($this->translator->trans('error.rsvp_deadline_after_meetup'));
         }
 
         $meetup = new Meetup();
@@ -74,7 +76,7 @@ class MeetupService
         }
 
         if (new \DateTime() > $meetup->getMeetupDate()) {
-            throw new \LogicException('Cannot edit a past meetup.');
+            throw new \LogicException($this->translator->trans('error.cannot_edit_past_meetup'));
         }
 
         if (isset($data['title'])) {
@@ -99,7 +101,7 @@ class MeetupService
             }
 
             if ($currentDeadline > $newMeetupDate) {
-                throw new \LogicException('The RSVP deadline cannot be after the meetup date.');
+                throw new \LogicException($this->translator->trans('error.rsvp_deadline_after_meetup'));
             }
             $meetup->setMeetupDate($newMeetupDate);
         }
@@ -110,7 +112,7 @@ class MeetupService
 
             $currentMeetupDate = $meetup->getMeetupDate();
             if ($newDeadline > $currentMeetupDate) {
-                throw new \LogicException('The RSVP deadline cannot be after the meetup date.');
+                throw new \LogicException($this->translator->trans('error.rsvp_deadline_after_meetup'));
             }
             $meetup->setRsvpDeadline($newDeadline);
         }
@@ -134,11 +136,11 @@ class MeetupService
         // RSVP Freeze Logic
         if (new \DateTime() > $meetup->getRsvpDeadline()) {
             $this->evaluateMeetupStatus($meetup);
-            throw new \LogicException('The RSVP window is closed.');
+            throw new \LogicException($this->translator->trans('error.rsvp_window_closed'));
         }
 
         if (MeetupStatus::CANCELLED === $meetup->getStatus()) {
-            throw new \LogicException('This meetup has been cancelled.');
+            throw new \LogicException($this->translator->trans('error.meetup_cancelled'));
         }
 
         $rsvpRepo = $this->entityManager->getRepository(MeetupRsvp::class);
@@ -155,7 +157,7 @@ class MeetupService
 
         if (RsvpStatus::GOING === $status) {
             if ($meetup->getMaxParticipants() && $meetup->getGoingCount() >= $meetup->getMaxParticipants() && RsvpStatus::GOING !== $previousStatus) {
-                throw new \RuntimeException('Meetup is full.');
+                throw new \RuntimeException($this->translator->trans('error.meetup_full'));
             }
         }
 

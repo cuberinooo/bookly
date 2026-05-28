@@ -3,12 +3,14 @@ import { ref, onMounted, computed } from 'vue';
 import { useLeaderboardStore } from '../store/useLeaderboardStore';
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
+import { useI18n } from 'vue-i18n';
 import Button from 'primevue/button';
 import Dialog from 'primevue/dialog';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import WorkoutRecordForm from '../components/WorkoutRecordForm.vue';
 
+const { t } = useI18n();
 const leaderboardStore = useLeaderboardStore();
 const toast = useToast();
 const confirm = useConfirm();
@@ -27,23 +29,23 @@ const personalBests = computed(() => {
 
 function confirmDelete(id: number) {
     confirm.require({
-        message: 'Delete this record? This will permanently remove it from your history and the leaderboard.',
-        header: 'Dangerous Action',
+        message: t('pb.deleteConfirmMessage'),
+        header: t('pb.deleteConfirmHeader'),
         icon: 'pi pi-exclamation-triangle',
         acceptProps: {
-            label: 'Delete',
+            label: t('app.delete'),
             severity: 'danger'
         },
         rejectProps: {
-            label: 'Cancel',
+            label: t('app.cancel'),
             severity: 'primary'
         },
         accept: async () => {
             try {
                 await leaderboardStore.deleteRecord(id);
-                toast.add({ severity: 'success', summary: 'Deleted', detail: 'Record removed', life: 3000 });
+                toast.add({ severity: 'success', summary: t('app.success'), detail: t('pb.deleteSuccess'), life: 3000 });
             } catch (e) {
-                toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to delete record', life: 3000 });
+                toast.add({ severity: 'error', summary: t('app.error'), detail: t('pb.deleteFailed'), life: 3000 });
             }
         }
     });
@@ -61,14 +63,14 @@ onMounted(() => {
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
         <div>
           <h1 class="text-5xl font-black italic uppercase tracking-tighter text-white leading-none">
-            My <span class="text-amber-500">Personal Bests</span>
+            {{ t('app.myAccount').split(' ')[0] }} <span class="text-amber-500">{{ t('pb.title') }}</span>
           </h1>
           <p class="text-slate-500 font-bold uppercase tracking-widest text-xs mt-3">
-            Track your progress and manage your achievements
+            {{ t('pb.subtitle') }}
           </p>
         </div>
         <Button
-          label="Log New PB"
+          :label="t('pb.logNewPB')"
           icon="pi pi-plus"
           size="large"
           class="p-button-primary"
@@ -91,14 +93,14 @@ onMounted(() => {
         <div class="lg:col-span-1 flex flex-col gap-6">
           <h2 class="text-xl font-black uppercase tracking-tight flex items-center gap-2 text-slate-400">
             <i class="pi pi-trophy text-amber-500" />
-            Current Bests
+            {{ t('pb.currentBests') }}
           </h2>
 
           <div
             v-if="personalBests.length === 0"
             class="p-8 border-2 border-dashed border-slate-700 rounded-3xl text-center bg-slate-800/50"
           >
-            <p class="text-slate-500 font-medium italic">No records yet. Start logging your workouts!</p>
+            <p class="text-slate-500 font-medium italic">{{ t('pb.noRecords') }}</p>
           </div>
 
           <div
@@ -108,7 +110,7 @@ onMounted(() => {
           >
             <div class="flex justify-between items-start mb-2">
               <span class="text-[10px] font-black uppercase tracking-widest text-slate-500 group-hover:text-amber-500 transition-colors">
-                Personal Best
+                {{ t('pb.personalBestLabel') }}
               </span>
               <span class="text-[10px] font-bold text-slate-400 bg-slate-700 px-2 py-0.5 rounded-full border border-slate-600">
                 {{ new Date(pb.dateAchieved).toLocaleDateString() }}
@@ -129,7 +131,7 @@ onMounted(() => {
         <div class="lg:col-span-2 flex flex-col gap-6">
           <h2 class="text-xl font-black uppercase tracking-tight flex items-center gap-2 text-slate-400">
             <i class="pi pi-history text-slate-500" />
-            Log History
+            {{ t('pb.logHistory') }}
           </h2>
 
           <div class="bg-slate-800 rounded-3xl border border-slate-700 shadow-sm overflow-hidden">
@@ -143,7 +145,7 @@ onMounted(() => {
             >
               <Column
                 field="dateAchieved"
-                header="Date"
+                :header="t('pb.date')"
                 sortable
               >
                 <template #body="slotProps">
@@ -154,7 +156,7 @@ onMounted(() => {
               </Column>
               <Column
                 field="exerciseName"
-                header="Exercise"
+                :header="t('pb.exercise')"
                 sortable
               >
                 <template #body="slotProps">
@@ -165,7 +167,7 @@ onMounted(() => {
               </Column>
               <Column
                 field="weightValue"
-                header="Score"
+                :header="t('pb.score')"
                 sortable
               >
                 <template #body="slotProps">
@@ -175,7 +177,7 @@ onMounted(() => {
                 </template>
               </Column>
               <Column
-                header="Action"
+                :header="t('pb.action')"
                 class="text-right"
               >
                 <template #body="slotProps">
@@ -190,7 +192,7 @@ onMounted(() => {
               </Column>
               <template #empty>
                 <div class="py-12 text-center text-slate-500 font-medium italic bg-slate-800/50">
-                  No logs found.
+                  {{ t('pb.noLogsFound') }}
                 </div>
               </template>
             </DataTable>
@@ -202,7 +204,7 @@ onMounted(() => {
       <Dialog
         v-model:visible="showSubmitDialog"
         modal
-        header="Log Personal Best"
+        :header="t('pb.addRecord')"
         class="w-full max-w-md dark-dialog"
       >
         <WorkoutRecordForm
