@@ -542,8 +542,11 @@ onUnmounted(() => {
               v-else
               class="flex items-center gap-2"
             >
-              <span :class="['slot-badge', { 'is-full': slotProps.data.bookings.length >= slotProps.data.capacity }]">
-                {{ slotProps.data.bookings.length }} / {{ slotProps.data.capacity }}
+              <span :class="['slot-badge', { 'is-full': slotProps.data.bookings.filter(b => !b.isWaitlist).length >= slotProps.data.capacity }]">
+                {{ slotProps.data.bookings.filter(b => !b.isWaitlist).length }} / {{ slotProps.data.capacity }}
+                <template v-if="slotProps.data.bookings.filter(b => b.isWaitlist).length > 0">
+                  <span class="ml-1 opacity-70">(+{{ slotProps.data.bookings.filter(b => b.isWaitlist).length }})</span>
+                </template>
               </span>
             </div>
           </template>
@@ -663,8 +666,11 @@ onUnmounted(() => {
                       {{ course.user?.id === authStore.user?.id ? t('course.you') : course.user?.name }}
                     </div>
                   </div>
-                  <span :class="['slot-badge !py-1 !px-2', { 'is-full': course.bookings.length >= course.capacity }]">
-                    {{ course.bookings.length }} / {{ course.capacity }}
+                  <span :class="['slot-badge !py-1 !px-2', { 'is-full': course.bookings.filter(b => !b.isWaitlist).length >= course.capacity }]">
+                    {{ course.bookings.filter(b => !b.isWaitlist).length }} / {{ course.capacity }}
+                    <template v-if="course.bookings.filter(b => b.isWaitlist).length > 0">
+                      <span class="ml-1 opacity-70">(+{{ course.bookings.filter(b => b.isWaitlist).length }})</span>
+                    </template>
                   </span>
                 </div>
 

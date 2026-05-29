@@ -138,6 +138,11 @@ function isBookedByUser(course: any) {
     return course.bookings?.some((b: any) => b.user?.id === props.userId);
 }
 
+function isWaitlistByUser(course: any) {
+    if (!props.userId) return false;
+    return course.bookings?.some((b: any) => b.user?.id === props.userId && b.isWaitlist);
+}
+
 function isRestrictedForTrial(course: any) {
     return authStore.isTrial && course.allowTrial === false;
 }
@@ -288,16 +293,30 @@ function formatDayName(date: Date) {
                   <div class="card-right">
                     <div
                       v-if="isBookedByUser(course)"
-                      class="booked-indicator"
+                      class="booked-indicator-wrapper"
                     >
-                      <i class="pi pi-check-circle" />
+                      <div
+                        v-if="isWaitlistByUser(course)"
+                        class="waitlist-badge-mobile"
+                      >
+                        {{ t('app.waitlist').toUpperCase() }}
+                      </div>
+                      <i
+                        v-else
+                        class="pi pi-check-circle booked-indicator"
+                      />
                     </div>
                     <div
                       v-else
                       class="spots-pill"
                       :class="{ 'is-full': course.bookings.filter(b => !b.isWaitlist).length >= course.capacity }"
                     >
-                      {{ course.capacity - course.bookings.filter(b => !b.isWaitlist).length }}
+                      <template v-if="course.bookings.filter(b => !b.isWaitlist).length < course.capacity">
+                        {{ course.bookings.filter(b => !b.isWaitlist).length }} / {{ course.capacity }}
+                      </template>
+                      <template v-else>
+                        {{ t('calendar.full').toUpperCase() }}
+                      </template>
                       <i class="pi pi-users" />
                     </div>
                   </div>
@@ -535,6 +554,23 @@ function formatDayName(date: Date) {
     }
 
     .card-right {
+        .booked-indicator-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        .waitlist-badge-mobile {
+            background: #64748b;
+            color: white;
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.6rem;
+            font-weight: 900;
+            font-family: 'Barlow Condensed', sans-serif;
+            letter-spacing: 0.05em;
+        }
+
         .booked-indicator {
             color: #ffc107;
             font-size: 1.5rem;

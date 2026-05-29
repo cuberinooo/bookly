@@ -134,6 +134,11 @@ function isBookedByUser(course: any) {
     return course.bookings?.some((b: any) => b.user?.id === props.userId);
 }
 
+function isWaitlistByUser(course: any) {
+    if (!props.userId) return false;
+    return course.bookings?.some((b: any) => b.user?.id === props.userId && b.isWaitlist);
+}
+
 function isRestrictedForTrial(course: any) {
     const isTrial = authStore.isTrial;
     return isTrial && course.allowTrial === false;
@@ -314,8 +319,10 @@ function onSlotClick(day: Date, hour: number) {
                       <div
                         v-if="isBookedByUser(course)"
                         class="booked-badge"
+                        :class="{ 'is-waitlist': isWaitlistByUser(course) }"
                       >
-                        <i class="pi pi-check" /> {{ t('calendar.booked') }}
+                        <i :class="isWaitlistByUser(course) ? 'pi pi-clock' : 'pi pi-check'" />
+                        {{ isWaitlistByUser(course) ? t('app.waitlist').toUpperCase() : t('calendar.booked') }}
                       </div>
                       <div
                         v-if="isRestrictedForTrial(course)"
@@ -648,6 +655,11 @@ $border-color: #e2e8f0;
         z-index: 2;
 
         i { font-size: 0.5rem; }
+
+        &.is-waitlist {
+            background: #64748b;
+            color: white;
+        }
     }
 
     .postponed-badge {
