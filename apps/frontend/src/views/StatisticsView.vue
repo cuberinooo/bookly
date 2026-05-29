@@ -80,10 +80,17 @@ function setupCharts() {
     labels: stats.value.popularTimeSlots.map((s: any) => s.hour),
     datasets: [
       {
-        label: 'Frequency',
+        label: 'Sessions',
+        backgroundColor: '#cbd5e1', // Slate 300
+        borderColor: '#cbd5e1',
+        data: stats.value.popularTimeSlots.map((s: any) => s.count),
+        borderRadius: 4
+      },
+      {
+        label: 'User Attempts',
         backgroundColor: primaryColor,
         borderColor: primaryColor,
-        data: stats.value.popularTimeSlots.map((s: any) => s.count),
+        data: stats.value.popularTimeSlots.map((s: any) => s.attempts),
         borderRadius: 4
       }
     ]
@@ -94,11 +101,28 @@ function setupCharts() {
     aspectRatio: 0.8,
     plugins: {
       legend: {
-        display: false
+        display: true,
+        position: 'top',
+        align: 'end',
+        labels: {
+          boxWidth: 8,
+          boxHeight: 8,
+          usePointStyle: true,
+          pointStyle: 'circle',
+          font: {
+            size: 10,
+            weight: 'bold'
+          }
+        }
+      },
+      tooltip: {
+        mode: 'index',
+        intersect: false
       }
     },
     scales: {
       x: {
+        stacked: false,
         ticks: {
           color: textColorSecondary
         },
@@ -107,6 +131,7 @@ function setupCharts() {
         }
       },
       y: {
+        stacked: false,
         ticks: {
           color: textColorSecondary,
           stepSize: 1
@@ -278,12 +303,15 @@ onMounted(() => {
               >
                 <div class="flex justify-between items-center mb-2">
                   <span class="font-bold text-slate-800">{{ dayStat.day }}</span>
-                  <span class="text-xs font-bold bg-slate-100 text-slate-600 px-3 py-1 rounded-full">{{ dayStat.count }} sessions</span>
+                  <div class="flex gap-2">
+                    <span class="text-[10px] font-black bg-slate-100 text-slate-500 px-2 py-0.5 rounded uppercase">{{ dayStat.count }} sessions</span>
+                    <span class="text-[10px] font-black bg-amber-100 text-amber-600 px-2 py-0.5 rounded uppercase">{{ dayStat.attempts }} attempts</span>
+                  </div>
                 </div>
                 <div class="w-full bg-slate-100 rounded-full h-3">
                   <div
                     class="bg-primary-gradient rounded-full h-3 transition-all duration-1000 ease-out"
-                    :style="{ width: (dayStat.count / stats.popularDaysOfWeek[0].count * 100) + '%' }"
+                    :style="{ width: (dayStat.attempts / Math.max(...stats.popularDaysOfWeek.map((d: any) => d.attempts || 1)) * 100) + '%' }"
                   />
                 </div>
               </div>
@@ -312,12 +340,15 @@ onMounted(() => {
               >
                 <div class="flex justify-between items-center mb-2">
                   <span class="font-bold text-slate-800">{{ course.title }}</span>
-                  <span class="text-xs font-bold bg-slate-100 text-slate-600 px-3 py-1 rounded-full">{{ course.count }} sessions</span>
+                  <div class="flex gap-2">
+                    <span class="text-[10px] font-black bg-slate-100 text-slate-500 px-2 py-0.5 rounded uppercase">{{ course.count }} sessions</span>
+                    <span class="text-[10px] font-black bg-amber-100 text-amber-600 px-2 py-0.5 rounded uppercase">{{ course.attempts }} attempts</span>
+                  </div>
                 </div>
                 <div class="w-full bg-slate-100 rounded-full h-3">
                   <div
                     class="bg-primary-gradient rounded-full h-3 transition-all duration-1000 ease-out"
-                    :style="{ width: (course.count / stats.popularCourseTypes[0].count * 100) + '%' }"
+                    :style="{ width: (course.attempts / Math.max(...stats.popularCourseTypes.map((c: any) => c.attempts || 1)) * 100) + '%' }"
                   />
                 </div>
               </div>
