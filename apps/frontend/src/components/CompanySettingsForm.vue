@@ -2,7 +2,9 @@
 import { ref, onMounted, computed } from 'vue';
 import api from '../services/api';
 import { useToast } from 'primevue/usetoast';
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n();
 const toast = useToast();
 const settings = ref({
     name: ''
@@ -15,7 +17,7 @@ const registrationLink = computed(() => {
 
 function copyLink() {
     navigator.clipboard.writeText(registrationLink.value);
-    toast.add({ severity: 'success', summary: 'Copied', detail: 'Registration link copied to clipboard', life: 3000 });
+    toast.add({ severity: 'success', summary: t('app.copied'), detail: t('settings.registrationLinkCopied'), life: 3000 });
 }
 
 async function fetchSettings() {
@@ -26,7 +28,7 @@ async function fetchSettings() {
             name: response.data.name || ''
         };
     } catch (e) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load company settings', life: 5000 });
+        toast.add({ severity: 'error', summary: t('app.error'), detail: t('settings.loadFailed'), life: 5000 });
     } finally {
         loading.value = false;
     }
@@ -50,18 +52,18 @@ onMounted(fetchSettings);
     >
       <div class="settings-card phoenix-card">
         <h3 class="settings-title">
-          Company Identity
+          {{ $t('settings.identityTitle') }}
         </h3>
         <div class="flex flex-col gap-4">
           <p class="text-sm text-slate-600">
-            This is your registered company identity used throughout the system.
-            <span class="block mt-1 font-bold text-amber-600">Note: The company name is locked and cannot be changed by administrators.</span>
+            {{ $t('settings.identityNote') }}
+            <span class="block mt-1 font-bold text-amber-600">{{ $t('settings.noteCompanyNameLocked') }}</span>
           </p>
           <div class="field flex flex-col gap-2">
             <label
               class="font-bold uppercase text-xs"
               for="companyName"
-            >Company Name</label>
+            >{{ $t('settings.companyName') }}</label>
             <InputText
               id="companyName"
               :model-value="settings.name"
@@ -75,17 +77,17 @@ onMounted(fetchSettings);
 
         <div class="registration-link-section">
           <h4 class="text-sm font-bold uppercase tracking-wider text-slate-900 mb-2">
-            Member Registration Link
+            {{ $t('settings.registrationLinkTitle') }}
           </h4>
           <p class="text-sm text-slate-600 mb-4">
-            Share this link with new members to make their registration easier. The company name will be pre-filled and locked.
+            {{ $t('settings.registrationLinkNote') }}
           </p>
           <div class="flex gap-2 p-2 bg-slate-50 border border-slate-200 rounded-lg items-center">
             <code class="text-xs text-slate-700 flex-1 overflow-hidden text-ellipsis whitespace-nowrap px-2">
               {{ registrationLink }}
             </code>
             <Button
-              v-tooltip.top="'Copy Link'"
+              v-tooltip.top="$t('settings.copyLink')"
               icon="pi pi-copy"
               severity="secondary"
               text

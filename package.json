@@ -2,7 +2,9 @@
   "name": "@booking-app/source",
   "version": "0.0.0",
   "license": "MIT",
-  "scripts": {},
+  "scripts": {
+    "i18n-check": "vue-i18n-extract report --vueFiles './apps/frontend/src/**/*.vue' --languageFiles './apps/frontend/src/locales/*.json'"
+  },
   "private": true,
   "devDependencies": {
     "@eslint/js": "^10.0.0",
@@ -45,6 +47,7 @@
     "vite": "^8.0.0",
     "vite-plugin-pwa": "^1.3.0",
     "vitest": "~4.1.0",
+    "vue-i18n-extract": "^2.0.7",
     "vue-tsc": "^3.0.0"
   },
   "dependencies": {

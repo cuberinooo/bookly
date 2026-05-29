@@ -1,27 +1,29 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useAuthStore } from '../store/useAuthStore';
+import { useI18n } from 'vue-i18n';
 import TrainerSettingsForm from '../components/TrainerSettingsForm.vue';
 import UserManagementTab from '../components/UserManagementTab.vue';
 import LegalSettingsForm from '../components/LegalSettingsForm.vue';
 import CompanySettingsForm from '../components/CompanySettingsForm.vue';
 import MailSettingsTab from '../components/MailSettingsTab.vue';
 
+const { t } = useI18n();
 const authStore = useAuthStore();
 
 const activeTabs = computed(() => {
     const tabs = [];
     if (authStore.isAdmin) {
-        tabs.push({ id: 'users', label: 'ATHLETES', component: UserManagementTab });
-        tabs.push({ id: 'company', label: 'IDENTITY', component: CompanySettingsForm });
-        tabs.push({ id: 'mail', label: 'EMAIL TEMPLATES', component: MailSettingsTab });
-        tabs.push({ id: 'legal', label: 'LEGAL & COMPLIANCE', component: LegalSettingsForm });
+        tabs.push({ id: 'users', label: t('settings.tabs.athletes'), component: UserManagementTab });
+        tabs.push({ id: 'company', label: t('settings.tabs.identity'), component: CompanySettingsForm });
+        tabs.push({ id: 'mail', label: t('settings.tabs.emailTemplates'), component: MailSettingsTab });
+        tabs.push({ id: 'legal', label: t('settings.tabs.legal'), component: LegalSettingsForm });
     }
     if (authStore.isTrainer) {
-        tabs.push({ id: 'system', label: 'SYSTEM & ALERTS', component: TrainerSettingsForm });
+        tabs.push({ id: 'system', label: t('settings.tabs.system'), component: TrainerSettingsForm });
     }
     if (!authStore.isAdmin && !authStore.isTrainer) {
-        tabs.push({ id: 'privacy', label: 'PRIVACY', component: null });
+        tabs.push({ id: 'privacy', label: t('settings.tabs.privacy'), component: null });
     }
     return tabs;
 });
@@ -31,10 +33,10 @@ const activeTabs = computed(() => {
   <div class="settings-view max-w-6xl mx-auto py-6 md:py-12 px-2 md:px-4">
     <div class="mb-6 md:mb-10">
       <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight">
-        System Settings
+        {{ t('settings.title') }}
       </h1>
       <p class="text-sm md:text-base text-slate-600 mt-2 font-medium">
-        Configure your athletic workspace and system preferences
+        {{ t('settings.subtitle') }}
       </p>
     </div>
 
@@ -72,13 +74,13 @@ const activeTabs = computed(() => {
           >
             <i class="pi pi-shield text-4xl text-slate-300 mb-4" />
             <h2 class="text-lg md:text-xl font-bold text-slate-900 mb-2">
-              Member Privacy
+              {{ t('settings.memberPrivacyTitle') }}
             </h2>
             <p class="text-sm md:text-base text-slate-600">
-              Your privacy is managed by the course trainers. You can update your personal profile information in the Profile section.
+              {{ t('settings.memberPrivacyNote') }}
             </p>
             <Button
-              label="Go to Profile"
+              :label="t('settings.goToProfile')"
               icon="pi pi-user"
               variant="text"
               class="mt-4"

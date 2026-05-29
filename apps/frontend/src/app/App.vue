@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import {RouterLink, RouterView} from 'vue-router';
+import { RouterLink, RouterView } from 'vue-router';
 import { useAuthStore } from '../store/useAuthStore';
 import { useSettingsStore } from '../store/useSettingsStore';
-import {useRouter} from 'vue-router';
-import {ref, computed, onMounted, watch, onUnmounted} from 'vue';
+import { useRouter } from 'vue-router';
+import { ref, computed, onMounted, watch, onUnmounted } from 'vue';
 import api from '../services/api';
-import {useToast} from 'primevue/usetoast';
+import { useToast } from 'primevue/usetoast';
 import TheFooter from '../components/TheFooter.vue';
 import TheMobileNav from '../components/TheMobileNav.vue';
 import VersionUpdateToast from '../components/VersionUpdateToast.vue';
@@ -32,27 +32,95 @@ watch(locale, (newLocale) => {
   localStorage.setItem('app_locale', newLocale);
   if (newLocale === 'de') {
     primevue.config.locale = {
-        dayNames: ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"],
-        dayNamesShort: ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"],
-        dayNamesMin: ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"],
-        monthNames: ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"],
-        monthNamesShort: ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"],
-        today: 'Heute',
-        clear: 'Löschen',
-        dateFormat: 'dd.mm.yy',
-        firstDayOfWeek: 1
+      dayNames: [
+        'Sonntag',
+        'Montag',
+        'Dienstag',
+        'Mittwoch',
+        'Donnerstag',
+        'Freitag',
+        'Samstag',
+      ],
+      dayNamesShort: ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'],
+      dayNamesMin: ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'],
+      monthNames: [
+        'Januar',
+        'Februar',
+        'März',
+        'April',
+        'Mai',
+        'Juni',
+        'Juli',
+        'August',
+        'September',
+        'Oktober',
+        'November',
+        'Dezember',
+      ],
+      monthNamesShort: [
+        'Jan',
+        'Feb',
+        'Mär',
+        'Apr',
+        'Mai',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Okt',
+        'Nov',
+        'Dez',
+      ],
+      today: 'Heute',
+      clear: 'Löschen',
+      dateFormat: 'dd.mm.yy',
+      firstDayOfWeek: 1,
     };
   } else {
     primevue.config.locale = {
-        dayNames: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
-        dayNamesShort: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
-        dayNamesMin: ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"],
-        monthNames: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
-        monthNamesShort: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
-        today: 'Today',
-        clear: 'Clear',
-        dateFormat: 'mm/dd/yy',
-        firstDayOfWeek: 0
+      dayNames: [
+        'Sunday',
+        'Monday',
+        'Tuesday',
+        'Wednesday',
+        'Thursday',
+        'Friday',
+        'Saturday',
+      ],
+      dayNamesShort: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+      dayNamesMin: ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'],
+      monthNames: [
+        'January',
+        'February',
+        'March',
+        'April',
+        'May',
+        'June',
+        'July',
+        'August',
+        'September',
+        'October',
+        'November',
+        'December',
+      ],
+      monthNamesShort: [
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec',
+      ],
+      today: 'Today',
+      clear: 'Clear',
+      dateFormat: 'mm/dd/yy',
+      firstDayOfWeek: 0,
     };
   }
 });
@@ -77,7 +145,9 @@ const passwordValidation = computed(() => {
     lowercase: /[a-z]/.test(newPassword.value),
     number: /[0-9]/.test(newPassword.value),
     special: /[^A-Za-z0-9]/.test(newPassword.value),
-    match: newPassword.value === confirmNewPassword.value && newPassword.value !== ''
+    match:
+      newPassword.value === confirmNewPassword.value &&
+      newPassword.value !== '',
   };
 });
 
@@ -106,8 +176,15 @@ const isAppReady = computed(() => {
 async function updatePassword() {
   changingPassword.value = true;
   try {
-    const response = await api.post('/user/change-password', {password: newPassword.value});
-    toast.add({severity: 'success', summary: t('app.success'), detail: t('app.passwordUpdated'), life: 5000});
+    const response = await api.post('/user/change-password', {
+      password: newPassword.value,
+    });
+    toast.add({
+      severity: 'success',
+      summary: t('app.success'),
+      detail: t('app.passwordUpdated'),
+      life: 5000,
+    });
 
     if (response.data.token) {
       authStore.setToken(response.data.token);
@@ -119,7 +196,7 @@ async function updatePassword() {
       severity: 'error',
       summary: t('app.error'),
       detail: e.response?.data?.error || t('app.failedToUpdatePassword'),
-      life: 5000
+      life: 5000,
     });
   } finally {
     changingPassword.value = false;
@@ -127,12 +204,14 @@ async function updatePassword() {
 }
 
 const dashboardLabel = computed(() => {
-  return authStore.isTrainer && authStore.viewMode === 'trainer' ? t('app.dashboard') : t('app.myBookings');
+  return authStore.isTrainer && authStore.viewMode === 'trainer'
+    ? t('app.dashboard')
+    : t('app.myBookings');
 });
 
 const canSeeLeaderboard = computed(() => {
   const allowedRoles = ['ROLE_MEMBER', 'ROLE_TRAINER', 'ROLE_ADMIN'];
-  return authStore.user?.roles.some(role => allowedRoles.includes(role));
+  return authStore.user?.roles.some((role) => allowedRoles.includes(role));
 });
 
 const menuItems = computed(() => {
@@ -140,26 +219,42 @@ const menuItems = computed(() => {
     {
       label: t('app.myAccount'),
       items: [
-        {label: t('app.profile'), icon: 'pi pi-user', command: () => router.push('/profile')},
-        {label: t('app.myPersonalBests'), icon: 'pi pi-trophy', command: () => router.push('/personal-bests')},
-        {label: t('app.settings'), icon: 'pi pi-cog', command: () => router.push('/settings')}
-      ]
-    }
+        {
+          label: t('app.profile'),
+          icon: 'pi pi-user',
+          command: () => router.push('/profile'),
+        },
+        {
+          label: t('app.myPersonalBests'),
+          icon: 'pi pi-trophy',
+          command: () => router.push('/personal-bests'),
+        },
+        {
+          label: t('app.settings'),
+          icon: 'pi pi-cog',
+          command: () => router.push('/settings'),
+        },
+      ],
+    },
   ];
 
   if (authStore.isTrainer) {
     items[0].items.push({
       label: t('app.statistics'),
       icon: 'pi pi-chart-bar',
-      command: () => router.push('/statistics')
+      command: () => router.push('/statistics'),
     });
   }
 
   items.push({
     label: t('app.accountAction'),
     items: [
-      {label: t('app.logout'), icon: 'pi pi-sign-out', command: () => logout()}
-    ]
+      {
+        label: t('app.logout'),
+        icon: 'pi pi-sign-out',
+        command: () => logout(),
+      },
+    ],
   });
 
   return items;
@@ -179,7 +274,7 @@ const profilePictureUrl = computed(() => {
 
 async function logout() {
   await authStore.logout();
-  router.push({name: 'login'});
+  router.push({ name: 'login' });
 }
 
 watch(
@@ -192,7 +287,7 @@ watch(
       settingsStore.fetchSettings();
       mercureService.init();
     }
-  }
+  },
 );
 
 onMounted(async () => {
@@ -202,17 +297,13 @@ onMounted(async () => {
     mercureService.init();
   }
 });
-
 </script>
 
 <template>
   <Toast position="bottom-right" />
   <ConfirmDialog />
 
-  <div
-    v-if="!isAppReady"
-    class="loading-overlay"
-  >
+  <div v-if="!isAppReady" class="loading-overlay">
     <div class="spinner" />
     <p class="loading-text">
       {{ companyName }}
@@ -228,24 +319,14 @@ onMounted(async () => {
           </RouterLink>
         </div>
         <div class="nav-links">
-          <RouterLink
-            v-if="authStore.isLoggedIn"
-            to="/"
-            class="desktop-only"
-          >
+          <RouterLink v-if="authStore.isLoggedIn" to="/" class="desktop-only">
             {{ t('app.courses') }}
           </RouterLink>
           <template v-if="authStore.isLoggedIn">
-            <RouterLink
-              to="/dashboard"
-              class="desktop-only"
-            >
+            <RouterLink to="/dashboard" class="desktop-only">
               {{ dashboardLabel }}
             </RouterLink>
-            <RouterLink
-              to="/meetups"
-              class="desktop-only"
-            >
+            <RouterLink to="/meetups" class="desktop-only">
               {{ t('app.meetups') }}
             </RouterLink>
             <RouterLink
@@ -255,75 +336,72 @@ onMounted(async () => {
             >
               {{ t('app.rankings') }}
             </RouterLink>
-
-            <div class="lang-switcher">
-              <Select
-                v-model="locale"
-                :options="[{label: 'EN', value: 'en', flag: '🇺🇸'}, {label: 'DE', value: 'de', flag: '🇩🇪'}]"
-                optionLabel="label"
-                optionValue="value"
-                class="lang-select"
-              >
-              </Select>
-            </div>
-
-            <div class="profile-dropdown-wrapper">
-              <Button
-                type="button"
-                severity="secondary"
-                rounded
-                class="profile-btn"
-                @click="toggleMenu"
-              >
-                <img
-                  v-if="profilePictureUrl"
-                  :src="profilePictureUrl"
-                  alt="Profile"
-                  class="profile-image-small"
-                >
-                <i
-                  v-else
-                  class="pi pi-user"
-                />
-
-                <!-- Role Indicator Badge -->
-                <div
-                  v-if="authStore.isTrainer"
-                  class="role-badge"
-                  :class="authStore.viewMode"
-                >
-                  <i :class="authStore.viewMode === 'trainer' ? 'pi pi-star-fill' : 'pi pi-user'" />
-                </div>
-              </Button>
-              <Menu
-                ref="menu"
-                :model="menuItems"
-                :popup="true"
-              >
-                <template #start>
-                  <div
-                    v-if="authStore.user"
-                    class="menu-user-info"
-                  >
-                    <span class="p-2 menu-user-name">{{ authStore.user.name }}</span>
-                    <div
-                      v-if="authStore.isTrainer"
-                      class="toggle-container"
-                    >
-                      <ToggleButton
-                        :on-label="t('app.trainerMode')"
-                        :off-label="t('app.memberMode')"
-                        on-icon="pi pi-star-fill"
-                        off-icon="pi pi-user"
-                        :model-value="authStore.viewMode === 'trainer'"
-                        @update:model-value="authStore.toggleViewMode()"
-                      />
-                    </div>
-                  </div>
-                </template>
-              </Menu>
-            </div>
           </template>
+
+          <div class="lang-switcher">
+            <Select
+              v-model="locale"
+              :options="[
+                { label: 'EN', value: 'en', flag: '🇺🇸' },
+                { label: 'DE', value: 'de', flag: '🇩🇪' },
+              ]"
+              option-label="label"
+              option-value="value"
+              class="lang-select"
+            />
+          </div>
+
+          <div v-if="authStore.isLoggedIn" class="profile-dropdown-wrapper">
+            <Button
+              type="button"
+              severity="secondary"
+              rounded
+              class="profile-btn"
+              @click="toggleMenu"
+            >
+              <img
+                v-if="profilePictureUrl"
+                :src="profilePictureUrl"
+                alt="Profile"
+                class="profile-image-small"
+              />
+              <i v-else class="pi pi-user" />
+
+              <!-- Role Indicator Badge -->
+              <div
+                v-if="authStore.isTrainer"
+                class="role-badge"
+                :class="authStore.viewMode"
+              >
+                <i
+                  :class="
+                    authStore.viewMode === 'trainer'
+                      ? 'pi pi-star-fill'
+                      : 'pi pi-user'
+                  "
+                />
+              </div>
+            </Button>
+            <Menu ref="menu" :model="menuItems" :popup="true">
+              <template #start>
+                <div v-if="authStore.user" class="menu-user-info">
+                  <span class="p-2 menu-user-name">{{
+                    authStore.user.name
+                  }}</span>
+                  <div v-if="authStore.isTrainer" class="toggle-container">
+                    <ToggleButton
+                      :on-label="t('app.trainerMode')"
+                      :off-label="t('app.memberMode')"
+                      on-icon="pi pi-star-fill"
+                      off-icon="pi pi-user"
+                      :model-value="authStore.viewMode === 'trainer'"
+                      @update:model-value="authStore.toggleViewMode()"
+                    />
+                  </div>
+                </div>
+              </template>
+            </Menu>
+          </div>
           <template v-else>
             <RouterLink to="/login">
               {{ t('app.login') }}
@@ -338,10 +416,7 @@ onMounted(async () => {
 
     <main class="container">
       <router-view v-slot="{ Component }">
-        <transition
-          name="fade-slide"
-          mode="out-in"
-        >
+        <transition name="fade-slide" mode="out-in">
           <component :is="Component" />
         </transition>
       </router-view>
@@ -358,7 +433,9 @@ onMounted(async () => {
       class="w-full max-w-md"
     >
       <div class="flex flex-col gap-6 py-4">
-        <div class="p-4 bg-amber-50 border-l-4 border-amber-500 text-amber-900 text-sm mb-2">
+        <div
+          class="p-4 bg-amber-50 border-l-4 border-amber-500 text-amber-900 text-sm mb-2"
+        >
           <p class="font-bold mb-1">
             {{ t('app.securityUpdateRequired') }}
           </p>
@@ -369,7 +446,8 @@ onMounted(async () => {
           <label
             for="newPassword"
             class="font-bold text-sm uppercase tracking-wider text-slate-500"
-          >{{ t('app.newPassword') }}</label>
+            >{{ t('app.newPassword') }}</label
+          >
           <Password
             v-model="newPassword"
             input-id="newPassword"
@@ -386,19 +464,49 @@ onMounted(async () => {
                 {{ t('app.requirements') }}
               </p>
               <ul class="pl-2 ml-2 mt-2 list-disc flex flex-col gap-1 text-xs">
-                <li :class="passwordValidation.minLength ? 'text-green-600' : 'text-slate-400'">
+                <li
+                  :class="
+                    passwordValidation.minLength
+                      ? 'text-green-600'
+                      : 'text-slate-400'
+                  "
+                >
                   {{ t('app.atLeast8Chars') }}
                 </li>
-                <li :class="passwordValidation.uppercase ? 'text-green-600' : 'text-slate-400'">
+                <li
+                  :class="
+                    passwordValidation.uppercase
+                      ? 'text-green-600'
+                      : 'text-slate-400'
+                  "
+                >
                   {{ t('app.atLeastOneUppercase') }}
                 </li>
-                <li :class="passwordValidation.lowercase ? 'text-green-600' : 'text-slate-400'">
+                <li
+                  :class="
+                    passwordValidation.lowercase
+                      ? 'text-green-600'
+                      : 'text-slate-400'
+                  "
+                >
                   {{ t('app.atLeastOneLowercase') }}
                 </li>
-                <li :class="passwordValidation.number ? 'text-green-600' : 'text-slate-400'">
+                <li
+                  :class="
+                    passwordValidation.number
+                      ? 'text-green-600'
+                      : 'text-slate-400'
+                  "
+                >
                   {{ t('app.atLeastOneNumber') }}
                 </li>
-                <li :class="passwordValidation.special ? 'text-green-600' : 'text-slate-400'">
+                <li
+                  :class="
+                    passwordValidation.special
+                      ? 'text-green-600'
+                      : 'text-slate-400'
+                  "
+                >
                   {{ t('app.atLeastOneSpecial') }}
                 </li>
               </ul>
@@ -408,34 +516,19 @@ onMounted(async () => {
             v-if="newPasswordTouched && !isNewPasswordValid"
             class="mt-2 flex flex-col gap-1 text-xs font-bold"
           >
-            <li
-              v-if="!passwordValidation.minLength"
-              class="text-red-500"
-            >
+            <li v-if="!passwordValidation.minLength" class="text-red-500">
               • {{ t('app.atLeast8Chars') }}
             </li>
-            <li
-              v-if="!passwordValidation.uppercase"
-              class="text-red-500"
-            >
+            <li v-if="!passwordValidation.uppercase" class="text-red-500">
               • {{ t('app.atLeastOneUppercase') }}
             </li>
-            <li
-              v-if="!passwordValidation.lowercase"
-              class="text-red-500"
-            >
+            <li v-if="!passwordValidation.lowercase" class="text-red-500">
               • {{ t('app.atLeastOneLowercase') }}
             </li>
-            <li
-              v-if="!passwordValidation.number"
-              class="text-red-500"
-            >
+            <li v-if="!passwordValidation.number" class="text-red-500">
               • {{ t('app.atLeastOneNumber') }}
             </li>
-            <li
-              v-if="!passwordValidation.special"
-              class="text-red-500"
-            >
+            <li v-if="!passwordValidation.special" class="text-red-500">
               • {{ t('app.atLeastOneSpecial') }}
             </li>
           </ul>
@@ -445,18 +538,22 @@ onMounted(async () => {
           <label
             for="confirmNewPassword"
             class="font-bold text-sm uppercase tracking-wider text-slate-500"
-          >{{ t('app.confirmNewPassword') }}</label>
+            >{{ t('app.confirmNewPassword') }}</label
+          >
           <InputText
             id="confirmNewPassword"
             v-model="confirmNewPassword"
             type="password"
             placeholder="••••••••"
-            :class="{ 'p-invalid': confirmNewPassword && !passwordValidation.match }"
+            :class="{
+              'p-invalid': confirmNewPassword && !passwordValidation.match,
+            }"
           />
           <small
             v-if="confirmNewPassword && !passwordValidation.match"
             class="text-red-500 font-bold"
-          >{{ t('app.passwordsDoNotMatch') }}</small>
+            >{{ t('app.passwordsDoNotMatch') }}</small
+          >
         </div>
       </div>
       <template #footer>
@@ -478,7 +575,9 @@ onMounted(async () => {
 
 <style scoped lang="scss">
 /* Essential: Prevents browser bounce physics from fighting your pull-to-refresh */
-html, body, #app {
+html,
+body,
+#app {
   overscroll-behavior-y: contain;
 }
 
@@ -641,13 +740,17 @@ html, body, #app {
 
       &.trainer {
         background: var(--bg-primary-color);
-        i { color: white; }
+        i {
+          color: white;
+        }
         box-shadow: 0 0 8px rgba(255, 193, 7, 0.4);
       }
 
       &.member {
         background: var(--bg-primary-color);
-        i { color: white; }
+        i {
+          color: white;
+        }
       }
     }
   }
@@ -743,7 +846,8 @@ html, body, #app {
 }
 
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {
@@ -767,4 +871,3 @@ html, body, #app {
   transform: translateX(-20px);
 }
 </style>
-
