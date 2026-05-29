@@ -303,7 +303,10 @@ onMounted(async () => {
   <Toast position="bottom-right" />
   <ConfirmDialog />
 
-  <div v-if="!isAppReady" class="loading-overlay">
+  <div
+    v-if="!isAppReady"
+    class="loading-overlay"
+  >
     <div class="spinner" />
     <p class="loading-text">
       {{ companyName }}
@@ -319,14 +322,24 @@ onMounted(async () => {
           </RouterLink>
         </div>
         <div class="nav-links">
-          <RouterLink v-if="authStore.isLoggedIn" to="/" class="desktop-only">
+          <RouterLink
+            v-if="authStore.isLoggedIn"
+            to="/"
+            class="desktop-only"
+          >
             {{ t('app.courses') }}
           </RouterLink>
           <template v-if="authStore.isLoggedIn">
-            <RouterLink to="/dashboard" class="desktop-only">
+            <RouterLink
+              to="/dashboard"
+              class="desktop-only"
+            >
               {{ dashboardLabel }}
             </RouterLink>
-            <RouterLink to="/meetups" class="desktop-only">
+            <RouterLink
+              to="/meetups"
+              class="desktop-only"
+            >
               {{ t('app.meetups') }}
             </RouterLink>
             <RouterLink
@@ -351,7 +364,10 @@ onMounted(async () => {
             />
           </div>
 
-          <div v-if="authStore.isLoggedIn" class="profile-dropdown-wrapper">
+          <div
+            v-if="authStore.isLoggedIn"
+            class="profile-dropdown-wrapper"
+          >
             <Button
               type="button"
               severity="secondary"
@@ -364,8 +380,11 @@ onMounted(async () => {
                 :src="profilePictureUrl"
                 alt="Profile"
                 class="profile-image-small"
+              >
+              <i
+                v-else
+                class="pi pi-user"
               />
-              <i v-else class="pi pi-user" />
 
               <!-- Role Indicator Badge -->
               <div
@@ -382,13 +401,23 @@ onMounted(async () => {
                 />
               </div>
             </Button>
-            <Menu ref="menu" :model="menuItems" :popup="true">
+            <Menu
+              ref="menu"
+              :model="menuItems"
+              :popup="true"
+            >
               <template #start>
-                <div v-if="authStore.user" class="menu-user-info">
+                <div
+                  v-if="authStore.user"
+                  class="menu-user-info"
+                >
                   <span class="p-2 menu-user-name">{{
                     authStore.user.name
                   }}</span>
-                  <div v-if="authStore.isTrainer" class="toggle-container">
+                  <div
+                    v-if="authStore.isTrainer"
+                    class="toggle-container"
+                  >
                     <ToggleButton
                       :on-label="t('app.trainerMode')"
                       :off-label="t('app.memberMode')"
@@ -416,7 +445,10 @@ onMounted(async () => {
 
     <main class="container">
       <router-view v-slot="{ Component }">
-        <transition name="fade-slide" mode="out-in">
+        <transition
+          name="fade-slide"
+          mode="out-in"
+        >
           <component :is="Component" />
         </transition>
       </router-view>
@@ -446,8 +478,7 @@ onMounted(async () => {
           <label
             for="newPassword"
             class="font-bold text-sm uppercase tracking-wider text-slate-500"
-            >{{ t('app.newPassword') }}</label
-          >
+          >{{ t('app.newPassword') }}</label>
           <Password
             v-model="newPassword"
             input-id="newPassword"
@@ -516,19 +547,34 @@ onMounted(async () => {
             v-if="newPasswordTouched && !isNewPasswordValid"
             class="mt-2 flex flex-col gap-1 text-xs font-bold"
           >
-            <li v-if="!passwordValidation.minLength" class="text-red-500">
+            <li
+              v-if="!passwordValidation.minLength"
+              class="text-red-500"
+            >
               • {{ t('app.atLeast8Chars') }}
             </li>
-            <li v-if="!passwordValidation.uppercase" class="text-red-500">
+            <li
+              v-if="!passwordValidation.uppercase"
+              class="text-red-500"
+            >
               • {{ t('app.atLeastOneUppercase') }}
             </li>
-            <li v-if="!passwordValidation.lowercase" class="text-red-500">
+            <li
+              v-if="!passwordValidation.lowercase"
+              class="text-red-500"
+            >
               • {{ t('app.atLeastOneLowercase') }}
             </li>
-            <li v-if="!passwordValidation.number" class="text-red-500">
+            <li
+              v-if="!passwordValidation.number"
+              class="text-red-500"
+            >
               • {{ t('app.atLeastOneNumber') }}
             </li>
-            <li v-if="!passwordValidation.special" class="text-red-500">
+            <li
+              v-if="!passwordValidation.special"
+              class="text-red-500"
+            >
               • {{ t('app.atLeastOneSpecial') }}
             </li>
           </ul>
@@ -538,8 +584,7 @@ onMounted(async () => {
           <label
             for="confirmNewPassword"
             class="font-bold text-sm uppercase tracking-wider text-slate-500"
-            >{{ t('app.confirmNewPassword') }}</label
-          >
+          >{{ t('app.confirmNewPassword') }}</label>
           <InputText
             id="confirmNewPassword"
             v-model="confirmNewPassword"
@@ -552,8 +597,7 @@ onMounted(async () => {
           <small
             v-if="confirmNewPassword && !passwordValidation.match"
             class="text-red-500 font-bold"
-            >{{ t('app.passwordsDoNotMatch') }}</small
-          >
+          >{{ t('app.passwordsDoNotMatch') }}</small>
         </div>
       </div>
       <template #footer>

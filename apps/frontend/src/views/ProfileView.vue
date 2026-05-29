@@ -179,13 +179,22 @@ onMounted(fetchProfile);
 
     <InactiveAccountAlert class="mb-8" />
 
-    <Tabs value="0" class="mb-8">
+    <Tabs
+      value="0"
+      class="mb-8"
+    >
       <TabList class="mb-6">
-        <Tab value="0" class="flex items-center gap-2">
+        <Tab
+          value="0"
+          class="flex items-center gap-2"
+        >
           <i class="pi pi-user" />
           <span>{{ t('profile.myAccount') }}</span>
         </Tab>
-        <Tab value="1" class="flex items-center gap-2">
+        <Tab
+          value="1"
+          class="flex items-center gap-2"
+        >
           <i class="pi pi-list-check" />
           <span>{{ t('profile.onboardingGuide') }}</span>
         </Tab>

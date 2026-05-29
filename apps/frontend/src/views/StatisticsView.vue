@@ -154,7 +154,9 @@ onMounted(() => {
           <i class="pi pi-user text-amber-500" />
           Your Performance
         </h2>
-        <p class="text-slate-400 text-sm font-bold uppercase tracking-widest mt-1">Personal coaching metrics and volume</p>
+        <p class="text-slate-400 text-sm font-bold uppercase tracking-widest mt-1">
+          Personal coaching metrics and volume
+        </p>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
@@ -217,7 +219,9 @@ onMounted(() => {
           <i class="pi pi-globe text-amber-500" />
           Global Insights
         </h2>
-        <p class="text-slate-400 text-sm font-bold uppercase tracking-widest mt-1">Gym-wide trends and community behavior</p>
+        <p class="text-slate-400 text-sm font-bold uppercase tracking-widest mt-1">
+          Gym-wide trends and community behavior
+        </p>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">

@@ -100,7 +100,9 @@ onMounted(() => {
             v-if="personalBests.length === 0"
             class="p-8 border-2 border-dashed border-slate-700 rounded-3xl text-center bg-slate-800/50"
           >
-            <p class="text-slate-500 font-medium italic">{{ t('pb.noRecords') }}</p>
+            <p class="text-slate-500 font-medium italic">
+              {{ t('pb.noRecords') }}
+            </p>
           </div>
 
           <div

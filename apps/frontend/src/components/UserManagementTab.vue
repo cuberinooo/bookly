@@ -243,10 +243,10 @@ onMounted(fetchUsers);
           />
           <Button
             v-if="searchQuery || selectedRoles.length > 0"
+            v-tooltip.top="$t('admin.users.clearFilters')"
             icon="pi pi-filter-slash"
             severity="secondary"
             variant="text"
-            v-tooltip.top="$t('admin.users.clearFilters')"
             class="flex-shrink-0"
             @click="searchQuery = ''; selectedRoles = []"
           />
