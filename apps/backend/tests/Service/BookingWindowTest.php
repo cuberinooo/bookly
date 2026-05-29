@@ -14,6 +14,7 @@ use App\Service\BookingService;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 class BookingWindowTest extends TestCase
 {
@@ -21,6 +22,7 @@ class BookingWindowTest extends TestCase
     private $bookingRepository;
     private $settingsRepository;
     private $mailer;
+    private $translator;
     private $bookingService;
 
     protected function setUp(): void
@@ -31,12 +33,15 @@ class BookingWindowTest extends TestCase
             ->disableOriginalConstructor()
             ->getMock();
         $this->mailer = $this->createMock(MailerInterface::class);
+        $this->translator = $this->createMock(TranslatorInterface::class);
+        $this->translator->method('trans')->willReturnArgument(0);
 
         $this->bookingService = new BookingService(
             $this->entityManager,
             $this->bookingRepository,
             $this->settingsRepository,
-            $this->mailer
+            $this->mailer,
+            $this->translator
         );
     }
 
@@ -72,7 +77,7 @@ class BookingWindowTest extends TestCase
         $course->setEndTime((clone $nextMonday)->modify('+1 hour'));
 
         $this->expectException(\Exception::class);
-        $this->expectExceptionMessage('Bookings are only allowed for the current week.');
+        $this->expectExceptionMessage('error.booking_window_current_week');
 
         $this->bookingService->book($course, $user);
     }
@@ -99,16 +104,12 @@ class BookingWindowTest extends TestCase
 
         $this->settingsRepository->method('find')->willReturn($settings);
 
-        // Course starts at the end of this week (Sunday 23:00)
-        // Ensure it is in the future relative to "now"
         $courseDate = new \DateTime();
         $day = (int) $courseDate->format('w');
         $daysToSunday = 0 === $day ? 0 : 7 - $day;
         $courseDate->modify("+$daysToSunday days");
         $courseDate->setTime(23, 0);
 
-        // If today is Sunday and 23:00 has passed, we need a better way to test "current week"
-        // but for unit tests, we can just ensure it's in the future.
         if ($courseDate <= new \DateTime()) {
             $courseDate->modify('+1 hour');
         }
@@ -126,7 +127,6 @@ class BookingWindowTest extends TestCase
         $this->bookingRepository->method('findOneBy')->willReturn(null);
         $this->bookingRepository->method('count')->willReturn(0);
 
-        // Should NOT throw exception
         $this->bookingService->book($course, $user);
 
         $this->assertTrue(true);

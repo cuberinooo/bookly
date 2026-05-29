@@ -332,10 +332,10 @@ class BookingService
 
         if ($course->getStartTime() > $deadline) {
             $message = match ($window) {
-                BookingWindow::CURRENT_WEEK => 'Bookings are only allowed for the current week.',
-                BookingWindow::TWO_WEEKS => 'Bookings are only allowed for the next two weeks.',
-                BookingWindow::MONTH => 'Bookings are only allowed for the next month.',
-                default => 'Course is outside the booking window.',
+                BookingWindow::CURRENT_WEEK => $this->translator->trans('error.booking_window_current_week'),
+                BookingWindow::TWO_WEEKS => $this->translator->trans('error.booking_window_two_weeks'),
+                BookingWindow::MONTH => $this->translator->trans('error.booking_window_month'),
+                default => $this->translator->trans('error.booking_window_outside'),
             };
             throw new \Exception($message);
         }

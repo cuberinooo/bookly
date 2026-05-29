@@ -15,20 +15,26 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 class MeetupServiceTest extends TestCase
 {
     private $entityManager;
     private $mailer;
+    private $translator;
     private $service;
 
     protected function setUp(): void
     {
         $this->entityManager = $this->createMock(EntityManagerInterface::class);
         $this->mailer = $this->createMock(MailerInterface::class);
+        $this->translator = $this->createMock(TranslatorInterface::class);
+        $this->translator->method('trans')->willReturnArgument(0);
+
         $this->service = new MeetupService(
             $this->entityManager,
-            $this->mailer
+            $this->mailer,
+            $this->translator
         );
     }
 
@@ -69,7 +75,7 @@ class MeetupServiceTest extends TestCase
         ];
 
         $this->expectException(\LogicException::class);
-        $this->expectExceptionMessage('The RSVP deadline cannot be after the meetup date.');
+        $this->expectExceptionMessage('error.rsvp_deadline_after_meetup');
 
         $this->service->createMeetup($data, $creator);
     }
@@ -87,7 +93,7 @@ class MeetupServiceTest extends TestCase
         ];
 
         $this->expectException(\LogicException::class);
-        $this->expectExceptionMessage('The RSVP deadline cannot be after the meetup date.');
+        $this->expectExceptionMessage('error.rsvp_deadline_after_meetup');
 
         $this->service->updateMeetup($meetup, $data, $creator);
     }
@@ -102,7 +108,7 @@ class MeetupServiceTest extends TestCase
         $user = new User();
 
         $this->expectException(\LogicException::class);
-        $this->expectExceptionMessage('The RSVP window is closed.');
+        $this->expectExceptionMessage('error.rsvp_window_closed');
 
         $this->service->handleRsvp($meetup, $user, RsvpStatus::GOING);
     }
@@ -125,7 +131,7 @@ class MeetupServiceTest extends TestCase
         $meetup->addRsvp($rsvp1);
 
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Meetup is full.');
+        $this->expectExceptionMessage('error.meetup_full');
 
         $this->service->handleRsvp($meetup, $user2, RsvpStatus::GOING);
     }

@@ -17,6 +17,7 @@ use PHPUnit\Framework\TestCase;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 class RegistrationServiceTest extends TestCase
 {
@@ -24,6 +25,7 @@ class RegistrationServiceTest extends TestCase
     private $passwordHasher;
     private $mailer;
     private $passwordValidator;
+    private $translator;
     private $service;
     private $userRepository;
     private $companyRepository;
@@ -38,7 +40,9 @@ class RegistrationServiceTest extends TestCase
         $this->mailer = $this->createMock(MailerInterface::class);
         $this->userRepository = $this->createMock(UserRepository::class);
         $this->companyRepository = $this->createMock(CompanyRepository::class);
-        $this->passwordValidator = new PasswordValidator();
+        $this->translator = $this->createMock(TranslatorInterface::class);
+        $this->translator->method('trans')->willReturnArgument(0);
+        $this->passwordValidator = new PasswordValidator($this->translator);
         $this->adminSettingsRepository = $this->createMock(AdminSettingsRepository::class);
         $this->security = $this->createMock(Security::class);
         $this->welcomeEmailService = $this->createMock(EmailService::class);
@@ -55,7 +59,8 @@ class RegistrationServiceTest extends TestCase
             $this->passwordValidator,
             $this->adminSettingsRepository,
             $this->security,
-            $this->welcomeEmailService
+            $this->welcomeEmailService,
+            $this->translator
         );
     }
 
@@ -174,7 +179,7 @@ class RegistrationServiceTest extends TestCase
         $this->userRepository->method('findOneBy')->willReturn(new User());
 
         $this->expectException(\Exception::class);
-        $this->expectExceptionMessage('Email already registered');
+        $this->expectExceptionMessage('error.email_already_registered');
 
         $this->service->register($data);
     }
@@ -205,7 +210,7 @@ class RegistrationServiceTest extends TestCase
         $this->userRepository->method('findOneBy')->willReturn($user);
 
         $this->expectException(\Exception::class);
-        $this->expectExceptionMessage('Token expired');
+        $this->expectExceptionMessage('error.token_expired');
 
         $this->service->verifyEmail($token);
     }

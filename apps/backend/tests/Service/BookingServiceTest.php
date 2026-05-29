@@ -14,6 +14,7 @@ use App\Service\BookingService;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 class BookingServiceTest extends TestCase
 {
@@ -21,6 +22,7 @@ class BookingServiceTest extends TestCase
     private $bookingRepository;
     private $settingsRepository;
     private $mailer;
+    private $translator;
     private $service;
     private $defaultCompany;
     private $defaultSettings;
@@ -32,11 +34,15 @@ class BookingServiceTest extends TestCase
         $this->settingsRepository = $this->createMock(GlobalSettingsRepository::class);
         $this->settingsRepository->method('find')->willReturn(new GlobalSettings());
         $this->mailer = $this->createMock(MailerInterface::class);
+        $this->translator = $this->createMock(TranslatorInterface::class);
+        $this->translator->method('trans')->willReturnArgument(0);
+
         $this->service = new BookingService(
             $this->entityManager,
             $this->bookingRepository,
             $this->settingsRepository,
-            $this->mailer
+            $this->mailer,
+            $this->translator
         );
 
         $this->defaultCompany = new \App\Entity\Company();
@@ -172,7 +178,7 @@ class BookingServiceTest extends TestCase
         $this->bookingRepository->method('findOneBy')->willReturn(new Booking());
 
         $this->expectException(\Exception::class);
-        $this->expectExceptionMessage('You already booked this course');
+        $this->expectExceptionMessage('error.already_booked');
 
         $this->service->book($course, $user);
     }
@@ -189,7 +195,7 @@ class BookingServiceTest extends TestCase
         $course->method('getStatus')->willReturn(\App\Enum\CourseStatus::ACTIVE);
 
         $this->expectException(\Exception::class);
-        $this->expectExceptionMessage('As a trainer, you cannot book your own course');
+        $this->expectExceptionMessage('error.trainer_cannot_book_own');
 
         $this->service->book($course, $user);
     }
@@ -256,7 +262,7 @@ class BookingServiceTest extends TestCase
         $course->method('getStatus')->willReturn(\App\Enum\CourseStatus::POSTPONED);
 
         $this->expectException(\Exception::class);
-        $this->expectExceptionMessage('This course has been postponed and is currently not bookable.');
+        $this->expectExceptionMessage('error.course_postponed_no_book');
 
         $this->service->book($course, $user);
     }
@@ -268,7 +274,7 @@ class BookingServiceTest extends TestCase
         $course->method('getEndTime')->willReturn(new \DateTime('-1 hour'));
 
         $this->expectException(\Exception::class);
-        $this->expectExceptionMessage('You cannot book a course that has already finished');
+        $this->expectExceptionMessage('error.cannot_book_finished');
 
         $this->service->book($course, $user);
     }
@@ -280,7 +286,7 @@ class BookingServiceTest extends TestCase
         $course->method('getEndTime')->willReturn(new \DateTime('-1 hour'));
 
         $this->expectException(\Exception::class);
-        $this->expectExceptionMessage('You cannot cancel a booking for a course that has already finished');
+        $this->expectExceptionMessage('error.cannot_cancel_finished');
 
         $this->service->unbook($course, $user);
     }

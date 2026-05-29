@@ -15,6 +15,7 @@ use App\Service\BookingService;
 use App\Service\CourseService;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 class CourseGenerationBugTest extends TestCase
 {
@@ -22,6 +23,7 @@ class CourseGenerationBugTest extends TestCase
     private $seriesRepository;
     private $entityManager;
     private $bookingService;
+    private $translator;
     private $service;
 
     protected function setUp(): void
@@ -30,11 +32,15 @@ class CourseGenerationBugTest extends TestCase
         $this->seriesRepository = $this->createMock(CourseSeriesRepository::class);
         $this->entityManager = $this->createMock(EntityManagerInterface::class);
         $this->bookingService = $this->createMock(BookingService::class);
+        $this->translator = $this->createMock(TranslatorInterface::class);
+        $this->translator->method('trans')->willReturnArgument(0);
+
         $this->service = new CourseService(
             $this->courseRepository,
             $this->seriesRepository,
             $this->entityManager,
-            $this->bookingService
+            $this->bookingService,
+            $this->translator
         );
     }
 

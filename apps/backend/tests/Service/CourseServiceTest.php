@@ -16,6 +16,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query;
 use Doctrine\ORM\QueryBuilder;
 use PHPUnit\Framework\TestCase;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 class CourseServiceTest extends TestCase
 {
@@ -23,6 +24,7 @@ class CourseServiceTest extends TestCase
     private $seriesRepository;
     private $entityManager;
     private $bookingService;
+    private $translator;
     private $service;
 
     protected function setUp(): void
@@ -31,11 +33,15 @@ class CourseServiceTest extends TestCase
         $this->seriesRepository = $this->createMock(CourseSeriesRepository::class);
         $this->entityManager = $this->createMock(EntityManagerInterface::class);
         $this->bookingService = $this->createMock(BookingService::class);
+        $this->translator = $this->createMock(TranslatorInterface::class);
+        $this->translator->method('trans')->willReturnArgument(0);
+
         $this->service = new CourseService(
             $this->courseRepository,
             $this->seriesRepository,
             $this->entityManager,
-            $this->bookingService
+            $this->bookingService,
+            $this->translator
         );
     }
 
@@ -118,30 +124,25 @@ class CourseServiceTest extends TestCase
             $this->seriesRepository,
             $this->entityManager,
             $this->bookingService,
+            $this->translator,
             $serializer,
             $this->createMock(\App\Service\TrainingCycleService::class),
             $this->createMock(\App\Repository\UserRepository::class)
         );
 
-        // We want to verify that the query builder receives an endDate that is ~1 year from now
-        // This is hard to verify with mocks of QueryBuilder unless we capture setParameter calls.
-        // But we can check if it's called.
-
         $now = new \DateTime();
         $expectedEnd = (clone $now)->setTime(0, 0, 0)->modify('+1 year')->setTime(23, 59, 59);
 
-        // Use a callback to verify the endDate parameter
         $qb->expects($this->atLeastOnce())
            ->method('setParameter')
            ->with($this->logicalOr('startDate', 'endDate', 'memberId', 'deletedStatus'), $this->anything())
            ->willReturnCallback(function ($param, $value) use ($expectedEnd) {
                if ('endDate' === $param) {
                    $this->assertInstanceOf(\DateTimeInterface::class, $value);
-                   // Check if it's within 1 minute of expected end (to account for test execution time)
                    $this->assertLessThan(60, abs($value->getTimestamp() - $expectedEnd->getTimestamp()));
                }
 
-               return $this->createMock(QueryBuilder::class); // Need to return self-like mock
+               return $this->createMock(QueryBuilder::class);
            });
 
         $service->listCourses($queryParams);
@@ -159,7 +160,6 @@ class CourseServiceTest extends TestCase
         $trainer->method('getId')->willReturn(1);
         $trainer->method('getName')->willReturn('John Doe');
 
-        // Mock series: Daily at 10:00 UTC
         $startTime = new \DateTime('2026-04-30 10:00:00', new \DateTimeZone('UTC'));
         $series = $this->createMock(CourseSeries::class);
         $series->method('getId')->willReturn(10);
@@ -174,7 +174,6 @@ class CourseServiceTest extends TestCase
 
         $this->seriesRepository->method('findActiveSeries')->willReturn([$series]);
 
-        // Mock one real course on 2026-05-01 10:00 UTC (matching the series)
         $realCourseStartTime = new \DateTime('2026-05-01 10:00:00', new \DateTimeZone('UTC'));
         $realCourse = $this->createMock(Course::class);
         $realCourse->method('getId')->willReturn(100);
@@ -190,7 +189,6 @@ class CourseServiceTest extends TestCase
         $qb->method('getQuery')->willReturn($query);
         $query->method('getResult')->willReturn([$realCourse]);
 
-        // Mock Serializer
         $serializer = $this->createMock(\Symfony\Component\Serializer\SerializerInterface::class);
         $serializer->method('serialize')->willReturn(json_encode([
             [
@@ -210,6 +208,7 @@ class CourseServiceTest extends TestCase
             $this->seriesRepository,
             $this->entityManager,
             $this->bookingService,
+            $this->translator,
             $serializer,
             $cycleService,
             $userRepo
@@ -217,10 +216,6 @@ class CourseServiceTest extends TestCase
 
         $result = $service->listCourses($queryParams);
 
-        // Expected:
-        // May 1: Real Course (instantiated)
-        // May 2: Virtual Course
-        // May 3: Virtual Course
         $this->assertCount(3, $result['data']);
         $this->assertFalse($result['data'][0]['isVirtual']);
         $this->assertTrue($result['data'][1]['isVirtual']);
