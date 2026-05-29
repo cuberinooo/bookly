@@ -103,6 +103,24 @@ class CourseService
         $this->messageBus->dispatch(new \App\Message\CheckCourseAutoCancelMessage($course->getId()), [new DelayStamp($delay)]);
     }
 
+    public function queueFutureAutoCancelChecks(\App\Entity\Company $company): void
+    {
+        $now = new \DateTime();
+        $courses = $this->courseRepository->createQueryBuilder('c')
+            ->where('c.company = :company')
+            ->andWhere('c.startTime >= :now')
+            ->andWhere('c.status = :status')
+            ->setParameter('company', $company)
+            ->setParameter('now', $now)
+            ->setParameter('status', \App\Enum\CourseStatus::ACTIVE)
+            ->getQuery()
+            ->getResult();
+
+        foreach ($courses as $course) {
+            $this->dispatchAutoCancelCheck($course);
+        }
+    }
+
     /**
      * Calculates occurrences for a series within a date range.
      *

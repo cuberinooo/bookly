@@ -33,7 +33,8 @@ class GlobalSettingsController extends AbstractController
     #[Route('', name: 'settings_update', methods: ['PATCH'])]
     public function updateSettings(
         Request $request,
-        EntityManagerInterface $entityManager
+        EntityManagerInterface $entityManager,
+        \App\Service\CourseService $courseService
     ): JsonResponse {
         $this->denyAccessUnlessGranted('ROLE_TRAINER');
         $user = $this->getUser();
@@ -42,6 +43,8 @@ class GlobalSettingsController extends AbstractController
         }
 
         $settings = $user->getCompany()->getGlobalSettings();
+        $wasAutoCancelEnabled = $settings->isAutoCancelEnabled();
+        
         $data = json_decode($request->getContent(), true);
 
         if (isset($data['showParticipantNames'])) {
@@ -71,6 +74,11 @@ class GlobalSettingsController extends AbstractController
         }
 
         $entityManager->flush();
+
+        // Trigger initialization of existing courses if enabling for the first time
+        if ($settings->isAutoCancelEnabled() && !$wasAutoCancelEnabled) {
+            $courseService->queueFutureAutoCancelChecks($user->getCompany());
+        }
 
         return new JsonResponse(['status' => 'Global settings updated']);
     }
