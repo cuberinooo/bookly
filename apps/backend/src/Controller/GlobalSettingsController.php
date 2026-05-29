@@ -60,6 +60,16 @@ class GlobalSettingsController extends AbstractController
             $settings->setTrialBookingLimit((int) $data['trialBookingLimit']);
         }
 
+        if (isset($data['autoCancelEnabled'])) {
+            $settings->setAutoCancelEnabled((bool) $data['autoCancelEnabled']);
+        }
+        if (isset($data['autoCancelMinParticipants'])) {
+            $settings->setAutoCancelMinParticipants((int) $data['autoCancelMinParticipants']);
+        }
+        if (isset($data['autoCancelHoursBefore'])) {
+            $settings->setAutoCancelHoursBefore((int) $data['autoCancelHoursBefore']);
+        }
+
         $entityManager->flush();
 
         return new JsonResponse(['status' => 'Global settings updated']);

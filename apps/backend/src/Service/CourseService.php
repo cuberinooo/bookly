@@ -13,20 +13,23 @@ use App\Repository\CourseRepository;
 use App\Repository\CourseSeriesRepository;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Messenger\MessageBusInterface;
+use Symfony\Component\Messenger\Stamp\DelayStamp;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 class CourseService
 {
     public function __construct(
-        private CourseRepository $courseRepository,
-        private CourseSeriesRepository $seriesRepository,
-        private EntityManagerInterface $entityManager,
-        private BookingService $bookingService,
-        private TranslatorInterface $translator,
-        private ?SerializerInterface $serializer = null,
-        private ?TrainingCycleService $cycleService = null,
-        private ?UserRepository $userRepository = null
+        private readonly CourseRepository $courseRepository,
+        private readonly CourseSeriesRepository $seriesRepository,
+        private readonly EntityManagerInterface $entityManager,
+        private readonly BookingService $bookingService,
+        private readonly TranslatorInterface $translator,
+        private readonly MessageBusInterface $messageBus,
+        private readonly ?SerializerInterface $serializer = null,
+        private readonly ?TrainingCycleService $cycleService = null,
+        private readonly ?UserRepository $userRepository = null
     ) {
     }
 
@@ -60,6 +63,8 @@ class CourseService
             $this->entityManager->persist($course);
             $this->entityManager->flush();
 
+            $this->dispatchAutoCancelCheck($course);
+
             return [$course];
         }
 
@@ -80,6 +85,22 @@ class CourseService
         // No longer pre-generating courses for 3 months here.
         // The calendar will generate virtual occurrences on-the-fly.
         return [];
+    }
+
+    public function dispatchAutoCancelCheck(Course $course): void
+    {
+        $settings = $course->getCompany()->getGlobalSettings();
+        if (!$settings || !$settings->isAutoCancelEnabled()) {
+            return;
+        }
+
+        $now = new \DateTime();
+        $checkTime = (clone $course->getStartTime())->modify('-' . $settings->getAutoCancelHoursBefore() . ' hours');
+        
+        $delaySeconds = $checkTime->getTimestamp() - $now->getTimestamp();
+        $delay = max(0, $delaySeconds) * 1000;
+        
+        $this->messageBus->dispatch(new \App\Message\CheckCourseAutoCancelMessage($course->getId()), [new DelayStamp($delay)]);
     }
 
     /**
@@ -191,6 +212,8 @@ class CourseService
         try {
             $this->entityManager->persist($course);
             $this->entityManager->flush();
+
+            $this->dispatchAutoCancelCheck($course);
 
             return $course;
         } catch (\Doctrine\DBAL\Exception\UniqueConstraintViolationException $e) {
@@ -317,6 +340,10 @@ class CourseService
             if (isset($updates['startTime']) || isset($updates['durationMinutes']) || isset($updates['trainer'])) {
                 $this->validateSchedule($course->getStartTime(), $course->getEndTime(), $course->getId(), $course->getUser()->getId());
             }
+            
+            if (isset($updates['startTime'])) {
+                $this->dispatchAutoCancelCheck($course);
+            }
         }
 
         if ($series) {
@@ -414,7 +441,7 @@ class CourseService
         }
     }
 
-    public function postponeCourse(Course $course, User $trainer): void
+    public function postponeCourse(Course $course, ?User $trainer = null): void
     {
         if (\App\Enum\CourseStatus::POSTPONED === $course->getStatus()) {
             throw new \LogicException($this->translator->trans('error.course_already_postponed'));
@@ -665,5 +692,9 @@ class CourseService
         }
 
         $this->entityManager->flush();
+
+        if (isset($data['startTime'])) {
+            $this->dispatchAutoCancelCheck($course);
+        }
     }
 }

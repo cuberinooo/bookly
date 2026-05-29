@@ -16,6 +16,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query;
 use Doctrine\ORM\QueryBuilder;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 class CourseServiceTest extends TestCase
@@ -25,6 +26,7 @@ class CourseServiceTest extends TestCase
     private $entityManager;
     private $bookingService;
     private $translator;
+    private $messageBus;
     private $service;
 
     protected function setUp(): void
@@ -35,13 +37,15 @@ class CourseServiceTest extends TestCase
         $this->bookingService = $this->createMock(BookingService::class);
         $this->translator = $this->createMock(TranslatorInterface::class);
         $this->translator->method('trans')->willReturnArgument(0);
+        $this->messageBus = $this->createMock(MessageBusInterface::class);
 
         $this->service = new CourseService(
             $this->courseRepository,
             $this->seriesRepository,
             $this->entityManager,
             $this->bookingService,
-            $this->translator
+            $this->translator,
+            $this->messageBus
         );
     }
 
@@ -125,6 +129,7 @@ class CourseServiceTest extends TestCase
             $this->entityManager,
             $this->bookingService,
             $this->translator,
+            $this->messageBus,
             $serializer,
             $this->createMock(\App\Service\TrainingCycleService::class),
             $this->createMock(\App\Repository\UserRepository::class)
@@ -209,6 +214,7 @@ class CourseServiceTest extends TestCase
             $this->entityManager,
             $this->bookingService,
             $this->translator,
+            $this->messageBus,
             $serializer,
             $cycleService,
             $userRepo

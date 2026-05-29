@@ -14,6 +14,9 @@ const settings = ref({
     isWaitlistVisible: true,
     bookingWindow: BookingWindow.OFF,
     trialBookingLimit: 0,
+    autoCancelEnabled: false,
+    autoCancelMinParticipants: 3,
+    autoCancelHoursBefore: 4,
     courseStartNotificationHours: 0,
     courseStartNotificationMinutes: 0
 });
@@ -45,6 +48,9 @@ async function fetchSettings() {
             isWaitlistVisible: response.data.isWaitlistVisible ?? true,
             bookingWindow: response.data.bookingWindow ?? BookingWindow.OFF,
             trialBookingLimit: response.data.trialBookingLimit ?? 0,
+            autoCancelEnabled: response.data.autoCancelEnabled ?? false,
+            autoCancelMinParticipants: response.data.autoCancelMinParticipants ?? 3,
+            autoCancelHoursBefore: response.data.autoCancelHoursBefore ?? 4,
             courseStartNotificationHours: userResponse.data.courseStartNotificationHours ?? 0,
             courseStartNotificationMinutes: userResponse.data.courseStartNotificationMinutes ?? 0
         };
@@ -62,7 +68,10 @@ async function updateGlobalSettings() {
             showParticipantNames: settings.value.showParticipantNames,
             isWaitlistVisible: settings.value.isWaitlistVisible,
             bookingWindow: settings.value.bookingWindow,
-            trialBookingLimit: settings.value.trialBookingLimit
+            trialBookingLimit: settings.value.trialBookingLimit,
+            autoCancelEnabled: settings.value.autoCancelEnabled,
+            autoCancelMinParticipants: settings.value.autoCancelMinParticipants,
+            autoCancelHoursBefore: settings.value.autoCancelHoursBefore
         });
         toast.add({ severity: 'success', summary: t('app.updated'), detail: t('profile.updateSuccess'), life: 3000 });
     } catch (e) {
@@ -210,6 +219,77 @@ onMounted(fetchSettings);
                 class="w-32"
                 @update:model-value="updateGlobalSettings"
               />
+            </div>
+          </div>
+
+          <div class="settings-card phoenix-card">
+            <h3 class="settings-title">
+              {{ $t('settings.autoCancel') }}
+            </h3>
+            <div class="flex flex-col gap-8">
+              <div class="setting-row">
+                <div class="setting-info">
+                  <label
+                    for="autoCancelEnabled"
+                    class="form-label"
+                  >{{ $t('settings.enableAutoCancel') }}</label>
+                  <p class="text-xs text-slate-500">
+                    {{ $t('settings.enableAutoCancelNote') }}
+                  </p>
+                </div>
+                <ToggleSwitch
+                  v-model="settings.autoCancelEnabled"
+                  input-id="autoCancelEnabled"
+                  :disabled="saving"
+                  @change="updateGlobalSettings"
+                />
+              </div>
+
+              <div
+                v-if="settings.autoCancelEnabled"
+                class="grid grid-cols-1 md:grid-cols-2 gap-8 pt-6 border-t border-slate-50"
+              >
+                <div class="flex flex-col gap-2">
+                  <div class="setting-info">
+                    <label
+                      for="autoCancelMin"
+                      class="form-label"
+                    >{{ $t('settings.minParticipants') }}</label>
+                    <p class="text-xs text-slate-500">
+                      {{ $t('settings.minParticipantsNote') }}
+                    </p>
+                  </div>
+                  <InputNumber
+                    v-model="settings.autoCancelMinParticipants"
+                    input-id="autoCancelMin"
+                    show-buttons
+                    :min="1"
+                    class="w-full"
+                    @update:model-value="updateGlobalSettings"
+                  />
+                </div>
+                <div class="flex flex-col gap-2">
+                  <div class="setting-info">
+                    <label
+                      for="autoCancelHours"
+                      class="form-label"
+                    >{{ $t('settings.hoursBefore') }}</label>
+                    <p class="text-xs text-slate-500">
+                      {{ $t('settings.hoursBeforeNote') }}
+                    </p>
+                  </div>
+                  <InputNumber
+                    v-model="settings.autoCancelHoursBefore"
+                    input-id="autoCancelHours"
+                    show-buttons
+                    :min="1"
+                    :max="72"
+                    suffix=" h"
+                    class="w-full"
+                    @update:model-value="updateGlobalSettings"
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </div>

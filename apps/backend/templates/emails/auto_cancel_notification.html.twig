@@ -1,0 +1,34 @@
+{% extends 'emails/base.html.twig' %}
+
+{% block title %}Course Automatically Cancelled{% endblock %}
+
+{% block content %}
+    <h1 style="color: #0f172a; font-size: 24px; font-weight: 800; margin-bottom: 20px; text-transform: uppercase;">
+        Automatic Cancellation
+    </h1>
+
+    <p style="color: #475569; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
+        Hello {{ course.user.name }},
+    </p>
+
+    <div style="background-color: #f8fafc; border-left: 4px solid #ef4444; padding: 20px; margin-bottom: 24px;">
+        <p style="margin: 0; font-weight: bold; color: #1e293b;">
+            The following course has been automatically cancelled:
+        </p>
+        <p style="margin: 10px 0 0 0; color: #475569;">
+            <strong>Course:</strong> {{ course.title }}<br>
+            <strong>Date:</strong> {{ course.startTime|date('d.m.Y H:i') }}<br>
+            <strong>Reason:</strong> Low participation ({{ participantCount }} signed up, minimum required: {{ minParticipants }})
+        </p>
+    </div>
+
+    <p style="color: #475569; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
+        All participants have been automatically unbooked and notified of the cancellation.
+    </p>
+
+    <div style="text-align: center; margin-top: 40px;">
+        <a href="{{ loginUrl }}" style="background-color: #ffc107; color: #000000; padding: 12px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; text-transform: uppercase; display: inline-block;">
+            Open Dashboard
+        </a>
+    </div>
+{% endblock %}
