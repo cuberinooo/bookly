@@ -15,6 +15,7 @@ use App\Enum\Gender;
 use App\Enum\MeetupStatus;
 use App\Enum\RsvpStatus;
 use App\Entity\MeetupRsvp;
+use App\Entity\MeetupComment;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -229,7 +230,36 @@ Don't miss out on this legendary day. Please make sure to RSVP by the deadline s
             $this->entityManager->persist($rsvp);
         }
 
-        $io->note('Generated upcoming community meetups and a Mega Meetup with participants.');
+        // Add some comments to the Mega Meetup
+        $commentAuthors = [$users[0], $users[3], $users[4], $users[1]];
+        $commentTexts = [
+            "I'm so excited for this! Should we bring some extra drinks?",
+            "Can't wait for the team challenges! Team Alice will win!",
+            "I'll bring some vegan burgers for the BBQ. Who else wants some?",
+            "Great idea Emma! I'll bring some fresh salads too."
+        ];
+
+        foreach ($commentTexts as $index => $text) {
+            $comment = new MeetupComment();
+            $comment->setMeetup($megaMeetup);
+            $comment->setAuthor($commentAuthors[$index]);
+            $comment->setContent($text);
+            $comment->setCompany($company);
+            $comment->setCreatedAt((new \DateTimeImmutable())->modify('-'.(5 - $index).' hours'));
+            $this->entityManager->persist($comment);
+        }
+
+        // 7. Create a Planning Phase Meetup (No dates)
+        $planningMeetup = new Meetup();
+        $planningMeetup->setTitle('Winter Ski Trip Planning');
+        $planningMeetup->setDescription('We are planning a ski trip for early 2027. This meetup is for discussing potential locations, dates, and sharing costs. No fixed date yet, let\'s use the comments to coordinate!');
+        $planningMeetup->setLocation('TBD');
+        $planningMeetup->setCompany($company);
+        $planningMeetup->setCreator($trainers[0]);
+        $planningMeetup->setStatus(MeetupStatus::OPEN);
+        $this->entityManager->persist($planningMeetup);
+
+        $io->note('Generated upcoming community meetups, a Mega Meetup with comments, and a planning phase meetup.');
 
         $this->entityManager->flush();
 

@@ -18,7 +18,7 @@ class Meetup implements CompanyAwareInterface
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['meetup:read'])]
+    #[Groups(['meetup:read', 'comment:read'])]
     private ?int $id = null;
 
     #[ORM\ManyToOne]
@@ -32,14 +32,14 @@ class Meetup implements CompanyAwareInterface
     private ?User $creator = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['meetup:read', 'meetup:write'])]
+    #[Groups(['meetup:read', 'meetup:write', 'comment:read'])]
     private ?string $title = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     #[Groups(['meetup:read', 'meetup:write'])]
     private ?string $description = null;
 
-    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     #[Groups(['meetup:read', 'meetup:write'])]
     private ?\DateTimeInterface $meetupDate = null;
 
@@ -59,7 +59,7 @@ class Meetup implements CompanyAwareInterface
     #[Groups(['meetup:read', 'meetup:write'])]
     private ?int $maxParticipants = null;
 
-    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     #[Groups(['meetup:read', 'meetup:write'])]
     private ?\DateTimeInterface $rsvpDeadline = null;
 
@@ -78,6 +78,12 @@ class Meetup implements CompanyAwareInterface
     #[Groups(['meetup:read'])]
     private Collection $rsvps;
 
+    /**
+     * @var Collection<int, MeetupComment>
+     */
+    #[ORM\OneToMany(targetEntity: MeetupComment::class, mappedBy: 'meetup', orphanRemoval: true)]
+    private Collection $comments;
+
     #[ORM\Column(length: 1000, nullable: true)]
     #[Groups(['meetup:read', 'meetup:write'])]
     private ?string $link = null;
@@ -86,6 +92,7 @@ class Meetup implements CompanyAwareInterface
     {
         $this->createdAt = new \DateTimeImmutable();
         $this->rsvps = new ArrayCollection();
+        $this->comments = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -146,7 +153,7 @@ class Meetup implements CompanyAwareInterface
         return $this->meetupDate;
     }
 
-    public function setMeetupDate(\DateTimeInterface $meetupDate): static
+    public function setMeetupDate(?\DateTimeInterface $meetupDate): static
     {
         $this->meetupDate = $meetupDate;
 
@@ -206,7 +213,7 @@ class Meetup implements CompanyAwareInterface
         return $this->rsvpDeadline;
     }
 
-    public function setRsvpDeadline(\DateTimeInterface $rsvpDeadline): static
+    public function setRsvpDeadline(?\DateTimeInterface $rsvpDeadline): static
     {
         $this->rsvpDeadline = $rsvpDeadline;
 

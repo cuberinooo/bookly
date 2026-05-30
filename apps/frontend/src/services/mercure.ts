@@ -10,6 +10,8 @@ class MercureService {
       `${apiBase}/courseseries`,
       `${apiBase}/meetup`,
       `${apiBase}/meetuprsvp`,
+      `${apiBase}/meetupcomment`,
+      `${apiBase}/meetupuserreadstate`,
     ];
   }
 

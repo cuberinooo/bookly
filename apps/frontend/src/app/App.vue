@@ -2,6 +2,7 @@
 import { RouterLink, RouterView } from 'vue-router';
 import { useAuthStore } from '../store/useAuthStore';
 import { useSettingsStore } from '../store/useSettingsStore';
+import { useMeetupStore } from '../store/useMeetupStore';
 import { useRouter } from 'vue-router';
 import { ref, computed, onMounted, watch, onUnmounted } from 'vue';
 import api from '../services/api';
@@ -14,6 +15,7 @@ import { useOnboarding } from '../composables/useOnboarding';
 import FloatingOnboardingWidget from '../components/FloatingOnboardingWidget.vue';
 import { useI18n } from 'vue-i18n';
 import { usePrimeVue } from 'primevue/config';
+import OverlayBadge from 'primevue/overlaybadge';
 
 const router = useRouter();
 const { t, locale } = useI18n();
@@ -22,10 +24,23 @@ const menu = ref();
 const toast = useToast();
 const authStore = useAuthStore();
 const settingsStore = useSettingsStore();
+const meetupStore = useMeetupStore();
 const { initRouteTracking } = useOnboarding();
+
+let notificationInterval: any = null;
 
 onMounted(() => {
   initRouteTracking();
+  if (authStore.isLoggedIn) {
+      meetupStore.fetchNotificationCounts();
+      notificationInterval = setInterval(() => {
+          meetupStore.fetchNotificationCounts();
+      }, 60000); // Check every minute
+  }
+});
+
+onUnmounted(() => {
+    if (notificationInterval) clearInterval(notificationInterval);
 });
 
 watch(locale, (newLocale) => {
@@ -340,7 +355,15 @@ onMounted(async () => {
               to="/meetups"
               class="desktop-only"
             >
-              {{ t('app.meetups') }}
+              <OverlayBadge
+                v-if="meetupStore.globalUnread > 0"
+                :value="meetupStore.globalUnread"
+                severity="danger"
+                size="small"
+              >
+                <span style="padding-right: 0.5rem;">{{ t('app.meetups') }}</span>
+              </OverlayBadge>
+              <span v-else>{{ t('app.meetups') }}</span>
             </RouterLink>
             <RouterLink
               v-if="canSeeLeaderboard"

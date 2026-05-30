@@ -32,7 +32,7 @@ class MercurePublisherService
         $this->hub->publish($update);
     }
 
-    public function publishEntityUpdate(object $entity, string $action): void
+    public function publishEntityUpdate(object $entity, string $action, array $extraData = []): void
     {
         $className = (new \ReflectionClass($entity))->getShortName();
         // If it's a proxy or mock, we might need to get the parent class
@@ -48,6 +48,8 @@ class MercurePublisherService
             'action' => $action,
             'id' => method_exists($entity, 'getId') ? $entity->getId() : null,
         ];
+
+        $data = array_merge($data, $extraData);
 
         if ($entity instanceof CompanyAwareInterface && $entity->getCompany()) {
             $data['companyId'] = $entity->getCompany()->getId();

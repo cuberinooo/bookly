@@ -27,13 +27,17 @@ class MeetupService
 
     public function createMeetup(array $data, User $creator): Meetup
     {
-        $meetupDate = new \DateTime($data['meetupDate']);
-        $meetupDate->setTimezone(new \DateTimeZone(date_default_timezone_get()));
+        $meetupDate = isset($data['meetupDate']) ? new \DateTime($data['meetupDate']) : null;
+        if ($meetupDate) {
+            $meetupDate->setTimezone(new \DateTimeZone(date_default_timezone_get()));
+        }
 
-        $rsvpDeadline = new \DateTime($data['rsvpDeadline']);
-        $rsvpDeadline->setTimezone(new \DateTimeZone(date_default_timezone_get()));
+        $rsvpDeadline = isset($data['rsvpDeadline']) ? new \DateTime($data['rsvpDeadline']) : null;
+        if ($rsvpDeadline) {
+            $rsvpDeadline->setTimezone(new \DateTimeZone(date_default_timezone_get()));
+        }
 
-        if ($rsvpDeadline > $meetupDate) {
+        if ($rsvpDeadline && $meetupDate && $rsvpDeadline > $meetupDate) {
             throw new \LogicException($this->translator->trans('error.rsvp_deadline_after_meetup'));
         }
 
@@ -75,7 +79,7 @@ class MeetupService
             throw new AccessDeniedException('Only the creator or an admin can edit this meetup.');
         }
 
-        if (new \DateTime() > $meetup->getMeetupDate()) {
+        if ($meetup->getMeetupDate() && new \DateTime() > $meetup->getMeetupDate()) {
             throw new \LogicException($this->translator->trans('error.cannot_edit_past_meetup'));
         }
 
@@ -91,27 +95,31 @@ class MeetupService
         if (isset($data['imageUrl'])) {
             $meetup->setImageUrl($data['imageUrl']);
         }
-        if (isset($data['meetupDate'])) {
-            $newMeetupDate = new \DateTime($data['meetupDate']);
-            $newMeetupDate->setTimezone(new \DateTimeZone(date_default_timezone_get()));
+        if (array_key_exists('meetupDate', $data)) {
+            $newMeetupDate = $data['meetupDate'] ? new \DateTime($data['meetupDate']) : null;
+            if ($newMeetupDate) {
+                $newMeetupDate->setTimezone(new \DateTimeZone(date_default_timezone_get()));
+            }
 
-            $currentDeadline = isset($data['rsvpDeadline']) ? new \DateTime($data['rsvpDeadline']) : $meetup->getRsvpDeadline();
+            $currentDeadline = array_key_exists('rsvpDeadline', $data) ? ($data['rsvpDeadline'] ? new \DateTime($data['rsvpDeadline']) : null) : $meetup->getRsvpDeadline();
             if ($currentDeadline instanceof \DateTime) {
                 $currentDeadline->setTimezone(new \DateTimeZone(date_default_timezone_get()));
             }
 
-            if ($currentDeadline > $newMeetupDate) {
+            if ($currentDeadline && $newMeetupDate && $currentDeadline > $newMeetupDate) {
                 throw new \LogicException($this->translator->trans('error.rsvp_deadline_after_meetup'));
             }
             $meetup->setMeetupDate($newMeetupDate);
         }
 
-        if (isset($data['rsvpDeadline'])) {
-            $newDeadline = new \DateTime($data['rsvpDeadline']);
-            $newDeadline->setTimezone(new \DateTimeZone(date_default_timezone_get()));
+        if (array_key_exists('rsvpDeadline', $data)) {
+            $newDeadline = $data['rsvpDeadline'] ? new \DateTime($data['rsvpDeadline']) : null;
+            if ($newDeadline) {
+                $newDeadline->setTimezone(new \DateTimeZone(date_default_timezone_get()));
+            }
 
             $currentMeetupDate = $meetup->getMeetupDate();
-            if ($newDeadline > $currentMeetupDate) {
+            if ($newDeadline && $currentMeetupDate && $newDeadline > $currentMeetupDate) {
                 throw new \LogicException($this->translator->trans('error.rsvp_deadline_after_meetup'));
             }
             $meetup->setRsvpDeadline($newDeadline);
@@ -134,7 +142,7 @@ class MeetupService
     public function handleRsvp(Meetup $meetup, User $user, RsvpStatus $status): MeetupRsvp
     {
         // RSVP Freeze Logic
-        if (new \DateTime() > $meetup->getRsvpDeadline()) {
+        if ($meetup->getRsvpDeadline() && new \DateTime() > $meetup->getRsvpDeadline()) {
             $this->evaluateMeetupStatus($meetup);
             throw new \LogicException($this->translator->trans('error.rsvp_window_closed'));
         }

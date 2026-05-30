@@ -20,7 +20,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, Company
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['course:read', 'booking:read', 'user:read', 'meetup:read', 'workout_record:read'])]
+    #[Groups(['course:read', 'booking:read', 'user:read', 'meetup:read', 'workout_record:read', 'comment:read'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 180)]
@@ -32,7 +32,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, Company
     #[Groups(['user:read'])]
     private ?Company $company = null;
 
-    #[Groups(['course:read', 'booking:read', 'user:read', 'meetup:read', 'workout_record:read'])]
+    #[Groups(['course:read', 'booking:read', 'user:read', 'meetup:read', 'workout_record:read', 'comment:read'])]
     #[ORM\Column(length: 255)]
     private ?string $name = null;
 
@@ -100,7 +100,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, Company
     private ?\DateTimeInterface $passwordResetTokenExpiresAt = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(['user:read', 'meetup:read', 'workout_record:read'])]
+    #[Groups(['user:read', 'meetup:read', 'workout_record:read', 'comment:read'])]
     private ?string $profilePicture = null;
 
     #[ORM\Column(name: 'gender', type: 'string', enumType: \App\Enum\Gender::class, nullable: true)]

@@ -6,13 +6,13 @@ export interface Meetup {
   id: number;
   title: string;
   description: string | null;
-  meetupDate: string;
+  meetupDate: string | null;
   location: string;
   imageUrl: string | null;
   link: string | null;
   minParticipants: number | null;
   maxParticipants: number | null;
-  rsvpDeadline: string;
+  rsvpDeadline: string | null;
   status: MeetupStatus;
   createdAt: string;
   creator: {
@@ -22,6 +22,18 @@ export interface Meetup {
   };
   rsvps: MeetupRsvp[];
   goingCount: number;
+  unreadCommentsCount?: number;
+}
+
+export interface MeetupComment {
+  id: number;
+  content: string;
+  createdAt: string;
+  author: {
+    id: number;
+    name: string;
+    profilePicture: string | null;
+  };
 }
 
 export interface MeetupRsvp {
@@ -67,6 +79,25 @@ const meetupService = {
 
   async cancelMeetup(id: number) {
     const response = await api.post(`/meetups/${id}/cancel`);
+    return response.data;
+  },
+
+  async getComments(meetupId: number) {
+    const response = await api.get<MeetupComment[]>(`/meetups/${meetupId}/comments`);
+    return response.data;
+  },
+
+  async postComment(meetupId: number, content: string) {
+    const response = await api.post<MeetupComment>(`/meetups/${meetupId}/comments`, { content });
+    return response.data;
+  },
+
+  async markCommentsRead(meetupId: number) {
+    await api.post(`/meetups/${meetupId}/comments/mark-read`);
+  },
+
+  async getNotificationCounts() {
+    const response = await api.get<{ totalUnread: number }>('/meetups/notifications');
     return response.data;
   }
 };

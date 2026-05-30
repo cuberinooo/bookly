@@ -315,7 +315,7 @@
   "meetup": {
     "title": "Title *",
     "description": "Description",
-    "eventDateTime": "Event Date & Time *",
+    "eventDateTime": "Event Date & Time",
     "location": "Location *",
     "externalLink": "External Link (Optional)",
     "banner": "Meetup Banner (Optional)",
@@ -327,10 +327,19 @@
     "placeholderDescription": "Tell us more about the activity...",
     "placeholderLocation": "Physical address or Link (e.g. Google Maps)",
     "placeholderLink": "e.g. https://hotel.com or Google Maps link",
+    "placeholderDate": "Optional: Pick a date",
+    "placeholderDeadline": "Optional: Set RSVP limit",
     "update": "Update Meetup",
     "create": "Create Meetup",
     "cancel": "Cancel",
     "moreInfo": "More Info",
+    "comments": "Comments",
+    "noCommentsYet": "No comments yet. Start the conversation!",
+    "writeComment": "Write a comment...",
+    "planningPhaseTitle": "Planning Phase",
+    "planningPhaseNote": "Leave dates blank to create a planning meetup. You can discuss the details with the community before fixing the final date.",
+    "datesTbd": "Dates to be determined",
+    "useCommentsToDiscuss": "Use comments to coordinate and vote on dates!",
     "participants": "Participants",
     "viewParticipants": "Click to view full participant list",
     "organizer": "Organizer",
@@ -342,7 +351,7 @@
     "confirmed": "Confirmed",
     "cancelled": "Cancelled",
     "rsvpDeadline": "RSVP Deadline",
-    "rsvpDeadlineTooltip": "Registration/Deregistration Deadline",
+    "rsvpDeadlineTooltip": "Deadline for members to confirm their attendance.",
     "youAreGoing": "You are going",
     "youAreNotGoing": "You are not going",
     "registrationClosed": "Registration closed",
@@ -366,7 +375,11 @@
       "cancelled": "Cancelled",
       "closed": "Closed",
       "locked": "Locked",
-      "confirmed": "Confirmed"
+      "confirmed": "Confirmed",
+      "planning": "Planning"
+    },
+    "error": {
+      "deadlineAfterEvent": "Deadline must be before the event date."
     }
   },
   "onboarding": {

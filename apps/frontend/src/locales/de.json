@@ -315,7 +315,7 @@
   "meetup": {
     "title": "Titel *",
     "description": "Beschreibung",
-    "eventDateTime": "Termin & Uhrzeit *",
+    "eventDateTime": "Termin & Uhrzeit",
     "location": "Ort *",
     "externalLink": "Externer Link (Optional)",
     "banner": "Meetup-Banner (Optional)",
@@ -327,10 +327,19 @@
     "placeholderDescription": "Erzähl uns mehr über die Aktivität...",
     "placeholderLocation": "Adresse oder Link (z.B. Google Maps)",
     "placeholderLink": "z.B. https://hotel.de oder Google Maps Link",
+    "placeholderDate": "Optional: Datum wählen",
+    "placeholderDeadline": "Optional: RSVP-Frist setzen",
     "update": "Meetup aktualisieren",
     "create": "Meetup erstellen",
     "cancel": "Abbrechen",
     "moreInfo": "Mehr Infos",
+    "comments": "Kommentare",
+    "noCommentsYet": "Noch keine Kommentare. Starte die Diskussion!",
+    "writeComment": "Einen Kommentar schreiben...",
+    "planningPhaseTitle": "Planungsphase",
+    "planningPhaseNote": "Lasse die Daten leer, um ein Planungs-Meetup zu erstellen. Du kannst die Details mit der Community besprechen, bevor du das endgültige Datum festlegst.",
+    "datesTbd": "Termine noch offen",
+    "useCommentsToDiscuss": "Nutze die Kommentare, um Termine abzustimmen!",
     "participants": "Teilnehmer",
     "viewParticipants": "Klicken, um die vollständige Teilnehmerliste anzuzeigen",
     "organizer": "Organisator",
@@ -342,7 +351,7 @@
     "confirmed": "Bestätigt",
     "cancelled": "Abgesagt",
     "rsvpDeadline": "RSVP-Frist",
-    "rsvpDeadlineTooltip": "An-/Abmeldefrist",
+    "rsvpDeadlineTooltip": "Frist für Mitglieder, ihre Teilnahme zu bestätigen.",
     "youAreGoing": "Du nimmst teil",
     "youAreNotGoing": "Du nimmst nicht teil",
     "registrationClosed": "Anmeldung geschlossen",
@@ -366,7 +375,11 @@
       "cancelled": "Abgesagt",
       "closed": "Geschlossen",
       "locked": "Gesperrt",
-      "confirmed": "Bestätigt"
+      "confirmed": "Bestätigt",
+      "planning": "Planung"
+    },
+    "error": {
+      "deadlineAfterEvent": "Die Frist muss vor dem Veranstaltungstermin liegen."
     }
   },
   "onboarding": {

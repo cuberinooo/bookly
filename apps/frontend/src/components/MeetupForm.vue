@@ -72,13 +72,13 @@ onMounted(() => {
     formData.value = {
       title: props.meetup.title,
       description: props.meetup.description || '',
-      meetupDate: new Date(props.meetup.meetupDate),
+      meetupDate: props.meetup.meetupDate ? new Date(props.meetup.meetupDate) : null,
       location: props.meetup.location,
       imageUrl: props.meetup.imageUrl || '',
       link: props.meetup.link || '',
       minParticipants: props.meetup.minParticipants,
       maxParticipants: props.meetup.maxParticipants,
-      rsvpDeadline: new Date(props.meetup.rsvpDeadline),
+      rsvpDeadline: props.meetup.rsvpDeadline ? new Date(props.meetup.rsvpDeadline) : null,
       sendNotification: false
     };
   }
@@ -151,15 +151,15 @@ const handleSubmit = async () => {
           v-model="formData.meetupDate"
           show-time
           hour-format="24"
-          required
+          :placeholder="t('meetup.placeholderDate')"
         />
       </div>
       <div class="field">
         <label
-          v-tooltip.top="'Répondez s\'il vous plaît - Please respond by this date to help the organizer plan better.'"
+          v-tooltip.top="t('meetup.rsvpDeadlineTooltip')"
           for="rsvpDeadline"
         >
-          RSVP Deadline *
+          {{ t('meetup.rsvpDeadline') }}
           <i class="pi pi-info-circle text-xs text-slate-400" />
         </label>
         <DatePicker
@@ -169,14 +169,25 @@ const handleSubmit = async () => {
           hour-format="24"
           :max-date="formData.meetupDate || undefined"
           :class="{ 'p-invalid': formData.rsvpDeadline && formData.meetupDate && formData.rsvpDeadline > formData.meetupDate }"
-          required
+          :placeholder="t('meetup.placeholderDeadline')"
         />
         <small
           v-if="formData.rsvpDeadline && formData.meetupDate && formData.rsvpDeadline > formData.meetupDate"
           class="p-error"
         >
-          Deadline must be before the event.
+          {{ t('meetup.error.deadlineAfterEvent') }}
         </small>
+      </div>
+    </div>
+
+    <div
+      v-if="!formData.meetupDate"
+      class="bg-blue-50 border border-blue-100 p-3 rounded-lg mb-6 flex items-start gap-3"
+    >
+      <i class="pi pi-info-circle text-blue-500 mt-1" />
+      <div class="flex flex-col">
+        <span class="text-sm font-bold text-blue-900">{{ t('meetup.planningPhaseTitle') }}</span>
+        <span class="text-xs text-blue-700 leading-relaxed">{{ t('meetup.planningPhaseNote') }}</span>
       </div>
     </div>
 

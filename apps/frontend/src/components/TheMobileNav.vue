@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import { RouterLink } from 'vue-router';
 import { useAuthStore } from '../store/useAuthStore';
+import { useMeetupStore } from '../store/useMeetupStore';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import OverlayBadge from 'primevue/overlaybadge';
 
 const authStore = useAuthStore();
+const meetupStore = useMeetupStore();
 const { t } = useI18n();
 
 const dashboardLabel = computed(() => {
@@ -37,7 +40,18 @@ const dashboardLabel = computed(() => {
       to="/meetups"
       class="mobile-nav-item"
     >
-      <i class="pi pi-users" />
+      <OverlayBadge
+        v-if="meetupStore.globalUnread > 0"
+        :value="meetupStore.globalUnread"
+        severity="danger"
+        size="small"
+      >
+        <i class="pi pi-users" />
+      </OverlayBadge>
+      <i
+        v-else
+        class="pi pi-users"
+      />
       <span>{{ t('app.meetups') }}</span>
     </RouterLink>
     

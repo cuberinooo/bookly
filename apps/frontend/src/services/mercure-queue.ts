@@ -41,6 +41,8 @@ function flushQueue(): void {
         break;
       case 'Meetup':
       case 'MeetupRsvp':
+      case 'MeetupComment':
+      case 'MeetupUserReadState':
         useMeetupStore().applyBatchUpdate(deduped);
         break;
     }
