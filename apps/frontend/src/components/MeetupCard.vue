@@ -441,12 +441,12 @@ const openComments = () => {
 
           <template v-if="canEdit">
             <Button
+              v-tooltip.top="t('app.actions')"
               type="button"
               icon="pi pi-ellipsis-v"
               severity="secondary"
               variant="text"
               class="p-button-sm"
-              v-tooltip.top="t('app.actions')"
               @click="menu.toggle($event)"
             />
             <Menu
