@@ -220,8 +220,14 @@ onMounted(fetchUsers);
 <template>
   <div class="user-management mt-6">
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-      <h2 class="text-2xl font-bold uppercase tracking-tight font-barlow">
+      <h2 class="text-2xl font-bold uppercase tracking-tight font-barlow flex items-center gap-2">
         {{ $t('admin.users.title') }}
+        <Tag
+          :value="filteredUsers.length"
+          severity="secondary"
+          rounded
+          class="font-mono"
+        />
       </h2>
       <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
         <div class="relative w-full sm:w-64">

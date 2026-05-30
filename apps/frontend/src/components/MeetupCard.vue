@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Meetup } from '../services/meetup.service';
 import { MeetupStatus } from '../app/enums/MeetupStatus';
@@ -12,6 +12,7 @@ import Card from 'primevue/card';
 import Tag from 'primevue/tag';
 import Avatar from 'primevue/avatar';
 import AvatarGroup from 'primevue/avatargroup';
+import Dialog from 'primevue/dialog';
 
 const props = defineProps<{
   meetup: Meetup;
@@ -85,6 +86,9 @@ const statusSeverity = computed(() => {
 const participants = computed(() => {
     return props.meetup.rsvps.filter(r => r.status === RsvpStatus.GOING);
 });
+
+const isDescriptionExpanded = ref(false);
+const showParticipantsDialog = ref(false);
 
 const isLocationLink = computed(() => {
   const loc = props.meetup.location;
@@ -175,9 +179,20 @@ const handleRsvp = (status: RsvpStatus) => {
         />
       </div>
 
-      <p class="text-sm line-clamp-3 mb-4">
+      <p :class="['text-sm mb-1 whitespace-pre-wrap break-words', !isDescriptionExpanded && 'line-clamp-3']">
         {{ meetup.description }}
       </p>
+      <div
+        v-if="meetup.description && meetup.description.length > 120"
+        class="mb-4"
+      >
+        <button
+          class="text-xs font-bold text-primary hover:underline focus:outline-none"
+          @click="isDescriptionExpanded = !isDescriptionExpanded"
+        >
+          {{ isDescriptionExpanded ? t('app.showLess') : t('app.showMore') }}
+        </button>
+      </div>
 
       <div class="flex items-center justify-between mb-4 bg-slate-50 p-3 rounded-lg border border-slate-100">
         <div class="flex flex-col">
@@ -203,28 +218,78 @@ const handleRsvp = (status: RsvpStatus) => {
         </div>
       </div>
 
-      <div class="flex items-center gap-2 mb-4">
-        <AvatarGroup v-if="participants.length > 0">
-          <Avatar
-            v-for="p in participants.slice(0, 5)"
-            :key="p.id"
-            :image="getAvatarUrl(p.user) || undefined"
-            :label="!p.user.profilePicture ? p.user.name.charAt(0) : undefined"
-            shape="circle"
-            size="normal"
-          />
-          <Avatar
-            v-if="participants.length > 5"
-            :label="`+${participants.length - 5}`"
-            shape="circle"
-            size="normal"
-          />
-        </AvatarGroup>
+      <div class="flex flex-col gap-2 mb-4">
+        <div
+          v-if="participants.length > 0"
+          v-tooltip.top="t('meetup.viewParticipants')"
+          class="flex items-center gap-2 cursor-pointer group/avatars transition-all hover:translate-x-1"
+          @click="showParticipantsDialog = true"
+        >
+          <AvatarGroup>
+            <Avatar
+              v-for="p in participants.slice(0, 5)"
+              :key="p.id"
+              :image="getAvatarUrl(p.user) || undefined"
+              :label="!p.user.profilePicture ? p.user.name.charAt(0) : undefined"
+              shape="circle"
+              size="normal"
+              class="border-2 border-white group-hover/avatars:border-primary transition-colors"
+            />
+            <Avatar
+              v-if="participants.length > 5"
+              :label="`+${participants.length - 5}`"
+              shape="circle"
+              size="normal"
+              class="border-2 border-white group-hover/avatars:border-primary transition-colors"
+            />
+          </AvatarGroup>
+          <i class="pi pi-chevron-right text-[10px] text-slate-300 group-hover/avatars:text-primary group-hover/avatars:translate-x-1 transition-all" />
+        </div>
         <span
           v-else
-          class="text-xs text-slate-400 italic"
+          class="text-xs text-slate-400 italic mb-2"
         >{{ t('meetup.noParticipants') }}</span>
       </div>
+
+      <Dialog
+        v-model:visible="showParticipantsDialog"
+        :header="t('meetup.participants')"
+        :modal="true"
+        class="w-full max-w-sm"
+        dismissable-mask
+      >
+        <div class="flex flex-col gap-3 py-2">
+          <div
+            v-for="p in participants"
+            :key="p.id"
+            class="flex items-center gap-3 p-1 rounded-lg transition-colors border border-transparent hover:border-slate-100"
+          >
+            <Avatar
+              :image="getAvatarUrl(p.user) || undefined"
+              :label="!p.user.profilePicture ? p.user.name.charAt(0) : undefined"
+              shape="circle"
+              size="normal"
+              class="border border-slate-200"
+            />
+            <div class="flex flex-col">
+              <span class="font-bold text-white">{{ p.user.name }}</span>
+              <span
+                v-if="p.user.id === meetup.creator.id"
+                class="text-[10px] uppercase font-black text-primary tracking-widest"
+              >{{ t('meetup.organizer') }}</span>
+            </div>
+          </div>
+        </div>
+        <template #footer>
+          <Button
+            :label="t('app.close')"
+            severity="secondary"
+            variant="text"
+            class="w-full"
+            @click="showParticipantsDialog = false"
+          />
+        </template>
+      </Dialog>
 
       <div class="flex items-center gap-2 text-xs text-slate-500">
         <Avatar
@@ -241,17 +306,17 @@ const handleRsvp = (status: RsvpStatus) => {
       <div class="flex gap-2 justify-end">
         <template v-if="canEdit">
           <Button
-            icon="pi pi-pencil"
-            :label="t('meetup.edit')"
-            class="p-button-secondary p-button-sm"
-            @click="emit('edit')"
-          />
-          <Button
             v-if="meetup.status === MeetupStatus.OPEN"
             icon="pi pi-times"
             :label="t('meetup.cancel')"
             class="p-button-danger p-button-sm"
             @click="emit('cancel')"
+          />
+          <Button
+            icon="pi pi-pencil"
+            :label="t('meetup.edit')"
+            class="p-button-secondary p-button-sm"
+            @click="emit('edit')"
           />
         </template>
 
@@ -275,7 +340,7 @@ const handleRsvp = (status: RsvpStatus) => {
           <Tag
             v-if="myRsvp === RsvpStatus.GOING"
             :value="t('meetup.youAreGoing')"
-            severity="success"
+            severity="secondary"
           />
           <Tag
             v-else-if="myRsvp === RsvpStatus.NOT_GOING"
@@ -309,6 +374,18 @@ const handleRsvp = (status: RsvpStatus) => {
     .meetup-banner {
       filter: grayscale(0.5);
     }
+  }
+
+  :deep(.p-card-body) {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 1.25rem;
+  }
+
+  :deep(.p-card-content) {
+    flex: 1;
+    padding: 0;
   }
 }
 

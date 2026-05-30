@@ -13,6 +13,8 @@ use App\Entity\User;
 use App\Entity\UserWorkoutRecord;
 use App\Enum\Gender;
 use App\Enum\MeetupStatus;
+use App\Enum\RsvpStatus;
+use App\Entity\MeetupRsvp;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -57,6 +59,10 @@ class LoadDevelopmentFixturesCommand extends Command
             ['name' => 'Member Alice', 'email' => 'alice@phoenix.test', 'roles' => ['ROLE_MEMBER'], 'gender' => Gender::FEMALE],
             ['name' => 'Member Bob', 'email' => 'bob@phoenix.test', 'roles' => ['ROLE_MEMBER'], 'gender' => Gender::MALE],
             ['name' => 'Member Charlie', 'email' => 'charlie@phoenix.test', 'roles' => ['ROLE_MEMBER'], 'gender' => Gender::OTHER],
+            ['name' => 'Member David', 'email' => 'david@phoenix.test', 'roles' => ['ROLE_MEMBER'], 'gender' => Gender::MALE],
+            ['name' => 'Member Emma', 'email' => 'emma@phoenix.test', 'roles' => ['ROLE_MEMBER'], 'gender' => Gender::FEMALE],
+            ['name' => 'Member Frank', 'email' => 'frank@phoenix.test', 'roles' => ['ROLE_MEMBER'], 'gender' => Gender::MALE],
+            ['name' => 'Member Grace', 'email' => 'grace@phoenix.test', 'roles' => ['ROLE_MEMBER'], 'gender' => Gender::FEMALE],
             ['name' => 'Trial User', 'email' => 'trial@phoenix.test', 'roles' => ['ROLE_TRIAL'], 'gender' => Gender::MALE],
         ];
 
@@ -188,7 +194,42 @@ class LoadDevelopmentFixturesCommand extends Command
             $this->entityManager->persist($meetup);
         }
 
-        $io->note('Generated upcoming community meetups.');
+        // 6. Create a Mega Meetup with many participants and a long description
+        $megaMeetup = new Meetup();
+        $megaMeetup->setTitle('Community Mega Meetup & Games 2026');
+        $megaMeetup->setDescription("Join us for the biggest community event of the year! We will have multiple stations with different games, a huge BBQ with options for everyone, and a live DJ to keep the energy high.
+
+It's a great opportunity to meet fellow athletes from all squads, share some training tips, and just have a blast outside the gym. We recommend bringing comfortable clothes, sunscreen, and a lot of good vibes!
+
+Schedule:
+14:00 - Arrival & Welcome Drinks
+15:00 - Community Games (Team Challenges)
+17:00 - BBQ & Refreshments
+19:00 - Awards Ceremony & Socializing
+21:00 - Event Wrap-up
+
+Don't miss out on this legendary day. Please make sure to RSVP by the deadline so we can plan the catering accordingly. We can't wait to see everyone there!");
+        $megaMeetup->setLocation('Olympic Stadium Park, North Entrance');
+        $start = (clone $now)->modify('+14 days')->setTime(14, 0);
+        $megaMeetup->setMeetupDate($start);
+        $megaMeetup->setRsvpDeadline((clone $start)->modify('-3 days'));
+        $megaMeetup->setCompany($company);
+        $megaMeetup->setCreator($trainers[1]);
+        $megaMeetup->setStatus(MeetupStatus::OPEN);
+        $megaMeetup->setMaxParticipants(50);
+        $this->entityManager->persist($megaMeetup);
+
+        // Add many RSVPs to the Mega Meetup
+        foreach ($users as $user) {
+            $rsvp = new MeetupRsvp();
+            $rsvp->setMeetup($megaMeetup);
+            $rsvp->setUser($user);
+            $rsvp->setCompany($company);
+            $rsvp->setStatus(RsvpStatus::GOING);
+            $this->entityManager->persist($rsvp);
+        }
+
+        $io->note('Generated upcoming community meetups and a Mega Meetup with participants.');
 
         $this->entityManager->flush();
 
