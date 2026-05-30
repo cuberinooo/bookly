@@ -221,6 +221,7 @@ const handleRsvp = (status: RsvpStatus) => {
       <div class="flex flex-col gap-2 mb-4">
         <div
           v-if="participants.length > 0"
+          v-memo="[participants.length, showParticipantsDialog]"
           v-tooltip.top="t('meetup.viewParticipants')"
           class="flex items-center gap-2 cursor-pointer group/avatars transition-all hover:translate-x-1"
           @click="showParticipantsDialog = true"
