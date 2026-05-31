@@ -55,6 +55,7 @@ email:
     details_title: "CANCELLATION DETAILS"
     course: "Course:"
     original_time: "Original Time:"
+    auto_cancelled_message: "The course has been automatically cancelled because the minimum number of participants was not reached."
     mistake_message: "If this was a mistake, you can always head back to the app and book another session."
     best_regards: "Best regards,"
     team: "The %siteName% Team"

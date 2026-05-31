@@ -275,7 +275,7 @@ function formatDayName(date: Date) {
                       v-if="course.status === 'cancelled'"
                       class="cancelled-badge-mobile mb-1"
                     >
-                      <i class="pi pi-clock" /> {{ t('calendar.cancelled') }}
+                      <i class="pi pi-clock" /> {{ course.autoCancelled ? t('calendar.autoCancelled') : t('calendar.cancelled') }}
                     </div>
                     <div class="course-title">
                       {{ course.title }}
@@ -293,10 +293,15 @@ function formatDayName(date: Date) {
                       </span>
                     </div>
                     <div
-                      v-if="course.status === 'cancelled' && course.cancelledBy"
+                      v-if="course.status === 'cancelled'"
                       class="course-coach !text-red-500 font-bold"
                     >
-                      {{ t('course.cancelledByLabel') }} {{ course.cancelledBy.name }}
+                      <template v-if="course.autoCancelled">
+                        <i class="pi pi-cog text-[10px]" /> {{ t('course.autoCancelledLabel') }}
+                      </template>
+                      <template v-else-if="course.cancelledBy">
+                        <i class="pi pi-user text-[10px]" /> {{ t('course.cancelledByLabel') }} {{ course.cancelledBy.name }}
+                      </template>
                     </div>
                     <div class="course-coach">
                       {{ t('calendar.coach') }}: {{ course.user?.name }}

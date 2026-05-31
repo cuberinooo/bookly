@@ -215,7 +215,20 @@ const bookingLabel = computed(() => {
             <i class="pi pi-lock" /> {{ course.status === 'cancelled' ? t('course.sessionCancelled') : t('course.bookingRestricted') }}
           </p>
           <p class="text-xs text-slate-500 font-medium">
-            {{ course.status === 'cancelled' ? t('course.cancelledNotBookable') : bookingWindowMessage }}
+            <template v-if="course.status === 'cancelled'">
+              <template v-if="course.autoCancelled">
+                {{ t('course.autoCancelledLabel') }}
+              </template>
+              <template v-else-if="course.cancelledBy">
+                {{ t('course.cancelledBy', { name: course.cancelledBy.name }) }}
+              </template>
+              <template v-else>
+                {{ t('course.cancelledNotBookable') }}
+              </template>
+            </template>
+            <template v-else>
+              {{ bookingWindowMessage }}
+            </template>
           </p>
         </div>
       </template>

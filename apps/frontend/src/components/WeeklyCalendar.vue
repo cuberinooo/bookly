@@ -313,7 +313,7 @@ function onSlotClick(day: Date, hour: number) {
                       v-if="course.status === 'cancelled'"
                       class="cancelled-badge"
                     >
-                      <i class="pi pi-clock" /> {{ t('calendar.cancelled') }}
+                      <i class="pi pi-clock" /> {{ course.autoCancelled ? t('calendar.autoCancelled') : t('calendar.cancelled') }}
                     </div>
                     <div class="flex justify-between items-start w-full gap-1">
                       <div
@@ -352,10 +352,15 @@ function onSlotClick(day: Date, hour: number) {
 
                   <div class="course-meta">
                     <div
-                      v-if="course.status === 'cancelled' && course.cancelledBy"
+                      v-if="course.status === 'cancelled'"
                       class="coach-line !text-red-500 font-bold"
                     >
-                      {{ t('course.cancelledByLabel') }} {{ course.cancelledBy.name }}
+                      <template v-if="course.autoCancelled">
+                        <i class="pi pi-cog text-[10px]" /> {{ t('course.autoCancelledLabel') }}
+                      </template>
+                      <template v-else-if="course.cancelledBy">
+                        <i class="pi pi-user text-[10px]" /> {{ t('course.cancelledByLabel') }} {{ course.cancelledBy.name }}
+                      </template>
                     </div>
                     <div class="coach-line">
                       <i class="pi pi-user text-[10px]" /> {{ course.user?.name }}

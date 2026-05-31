@@ -254,6 +254,7 @@ class BookingService
                 'location' => $company->getName(),
                 'uid' => $uid,
                 'siteName' => $company->getName(),
+                'isAutoCancelled' => $course->isAutoCancelled(),
             ]);
 
         $icsContent = $this->generateIcsContent($booking, true);

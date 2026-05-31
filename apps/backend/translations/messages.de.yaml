@@ -55,6 +55,7 @@ email:
     details_title: "STORNIERUNGSDETAILS"
     course: "Kurs:"
     original_time: "Ursprüngliche Zeit:"
+    auto_cancelled_message: "Der Kurs wurde automatisch abgesagt, da die Mindestteilnehmerzahl nicht erreicht wurde."
     mistake_message: "Falls dies ein Fehler war, kannst du jederzeit zur App zurückkehren und eine andere Einheit buchen."
     best_regards: "Beste Grüße,"
     team: "Das %siteName% Team"

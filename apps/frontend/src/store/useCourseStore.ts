@@ -11,6 +11,7 @@ export interface Course {
   capacity: number;
   allowTrial: boolean;
   status: string;
+  autoCancelled: boolean;
   seriesId: string | null;
   user: {
     id: number;

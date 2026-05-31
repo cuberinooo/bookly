@@ -66,6 +66,10 @@ class Course implements CompanyAwareInterface
     #[Groups(['course:read'])]
     private \App\Enum\CourseStatus $status = \App\Enum\CourseStatus::ACTIVE;
 
+    #[ORM\Column(type: 'boolean', options: ['default' => false])]
+    #[Groups(['course:read', 'managed-course:read'])]
+    private bool $autoCancelled = false;
+
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
     #[Groups(['course:read'])]
@@ -297,6 +301,18 @@ class Course implements CompanyAwareInterface
                 $booking->setCourse(null);
             }
         }
+
+        return $this;
+    }
+
+    public function isAutoCancelled(): bool
+    {
+        return $this->autoCancelled;
+    }
+
+    public function setAutoCancelled(bool $autoCancelled): static
+    {
+        $this->autoCancelled = $autoCancelled;
 
         return $this;
     }

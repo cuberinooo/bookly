@@ -155,6 +155,8 @@
     "updateSuccess": "Kurs erfolgreich aktualisiert",
     "createSuccess": "Kurs erfolgreich erstellt",
     "cancelledByLabel": "Abgesagt von",
+    "autoCancelledLabel": "Automatisch Abgesagt",
+    "system": "SYSTEM",
     "types": {
       "functionalTraining": "Functional Training",
       "runTraining": "Lauftraining",
@@ -680,6 +682,7 @@
     "coach": "Coach",
     "booked": "GEBUCHT",
     "cancelled": "ABGESAGT",
+    "autoCancelled": "AUTO-ABGESAGT",
     "full": "VOLL",
     "restrictedTooltip": "Eingeschränkt für Probe-Mitglieder",
     "noSessions": "Keine Einheiten für diesen Tag geplant."

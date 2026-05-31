@@ -480,7 +480,12 @@ onUnmounted(() => {
                 severity="secondary"
                 class="w-fit text-[8px] uppercase font-black tracking-widest mt-1"
               >
-                {{ t('course.cancelledBy', { name: slotProps.data.cancelledBy?.name || t('dashboard.trainer') }) }}
+                <template v-if="slotProps.data.autoCancelled">
+                  {{ t('course.autoCancelledLabel') }}
+                </template>
+                <template v-else-if="slotProps.data.cancelledBy">
+                  {{ t('course.cancelledBy', { name: slotProps.data.cancelledBy.name }) }}
+                </template>
               </Tag>
             </div>
           </template>
@@ -651,7 +656,12 @@ onUnmounted(() => {
                       severity="secondary"
                       class="w-fit text-[8px] uppercase font-black tracking-widest mb-2"
                     >
-                      {{ t('course.cancelledBy', { name: course.cancelledBy?.name || t('dashboard.trainer') }) }}
+                      <template v-if="course.autoCancelled">
+                        {{ t('course.autoCancelledLabel') }}
+                      </template>
+                      <template v-else-if="course.cancelledBy">
+                        {{ t('course.cancelledBy', { name: course.cancelledBy.name }) }}
+                      </template>
                     </Tag>
                     <div class="flex items-center gap-2 text-xs font-bold text-slate-500">
                       <i class="pi pi-calendar text-[10px]" />

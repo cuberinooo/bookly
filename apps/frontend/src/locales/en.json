@@ -155,6 +155,8 @@
     "updateSuccess": "Course updated successfully",
     "createSuccess": "Course created successfully",
     "cancelledByLabel": "Cancelled by",
+    "autoCancelledLabel": "Automatically Cancelled",
+    "system": "SYSTEM",
     "types": {
       "functionalTraining": "Functional Training",
       "runTraining": "Run Training",
@@ -680,6 +682,7 @@
     "coach": "Coach",
     "booked": "BOOKED",
     "cancelled": "CANCELLED",
+    "autoCancelled": "AUTO-CANCELLED",
     "full": "FULL",
     "restrictedTooltip": "Restricted for Trial Members",
     "noSessions": "No sessions scheduled for this day."

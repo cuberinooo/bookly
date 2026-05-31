@@ -467,6 +467,7 @@ class CourseService
 
         $course->setStatus(\App\Enum\CourseStatus::CANCELLED);
         $course->setCancelledBy($trainer);
+        $course->setAutoCancelled($trainer === null);
 
         $this->unbookAll($course);
 
