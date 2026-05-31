@@ -1,4 +1,4 @@
-import './styles.scss';
+import './styles.css';
 import 'primeicons/primeicons.css';
 import router from './router';
 import { createApp } from 'vue';

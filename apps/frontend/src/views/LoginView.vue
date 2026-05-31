@@ -100,7 +100,7 @@ async function resendVerification() {
             :loading="loading"
             class="mt-2"
           />
-          
+
           <div
             v-if="showResend"
             class="bg-amber-50 border border-amber-200 rounded-lg p-4 mt-2"
@@ -108,14 +108,14 @@ async function resendVerification() {
             <p class="text-xs text-amber-800 mb-2 font-medium">
               {{ t('auth.didNotGetEmail') }}
             </p>
-            <Button 
-              :label="t('auth.resendVerification')" 
-              size="small" 
-              severity="warn" 
+            <Button
+              :label="t('auth.resendVerification')"
+              size="small"
+              severity="warn"
               variant="text"
-              class="w-full text-xs font-bold" 
-              :loading="resending" 
-              @click="resendVerification" 
+              class="w-full text-xs font-bold"
+              :loading="resending"
+              @click="resendVerification"
             />
           </div>
         </form>

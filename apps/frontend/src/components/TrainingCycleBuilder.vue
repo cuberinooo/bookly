@@ -47,7 +47,7 @@ const weekRanges = computed(() => {
     for (let i = 0; i < cycleWeeks.value; i++) {
         const weekStart = new Date(start);
         weekStart.setDate(start.getDate() + (i * 7));
-        
+
         const weekEnd = new Date(weekStart);
         weekEnd.setDate(weekStart.getDate() + 6);
 
@@ -65,7 +65,7 @@ async function loadData() {
             trainingCycleService.getCycles()
         ]);
         categories.value = catData;
-        
+
         if (cycleData.length > 0) {
             const active = cycleData[0]; // Take the only cycle
             currentCycle.value = active;
@@ -113,7 +113,7 @@ function toggleCell(week: number, day: number) {
         delete matrix.value[key];
         return;
     }
-    
+
     if (matrix.value[key] === selectedCategory.value.id) {
         delete matrix.value[key];
     } else {
@@ -148,11 +148,11 @@ async function saveCycle() {
 async function toggleCycleStatus() {
     try {
         await trainingCycleService.toggleStatus(isActive.value);
-        toast.add({ 
-            severity: 'info', 
-            summary: isActive.value ? t('admin.cycle.active') : t('admin.cycle.deactivated'), 
-            detail: isActive.value ? t('admin.cycle.active') : t('admin.cycle.deactivated'), 
-            life: 3000 
+        toast.add({
+            severity: 'info',
+            summary: isActive.value ? t('admin.cycle.active') : t('admin.cycle.deactivated'),
+            detail: isActive.value ? t('admin.cycle.active') : t('admin.cycle.deactivated'),
+            life: 3000
         });
     } catch (e) {
         isActive.value = !isActive.value; // Revert on error
@@ -254,9 +254,9 @@ onMounted(loadData);
                 <span class="font-black text-[10px] uppercase text-slate-400 leading-none mb-1">{{ $t('admin.cycle.week') }} {{ idx + 1 }}</span>
                 <span class="font-bold text-[9px] text-slate-600">{{ range }}</span>
               </div>
-              <div 
-                v-for="day in 7" 
-                :key="day" 
+              <div
+                v-for="day in 7"
+                :key="day"
                 class="aspect-square rounded-lg border-2 border-slate-100 cursor-pointer transition-all hover:scale-105"
                 :class="{ 'ring-2 ring-amber-400 ring-offset-1': selectedCategory && matrix[`${idx + 1}-${day}`] === selectedCategory.id }"
                 :style="{ backgroundColor: getCellColor(idx + 1, day) }"

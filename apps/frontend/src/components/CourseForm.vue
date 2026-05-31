@@ -144,7 +144,7 @@ const isChanged = computed(() => {
     if (!props.course) return false;
 
     const finalTitle = form.value.title === 'Other' ? form.value.customTitle : form.value.title;
-    
+
     const timeChanged = new Date(form.value.startTime).getTime() !== new Date(props.course.startTime).getTime();
     const trainerChanged = form.value.trainerId !== (props.course.user?.id || null);
     const titleChanged = finalTitle !== props.course.title;

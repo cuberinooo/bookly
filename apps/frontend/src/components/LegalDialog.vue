@@ -22,8 +22,8 @@ const show = computed({
 });
 
 const header = computed(() => {
-  return props.type === 'terms' 
-    ? t('settings.termsHeader', { company: props.companyName }) 
+  return props.type === 'terms'
+    ? t('settings.termsHeader', { company: props.companyName })
     : t('settings.legalHeader', { company: props.companyName });
 });
 

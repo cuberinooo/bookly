@@ -50,9 +50,9 @@ async function submit() {
 
     loading.value = true;
     try {
-        await api.post('/reset-password', { 
-            token, 
-            password: password.value 
+        await api.post('/reset-password', {
+            token,
+            password: password.value
         });
         toast.add({ severity: 'success', summary: 'Success', detail: 'Password updated! Please login with your new password.', life: 5000 });
         router.push({ name: 'login' });
@@ -156,11 +156,11 @@ async function submit() {
               for="confirmPassword"
               class="font-bold text-sm mb-2"
             >Confirm Password</label>
-            <InputText 
-              id="confirmPassword" 
-              v-model="confirmPassword" 
-              type="password" 
-              required 
+            <InputText
+              id="confirmPassword"
+              v-model="confirmPassword"
+              type="password"
+              required
               placeholder="••••••••"
               :class="{ 'p-invalid': confirmPassword && !passwordValidation.match }"
             />
@@ -169,13 +169,13 @@ async function submit() {
               class="text-red-500 mt-1 font-bold"
             >Passwords do not match</small>
           </div>
-          <Button 
-            severity="primary" 
-            type="submit" 
-            label="Reset Password" 
-            :loading="loading" 
+          <Button
+            severity="primary"
+            type="submit"
+            label="Reset Password"
+            :loading="loading"
             :disabled="!isFormValid"
-            class="mt-2 py-3 font-bold uppercase tracking-widest text-sm" 
+            class="mt-2 py-3 font-bold uppercase tracking-widest text-sm"
           />
         </form>
       </template>

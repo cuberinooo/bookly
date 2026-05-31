@@ -31,10 +31,10 @@ watch(() => props.baseDate, (newVal) => {
 
 const displayedCycleWeek = computed(() => {
     if (!props.cycleInfo || !props.cycleInfo.startDate) return 0;
-    
+
     const cycleStart = new Date(props.cycleInfo.startDate);
     cycleStart.setHours(0, 0, 0, 0);
-    
+
     // Find Monday of the cycle start week
     const day = cycleStart.getDay();
     const diff = (day === 0 ? 6 : day - 1);
@@ -42,7 +42,7 @@ const displayedCycleWeek = computed(() => {
 
     const currentBase = new Date(internalBaseDate.value);
     currentBase.setHours(0, 0, 0, 0);
-    
+
     // Find Monday of the current base week
     const currentDay = currentBase.getDay();
     const currentDiff = (currentDay === 0 ? 6 : currentDay - 1);
@@ -50,9 +50,9 @@ const displayedCycleWeek = computed(() => {
 
     const diffDays = Math.round((currentBase.getTime() - cycleStart.getTime()) / (24 * 60 * 60 * 1000));
     const weeksElapsed = Math.floor(diffDays / 7);
-    
+
     if (weeksElapsed < 0) return 1;
-    
+
     return (weeksElapsed % props.cycleInfo.totalWeeks) + 1;
 });
 

@@ -131,12 +131,12 @@ onMounted(fetchSettings);
     @media (max-width: 640px) {
       flex-direction: column;
       align-items: stretch;
-      
+
       code {
         padding: 0.75rem;
         border-bottom: 1px solid var(--border-color);
       }
-      
+
       :deep(.p-button) {
         width: 100%;
         justify-content: center;

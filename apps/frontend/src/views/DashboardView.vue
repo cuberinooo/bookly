@@ -162,8 +162,8 @@ function formatDuration(min: number) {
     if (min < 60) return `${min}${t('app.minutesShort')}`;
     const hoursCount = Math.floor(min / 60);
     const remaining = min % 60;
-    return remaining > 0 
-        ? `${hoursCount}${t('app.hourShort')} ${remaining}${t('app.minutesShort')}` 
+    return remaining > 0
+        ? `${hoursCount}${t('app.hourShort')} ${remaining}${t('app.minutesShort')}`
         : `${hoursCount}${t('app.hourShort')}`;
 }
 

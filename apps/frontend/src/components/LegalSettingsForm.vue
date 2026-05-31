@@ -128,8 +128,8 @@ onMounted(fetchSettings);
                   :placeholder="$t('settings.legalNoticePlaceholder')"
                   class="w-full font-mono text-sm"
                 />
-                <MarkdownPreview 
-                  :content="settings.legalNoticeMarkdown" 
+                <MarkdownPreview
+                  :content="settings.legalNoticeMarkdown"
                   :title="$t('settings.legalNoticePreview')"
                   :placeholder="$t('settings.legalNoticePlaceholder')"
                 />
@@ -287,8 +287,8 @@ onMounted(fetchSettings);
                 placeholder="# Allgemeine Geschäftsbedingungen (AGB)&#10;&#10;1. Geltungsbereich..."
                 class="w-full font-mono text-sm"
               />
-              <MarkdownPreview 
-                :content="settings.termsAndConditionsMarkdown" 
+              <MarkdownPreview
+                :content="settings.termsAndConditionsMarkdown"
                 :title="$t('settings.termsPreview')"
                 :placeholder="$t('settings.termsPlaceholder')"
               />
@@ -328,12 +328,12 @@ onMounted(fetchSettings);
                 </p>
               </div>
             </div>
-            <Button 
-              icon="pi pi-download" 
-              severity="secondary" 
-              variant="text" 
+            <Button
+              icon="pi pi-download"
+              severity="secondary"
+              variant="text"
               rounded
-              @click="downloadPrivacyPolicy()" 
+              @click="downloadPrivacyPolicy()"
             />
           </div>
           <FileUpload

@@ -27,7 +27,7 @@ const dashboardLabel = computed(() => {
       <i class="pi pi-calendar" />
       <span>{{ t('app.courses') }}</span>
     </RouterLink>
-    
+
     <RouterLink
       to="/dashboard"
       class="mobile-nav-item"
@@ -35,7 +35,7 @@ const dashboardLabel = computed(() => {
       <i class="pi pi-th-large" />
       <span>{{ dashboardLabel }}</span>
     </RouterLink>
-    
+
     <RouterLink
       to="/meetups"
       class="mobile-nav-item"
@@ -54,7 +54,7 @@ const dashboardLabel = computed(() => {
       />
       <span>{{ t('app.meetups') }}</span>
     </RouterLink>
-    
+
     <RouterLink
       to="/leaderboard"
       class="mobile-nav-item"
@@ -112,7 +112,7 @@ const dashboardLabel = computed(() => {
 
   &.router-link-active {
     color: var(--primary-color);
-    
+
     i {
       transform: scale(1.1);
     }

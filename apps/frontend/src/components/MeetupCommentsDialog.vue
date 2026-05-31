@@ -148,8 +148,8 @@ onMounted(() => {
           <div
             class="p-3 rounded-2xl text-sm shadow-sm border"
             :class="[
-              comment.author.id === authStore.user?.id 
-                ? 'bg-primary text-white border-primary rounded-tr-none' 
+              comment.author.id === authStore.user?.id
+                ? 'bg-primary text-white border-primary rounded-tr-none'
                 : 'bg-white text-slate-800 border-slate-100 rounded-tl-none'
             ]"
           >

@@ -109,7 +109,7 @@ const isMobile = ref(window.innerWidth <= 768);
 const rangeLabel = computed(() => {
     const start = lazyParams.value.startDate;
     const end = lazyParams.value.endDate;
-    
+
     return `${start.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })} - ${end.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })}`;
 });
 
@@ -279,8 +279,8 @@ function formatDuration(min: number) {
     if (min < 60) return `${min}${t('course.minutes').substring(0, 3)}`;
     const hours = Math.floor(min / 60);
     const remaining = min % 60;
-    return remaining > 0 
-        ? `${hours}h ${remaining}${t('course.minutes').substring(0, 3)}` 
+    return remaining > 0
+        ? `${hours}h ${remaining}${t('course.minutes').substring(0, 3)}`
         : `${hours} ${hours > 1 ? t('course.hours') : t('course.hour')}`;
 }
 function confirmCancelCourse(course: any) {
