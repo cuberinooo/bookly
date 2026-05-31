@@ -31,7 +31,9 @@ class MeetupCommentRepository extends ServiceEntityRepository
         $qb = $this->createQueryBuilder('c')
             ->select('count(c.id)')
             ->where('c.meetup = :meetup')
-            ->setParameter('meetup', $meetup);
+            ->andWhere('c.author != :user')
+            ->setParameter('meetup', $meetup)
+            ->setParameter('user', $user);
 
         if ($readState) {
             $qb->andWhere('c.createdAt > :lastReadAt')

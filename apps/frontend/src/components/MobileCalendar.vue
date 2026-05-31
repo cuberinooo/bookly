@@ -248,7 +248,8 @@ function formatDayName(date: Date) {
                   :class="{
                     'is-booked': isBookedByUser(course),
                     'is-restricted': isRestrictedForTrial(course),
-                    'is-past': isPastCourse(course)
+                    'is-past': isPastCourse(course),
+                    'is-postponed': course.status === 'postponed'
                   }"
                   :style="course.cycleCategory ? { borderLeft: `6px solid ${course.cycleCategory.colorHex}` } : {}"
                   @click="$emit('course-click', course)"
@@ -270,6 +271,12 @@ function formatDayName(date: Date) {
                   </div>
 
                   <div class="card-main">
+                    <div
+                      v-if="course.status === 'postponed'"
+                      class="postponed-badge-mobile mb-1"
+                    >
+                      <i class="pi pi-clock" /> {{ t('calendar.postponed') }}
+                    </div>
                     <div class="course-title">
                       {{ course.title }}
                       <span
@@ -284,6 +291,12 @@ function formatDayName(date: Date) {
                       >
                         <i class="pi pi-history" /> {{ t('calendar.past') }}
                       </span>
+                    </div>
+                    <div
+                      v-if="course.status === 'postponed' && course.postponedBy"
+                      class="course-coach !text-red-500 font-bold"
+                    >
+                      {{ t('course.postponedByLabel') }} {{ course.postponedBy.name }}
                     </div>
                     <div class="course-coach">
                       {{ t('calendar.coach') }}: {{ course.user?.name }}
@@ -484,6 +497,19 @@ function formatDayName(date: Date) {
         background: #fffbeb;
     }
 
+    &.is-postponed {
+        background: #f1f5f9;
+        border-color: #94a3b8;
+        border-left: 4px dashed #64748b;
+        opacity: 0.8;
+        filter: grayscale(0.5);
+
+        .card-main .course-title {
+            text-decoration: line-through;
+            color: #64748b;
+        }
+    }
+
     &.is-restricted {
         background: #f1f5f9;
         border-color: #cbd5e1;
@@ -569,6 +595,23 @@ function formatDayName(date: Date) {
             font-weight: 900;
             font-family: 'Barlow Condensed', sans-serif;
             letter-spacing: 0.05em;
+        }
+
+        .postponed-badge-mobile {
+            background: #ef4444; // red-500
+            color: white;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.65rem;
+            font-weight: 900;
+            font-family: 'Barlow Condensed', sans-serif;
+            letter-spacing: 0.05em;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            width: fit-content;
+
+            i { font-size: 0.65rem; }
         }
 
         .booked-indicator {
