@@ -691,5 +691,24 @@
     "legal": "Impressum & Rechtliches",
     "hosting": "Infrastruktur",
     "hostedBy": "Gehostet in Deutschland 🇩🇪"
+  },
+  "cookies": {
+    "title": "Ihre Privatsphäre ist uns wichtig",
+    "description": "Wir verwenden funktionale Cookies, um Ihre Einstellungen wie Sprache zu speichern und Ihr Buchungserlebnis zu verbessern. Einige Cookies sind für den Betrieb der Seite unerlässlich.",
+    "accept": "Alle akzeptieren",
+    "decline": "Nur Essenzielle",
+    "manage": "Einstellungen verwalten",
+    "preferencesTitle": "Cookie-Einstellungen",
+    "preferencesDesc": "Sie können wählen, welche Arten von Cookies Sie zulassen möchten. Essenzielle Cookies können nicht deaktiviert werden, da sie für das ordnungsgemäße Funktionieren der App erforderlich sind.",
+    "essentialTitle": "Technisch Notwendig",
+    "essentialDesc": "Erforderlich für die Funktionalität und Sicherheit der Website.",
+    "functionalTitle": "Funktional",
+    "functionalDesc": "Speichern Ihrer Einstellungen und Präferenzen.",
+    "analyticalTitle": "Analytisch",
+    "analyticalDesc": "Helfen uns zu verstehen, wie die App genutzt wird.",
+    "marketingTitle": "Marketing",
+    "marketingDesc": "Verwendet für maßgeschneiderte Inhalte und Werbung.",
+    "savePreferences": "Einstellungen speichern",
+    "declineAll": "Alle ablehnen"
   }
 }

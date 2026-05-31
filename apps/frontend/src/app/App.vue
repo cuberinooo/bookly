@@ -13,6 +13,7 @@ import VersionUpdateToast from '../components/VersionUpdateToast.vue';
 import mercureService from '../services/mercure';
 import { useOnboarding } from '../composables/useOnboarding';
 import FloatingOnboardingWidget from '../components/FloatingOnboardingWidget.vue';
+import CookieConsent from '../components/CookieConsent.vue';
 import { useI18n } from 'vue-i18n';
 import { usePrimeVue } from 'primevue/config';
 import OverlayBadge from 'primevue/overlaybadge';
@@ -637,6 +638,7 @@ onMounted(async () => {
     <VersionUpdateToast />
     <TheMobileNav />
     <FloatingOnboardingWidget v-if="authStore.isLoggedIn" />
+    <CookieConsent />
   </div>
 </template>
 

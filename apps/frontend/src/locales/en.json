@@ -691,5 +691,24 @@
     "legal": "Legal & Privacy",
     "hosting": "Infrastructure",
     "hostedBy": "Hosted in Germany 🇩🇪"
+  },
+  "cookies": {
+    "title": "We value your privacy",
+    "description": "We use functional cookies to save your preferences like language and to improve your booking experience. Some cookies are essential for the site to work.",
+    "accept": "Accept All",
+    "decline": "Decline Non-Essential",
+    "manage": "Manage Preferences",
+    "preferencesTitle": "Cookie Preferences",
+    "preferencesDesc": "You can choose which types of cookies you want to allow. Essential cookies cannot be disabled as they are required for the app to function properly.",
+    "essentialTitle": "Strictly Necessary",
+    "essentialDesc": "Required for site functionality and security.",
+    "functionalTitle": "Functional",
+    "functionalDesc": "Remembering your settings and preferences.",
+    "analyticalTitle": "Analytical",
+    "analyticalDesc": "Helping us understand how the app is used.",
+    "marketingTitle": "Marketing",
+    "marketingDesc": "Used for tailored content and advertisements.",
+    "savePreferences": "Save Preferences",
+    "declineAll": "Decline All"
   }
 }
