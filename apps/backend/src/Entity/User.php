@@ -100,7 +100,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, Company
     private ?\DateTimeInterface $passwordResetTokenExpiresAt = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(['user:read', 'meetup:read', 'workout_record:read', 'comment:read'])]
+    #[Groups(['user:read', 'meetup:read', 'workout_record:read', 'comment:read', 'course:read', 'booking:read'])]
     private ?string $profilePicture = null;
 
     #[ORM\Column(name: 'gender', type: 'string', enumType: \App\Enum\Gender::class, nullable: true)]

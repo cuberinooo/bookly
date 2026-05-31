@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, ref } from 'vue';
 import { useAuthStore } from '../store/useAuthStore';
 import api from '../services/api';
 
@@ -19,7 +19,6 @@ const { t } = useI18n();
 const confirm = useConfirm();
 const toast = useToast();
 const authStore = useAuthStore();
-const profileHashes = ref<Record<number, string>>({});
 const emergencyInfo = ref<any>(null);
 const showEmergencyDialog = ref(false);
 const loadingEmergency = ref(false);
@@ -39,24 +38,16 @@ const waitlistParticipants = computed(() => {
     return props.course?.bookings.filter((b: any) => b.isWaitlist).sort((a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()) || [];
 });
 
-watch(() => props.visible, (isVisible) => {
-    if (isVisible && props.course?.bookings) {
-        fetchProfilePictures();
+function getProfilePictureUrl(user: any) {
+    if (isAnonymized(user.name)) {
+        return null;
     }
-}, { immediate: true });
 
-async function fetchProfilePictures() {
-    const userIds = props.course.bookings.map((b: any) => b.user.id);
-    if (userIds.length === 0) return;
-
-    try {
-        const response = await api.get('/user/profile-pictures', {
-            params: { ids: userIds.join(',') }
-        });
-        profileHashes.value = response.data;
-    } catch (e) {
-        console.error('Failed to fetch profile pictures', e);
+    const hash = user.profilePicture;
+    if (hash) {
+        return `${import.meta.env.VITE_API_URL}/user/profile-picture/${user.id}?t=${hash}`;
     }
+    return null;
 }
 
 function confirmEmergencyAccess(user: any) {
@@ -115,18 +106,6 @@ async function toggleAttendance(booking: any) {
 
 function isAnonymized(name: string) {
     return name?.startsWith('Athlete #');
-}
-
-function getProfilePictureUrl(user: any) {
-    if (isAnonymized(user.name)) {
-        return null;
-    }
-
-    const hash = profileHashes.value[user.id];
-    if (hash) {
-        return `${import.meta.env.VITE_API_URL}/user/profile-picture/${user.id}?t=${hash}`;
-    }
-    return null;
 }
 
 function close() {
