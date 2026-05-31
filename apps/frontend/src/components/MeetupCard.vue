@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Meetup } from '../services/meetup.service';
 import { MeetupStatus } from '../app/enums/MeetupStatus';
@@ -56,6 +56,10 @@ const menuItems = computed(() => {
 });
 
 const localUnreadCount = ref(props.meetup.unreadCommentsCount || 0);
+
+watch(() => props.meetup.unreadCommentsCount, (newVal) => {
+    localUnreadCount.value = newVal || 0;
+});
 const rsvpDeadline = computed(() => props.meetup.rsvpDeadline ? new Date(props.meetup.rsvpDeadline) : null);
 const meetupDate = computed(() => props.meetup.meetupDate ? new Date(props.meetup.meetupDate) : null);
 const isRsvpLocked = computed(() => {

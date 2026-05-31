@@ -6,6 +6,8 @@ export interface EntityUpdate {
   action: 'created' | 'updated' | 'deleted';
   id: number;
   companyId: number;
+  meetupId?: number;
+  [key: string]: any;
 }
 
 const pendingUpdates: EntityUpdate[] = [];

@@ -290,7 +290,7 @@ function onSlotClick(day: Date, hour: number) {
                     'is-booked': isBookedByUser(course),
                     'is-restricted': isRestrictedForTrial(course),
                     'is-past': isPastCourse(course),
-                    'is-postponed': course.status === 'postponed'
+                    'is-cancelled': course.status === 'cancelled'
                   }"
                   :style="[
                     !isCompactView ? { gridRow: getGridRow(course.startTime, course.durationMinutes) } : {},
@@ -310,10 +310,10 @@ function onSlotClick(day: Date, hour: number) {
 
                   <div class="flex flex-col gap-1 w-full mb-1">
                     <div
-                      v-if="course.status === 'postponed'"
-                      class="postponed-badge"
+                      v-if="course.status === 'cancelled'"
+                      class="cancelled-badge"
                     >
-                      <i class="pi pi-clock" /> {{ t('calendar.postponed') }}
+                      <i class="pi pi-clock" /> {{ t('calendar.cancelled') }}
                     </div>
                     <div class="flex justify-between items-start w-full gap-1">
                       <div
@@ -352,10 +352,10 @@ function onSlotClick(day: Date, hour: number) {
 
                   <div class="course-meta">
                     <div
-                      v-if="course.status === 'postponed' && course.postponedBy"
+                      v-if="course.status === 'cancelled' && course.cancelledBy"
                       class="coach-line !text-red-500 font-bold"
                     >
-                      {{ t('course.postponedByLabel') }} {{ course.postponedBy.name }}
+                      {{ t('course.cancelledByLabel') }} {{ course.cancelledBy.name }}
                     </div>
                     <div class="coach-line">
                       <i class="pi pi-user text-[10px]" /> {{ course.user?.name }}
@@ -628,7 +628,7 @@ $border-color: #e2e8f0;
         }
     }
 
-    &.is-postponed {
+    &.is-cancelled {
         background: #f1f5f9;
         border-color: #94a3b8;
         border-left: 4px dashed #64748b;
@@ -662,7 +662,7 @@ $border-color: #e2e8f0;
         }
     }
 
-    .postponed-badge {
+    .cancelled-badge {
         font-family: 'Barlow Condensed', sans-serif;
         font-weight: 800;
         font-size: 0.6rem;

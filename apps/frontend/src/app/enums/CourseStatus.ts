@@ -1,5 +1,5 @@
 export enum CourseStatus {
     ACTIVE = 'active',
-    POSTPONED = 'postponed',
+    CANCELLED = 'cancelled',
     DELETED = 'deleted',
 }

@@ -135,15 +135,15 @@ class MeetupController extends AbstractController
         /** @var \App\Entity\User $user */
         $user = $this->getUser();
 
-        // Get all meetups the user is organized or attending
+        // Get all active meetups (where comments can be relevant)
         $qb = $meetupRepository->createQueryBuilder('m');
-        $qb->leftJoin('m.rsvps', 'r')
-           ->andWhere($qb->expr()->orX(
-               'm.creator = :user',
-               'r.user = :user AND r.status = :status'
+        $qb->andWhere($qb->expr()->orX(
+               'm.meetupDate IS NULL',
+               'm.meetupDate >= :now'
            ))
-           ->setParameter('user', $user)
-           ->setParameter('status', RsvpStatus::GOING);
+           ->andWhere('m.status != :cancelled')
+           ->setParameter('now', new \DateTime())
+           ->setParameter('cancelled', \App\Enum\MeetupStatus::CANCELLED);
 
         $relevantMeetups = $qb->getQuery()->getResult();
         $totalUnread = 0;

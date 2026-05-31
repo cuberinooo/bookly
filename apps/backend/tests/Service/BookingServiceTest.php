@@ -254,15 +254,15 @@ class BookingServiceTest extends TestCase
         $this->service->deleteBooking($booking);
     }
 
-    public function test_book_postponed_course_throws_exception(): void
+    public function test_book_cancelled_course_throws_exception(): void
     {
-        $user = new User();
         $course = $this->createMock(Course::class);
         $course->method('getEndTime')->willReturn(new \DateTime('+1 hour'));
-        $course->method('getStatus')->willReturn(\App\Enum\CourseStatus::POSTPONED);
+        $course->method('getStatus')->willReturn(\App\Enum\CourseStatus::CANCELLED);
+        $user = new User();
 
         $this->expectException(\Exception::class);
-        $this->expectExceptionMessage('error.course_postponed_no_book');
+        $this->expectExceptionMessage('error.course_cancelled_no_book');
 
         $this->service->book($course, $user);
     }

@@ -442,7 +442,7 @@ class CourseService
     {
         $overlappingCourses = $this->courseRepository->findOverlappingCourses($startTime, $endTime, $excludeId, $trainerId);
 
-        // Filter out postponed courses from conflict detection
+        // Filter out cancelled courses from conflict detection
         $overlappingCourses = array_filter($overlappingCourses, fn (Course $c) => \App\Enum\CourseStatus::ACTIVE === $c->getStatus());
 
         if (!empty($overlappingCourses)) {
@@ -459,14 +459,14 @@ class CourseService
         }
     }
 
-    public function postponeCourse(Course $course, ?User $trainer = null): void
+    public function cancelCourse(Course $course, ?User $trainer = null): void
     {
-        if (\App\Enum\CourseStatus::POSTPONED === $course->getStatus()) {
-            throw new \LogicException($this->translator->trans('error.course_already_postponed'));
+        if (\App\Enum\CourseStatus::CANCELLED === $course->getStatus()) {
+            throw new \LogicException($this->translator->trans('error.course_already_cancelled'));
         }
 
-        $course->setStatus(\App\Enum\CourseStatus::POSTPONED);
-        $course->setPostponedBy($trainer);
+        $course->setStatus(\App\Enum\CourseStatus::CANCELLED);
+        $course->setCancelledBy($trainer);
 
         $this->unbookAll($course);
 
@@ -524,13 +524,13 @@ class CourseService
            ->setParameter('endDate', $endDate);
 
         // If memberId is provided, we want to see ALL their bookings regardless of course status
-        // (so they see history, postponed ones, etc.), but NOT deleted ones.
-        // If NO memberId, we show ACTIVE and POSTPONED courses (for calendar/management)
+        // (so they see history, cancelled ones, etc.), but NOT deleted ones.
+        // If NO memberId, we show ACTIVE and CANCELLED courses (for calendar/management)
         if (!$memberId) {
             $qb->andWhere('c.status IN (:statuses)')
                ->setParameter('statuses', [
                    \App\Enum\CourseStatus::ACTIVE,
-                   \App\Enum\CourseStatus::POSTPONED,
+                   \App\Enum\CourseStatus::CANCELLED,
                ]);
         } else {
             $qb->andWhere('c.status != :deletedStatus')

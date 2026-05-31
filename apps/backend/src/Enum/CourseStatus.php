@@ -7,6 +7,6 @@ namespace App\Enum;
 enum CourseStatus: string
 {
     case ACTIVE = 'active';
-    case POSTPONED = 'postponed';
+    case CANCELLED = 'cancelled';
     case DELETED = 'deleted';
 }

@@ -40,9 +40,9 @@ class BookingService
             throw new \Exception($this->translator->trans('error.cannot_book_finished'));
         }
 
-        // Check if the course is postponed
-        if (\App\Enum\CourseStatus::POSTPONED === $course->getStatus()) {
-            throw new \Exception($this->translator->trans('error.course_postponed_no_book'));
+        // Check if the course is cancelled
+        if (\App\Enum\CourseStatus::CANCELLED === $course->getStatus()) {
+            throw new \Exception($this->translator->trans('error.course_cancelled_no_book'));
         }
 
         // Validate booking window

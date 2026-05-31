@@ -69,7 +69,7 @@ class Course implements CompanyAwareInterface
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
     #[Groups(['course:read'])]
-    private ?User $postponedBy = null;
+    private ?User $cancelledBy = null;
 
     #[ORM\ManyToOne(inversedBy: 'courses')]
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
@@ -197,14 +197,14 @@ class Course implements CompanyAwareInterface
         return $this;
     }
 
-    public function getPostponedBy(): ?User
+    public function getCancelledBy(): ?User
     {
-        return $this->postponedBy;
+        return $this->cancelledBy;
     }
 
-    public function setPostponedBy(?User $postponedBy): static
+    public function setCancelledBy(?User $cancelledBy): static
     {
-        $this->postponedBy = $postponedBy;
+        $this->cancelledBy = $cancelledBy;
 
         return $this;
     }

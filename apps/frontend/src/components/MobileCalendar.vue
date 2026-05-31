@@ -249,7 +249,7 @@ function formatDayName(date: Date) {
                     'is-booked': isBookedByUser(course),
                     'is-restricted': isRestrictedForTrial(course),
                     'is-past': isPastCourse(course),
-                    'is-postponed': course.status === 'postponed'
+                    'is-cancelled': course.status === 'cancelled'
                   }"
                   :style="course.cycleCategory ? { borderLeft: `6px solid ${course.cycleCategory.colorHex}` } : {}"
                   @click="$emit('course-click', course)"
@@ -272,10 +272,10 @@ function formatDayName(date: Date) {
 
                   <div class="card-main">
                     <div
-                      v-if="course.status === 'postponed'"
-                      class="postponed-badge-mobile mb-1"
+                      v-if="course.status === 'cancelled'"
+                      class="cancelled-badge-mobile mb-1"
                     >
-                      <i class="pi pi-clock" /> {{ t('calendar.postponed') }}
+                      <i class="pi pi-clock" /> {{ t('calendar.cancelled') }}
                     </div>
                     <div class="course-title">
                       {{ course.title }}
@@ -293,10 +293,10 @@ function formatDayName(date: Date) {
                       </span>
                     </div>
                     <div
-                      v-if="course.status === 'postponed' && course.postponedBy"
+                      v-if="course.status === 'cancelled' && course.cancelledBy"
                       class="course-coach !text-red-500 font-bold"
                     >
-                      {{ t('course.postponedByLabel') }} {{ course.postponedBy.name }}
+                      {{ t('course.cancelledByLabel') }} {{ course.cancelledBy.name }}
                     </div>
                     <div class="course-coach">
                       {{ t('calendar.coach') }}: {{ course.user?.name }}
@@ -497,7 +497,7 @@ function formatDayName(date: Date) {
         background: #fffbeb;
     }
 
-    &.is-postponed {
+    &.is-cancelled {
         background: #f1f5f9;
         border-color: #94a3b8;
         border-left: 4px dashed #64748b;
@@ -597,7 +597,7 @@ function formatDayName(date: Date) {
             letter-spacing: 0.05em;
         }
 
-        .postponed-badge-mobile {
+        .cancelled-badge-mobile {
             background: #ef4444; // red-500
             color: white;
             padding: 0.15rem 0.5rem;

@@ -42,17 +42,17 @@ const menuItems = computed(() => {
         {
             label: t('course.participants'),
             icon: 'pi pi-users',
-            disabled: activeCourse.value.status === 'postponed',
+            disabled: activeCourse.value.status === 'cancelled',
             command: () => {
                 selectedCourse.value = activeCourse.value;
                 participantsDialog.value = true;
             }
         },
         {
-            label: t('course.postpone'),
-            icon: 'pi pi-clock',
-            disabled: activeCourse.value.status === 'postponed',
-            command: () => confirmPostponeCourse(activeCourse.value)
+            label: t('course.cancel'),
+            icon: 'pi pi-times-circle',
+            disabled: activeCourse.value.status === 'cancelled',
+            command: () => confirmCancelCourse(activeCourse.value)
         },
         {
             label: t('app.edit'),
@@ -283,14 +283,14 @@ function formatDuration(min: number) {
         ? `${hours}h ${remaining}${t('course.minutes').substring(0, 3)}` 
         : `${hours} ${hours > 1 ? t('course.hours') : t('course.hour')}`;
 }
-function confirmPostponeCourse(course: any) {
+function confirmCancelCourse(course: any) {
     confirm.require({
-        message: t('course.postponeConfirm', { title: course.title }),
-        header: t('course.postpone'),
-        icon: 'pi pi-clock',
+        message: t('course.cancelConfirm', { title: course.title }),
+        header: t('course.cancel'),
+        icon: 'pi pi-times-circle',
         acceptProps: {
-            label: t('course.postpone'),
-            severity: 'warn'
+            label: t('course.cancel'),
+            severity: 'danger'
         },
         rejectProps: {
             label: t('app.cancel'),
@@ -298,11 +298,11 @@ function confirmPostponeCourse(course: any) {
         },
         accept: async () => {
             try {
-                await courseStore.postponeCourse(course.id);
-                toast.add({ severity: 'success', summary: t('course.postpone'), detail: t('course.postponedSummary'), life: 5000 });
+                await courseStore.cancelCourse(course.id);
+                toast.add({ severity: 'success', summary: t('course.cancel'), detail: t('course.cancelledSummary'), life: 5000 });
                 loadLazyData();
             } catch (e: any) {
-                toast.add({ severity: 'error', summary: t('app.error'), detail: e.response?.data?.error || t('course.postponeError'), life: 5000 });
+                toast.add({ severity: 'error', summary: t('app.error'), detail: e.response?.data?.error || t('course.cancelError'), life: 5000 });
             }
         }
     });
@@ -458,7 +458,7 @@ onUnmounted(() => {
         :rows="lazyParams.rows"
         :total-records="totalRecords"
         class="managed-table"
-        :row-class="(data) => ({ 'is-postponed': data.status === 'postponed' })"
+        :row-class="(data) => ({ 'is-cancelled': data.status === 'cancelled' })"
         @page="onPage"
       >
         <Column
@@ -476,11 +476,11 @@ onUnmounted(() => {
             >
               <span class="course-title-cell">{{ slotProps.data.title }}</span>
               <Tag
-                v-if="slotProps.data.status === 'postponed'"
+                v-if="slotProps.data.status === 'cancelled'"
                 severity="secondary"
                 class="w-fit text-[8px] uppercase font-black tracking-widest mt-1"
               >
-                {{ t('course.postponedBy', { name: slotProps.data.postponedBy?.name || t('dashboard.trainer') }) }}
+                {{ t('course.cancelledBy', { name: slotProps.data.cancelledBy?.name || t('dashboard.trainer') }) }}
               </Tag>
             </div>
           </template>
@@ -647,11 +647,11 @@ onUnmounted(() => {
                       {{ course.title }}
                     </span>
                     <Tag
-                      v-if="course.status === 'postponed'"
+                      v-if="course.status === 'cancelled'"
                       severity="secondary"
                       class="w-fit text-[8px] uppercase font-black tracking-widest mb-2"
                     >
-                      {{ t('course.postponedBy', { name: course.postponedBy?.name || t('dashboard.trainer') }) }}
+                      {{ t('course.cancelledBy', { name: course.cancelledBy?.name || t('dashboard.trainer') }) }}
                     </Tag>
                     <div class="flex items-center gap-2 text-xs font-bold text-slate-500">
                       <i class="pi pi-calendar text-[10px]" />
@@ -784,17 +784,17 @@ onUnmounted(() => {
             &:hover { @apply bg-slate-50/50; }
         }
 
-        &.is-postponed {
+        &.is-cancelled {
           @apply opacity-50 grayscale;
 
           .action-btn {
-            @apply pointer-events-auto; // Allow deletion/edit even if postponed
+            @apply pointer-events-auto; // Allow deletion/edit even if cancelled
           }
         }
     }
 }
 
-.is-postponed-card {
+.is-cancelled-card {
   @apply opacity-60 grayscale border-dashed;
 }
 

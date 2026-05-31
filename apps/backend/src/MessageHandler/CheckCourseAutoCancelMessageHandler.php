@@ -68,7 +68,7 @@ class CheckCourseAutoCancelMessageHandler
         
         if (count($confirmedBookings) < $settings->getAutoCancelMinParticipants()) {
             // Automatically cancel the course
-            $this->courseService->postponeCourse($course, null);
+            $this->courseService->cancelCourse($course, null);
             
             // Notify the trainer
             $this->notifyTrainer($course, count($confirmedBookings));

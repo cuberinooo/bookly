@@ -71,7 +71,7 @@ class CheckCourseAutoCancelMessageHandlerTest extends TestCase
 
         $this->courseRepository->method('find')->willReturn($course);
 
-        $this->courseService->expects($this->never())->method('postponeCourse');
+        $this->courseService->expects($this->never())->method('cancelCourse');
         
         ($this->handler)(new CheckCourseAutoCancelMessage(1));
     }
@@ -102,7 +102,7 @@ class CheckCourseAutoCancelMessageHandlerTest extends TestCase
                 return new Envelope($message, $stamps);
             });
 
-        $this->courseService->expects($this->never())->method('postponeCourse');
+        $this->courseService->expects($this->never())->method('cancelCourse');
         
         ($this->handler)(new CheckCourseAutoCancelMessage(1));
     }
@@ -139,7 +139,7 @@ class CheckCourseAutoCancelMessageHandlerTest extends TestCase
         $this->courseRepository->method('find')->willReturn($course);
 
         $this->courseService->expects($this->once())
-            ->method('postponeCourse')
+            ->method('cancelCourse')
             ->with($course, null);
         
         $this->mailer->expects($this->once())->method('send');
@@ -170,7 +170,7 @@ class CheckCourseAutoCancelMessageHandlerTest extends TestCase
 
         $this->courseRepository->method('find')->willReturn($course);
 
-        $this->courseService->expects($this->never())->method('postponeCourse');
+        $this->courseService->expects($this->never())->method('cancelCourse');
         
         ($this->handler)(new CheckCourseAutoCancelMessage(1));
     }
