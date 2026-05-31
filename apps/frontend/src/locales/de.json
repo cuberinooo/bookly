@@ -484,6 +484,11 @@
     "verifyEmailInstruction": "Wir haben einen Bestätigungslink an deine E-Mail gesendet. Bitte klicke auf den Link, um dein Konto zu aktivieren.",
     "goToLogin": "Zum Login"
     },
+  "versionUpdate": {
+    "available": "Eine neue Version der App ist verfügbar.",
+    "pleaseRefresh": "Bitte lade die Seite neu, um zu aktualisieren.",
+    "refresh": "Aktualisieren"
+  },
   "profile": {
     "myAccount": "Mein Konto",
     "personalInfo": "Persönliche Informationen",

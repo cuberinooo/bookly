@@ -31,6 +31,14 @@ const { initRouteTracking } = useOnboarding();
 let notificationInterval: any = null;
 
 onMounted(() => {
+  // Clean up refresh query param if present from a version update hard reload
+  const url = new URL(window.location.href);
+  if (url.searchParams.has('refresh')) {
+    url.searchParams.delete('refresh');
+    const newUrl = url.pathname + url.search + url.hash;
+    window.history.replaceState({}, '', newUrl);
+  }
+
   initRouteTracking();
   if (authStore.isLoggedIn) {
       meetupStore.fetchNotificationCounts();
