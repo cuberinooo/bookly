@@ -76,7 +76,7 @@ const saveChoice = () => {
 <template>
   <transition name="fade-slide">
     <div
-      v-if="isVisible"
+      v-if="isVisible && !showModal"
       role="dialog"
       aria-live="polite"
       aria-labelledby="cookie-title"
@@ -101,10 +101,10 @@ const saveChoice = () => {
             </p>
           </div>
 
-          <div class="action-buttons flex flex-wrap items-center gap-3 shrink-0">
+          <div class="action-buttons flex flex-col sm:flex-row items-center gap-3 shrink-0 w-full sm:w-auto">
             <button
               type="button"
-              class="text-sm font-medium hover:underline focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-slate-900 rounded px-2 py-1"
+              class="text-sm font-medium hover:underline focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-slate-900 rounded px-2 py-1 order-3 sm:order-1"
               @click="showModal = true"
             >
               {{ t('cookies.manage') }}
@@ -114,14 +114,14 @@ const saveChoice = () => {
               severity="secondary"
               outlined
               size="small"
-              class="min-w-[140px]"
+              class="w-full sm:min-w-[140px] order-2 sm:order-2"
               @click="rejectNonEssential"
             />
             <Button
               :label="t('cookies.accept')"
               severity="primary"
               size="small"
-              class="min-w-[140px]"
+              class="w-full sm:min-w-[140px] order-1 sm:order-3"
               @click="acceptAll"
             />
           </div>
@@ -134,7 +134,9 @@ const saveChoice = () => {
     v-model:visible="showModal"
     :header="t('cookies.preferencesTitle')"
     :modal="true"
-    :breakpoints="{ '960px': '75vw', '641px': '90vw' }"
+    :dismissable-mask="true"
+    :breakpoints="{ '960px': '75vw', '641px': '95vw' }"
+    :style="{ width: '50vw' }"
     class="cookie-preferences-dialog"
   >
     <div class="flex flex-col gap-6 py-4">
@@ -206,16 +208,18 @@ const saveChoice = () => {
     </div>
 
     <template #footer>
-      <div class="flex justify-between items-center w-full">
+      <div class="flex flex-col sm:flex-row justify-between items-center gap-4 w-full">
         <Button
           :label="t('cookies.declineAll')"
           severity="secondary"
           text
+          class="w-full sm:w-auto order-2 sm:order-1"
           @click="rejectNonEssential"
         />
         <Button
           :label="t('cookies.savePreferences')"
           severity="primary"
+          class="w-full sm:w-auto order-1 sm:order-2"
           @click="saveCustom"
         />
       </div>
@@ -232,13 +236,20 @@ const saveChoice = () => {
   z-index: 2000;
   display: flex;
   justify-content: center;
+  pointer-events: none;
+
+  @media (max-width: 768px) {
+    bottom: 1rem;
+    left: 1rem;
+    right: 1rem;
+  }
 }
 
 .cookie-banner-content {
   width: 100%;
   max-width: 1200px;
   padding: 1.5rem 2rem;
-  background: rgba(15, 23, 42, 0.85); // Dark slate with opacity
+  background: rgba(15, 23, 42, 0.9); // Slightly more opaque for better legibility
   backdrop-filter: blur(16px) saturate(180%);
   -webkit-backdrop-filter: blur(16px) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -249,12 +260,10 @@ const saveChoice = () => {
     0 20px 25px -5px rgba(0, 0, 0, 0.1),
     inset 0 0 0 1px rgba(255, 255, 255, 0.05);
   color: white;
+  pointer-events: auto;
 
   @media (max-width: 768px) {
     padding: 1.25rem;
-    bottom: 1rem;
-    left: 1rem;
-    right: 1rem;
   }
 }
 
