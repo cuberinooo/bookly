@@ -117,28 +117,56 @@ onMounted(fetchAboData);
 
 <template>
   <div class="user-abo-tab max-w-4xl mx-auto py-4">
-    <div v-if="isLoading" class="space-y-6">
-      <Skeleton height="200px" borderRadius="16px" />
+    <div
+      v-if="isLoading"
+      class="space-y-6"
+    >
+      <Skeleton
+        height="200px"
+        border-radius="16px"
+      />
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Skeleton height="300px" borderRadius="16px" />
-        <Skeleton height="300px" borderRadius="16px" />
+        <Skeleton
+          height="300px"
+          border-radius="16px"
+        />
+        <Skeleton
+          height="300px"
+          border-radius="16px"
+        />
       </div>
     </div>
 
-    <div v-else class="space-y-8">
+    <div
+      v-else
+      class="space-y-8"
+    >
       <!-- Current Subscription Status -->
-      <div v-if="subscription && subscription.status !== 'inactive'" class="phoenix-card p-6 md:p-8 border-l-8 bg-opacity-30" :class="subscription.cancel_at_period_end ? 'border-amber-500 bg-amber-50' : 'border-green-500 bg-green-50'">
+      <div
+        v-if="subscription && subscription.status !== 'inactive'"
+        class="phoenix-card p-6 md:p-8 border-l-8 bg-opacity-30"
+        :class="subscription.cancel_at_period_end ? 'border-amber-500 bg-amber-50' : 'border-green-500 bg-green-50'"
+      >
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div class="flex items-center gap-4">
-            <div class="w-14 h-14 rounded-2xl flex items-center justify-center" :class="subscription.cancel_at_period_end ? 'bg-amber-100 text-amber-600' : 'bg-green-100 text-green-600'">
-              <i :class="subscription.cancel_at_period_end ? 'pi pi-exclamation-circle' : 'pi pi-check-circle'" class="text-2xl" />
+            <div
+              class="w-14 h-14 rounded-2xl flex items-center justify-center"
+              :class="subscription.cancel_at_period_end ? 'bg-amber-100 text-amber-600' : 'bg-green-100 text-green-600'"
+            >
+              <i
+                :class="subscription.cancel_at_period_end ? 'pi pi-exclamation-circle' : 'pi pi-check-circle'"
+                class="text-2xl"
+              />
             </div>
             <div>
               <h3 class="text-xl font-black uppercase tracking-tight text-slate-900">
                 {{ subscription.cancel_at_period_end ? t('profile.subscriptionStatus.cancelling') : t('profile.subscriptionStatus.active') }}
               </h3>
               <div class="flex items-center gap-2 mt-1">
-                <Tag :value="subscription.display_status.toUpperCase()" :severity="getStatusSeverity(subscription.display_status)" />
+                <Tag
+                  :value="subscription.display_status.toUpperCase()"
+                  :severity="getStatusSeverity(subscription.display_status)"
+                />
                 <span class="text-sm text-slate-500 font-medium">
                   {{ subscription.cancel_at_period_end ? t('profile.subscriptionStatus.accessUntil') : t('profile.subscriptionStatus.renewsOn') }} {{ formatDate(subscription.current_period_end) }}
                 </span>
@@ -146,37 +174,44 @@ onMounted(fetchAboData);
             </div>
           </div>
           <div class="flex items-center gap-3">
-             <Button
-                v-if="!subscription.cancel_at_period_end && (subscription.status === 'active' || subscription.status === 'trialing')"
-                :label="t('profile.subscriptionStatus.cancelBtn')"
-                icon="pi pi-times-circle"
-                severity="danger"
-                text
-                size="small"
-                :loading="isCancelling"
-                @click="confirmCancellation"
-             />
-             <Button
-                :label="t('profile.subscriptionStatus.manageStripe')"
-                icon="pi pi-external-link"
-                severity="secondary"
-                outlined
-                size="small"
-                :loading="isUpgrading"
-                @click="manageSubscription"
-             />
+            <Button
+              v-if="!subscription.cancel_at_period_end && (subscription.status === 'active' || subscription.status === 'trialing')"
+              :label="t('profile.subscriptionStatus.cancelBtn')"
+              icon="pi pi-times-circle"
+              severity="danger"
+              text
+              size="small"
+              :loading="isCancelling"
+              @click="confirmCancellation"
+            />
+            <Button
+              :label="t('profile.subscriptionStatus.manageStripe')"
+              icon="pi pi-external-link"
+              severity="secondary"
+              outlined
+              size="small"
+              :loading="isUpgrading"
+              @click="manageSubscription"
+            />
           </div>
         </div>
       </div>
 
-      <div v-else class="phoenix-card p-6 md:p-8 border-l-8 border-amber-500 bg-amber-50/30">
+      <div
+        v-else
+        class="phoenix-card p-6 md:p-8 border-l-8 border-amber-500 bg-amber-50/30"
+      >
         <div class="flex items-center gap-4">
           <div class="w-14 h-14 rounded-2xl bg-amber-100 flex items-center justify-center text-amber-600">
             <i class="pi pi-bolt text-2xl" />
           </div>
           <div>
-            <h3 class="text-xl font-black uppercase tracking-tight text-slate-900">{{ t('profile.trial.title') }}</h3>
-            <p class="text-sm text-slate-600 font-medium mt-1">{{ t('profile.trial.subtitle') }}</p>
+            <h3 class="text-xl font-black uppercase tracking-tight text-slate-900">
+              {{ t('profile.trial.title') }}
+            </h3>
+            <p class="text-sm text-slate-600 font-medium mt-1">
+              {{ t('profile.trial.subtitle') }}
+            </p>
           </div>
         </div>
       </div>
@@ -190,13 +225,21 @@ onMounted(fetchAboData);
             {{ t('profile.benefits.title') }}
           </h3>
           <ul class="space-y-6 flex-1">
-            <li v-for="feature in features" :key="feature.title" class="flex gap-4">
+            <li
+              v-for="feature in features"
+              :key="feature.title"
+              class="flex gap-4"
+            >
               <div class="mt-1 w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
                 <i class="pi pi-check text-[10px] text-blue-600 font-bold" />
               </div>
               <div>
-                <p class="font-bold text-slate-900 text-sm">{{ feature.title }}</p>
-                <p class="text-xs text-slate-500 mt-0.5 leading-relaxed">{{ feature.desc }}</p>
+                <p class="font-bold text-slate-900 text-sm">
+                  {{ feature.title }}
+                </p>
+                <p class="text-xs text-slate-500 mt-0.5 leading-relaxed">
+                  {{ feature.desc }}
+                </p>
               </div>
             </li>
           </ul>
@@ -204,8 +247,12 @@ onMounted(fetchAboData);
 
         <!-- Pricing Card -->
         <div class="phoenix-card p-6 md:p-8 border-2 border-slate-900 flex flex-col relative overflow-hidden">
-          <h3 class="text-lg font-black uppercase tracking-widest text-slate-900 mb-2">{{ t('profile.pricing.title') }}</h3>
-          <p class="text-xs text-slate-500 mb-6 font-medium">{{ t('profile.pricing.subtitle') }}</p>
+          <h3 class="text-lg font-black uppercase tracking-widest text-slate-900 mb-2">
+            {{ t('profile.pricing.title') }}
+          </h3>
+          <p class="text-xs text-slate-500 mb-6 font-medium">
+            {{ t('profile.pricing.subtitle') }}
+          </p>
 
           <div class="flex items-baseline gap-1 mb-8">
             <span class="text-4xl font-black text-slate-900">{{ prices?.monthlyFee?.toFixed(2) }}€</span>
@@ -213,7 +260,10 @@ onMounted(fetchAboData);
           </div>
 
           <div class="space-y-4 mb-8">
-            <div v-if="prices?.yearlyFeeEnabled && prices?.setupFee" class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-200">
+            <div
+              v-if="prices?.yearlyFeeEnabled && prices?.setupFee"
+              class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-200"
+            >
               <div class="flex flex-col">
                 <span class="text-xs font-bold text-slate-900">{{ t('profile.pricing.yearlyFee') }}</span>
                 <span class="text-[10px] text-slate-500">{{ t('profile.pricing.yearlyFeeNote') }}</span>
@@ -231,25 +281,25 @@ onMounted(fetchAboData);
           </div>
 
           <div class="mt-auto">
-             <Button
-                v-if="subscription?.status !== 'active'"
-                :label="t('profile.pricing.upgradeBtn')"
-                icon="pi pi-bolt"
-                class="w-full upgrade-btn py-4"
-                :loading="isUpgrading"
-                @click="upgrade"
-              />
-              <Button
-                v-else
-                :label="t('profile.pricing.isMember')"
-                icon="pi pi-verified"
-                class="w-full py-4"
-                disabled
-                severity="primary"
-              />
-              <p class="text-[10px] text-center text-slate-400 mt-4 leading-relaxed">
-                {{ t('profile.pricing.securePayment') }}
-              </p>
+            <Button
+              v-if="subscription?.status !== 'active'"
+              :label="t('profile.pricing.upgradeBtn')"
+              icon="pi pi-bolt"
+              class="w-full upgrade-btn py-4"
+              :loading="isUpgrading"
+              @click="upgrade"
+            />
+            <Button
+              v-else
+              :label="t('profile.pricing.isMember')"
+              icon="pi pi-verified"
+              class="w-full py-4"
+              disabled
+              severity="primary"
+            />
+            <p class="text-[10px] text-center text-slate-400 mt-4 leading-relaxed">
+              {{ t('profile.pricing.securePayment') }}
+            </p>
           </div>
         </div>
       </div>

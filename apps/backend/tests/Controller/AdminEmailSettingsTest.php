@@ -56,7 +56,7 @@ class AdminEmailSettingsTest extends WebTestCase
             'HTTP_AUTHORIZATION' => 'Bearer '.$token,
         ], json_encode([
             'welcomeMailMarkdown' => 'Welcome member',
-            'joinUsMailMarkdown' => 'Join us trial',
+            'membershipWelcomeMailMarkdown' => 'Join us trial',
         ]));
 
         $this->assertEquals(Response::HTTP_OK, $client->getResponse()->getStatusCode());
@@ -64,6 +64,6 @@ class AdminEmailSettingsTest extends WebTestCase
         $entityManager->clear();
         $settings = $entityManager->getRepository(AdminSettings::class)->find($admin->getCompany()->getAdminSettings()->getId());
         $this->assertEquals('Welcome member', $settings->getWelcomeMailMarkdown());
-        $this->assertEquals('Join us trial', $settings->getJoinUsMailMarkdown());
+        $this->assertEquals('Join us trial', $settings->getMembershipWelcomeMailMarkdown());
     }
 }

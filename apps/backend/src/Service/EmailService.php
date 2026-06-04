@@ -70,7 +70,7 @@ class EmailService
 
         $content = str_replace(array_keys($placeholders), array_values($placeholders), $markdown);
 
-        $email->subject(sprintf('Welcome to the community at %s!', $siteName))
+        $email->subject(sprintf('Join us at %s!', $siteName))
             ->htmlTemplate('emails/company_welcome.html.twig')
             ->context([
                 'content' => $content,

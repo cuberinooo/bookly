@@ -115,11 +115,16 @@ const savePrices = async () => {
       </p>
     </div>
 
-    <div v-if="!stripeOnboardingComplete" class="text-center py-10">
+    <div
+      v-if="!stripeOnboardingComplete"
+      class="text-center py-10"
+    >
       <div class="mb-6">
-        <i class="pi pi-stripe text-6xl text-indigo-600"></i>
+        <i class="pi pi-stripe text-6xl text-indigo-600" />
       </div>
-      <h3 class="text-lg font-bold text-slate-900 mb-2">{{ t('settings.stripe.connectTitle') }}</h3>
+      <h3 class="text-lg font-bold text-slate-900 mb-2">
+        {{ t('settings.stripe.connectTitle') }}
+      </h3>
       <p class="text-slate-600 mb-6 max-w-md mx-auto">
         {{ t('settings.stripe.connectDesc') }}
       </p>
@@ -128,22 +133,34 @@ const savePrices = async () => {
         severity="primary"
         icon="pi pi-external-link"
         :loading="isSettingUp"
-        @click="setupStripe"
         size="large"
+        @click="setupStripe"
       />
     </div>
 
-    <div v-else class="space-y-10">
+    <div
+      v-else
+      class="space-y-10"
+    >
       <!-- Connection Status -->
       <div class="bg-green-50 text-green-800 p-4 rounded-lg flex items-center justify-between border border-green-200">
         <div class="flex items-center gap-3">
-          <i class="pi pi-check-circle text-xl"></i>
+          <i class="pi pi-check-circle text-xl" />
           <span class="font-semibold">{{ t('settings.stripe.connected') }}</span>
         </div>
-        <div v-if="stripeAccountId" class="flex items-center gap-3">
+        <div
+          v-if="stripeAccountId"
+          class="flex items-center gap-3"
+        >
           <div class="flex items-center gap-2">
             <span class="text-xs font-mono bg-white px-2 py-1 rounded border border-green-200">{{ stripeAccountId }}</span>
-            <Button icon="pi pi-copy" variant="text" size="small" @click="copyAccountId" v-tooltip="t('settings.stripe.copyAccount')" />
+            <Button
+              v-tooltip="t('settings.stripe.copyAccount')"
+              icon="pi pi-copy"
+              variant="text"
+              size="small"
+              @click="copyAccountId"
+            />
           </div>
           <Button
             :label="t('settings.stripe.dashboardBtn')"
@@ -164,36 +181,48 @@ const savePrices = async () => {
               <i class="pi pi-power-off text-2xl" />
             </div>
             <div>
-              <h3 class="text-lg font-black uppercase tracking-widest leading-none mb-1">{{ t('settings.stripe.enablePayments') }}</h3>
-              <p class="text-xs text-slate-400 font-medium">{{ t('settings.stripe.enablePaymentsNote') }}</p>
+              <h3 class="text-lg font-black uppercase tracking-widest leading-none mb-1">
+                {{ t('settings.stripe.enablePayments') }}
+              </h3>
+              <p class="text-xs text-slate-400 font-medium">
+                {{ t('settings.stripe.enablePaymentsNote') }}
+              </p>
             </div>
           </div>
           <div class="flex items-center gap-4">
-            <span class="text-sm font-bold uppercase tracking-tighter" :class="paymentEnabled ? 'text-amber-500' : 'text-slate-500'">
+            <span
+              class="text-sm font-bold uppercase tracking-tighter"
+              :class="paymentEnabled ? 'text-amber-500' : 'text-slate-500'"
+            >
               {{ paymentEnabled ? t('settings.stripe.active') : t('settings.stripe.disabled') }}
             </span>
             <ToggleSwitch v-model="paymentEnabled" />
           </div>
         </div>
-        <div v-if="!paymentEnabled" class="mt-4 p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl flex items-start gap-3">
-           <i class="pi pi-info-circle text-amber-500 mt-0.5" />
-           <p class="text-[10px] text-amber-200/80 leading-relaxed italic">
-             {{ t('settings.stripe.paymentDisabledWarning') }}
-           </p>
+        <div
+          v-if="!paymentEnabled"
+          class="mt-4 p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl flex items-start gap-3"
+        >
+          <i class="pi pi-info-circle text-amber-500 mt-0.5" />
+          <p class="text-[10px] text-amber-200/80 leading-relaxed italic">
+            {{ t('settings.stripe.paymentDisabledWarning') }}
+          </p>
         </div>
       </section>
 
       <!-- Membership Pricing Section -->
       <section>
         <div class="flex items-center justify-between mb-6">
-          <h3 class="text-lg font-bold text-slate-900 border-l-4 border-amber-500 pl-3">{{ t('settings.stripe.pricing') }}</h3>
+          <h3 class="text-lg font-bold text-slate-900 border-l-4 border-amber-500 pl-3">
+            {{ t('settings.stripe.pricing') }}
+          </h3>
           <Button
+            v-tooltip="t('settings.stripe.refreshPrices')"
             icon="pi pi-refresh"
             variant="text"
             size="small"
             :loading="isLoadingPrices"
             @click="fetchPrices"
-            v-tooltip="t('settings.stripe.refreshPrices')"
           />
         </div>
 
@@ -203,11 +232,28 @@ const savePrices = async () => {
               <label class="font-bold text-sm text-slate-700 uppercase tracking-tight">{{ t('settings.stripe.yearlyFee') }}</label>
               <ToggleSwitch v-model="yearlyFeeEnabled" />
             </div>
-            <div class="p-inputgroup" :class="{ 'opacity-50 pointer-events-none': !yearlyFeeEnabled }">
-              <InputNumber v-model="setupFee" mode="currency" currency="EUR" locale="de-DE" placeholder="e.g. 50.00" />
+            <div
+              class="p-inputgroup"
+              :class="{ 'opacity-50 pointer-events-none': !yearlyFeeEnabled }"
+            >
+              <InputNumber
+                v-model="setupFee"
+                mode="currency"
+                currency="EUR"
+                locale="de-DE"
+                placeholder="e.g. 50.00"
+              />
               <span class="p-inputgroup-addon bg-slate-50">
-                <i v-if="stripePriceSetupFeeId" class="pi pi-verified text-green-500" v-tooltip="t('settings.stripe.priceCreated')" />
-                <i v-else class="pi pi-info-circle text-amber-500" v-tooltip="t('settings.stripe.priceWillBeCreated')" />
+                <i
+                  v-if="stripePriceSetupFeeId"
+                  v-tooltip="t('settings.stripe.priceCreated')"
+                  class="pi pi-verified text-green-500"
+                />
+                <i
+                  v-else
+                  v-tooltip="t('settings.stripe.priceWillBeCreated')"
+                  class="pi pi-info-circle text-amber-500"
+                />
               </span>
             </div>
             <small class="text-slate-500 leading-snug italic">{{ t('settings.stripe.yearlyFeeNote') }}</small>
@@ -216,10 +262,24 @@ const savePrices = async () => {
           <div class="flex flex-col gap-3">
             <label class="font-bold text-sm text-slate-700 uppercase tracking-tight">{{ t('settings.stripe.monthlyFee') }}</label>
             <div class="p-inputgroup">
-              <InputNumber v-model="monthlyFee" mode="currency" currency="EUR" locale="de-DE" placeholder="e.g. 29.99" />
+              <InputNumber
+                v-model="monthlyFee"
+                mode="currency"
+                currency="EUR"
+                locale="de-DE"
+                placeholder="e.g. 29.99"
+              />
               <span class="p-inputgroup-addon bg-slate-50">
-                <i v-if="stripePriceMembershipId" class="pi pi-verified text-green-500" v-tooltip="t('settings.stripe.priceCreated')" />
-                <i v-else class="pi pi-info-circle text-amber-500" v-tooltip="t('settings.stripe.priceWillBeCreated')" />
+                <i
+                  v-if="stripePriceMembershipId"
+                  v-tooltip="t('settings.stripe.priceCreated')"
+                  class="pi pi-verified text-green-500"
+                />
+                <i
+                  v-else
+                  v-tooltip="t('settings.stripe.priceWillBeCreated')"
+                  class="pi pi-info-circle text-amber-500"
+                />
               </span>
             </div>
             <small class="text-slate-500 leading-snug italic">{{ t('settings.stripe.monthlyFeeNote') }}</small>
@@ -229,11 +289,15 @@ const savePrices = async () => {
 
       <!-- Billing Cycle Configuration -->
       <section>
-        <h3 class="text-lg font-bold text-slate-900 border-l-4 border-indigo-500 pl-3 mb-6">{{ t('settings.stripe.billingSchedule') }}</h3>
+        <h3 class="text-lg font-bold text-slate-900 border-l-4 border-indigo-500 pl-3 mb-6">
+          {{ t('settings.stripe.billingSchedule') }}
+        </h3>
         <div class="bg-slate-50 p-6 rounded-xl border border-slate-200">
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
-              <label class="font-bold text-sm text-slate-900 block mb-1">{{ t('settings.stripe.billingAlignment') }}</label>
-              <p class="text-xs text-slate-600 mb-0">{{ t('settings.stripe.billingAlignmentNote') }}</p>
+            <label class="font-bold text-sm text-slate-900 block mb-1">{{ t('settings.stripe.billingAlignment') }}</label>
+            <p class="text-xs text-slate-600 mb-0">
+              {{ t('settings.stripe.billingAlignmentNote') }}
+            </p>
             <Select
               v-model="billingCycleAnchorDay"
               :options="billingDayOptions"

@@ -213,7 +213,10 @@ onMounted(() => {
 
     <InactiveAccountAlert class="mb-8" />
 
-    <Tabs v-model:value="activeTab" class="mb-8">
+    <Tabs
+      v-model:value="activeTab"
+      class="mb-8"
+    >
       <TabList class="mb-6">
         <Tab
           value="0"
@@ -222,7 +225,11 @@ onMounted(() => {
           <i class="pi pi-user" />
           <span>{{ t('profile.myAccount') }}</span>
         </Tab>
-        <Tab v-if="isAthlete && settingsStore.paymentEnabled" value="abo" class="flex items-center gap-2">
+        <Tab
+          v-if="isAthlete && settingsStore.paymentEnabled"
+          value="abo"
+          class="flex items-center gap-2"
+        >
           <i class="pi pi-credit-card" />
           <span>{{ t('profile.subscription') }}</span>
         </Tab>
@@ -446,7 +453,10 @@ onMounted(() => {
           </div>
         </TabPanel>
 
-        <TabPanel v-if="isAthlete && settingsStore.paymentEnabled" value="abo">
+        <TabPanel
+          v-if="isAthlete && settingsStore.paymentEnabled"
+          value="abo"
+        >
           <UserAboTab />
         </TabPanel>
 
