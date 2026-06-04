@@ -56,7 +56,7 @@ class AdminEmailSettingsTest extends WebTestCase
             'HTTP_AUTHORIZATION' => 'Bearer '.$token,
         ], json_encode([
             'welcomeMailMarkdown' => 'Welcome member',
-            'joinUsMailMarkdown' => 'Join us trial',
+            'membershipWelcomeMailMarkdown' => 'Join us trial',
         ]));
 
         $this->assertEquals(Response::HTTP_OK, $client->getResponse()->getStatusCode());
@@ -64,51 +64,6 @@ class AdminEmailSettingsTest extends WebTestCase
         $entityManager->clear();
         $settings = $entityManager->getRepository(AdminSettings::class)->find($admin->getCompany()->getAdminSettings()->getId());
         $this->assertEquals('Welcome member', $settings->getWelcomeMailMarkdown());
-        $this->assertEquals('Join us trial', $settings->getJoinUsMailMarkdown());
-    }
-
-    public function test_send_welcome_mail_to_member_and_trial(): void
-    {
-        $client = static::createClient();
-        $entityManager = $client->getContainer()->get('doctrine.orm.entity_manager');
-        $admin = $this->createAdmin($entityManager);
-        $token = $this->getToken($client, $admin);
-
-        $suffix = uniqid();
-        // Create a Trial User
-        $trialUser = new User();
-        $trialUser->setEmail('trial_'.$suffix.'@example.com');
-        $trialUser->setName('Trial');
-        $trialUser->setRoles(['ROLE_TRIAL']);
-        $trialUser->setPassword('password');
-        $trialUser->setCompany($admin->getCompany());
-        $entityManager->persist($trialUser);
-
-        // Create a Member
-        $memberUser = new User();
-        $memberUser->setEmail('member_'.$suffix.'@example.com');
-        $memberUser->setName('Member');
-        $memberUser->setRoles(['ROLE_MEMBER']);
-        $memberUser->setPassword('password');
-        $memberUser->setCompany($admin->getCompany());
-        $entityManager->persist($memberUser);
-
-        $entityManager->flush();
-
-        // 1. Send to Trial
-        $client->request('POST', '/api/admin/users/'.$trialUser->getId().'/send-join-us', [], [], [
-            'HTTP_AUTHORIZATION' => 'Bearer '.$token,
-        ]);
-        $this->assertEquals(Response::HTTP_OK, $client->getResponse()->getStatusCode());
-
-        // 2. Send to Member
-        $client->request('POST', '/api/admin/users/'.$memberUser->getId().'/send-join-us', [], [], [
-            'HTTP_AUTHORIZATION' => 'Bearer '.$token,
-        ]);
-        $this->assertEquals(Response::HTTP_OK, $client->getResponse()->getStatusCode());
-
-        $entityManager->clear();
-        $this->assertTrue($entityManager->getRepository(User::class)->find($trialUser->getId())->isJoinUsMailSent());
-        $this->assertTrue($entityManager->getRepository(User::class)->find($memberUser->getId())->isJoinUsMailSent());
+        $this->assertEquals('Join us trial', $settings->getMembershipWelcomeMailMarkdown());
     }
 }

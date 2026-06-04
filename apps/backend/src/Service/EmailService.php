@@ -49,7 +49,7 @@ class EmailService
         $this->send($company->getId(), $email);
     }
 
-    public function sendTrialJoinUsEmail(User $user): void
+    public function sendMembershipWelcomeEmail(User $user): void
     {
         $company = $user->getCompany();
         if (!$company) {
@@ -61,7 +61,7 @@ class EmailService
             ->from(new Address($_ENV['NO_REPLY_MAIL'] ?? 'noreply@example.com', $company->getName()))
             ->to($user->getEmail());
 
-        $markdown = $settings->getJoinUsMailMarkdown() ?? '';
+        $markdown = $settings->getMembershipWelcomeMailMarkdown() ?? '';
         $siteName = $company->getName();
         $placeholders = [
             '{user_name}' => $user->getName(),
@@ -80,7 +80,7 @@ class EmailService
             ]);
 
         // Attach files
-        $attachments = $settings->getJoinUsMailAttachments() ?? [];
+        $attachments = $settings->getMembershipWelcomeMailAttachments() ?? [];
         $this->attachFiles($email, $attachments);
 
         $this->send($company->getId(), $email);
@@ -384,6 +384,26 @@ class EmailService
     {
         $this->bodyRenderer->render($email);
         $this->bus->dispatch(new SendCompanyEmailMessage($companyId, $email));
+    }
+
+    public function sendPriceChangeNotification(User $user, float $newPrice): void
+    {
+        $company = $user->getCompany();
+        $siteName = $company ? $company->getName() : 'Phoenix Athletics';
+
+        $email = (new TemplatedEmail())
+            ->from(new Address($_ENV['NO_REPLY_MAIL'] ?? 'noreply@example.com', $siteName))
+            ->to($user->getEmail())
+            ->subject(sprintf('Important: Membership Price Update for %s', $siteName))
+            ->htmlTemplate('emails/price_update.html.twig')
+            ->context([
+                'name' => $user->getName(),
+                'siteName' => $siteName,
+                'newPrice' => number_format($newPrice, 2, ',', '.') . ' €',
+                'loginUrl' => $this->getLoginUrl(),
+            ]);
+
+        $this->mailer->send($email);
     }
 
     private function attachFiles(TemplatedEmail $email, array $attachments): void

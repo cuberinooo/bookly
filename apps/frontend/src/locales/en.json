@@ -27,6 +27,12 @@
     "english": "English",
     "german": "German",
     "copied": "Copied",
+    "personal": "Personal",
+    "management": "Management",
+    "administration": "Administration",
+    "athletes": "Athletes",
+    "payments": "Payments",
+    "systemSettings": "System Settings",
     "courses": "Courses",
     "meetups": "Meetups",
     "rankings": "Rankings",
@@ -57,6 +63,10 @@
     "close": "Close",
     "back": "Back",
     "submit": "Submit",
+    "immediate": "Immediate (No alignment)",
+    "firstOfMonth": "1st of the month",
+    "fifteenthOfMonth": "15th of the month",
+    "lastOfMonth": "Last day of month",
     "hour": "hour",
     "hours": "hours",
     "hourShort": "h",
@@ -278,7 +288,6 @@
       "statusUpdated": "Status updated.",
       "passwordResetSuccess": "Password Reset Initiated",
       "passwordResetDetail": "The user has been reset and requires a new password on next login.",
-      "joinUsMailSuccess": "Join Us email sent.",
       "userActivated": "User activated.",
       "userDeactivated": "User deactivated.",
       "deleteConfirm": "Are you sure you want to delete user '{name}'?",
@@ -287,7 +296,6 @@
       "verified": "Verified",
       "mail": "Mail",
       "actions": "Actions",
-      "sendJoinUs": "Send Join Us Mail",
       "noUsersFound": "No users found.",
       "activeStatus": "Active Status",
       "editAthlete": "Edit Athlete",
@@ -306,11 +314,13 @@
       "roleAdmin": "Admin",
       "roleTrainer": "Trainer",
       "roleMember": "Member",
-      "roleTrial": "Trial"
+      "roleTrial": "Trial",
+      "sendMembershipWelcome": "Send Membership Welcome Mail",
+      "membershipWelcomeMailSuccess": "Membership welcome mail sent successfully."
     },
     "mail": {
       "placeholders": "Dynamic Placeholders",
-      "placeholdersNote": "You can use the following placeholders in your templates: \\{user_name\\}, \\{company_name\\}.",
+      "placeholdersNote": "You can use the following placeholders in your templates: {user_name}, {company_name}.",
       "welcomeMailTitle": "Welcome Email Template",
       "welcomeMailNote": "This email is sent automatically when a new user registers or is created by an admin.",
       "bodyMarkdown": "Email Body (Markdown)",
@@ -319,10 +329,11 @@
       "attachments": "Attachments",
       "noAttachments": "No attachments uploaded yet.",
       "welcomeUpload": "Upload Welcome Attachment",
-      "joinUsMailTitle": "Join Us Email Template",
-      "joinUsMailNote": "This email can be sent manually to trial members to encourage them to join permanently.",
-      "joinUsPreview": "Join Us Mail Preview",
-      "joinUsUpload": "Upload Join Us Attachment",
+      "membershipWelcomeMailTitle": "Membership Welcome Mail (Subscribers)",
+      "membershipWelcomeMailNote": "This email is automatically sent when a user successfully subscribes to a paid membership. Use this to provide essential onboarding information, studio rules, or access details.",
+      "membershipWelcomePreview": "Membership Welcome Email Preview",
+      "membershipWelcomeUpload": "Upload Membership Welcome Attachment",
+      "noMembershipWelcomeAttachments": "No attachments for Membership Welcome Mail.",
       "saveTemplates": "Save All Templates",
       "templatesSaved": "Email templates saved successfully",
       "loadFailed": "Failed to load email settings"
@@ -504,7 +515,66 @@
     "refresh": "Refresh"
   },
   "profile": {
+    "title": "My Profile",
+    "subtitle": "Manage your personal information and preferences.",
     "myAccount": "My Account",
+    "subscription": "Subscription",
+    "subscriptionStatus": {
+        "active": "Your Subscription is Active",
+        "cancelling": "Subscription Cancelling",
+        "accessUntil": "Access until",
+        "renewsOn": "Renews on",
+        "cancelBtn": "Cancel Subscription",
+        "manageStripe": "Manage in Stripe"
+    },
+    "trial": {
+        "title": "You are on a Trial Period",
+        "subtitle": "Upgrade now to unlock the full potential of your training."
+    },
+    "benefits": {
+        "title": "Membership Benefits",
+        "features": {
+            "unlimited": {
+                "title": "Unlimited Bookings",
+                "desc": "Book as many courses as you want every month."
+            },
+            "pb": {
+                "title": "Personal Best Tracking",
+                "desc": "Record and visualize your progress over time."
+            },
+            "rankings": {
+                "title": "Community Rankings",
+                "desc": "See where you stand on the leaderboard."
+            },
+            "stats": {
+                "title": "Advanced Statistics",
+                "desc": "Detailed analysis of your training performance."
+            }
+        }
+    },
+    "pricing": {
+        "title": "Full Access",
+        "subtitle": "Everything you need to succeed.",
+        "perMonth": "/ month",
+        "yearlyFee": "Yearly Admin Fee",
+        "yearlyFeeNote": "Charged once per year",
+        "monthlyMember": "Monthly Membership",
+        "monthlyMemberNote": "Unlimited access",
+        "upgradeBtn": "Upgrade Now",
+        "isMember": "You are a Member",
+        "securePayment": "Secure payment via Stripe. No hidden costs. Cancel anytime."
+    },
+    "actions": {
+        "loadFailed": "Could not load subscription details",
+        "cancelConfirm": "Are you sure you want to cancel your subscription? You will still have access until the end of your current billing period.",
+        "cancelHeader": "Cancel Subscription",
+        "staySubscribed": "Stay Subscribed",
+        "cancelSuccess": "Your subscription has been cancelled and will not renew.",
+        "cancelFailed": "Failed to cancel subscription.",
+        "checkoutFailed": "Failed to initialize checkout.",
+        "portalFailed": "Failed to open billing portal."
+    },
+    "onboardingGuide": "Onboarding Guide",
     "personalInfo": "Personal Information",
     "emailNote": "Email cannot be changed",
     "phoneNumber": "Your Phone Number",
@@ -515,9 +585,6 @@
     "updateSuccess": "Profile updated successfully",
     "updateError": "Failed to update profile",
     "avatarUpdated": "Profile picture updated",
-    "title": "My Profile",
-    "subtitle": "Manage your personal information and preferences.",
-    "onboardingGuide": "Onboarding Guide",
     "changePicture": "Change Picture",
     "publicProfile": "Public Profile",
     "publicProfileNote": "When enabled, your stats and PBs are visible to other members.",
@@ -611,6 +678,38 @@
       "username": "Username / Email",
       "password": "Password",
       "encryption": "Encryption"
+    },
+    "stripe": {
+      "title": "Stripe Integration",
+      "subtitle": "Configure your payment processing, membership fees, and billing cycles.",
+      "connectTitle": "Connect with Stripe",
+      "connectDesc": "Set up payments via Stripe to easily collect memberships and fees from your athletes.",
+      "connectBtn": "Set up Payments via Stripe",
+      "connected": "Stripe account successfully connected!",
+      "dashboardBtn": "Stripe Dashboard",
+      "enablePayments": "Enable Global Payments",
+      "enablePaymentsNote": "Toggle all payment features (subscriptions, fees) on or off system-wide.",
+      "active": "Active",
+      "disabled": "Disabled",
+      "paymentDisabledWarning": "When disabled, members will not be prompted to subscribe, and the subscription UI will be hidden from their profiles. Existing trial limits still apply unless manually updated by an admin.",
+      "pricing": "Membership Pricing",
+      "yearlyFee": "Yearly Admin Fee (€)",
+      "yearlyFeeNote": "Recurring annual fee charged upon registration and every 12 months.",
+      "monthlyFee": "Monthly Membership (€)",
+      "monthlyFeeNote": "Standard recurring monthly subscription fee for all members.",
+      "billingSchedule": "Billing Schedule",
+      "billingAlignment": "Monthly Billing Alignment",
+      "billingAlignmentNote": "Select a specific day of the month for all member subscriptions. New members will be prorated until this day.",
+      "selectBillingDay": "Select Billing Day",
+      "saveBtn": "Save & Sync Preferences",
+      "saveSuccess": "Settings saved and synced with Stripe",
+      "saveFailed": "Failed to save settings.",
+      "copyAccount": "Copy Account ID",
+      "copyAccountSuccess": "Account ID copied to clipboard",
+      "onboardFailed": "Failed to start Stripe onboarding.",
+      "priceCreated": "Price created in Stripe",
+      "priceWillBeCreated": "Price will be created on save",
+      "refreshPrices": "Refresh prices from Stripe"
     },
     "memberPrivacyTitle": "Member Privacy",
     "memberPrivacyNote": "Your privacy is managed by the course trainers. You can update your personal profile information in the Profile section.",
@@ -767,5 +866,33 @@
     "marketingDesc": "Used for tailored content and advertisements.",
     "savePreferences": "Save Preferences",
     "declineAll": "Decline All"
+  },
+  "payments": {
+    "title": "Payment & Billing Dashboard",
+    "subtitle": "Manage subscriptions, billing cycles, and Stripe integration",
+    "tabs": {
+        "config": "CONFIGURATION",
+        "subscribers": "SUBSCRIBERS",
+        "analytics": "ANALYTICS"
+    },
+    "activeSubscriptions": "Active Subscriptions",
+    "fetchFailed": "Failed to fetch subscriptions",
+    "missingAccountId": "Missing Account ID",
+    "missingAccountIdNote": "Stripe Account ID is not configured.",
+    "customer": "Customer",
+    "mappedAthlete": "Mapped Athlete",
+    "activePlans": "Active Plans",
+    "status": "Status",
+    "lastPayments": "Last Payments",
+    "nextRenewal": "Next Renewal",
+    "actions": "Actions",
+    "manage": "Manage",
+    "noSubscriptionsFound": "No active subscriptions found in Stripe.",
+    "unmapped": "Unmapped",
+    "cancellingAtPeriodEnd": "Cancelling at period end",
+    "noPaymentYet": "No payment yet",
+    "totalSubscribers": "Total Subscribers",
+    "estimatedMrr": "Estimated MRR",
+    "failedPayments": "Failed Payments"
   }
 }

@@ -79,11 +79,12 @@ class AdminSettings
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     #[Groups(['admin:read', 'admin:write'])]
-    private ?string $joinUsMailMarkdown = null;
+    private ?string $membershipWelcomeMailMarkdown = null;
 
     #[ORM\Column(type: Types::JSON, nullable: true)]
-    #[Groups(['admin:read', 'admin:write'])]
-    private ?array $joinUsMailAttachments = null;
+    #[Groups(['admin:read'])]
+    private ?array $membershipWelcomeMailAttachments = null;
+
 
     public function getId(): ?int
     {
@@ -270,26 +271,26 @@ class AdminSettings
         return $this;
     }
 
-    public function getJoinUsMailMarkdown(): ?string
+    public function getMembershipWelcomeMailMarkdown(): ?string
     {
-        return $this->joinUsMailMarkdown;
+        return $this->membershipWelcomeMailMarkdown;
     }
 
-    public function setJoinUsMailMarkdown(?string $joinUsMailMarkdown): static
+    public function setMembershipWelcomeMailMarkdown(?string $membershipWelcomeMailMarkdown): static
     {
-        $this->joinUsMailMarkdown = $joinUsMailMarkdown;
+        $this->membershipWelcomeMailMarkdown = $membershipWelcomeMailMarkdown;
 
         return $this;
     }
 
-    public function getJoinUsMailAttachments(): ?array
+    public function getMembershipWelcomeMailAttachments(): ?array
     {
-        return $this->joinUsMailAttachments;
+        return $this->membershipWelcomeMailAttachments;
     }
 
-    public function setJoinUsMailAttachments(?array $joinUsMailAttachments): static
+    public function setMembershipWelcomeMailAttachments(?array $membershipWelcomeMailAttachments): static
     {
-        $this->joinUsMailAttachments = $joinUsMailAttachments;
+        $this->membershipWelcomeMailAttachments = $membershipWelcomeMailAttachments;
 
         return $this;
     }

@@ -56,6 +56,8 @@ security:
         - { path: ^/api/resend-verification, roles: PUBLIC_ACCESS }
         - { path: ^/api/user/profile-picture, roles: PUBLIC_ACCESS }
         - { path: ^/api/admin-settings/privacy-policy/download, roles: PUBLIC_ACCESS }
+        - { path: ^/api/stripe/onboard/return, roles: PUBLIC_ACCESS }
+        - { path: ^/api/stripe/onboard/refresh, roles: PUBLIC_ACCESS }
         - { path: ^/api,       roles: IS_AUTHENTICATED_FULLY }
 
 when@test:

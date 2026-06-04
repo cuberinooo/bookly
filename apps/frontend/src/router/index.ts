@@ -67,6 +67,18 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
+      path: '/users',
+      name: 'users',
+      component: () => import('../views/UsersView.vue'),
+      meta: { requiresAuth: true, roles: ['ROLE_ADMIN'] }
+    },
+    {
+      path: '/payments',
+      name: 'payments',
+      component: () => import('../views/PaymentsView.vue'),
+      meta: { requiresAuth: true, roles: ['ROLE_ADMIN'] }
+    },
+    {
       path: '/meetups',
       name: 'meetups',
       component: () => import('../views/MeetupsView.vue'),

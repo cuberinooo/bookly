@@ -6,6 +6,7 @@ namespace App\Controller;
 
 use App\Service\AdminSettingsService;
 use Aws\S3\S3ClientInterface;
+use Stripe\Stripe;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -21,7 +22,8 @@ class AdminSettingsController extends AbstractController
         private SerializerInterface $serializer,
         private \Doctrine\ORM\EntityManagerInterface $entityManager,
         private S3ClientInterface $s3Client,
-        private string $s3Bucket
+        private string $s3Bucket,
+        private string $stripeSecretKey
     ) {
     }
 
@@ -38,6 +40,13 @@ class AdminSettingsController extends AbstractController
 
         $data = json_decode($this->serializer->serialize($settings, 'json', ['groups' => 'admin:read']), true);
         $data['name'] = $company->getName();
+        $data['stripeOnboardingComplete'] = $company->getStripeConfig()->isStripeOnboardingComplete();
+        $data['stripeAccountId'] = $company->getStripeConfig()->getStripeAccountId();
+        $data['stripePriceSetupFeeId'] = $company->getStripeConfig()->getStripePriceSetupFeeId();
+        $data['stripePriceMembershipId'] = $company->getStripeConfig()->getStripePriceMembershipId();
+        $data['billingCycleAnchorDay'] = $company->getStripeConfig()->getBillingCycleAnchorDay();
+        $data['yearlyFeeEnabled'] = $company->getStripeConfig()->isYearlyFeeEnabled();
+        $data['paymentEnabled'] = $company->getStripeConfig()->isPaymentEnabled();
 
         return new JsonResponse($data);
     }
@@ -52,7 +61,30 @@ class AdminSettingsController extends AbstractController
         }
 
         $data = json_decode($request->getContent(), true);
-        $this->adminSettingsService->updateSettings($user->getCompany(), $data);
+        $company = $user->getCompany();
+
+        if (array_key_exists('paymentEnabled', $data)) {
+            $newValue = (bool)$data['paymentEnabled'];
+            $oldValue = $company->getStripeConfig()->isPaymentEnabled();
+
+            if ($oldValue && !$newValue) {
+                // Check for active subscriptions in Stripe
+                $stripeAccountId = $company->getStripeConfig()->getStripeAccountId();
+                if ($stripeAccountId) {
+                    Stripe::setApiKey($this->stripeSecretKey);
+                    $subscriptions = \Stripe\Subscription::all([
+                        'status' => 'active',
+                        'limit' => 1,
+                    ], ['stripe_account' => $stripeAccountId]);
+
+                    if (count($subscriptions->data) > 0) {
+                        return new JsonResponse(['error' => 'Cannot disable payments while active subscriptions exist.'], Response::HTTP_BAD_REQUEST);
+                    }
+                }
+            }
+        }
+
+        $this->adminSettingsService->updateSettings($company, $data);
 
         return new JsonResponse(['status' => 'Admin settings updated']);
     }
@@ -122,8 +154,8 @@ class AdminSettingsController extends AbstractController
         return new JsonResponse(['status' => 'Attachment deleted']);
     }
 
-    #[Route('/join-us-attachment', name: 'admin_settings_upload_join_us_attachment', methods: ['POST'])]
-    public function uploadJoinUsMailAttachment(Request $request): JsonResponse
+    #[Route('/membership-welcome-attachment', name: 'admin_settings_upload_membership_welcome_attachment', methods: ['POST'])]
+    public function uploadMembershipWelcomeMailAttachment(Request $request): JsonResponse
     {
         $this->denyAccessUnlessGranted('ROLE_ADMIN');
         $user = $this->getUser();
@@ -137,7 +169,7 @@ class AdminSettingsController extends AbstractController
         }
 
         try {
-            $attachment = $this->adminSettingsService->uploadJoinUsMailAttachment($user->getCompany(), $file);
+            $attachment = $this->adminSettingsService->uploadMembershipWelcomeMailAttachment($user->getCompany(), $file);
 
             return new JsonResponse($attachment);
         } catch (\RuntimeException $e) {
@@ -145,8 +177,8 @@ class AdminSettingsController extends AbstractController
         }
     }
 
-    #[Route('/join-us-attachment', name: 'admin_settings_delete_join_us_attachment', methods: ['DELETE'])]
-    public function deleteJoinUsMailAttachment(Request $request): JsonResponse
+    #[Route('/membership-welcome-attachment', name: 'admin_settings_delete_membership_welcome_attachment', methods: ['DELETE'])]
+    public function deleteMembershipWelcomeMailAttachment(Request $request): JsonResponse
     {
         $this->denyAccessUnlessGranted('ROLE_ADMIN');
         $user = $this->getUser();
@@ -159,7 +191,7 @@ class AdminSettingsController extends AbstractController
             return new JsonResponse(['error' => 'No path provided'], Response::HTTP_BAD_REQUEST);
         }
 
-        $this->adminSettingsService->deleteJoinUsMailAttachment($user->getCompany(), $path);
+        $this->adminSettingsService->deleteMembershipWelcomeMailAttachment($user->getCompany(), $path);
 
         return new JsonResponse(['status' => 'Attachment deleted']);
     }
@@ -229,8 +261,8 @@ class AdminSettingsController extends AbstractController
 
         $settings = $user->getCompany()->getAdminSettings();
         $welcomeAttachments = $settings->getWelcomeMailAttachments() ?? [];
-        $joinUsAttachments = $settings->getJoinUsMailAttachments() ?? [];
-        $attachments = array_merge($welcomeAttachments, $joinUsAttachments);
+        $membershipWelcomeAttachments = $settings->getMembershipWelcomeMailAttachments() ?? [];
+        $attachments = array_merge($welcomeAttachments, $membershipWelcomeAttachments);
 
         $found = false;
         $fileName = 'attachment';

@@ -100,8 +100,8 @@ class EmailServiceTest extends TestCase
         $companyMock->method('getName')->willReturn('Test Company');
 
         $settings = new AdminSettings();
-        $settings->setJoinUsMailMarkdown('Join us {user_name} at {company_name}');
-        $settings->setJoinUsMailAttachments([['name' => 'trial-info.pdf', 'path' => 'path/to/trial.pdf']]);
+        $settings->setMembershipWelcomeMailMarkdown('Join us {user_name} at {company_name}');
+        $settings->setMembershipWelcomeMailAttachments([['name' => 'trial-info.pdf', 'path' => 'path/to/trial.pdf']]);
         $companyMock->method('getAdminSettings')->willReturn($settings);
 
         $user = new User();
@@ -138,6 +138,6 @@ class EmailServiceTest extends TestCase
             }))
             ->willReturn(new Envelope(new \stdClass()));
 
-        $this->service->sendTrialJoinUsEmail($user);
+        $this->service->sendMembershipWelcomeEmail($user);
     }
 }

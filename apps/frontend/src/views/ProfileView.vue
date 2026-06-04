@@ -1,12 +1,14 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import { useAuthStore } from '../store/useAuthStore';
+import { useSettingsStore } from '../store/useSettingsStore';
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useOnboarding, ONBOARDING_TASKS } from '../composables/useOnboarding';
 import OnboardingChecklist from '../components/OnboardingChecklist.vue';
+import UserAboTab from '../components/UserAboTab.vue';
 import InactiveAccountAlert from '../components/InactiveAccountAlert.vue';
 import api from '../services/api';
 
@@ -14,8 +16,37 @@ const { t } = useI18n();
 const toast = useToast();
 const confirm = useConfirm();
 const router = useRouter();
+const route = useRoute();
 const authStore = useAuthStore();
+const settingsStore = useSettingsStore();
 const { markTaskComplete } = useOnboarding();
+
+const isAthlete = computed(() => !authStore.isAdmin);
+const activeTab = ref('0');
+
+// Watch for tab query parameter changes
+watch(
+  () => route.query.tab,
+  (newTab) => {
+    if (newTab === 'abo' && isAthlete.value) {
+      activeTab.value = 'abo';
+    } else if (!newTab || newTab === 'account') {
+      activeTab.value = '0';
+    }
+  },
+  { immediate: true }
+);
+
+// Also watch isAthlete to ensure tab switches if it was delayed by loading
+watch(
+  isAthlete,
+  (val) => {
+    if (val && route.query.tab === 'abo') {
+      activeTab.value = 'abo';
+    }
+  }
+);
+
 const user = ref({
     name: '',
     email: '',
@@ -28,6 +59,7 @@ const user = ref({
     gender: null,
     isPublic: false
 });
+
 const hasConsentedToEmergency = ref(false);
 const loading = ref(false);
 const fetching = ref(true);
@@ -163,7 +195,9 @@ async function updateProfile() {
     }
 }
 
-onMounted(fetchProfile);
+onMounted(() => {
+    fetchProfile();
+});
 </script>
 
 <template>
@@ -180,7 +214,7 @@ onMounted(fetchProfile);
     <InactiveAccountAlert class="mb-8" />
 
     <Tabs
-      value="0"
+      v-model:value="activeTab"
       class="mb-8"
     >
       <TabList class="mb-6">
@@ -190,6 +224,14 @@ onMounted(fetchProfile);
         >
           <i class="pi pi-user" />
           <span>{{ t('profile.myAccount') }}</span>
+        </Tab>
+        <Tab
+          v-if="isAthlete && settingsStore.paymentEnabled"
+          value="abo"
+          class="flex items-center gap-2"
+        >
+          <i class="pi pi-credit-card" />
+          <span>{{ t('profile.subscription') }}</span>
         </Tab>
         <Tab
           value="1"
@@ -270,10 +312,10 @@ onMounted(fetchProfile);
                   class="flex flex-col gap-6"
                   @submit.prevent="updateProfile"
                 >
-                  <div class="flex flex-col">
+                  <div class="field">
                     <label
                       for="profileName"
-                      class="form-label-base"
+                      class="font-bold text-sm text-slate-500 uppercase tracking-wider"
                     >{{ t('auth.fullName') }}</label>
                     <InputText
                       id="profileName"
@@ -281,10 +323,10 @@ onMounted(fetchProfile);
                     />
                   </div>
 
-                  <div class="flex flex-col">
+                  <div class="field">
                     <label
                       for="profileEmail"
-                      class="form-label-base"
+                      class="font-bold text-sm text-slate-500 uppercase tracking-wider"
                     >{{ t('auth.email') }}</label>
                     <InputText
                       id="profileEmail"
@@ -297,10 +339,10 @@ onMounted(fetchProfile);
                   </div>
 
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="flex flex-col">
+                    <div class="field">
                       <label
                         for="phoneNumber"
-                        class="form-label-base"
+                        class="font-bold text-sm text-slate-500 uppercase tracking-wider"
                       >{{ t('profile.phoneNumber') }}</label>
                       <InputText
                         id="phoneNumber"
@@ -308,14 +350,15 @@ onMounted(fetchProfile);
                         placeholder="+49 123 456789"
                       />
                     </div>
-                    <div class="flex flex-col">
-                      <label class="form-label-base">{{ t('auth.gender') }}</label>
+                    <div class="field">
+                      <label class="font-bold text-sm text-slate-500 uppercase tracking-wider">{{ t('auth.gender') }}</label>
                       <Select
                         v-model="user.gender"
                         :options="genderOptions"
                         option-label="label"
                         option-value="value"
                         :placeholder="t('auth.selectGender')"
+                        class="w-full"
                       />
                     </div>
                   </div>
@@ -339,10 +382,10 @@ onMounted(fetchProfile);
                     </h3>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-                      <div class="flex flex-col">
+                      <div class="field">
                         <label
                           for="emergencyName"
-                          class="form-label-base"
+                          class="font-bold text-sm text-slate-500 uppercase tracking-wider"
                         >{{ t('profile.emergencyContactName') }}</label>
                         <InputText
                           id="emergencyName"
@@ -350,10 +393,10 @@ onMounted(fetchProfile);
                           :placeholder="t('profile.placeholderEmergencyName')"
                         />
                       </div>
-                      <div class="flex flex-col">
+                      <div class="field">
                         <label
                           for="emergencyPhone"
-                          class="form-label-base"
+                          class="font-bold text-sm text-slate-500 uppercase tracking-wider"
                         >{{ t('profile.emergencyContactPhone') }}</label>
                         <InputText
                           id="emergencyPhone"
@@ -409,6 +452,14 @@ onMounted(fetchProfile);
             </div>
           </div>
         </TabPanel>
+
+        <TabPanel
+          v-if="isAthlete && settingsStore.paymentEnabled"
+          value="abo"
+        >
+          <UserAboTab />
+        </TabPanel>
+
         <TabPanel value="1">
           <OnboardingChecklist :always-show="true" />
         </TabPanel>

@@ -3,7 +3,18 @@ import { ref, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import api from '../services/api';
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
+
+function formatMonthLabel(monthStr: string) {
+  try {
+    const [year, month] = monthStr.split('-');
+    const date = new Date(parseInt(year), parseInt(month) - 1);
+    return new Intl.DateTimeFormat(locale.value, { month: 'short', year: '2-digit' }).format(date);
+  } catch (e) {
+    return monthStr;
+  }
+}
+
 const stats = ref<any>(null);
 const loading = ref(true);
 
@@ -33,7 +44,7 @@ function setupCharts() {
 
   // Line Chart: Monthly Stats
   lineData.value = {
-    labels: stats.value.monthlyStats.map((s: any) => t('app.months.' + s.month.toLowerCase())),
+    labels: stats.value.monthlyStats.map((s: any) => formatMonthLabel(s.month.toLowerCase())),
     datasets: [
       {
         label: t('statistics.charts.coursesCoached'),

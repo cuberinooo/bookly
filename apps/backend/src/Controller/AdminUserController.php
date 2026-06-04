@@ -91,8 +91,8 @@ class AdminUserController extends AbstractController
         return new JsonResponse(['status' => 'Password has been reset and email sent to the athlete.']);
     }
 
-    #[Route('/{id}/send-join-us', name: 'admin_user_send_join_us', methods: ['POST'])]
-    public function sendJoinUsMail(User $user, \App\Service\EmailService $emailService, EntityManagerInterface $entityManager): JsonResponse
+    #[Route('/{id}/send-membership-welcome', name: 'admin_user_send_membership_welcome', methods: ['POST'])]
+    public function sendMembershipWelcomeMail(User $user, \App\Service\EmailService $emailService, EntityManagerInterface $entityManager): JsonResponse
     {
         $allowedRoles = ['ROLE_TRIAL', 'ROLE_MEMBER'];
         $hasAllowedRole = false;
@@ -107,16 +107,16 @@ class AdminUserController extends AbstractController
             return new JsonResponse(['error' => 'Welcome mail can only be sent to trial or regular members.'], Response::HTTP_BAD_REQUEST);
         }
 
-        if ($user->isJoinUsMailSent()) {
+        if ($user->isMembershipWelcomeMailSent()) {
             return new JsonResponse(['error' => 'Welcome mail has already been sent to this user.'], Response::HTTP_BAD_REQUEST);
         }
 
-        $emailService->sendTrialJoinUsEmail($user);
+        $emailService->sendMembershipWelcomeEmail($user);
 
-        $user->setJoinUsMailSent(true);
+        $user->setMembershipWelcomeMailSent(true);
         $entityManager->flush();
 
-        return new JsonResponse(['status' => 'Join us mail sent successfully.']);
+        return new JsonResponse(['status' => 'Membership welcome mail sent successfully.']);
     }
 
     #[Route('/{id}', name: 'admin_user_delete', methods: ['DELETE'])]

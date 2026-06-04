@@ -241,7 +241,7 @@ const canSeeLeaderboard = computed(() => {
 const menuItems = computed(() => {
   const items = [
     {
-      label: t('app.myAccount'),
+      label: t('app.personal'),
       items: [
         {
           label: t('app.profile'),
@@ -253,23 +253,59 @@ const menuItems = computed(() => {
           icon: 'pi pi-trophy',
           command: () => router.push('/personal-bests'),
         },
-        {
-          label: t('app.settings'),
-          icon: 'pi pi-cog',
-          command: () => router.push('/settings'),
-        },
       ],
     },
   ];
 
+  // Management Category (Admin or Trainer)
+  const managementItems = [];
+  if (authStore.isAdmin) {
+    managementItems.push({
+      label: t('app.athletes'),
+      icon: 'pi pi-users',
+      command: () => router.push('/users'),
+    });
+  }
   if (authStore.isTrainer) {
-    items[0].items.push({
+    managementItems.push({
       label: t('app.statistics'),
       icon: 'pi pi-chart-bar',
       command: () => router.push('/statistics'),
     });
   }
 
+  if (managementItems.length > 0) {
+    items.push({
+      label: t('app.management'),
+      items: managementItems,
+    });
+  }
+
+  // Administration Category (Admin or Trainer)
+  const administrationItems = [];
+  if (authStore.isAdmin) {
+    administrationItems.push({
+      label: t('app.payments'),
+      icon: 'pi pi-credit-card',
+      command: () => router.push('/payments'),
+    });
+  }
+  if (authStore.isAdmin || authStore.isTrainer) {
+    administrationItems.push({
+      label: t('app.systemSettings'),
+      icon: 'pi pi-cog',
+      command: () => router.push('/settings'),
+    });
+  }
+
+  if (administrationItems.length > 0) {
+    items.push({
+      label: t('app.administration'),
+      items: administrationItems,
+    });
+  }
+
+  // Account Category
   items.push({
     label: t('app.accountAction'),
     items: [

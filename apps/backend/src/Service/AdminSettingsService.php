@@ -44,14 +44,27 @@ class AdminSettingsService
             'legalNoticeMarkdown',
             'termsAndConditionsMarkdown',
             'welcomeMailMarkdown',
-            'joinUsMailMarkdown',
+            'membershipWelcomeMailMarkdown',
         ];
+
 
         foreach ($fields as $field) {
             if (array_key_exists($field, $data)) {
                 $setter = 'set'.ucfirst($field);
                 $settings->$setter($data[$field]);
             }
+        }
+
+        if (array_key_exists('billingCycleAnchorDay', $data)) {
+            $company->getStripeConfig()->setBillingCycleAnchorDay($data['billingCycleAnchorDay']);
+        }
+
+        if (array_key_exists('yearlyFeeEnabled', $data)) {
+            $company->getStripeConfig()->setYearlyFeeEnabled((bool)$data['yearlyFeeEnabled']);
+        }
+
+        if (array_key_exists('paymentEnabled', $data)) {
+            $company->getStripeConfig()->setPaymentEnabled((bool)$data['paymentEnabled']);
         }
 
         $this->entityManager->flush();
@@ -86,9 +99,9 @@ class AdminSettingsService
         return $this->uploadAttachment($company, $file, 'welcome');
     }
 
-    public function uploadJoinUsMailAttachment(\App\Entity\Company $company, UploadedFile $file): array
+    public function uploadMembershipWelcomeMailAttachment(\App\Entity\Company $company, UploadedFile $file): array
     {
-        return $this->uploadAttachment($company, $file, 'join-us');
+        return $this->uploadAttachment($company, $file, 'membership-welcome');
     }
 
     private function uploadAttachment(\App\Entity\Company $company, UploadedFile $file, string $type): array
@@ -111,7 +124,7 @@ class AdminSettingsService
         if ('welcome' === $type) {
             $attachments = $settings->getWelcomeMailAttachments() ?? [];
         } else {
-            $attachments = $settings->getJoinUsMailAttachments() ?? [];
+            $attachments = $settings->getMembershipWelcomeMailAttachments() ?? [];
         }
 
         $attachment = [
@@ -123,7 +136,7 @@ class AdminSettingsService
         if ('welcome' === $type) {
             $settings->setWelcomeMailAttachments($attachments);
         } else {
-            $settings->setJoinUsMailAttachments($attachments);
+            $settings->setMembershipWelcomeMailAttachments($attachments);
         }
 
         $this->entityManager->flush();
@@ -136,9 +149,9 @@ class AdminSettingsService
         $this->deleteAttachment($company, $path, 'welcome');
     }
 
-    public function deleteJoinUsMailAttachment(\App\Entity\Company $company, string $path): void
+    public function deleteMembershipWelcomeMailAttachment(\App\Entity\Company $company, string $path): void
     {
-        $this->deleteAttachment($company, $path, 'join-us');
+        $this->deleteAttachment($company, $path, 'membership-welcome');
     }
 
     private function deleteAttachment(\App\Entity\Company $company, string $path, string $type): void
@@ -147,7 +160,7 @@ class AdminSettingsService
         if ('welcome' === $type) {
             $attachments = $settings->getWelcomeMailAttachments() ?? [];
         } else {
-            $attachments = $settings->getJoinUsMailAttachments() ?? [];
+            $attachments = $settings->getMembershipWelcomeMailAttachments() ?? [];
         }
 
         $newAttachments = [];
@@ -169,7 +182,7 @@ class AdminSettingsService
         if ('welcome' === $type) {
             $settings->setWelcomeMailAttachments($newAttachments);
         } else {
-            $settings->setJoinUsMailAttachments($newAttachments);
+            $settings->setMembershipWelcomeMailAttachments($newAttachments);
         }
 
         $this->entityManager->flush();

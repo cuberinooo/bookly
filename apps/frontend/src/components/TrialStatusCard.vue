@@ -1,45 +1,84 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { ref, computed } from 'vue';
+import api from '../services/api';
+import { useToast } from 'primevue/usetoast';
+import { useRouter } from 'vue-router';
 
 const props = defineProps<{
     count: number;
     limit: number;
 }>();
 
+const router = useRouter();
 const remaining = computed(() => Math.max(0, props.limit - props.count));
 const progressWidth = computed(() => Math.max(0, Math.min(100, (props.count / props.limit) * 100)));
+
+const toast = useToast();
+const isUpgrading = ref(false);
+
+const upgrade = async () => {
+    isUpgrading.value = true;
+    try {
+        const response = await api.post('/stripe/checkout');
+        window.location.href = response.data.url;
+    } catch (e: any) {
+        toast.add({ severity: 'error', summary: 'Error', detail: e.response?.data?.error || 'Failed to initialize checkout.', life: 3000 });
+    } finally {
+        isUpgrading.value = false;
+    }
+};
 </script>
 
 <template>
-  <div class="trial-status-card">
-    <div class="flex items-center gap-4 mb-4">
-      <div class="status-icon">
-        <i class="pi pi-bolt" />
+  <div class="trial-status-card flex flex-col h-full">
+    <div>
+      <div class="flex items-center gap-4 mb-4">
+        <div class="status-icon">
+          <i class="pi pi-bolt" />
+        </div>
+        <div>
+          <h3 class="text-lg font-black uppercase tracking-tighter leading-tight">
+            Trial Progress
+          </h3>
+          <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+            Workout Credits
+          </p>
+        </div>
       </div>
-      <div>
-        <h3 class="text-lg font-black uppercase tracking-tighter leading-tight">
-          Trial Progress
-        </h3>
-        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-          Workout Credits
-        </p>
+
+      <div class="flex justify-between items-end mb-2">
+        <span class="text-xs font-bold text-slate-400 pb-1"> {{ remaining }} LEFT</span>
       </div>
+
+      <div class="progress-bar-bg">
+        <div
+          class="progress-bar-fill"
+          :style="{ width: progressWidth + '%' }"
+        />
+      </div>
+
+      <p class="mt-4 text-xs font-medium text-slate-600 leading-relaxed mb-6">
+        Upgrade to a full membership to unlock unlimited bookings.
+      </p>
     </div>
 
-    <div class="flex justify-between items-end mb-2">
-      <span class="text-xs font-bold text-slate-400 pb-1"> {{ remaining }} LEFT</span>
-    </div>
-
-    <div class="progress-bar-bg">
-      <div
-        class="progress-bar-fill"
-        :style="{ width: progressWidth + '%' }"
+    <div class="mt-auto space-y-3">
+      <Button
+        label="Sign Contract & Pay"
+        icon="pi pi-file-edit"
+        class="w-full upgrade-btn"
+        :loading="isUpgrading"
+        @click="upgrade"
+      />
+      <Button
+        label="View Plan Details"
+        icon="pi pi-info-circle"
+        class="w-full"
+        severity="secondary"
+        text
+        @click="router.push({ path: '/profile', query: { tab: 'abo' } })"
       />
     </div>
-
-    <p class="mt-4 text-xs font-medium text-slate-600 leading-relaxed">
-      Upgrade to a full membership to unlock unlimited bookings.
-    </p>
   </div>
 </template>
 

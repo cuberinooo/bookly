@@ -40,7 +40,7 @@ const editingUser = ref<any>({ name: '', email: '', roles: ['ROLE_MEMBER'], pass
 const submitting = ref(false);
 const submitted = ref(false);
 const resettingPassword = ref(false);
-const sendingJoinUs = ref(false);
+const sendingMembershipWelcome = ref(false);
 
 const getSortedRoles = (roles: string[]) => {
   const roleOrder = ['ROLE_ADMIN', 'ROLE_TRAINER', 'ROLE_MEMBER', 'ROLE_TRIAL'];
@@ -168,19 +168,18 @@ async function resetPassword() {
     });
 }
 
-async function sendJoinUsMail(user: any) {
-    sendingJoinUs.value = true;
+async function sendMembershipWelcomeMail(user: any) {
+    sendingMembershipWelcome.value = true;
     try {
-        await api.post(`/admin/users/${user.id}/send-join-us`);
-        user.joinUsMailSent = true;
-        toast.add({ severity: 'success', summary: t('app.success'), detail: t('admin.users.joinUsMailSuccess'), life: 5000 });
+        await api.post(`/admin/users/${user.id}/send-membership-welcome`);
+        user.membershipWelcomeMailSent = true;
+        toast.add({ severity: 'success', summary: t('app.success'), detail: t('admin.users.membershipWelcomeMailSuccess'), life: 5000 });
     } catch (e: any) {
         toast.add({ severity: 'error', summary: t('app.error'), detail: e.response?.data?.error || t('app.error'), life: 5000 });
     } finally {
-        sendingJoinUs.value = false;
+        sendingMembershipWelcome.value = false;
     }
 }
-
 async function toggleActive(user: any) {
     try {
         await api.patch(`/admin/users/${user.id}/toggle-active`);
@@ -280,8 +279,22 @@ onMounted(fetchUsers);
           sortable
         >
           <template #body="{ data }">
-            <div class="font-bold text-slate-900">
-              {{ data.name }}
+            <div class="flex items-center gap-2">
+              <div class="font-bold text-slate-900">
+                {{ data.name }}
+              </div>
+              <Tag
+                v-if="data.stripeCustomerId"
+                v-tooltip.top="'Active Subscription'"
+                severity="success"
+                rounded
+                class="px-2 py-0.5 text-[10px] uppercase font-black"
+              >
+                <div class="flex items-center gap-1">
+                  <i class="pi pi-credit-card text-[10px]" />
+                  <span>Paid</span>
+                </div>
+              </Tag>
             </div>
             <div class="text-xs text-slate-500">
               {{ data.email }}
@@ -322,9 +335,9 @@ onMounted(fetchUsers);
           <template #body="{ data }">
             <div v-if="(data.roles.includes('ROLE_TRIAL'))">
               <i
-                v-tooltip.top="data.joinUsMailSent ? $t('admin.users.joinUsMailSuccess') : $t('admin.users.mail')"
+                v-tooltip.top="data.membershipWelcomeMailSent ? $t('admin.users.membershipWelcomeMailSuccess') : $t('admin.users.mail')"
                 class="pi"
-                :class="data.joinUsMailSent ? 'pi-send text-accent' : 'pi-minus text-slate-300'"
+                :class="data.membershipWelcomeMailSent ? 'pi-send text-accent' : 'pi-minus text-slate-300'"
               />
             </div>
           </template>
@@ -336,13 +349,13 @@ onMounted(fetchUsers);
           <template #body="{ data }">
             <div class="flex gap-2">
               <Button
-                v-if="data.roles.includes('ROLE_TRIAL') && !data.joinUsMailSent"
-                v-tooltip.top="$t('admin.users.sendJoinUs')"
+                v-if="data.roles.includes('ROLE_TRIAL') && !data.membershipWelcomeMailSent"
+                v-tooltip.top="$t('admin.users.sendMembershipWelcome')"
                 icon="pi pi-envelope"
                 variant="text"
                 rounded
-                :loading="sendingJoinUs"
-                @click="sendJoinUsMail(data)"
+                :loading="sendingMembershipWelcome"
+                @click="sendMembershipWelcomeMail(data)"
               />
               <Button
                 icon="pi pi-pencil"
@@ -392,9 +405,19 @@ onMounted(fetchUsers);
           >
             <div class="flex justify-between items-start mb-4">
               <div>
-                <h3 class="font-black text-lg text-slate-900 leading-tight">
-                  {{ user.name }}
-                </h3>
+                <div class="flex items-center gap-2 mb-1">
+                  <h3 class="font-black text-lg text-slate-900 leading-tight">
+                    {{ user.name }}
+                  </h3>
+                  <Tag
+                    v-if="user.stripeCustomerId"
+                    severity="success"
+                    rounded
+                    class="px-2 py-0.5 text-[9px] uppercase font-black"
+                  >
+                    Paid
+                  </Tag>
+                </div>
                 <p class="text-xs text-slate-500 font-medium mb-2">
                   {{ user.email }}
                 </p>
@@ -408,8 +431,8 @@ onMounted(fetchUsers);
                     class="text-[10px] uppercase font-black"
                   />
                   <Tag
-                    v-if="user.roles.includes('ROLE_TRIAL') && user.joinUsMailSent"
-                    :value="$t('admin.users.joinUsMailSuccess')"
+                    v-if="user.roles.includes('ROLE_TRIAL') && user.membershipWelcomeMailSent"
+                    :value="$t('admin.users.membershipWelcomeMailSuccess')"
                     severity="success"
                     class="text-[10px] uppercase font-black"
                     icon="pi pi-send"
@@ -434,15 +457,6 @@ onMounted(fetchUsers);
                 />
               </div>
               <div class="flex gap-1">
-                <Button
-                  v-if="user.roles.includes('ROLE_TRIAL') && !user.joinUsMailSent"
-                  icon="pi pi-envelope"
-                  severity="secondary"
-                  variant="text"
-                  rounded
-                  :loading="sendingJoinUs"
-                  @click="sendJoinUsMail(user)"
-                />
                 <Button
                   icon="pi pi-pencil"
                   severity="secondary"

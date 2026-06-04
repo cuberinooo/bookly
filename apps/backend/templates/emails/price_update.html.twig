@@ -1,0 +1,17 @@
+{% extends 'emails/base.html.twig' %}
+
+{% block title %}Membership Price Update{% endblock %}
+
+{% block content %}
+    <p>Hello {{ name }},</p>
+    <p>We are writing to inform you of an update to our membership pricing at <strong>{{ siteName }}</strong>.</p>
+    <p>Starting from your next billing cycle, your monthly membership fee will be adjusted to <strong>{{ newPrice }}</strong>.</p>
+    <p>This update allows us to continue providing the best training experience and facilities for our community. We appreciate your continued support and dedication.</p>
+    <p>If you have any questions regarding this change, please don't hesitate to contact us.</p>
+    <p>You can manage your subscription at any time via your profile:</p>
+    <p style="text-align: center; margin: 30px 0;">
+        <a href="{{ loginUrl }}" class="button">Go to My Profile</a>
+    </p>
+    <p>Keep training hard!</p>
+    <p>The {{ siteName }} Team</p>
+{% endblock %}

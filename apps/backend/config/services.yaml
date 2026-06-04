@@ -18,6 +18,9 @@ services:
         autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
         bind:
             $s3Bucket: '%aws_s3_bucket%'
+            $stripeSecretKey: '%env(STRIPE_SECRET_KEY)%'
+            $stripeWebhookSecret: '%env(STRIPE_WEBHOOK_SECRET)%'
+            $frontendUrl: '%env(FRONTEND_URL)%'
             $apiCachePool: '@api_cache.pool'
 
     Aws\S3\S3Client:
