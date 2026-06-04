@@ -4,9 +4,11 @@ import { useSettingsStore } from '../store/useSettingsStore';
 import { useRouter, useRoute } from 'vue-router';
 import api from '../services/api';
 import { useToast } from 'primevue/usetoast';
+import { useI18n } from 'vue-i18n';
 import {downloadPrivacyPolicy} from "../services/download";
 import LegalDialog from "../components/LegalDialog.vue";
 
+const { t } = useI18n();
 const step = ref(1);
 const name = ref('');
 const nameTouched = ref(false);
@@ -14,11 +16,11 @@ const email = ref('');
 const emailTouched = ref(false);
 const gender = ref(null);
 const genderTouched = ref(false);
-const genderOptions = [
-    { label: 'Male', value: 'male' },
-    { label: 'Female', value: 'female' },
-    { label: 'Other', value: 'other' }
-];
+const genderOptions = computed(() => [
+    { label: t('auth.genderMale'), value: 'male' },
+    { label: t('auth.genderFemale'), value: 'female' },
+    { label: t('auth.genderOther'), value: 'other' }
+]);
 const companyName = ref('Bookly');
 const companyNameTouched = ref(false);
 const password = ref('');
@@ -82,7 +84,7 @@ async function goToStep2() {
   confirmPasswordTouched.value = true;
 
   if (!isStep1Valid.value) {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'Please fill in all fields correctly.', life: 3000 });
+    toast.add({ severity: 'error', summary: t('app.error'), detail: t('auth.fillFieldsError'), life: 3000 });
     return;
   }
 
@@ -100,7 +102,7 @@ async function goToStep2() {
     step.value = 2;
     window.scrollTo(0, 0);
   } catch (err) {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to fetch company information.', life: 3000 });
+    toast.add({ severity: 'error', summary: t('app.error'), detail: t('auth.fetchCompanyError'), life: 3000 });
   } finally {
     loading.value = false;
   }
@@ -113,7 +115,7 @@ function onClickShowTerms() {
 
 async function register() {
   if (!isFormValid.value) {
-      toast.add({ severity: 'error', summary: 'Error', detail: 'Please agree to the terms and conditions.', life: 5000 });
+      toast.add({ severity: 'error', summary: t('app.error'), detail: t('auth.agreeTermsError'), life: 5000 });
       return;
   }
 
@@ -129,11 +131,11 @@ async function register() {
     isRegistered.value = true;
     window.scrollTo(0, 0);
   } catch (err: any) {
-    let detail = err.response?.data?.error || 'Registration failed';
+    let detail = err.response?.data?.error || t('auth.registrationFailed');
     if (err.response?.status === 409 || detail === 'Email already registered') {
-        detail = 'This email address is already registered. Please login or use a different email.';
+        detail = t('auth.emailAlreadyRegistered');
     }
-    toast.add({ severity: 'error', summary: 'Error', detail: detail, life: 7000 });
+    toast.add({ severity: 'error', summary: t('app.error'), detail: detail, life: 7000 });
   } finally {
     loading.value = false;
   }
@@ -147,10 +149,10 @@ async function register() {
       <div v-if="!isRegistered">
         <div class="text-center mb-10">
           <h1 class="text-3xl font-extrabold tracking-tight">
-            {{ step === 1 ? 'Join ' + companyName : (companyLegal.found ? 'Legal Agreement' : 'Create New Company') }}
+            {{ step === 1 ? t('auth.join', { company: companyName }) : (companyLegal.found ? t('auth.legalAgreement') : t('auth.createNewCompany')) }}
           </h1>
           <p class="text-slate-600 mt-2 font-medium">
-            {{ step === 1 ? 'Start your athletic transformation' : (companyLegal.found ? 'Please review and accept the following terms' : 'Confirm your registration details') }}
+            {{ step === 1 ? t('auth.startTransformation') : (companyLegal.found ? t('auth.reviewTerms') : t('auth.confirmDetails')) }}
           </p>
         </div>
 
@@ -163,7 +165,7 @@ async function register() {
               <label
                 for="name"
                 class="form-label-base"
-              >Full Name</label>
+              >{{ t('auth.fullName') }}</label>
               <InputText
                 id="name"
                 v-model="name"
@@ -175,14 +177,14 @@ async function register() {
               <small
                 v-if="nameTouched && !name"
                 class="text-red-500 text-xs mt-1"
-              >Full name is required.</small>
+              >{{ t('auth.nameRequired') }}</small>
             </div>
 
             <div class="flex flex-col">
               <label
                 for="email"
                 class="form-label-base"
-              >Email Address</label>
+              >{{ t('auth.email') }}</label>
               <InputText
                 id="email"
                 v-model="email"
@@ -195,35 +197,35 @@ async function register() {
               <small
                 v-if="emailTouched && !email"
                 class="text-red-500 text-xs mt-1"
-              >Email is required.</small>
+              >{{ t('auth.emailRequired') }}</small>
               <small
                 v-else-if="emailTouched && !isEmailValid"
                 class="text-red-500 text-xs mt-1"
-              >Please enter a valid email address.</small>
+              >{{ t('auth.invalidEmail') }}</small>
             </div>
 
             <div class="flex flex-col">
-              <label class="form-label-base">Gender</label>
+              <label class="form-label-base">{{ t('auth.gender') }}</label>
               <Select
                 v-model="gender"
                 :options="genderOptions"
                 option-label="label"
                 option-value="value"
-                placeholder="Select Gender"
+                :placeholder="t('auth.selectGender')"
                 :class="{ 'p-invalid': genderTouched && !gender }"
                 @blur="genderTouched = true"
               />
               <small
                 v-if="genderTouched && !gender"
                 class="text-red-500 text-xs mt-1"
-              >Gender is required.</small>
+              >{{ t('auth.genderRequired') }}</small>
             </div>
 
             <div class="flex flex-col">
               <label
                 for="companyName"
                 class="form-label-base"
-              >Company Name</label>
+              >{{ t('auth.companyName') }}</label>
               <InputText
                 id="companyName"
                 v-model="companyName"
@@ -236,13 +238,13 @@ async function register() {
               <small
                 v-if="companyNameTouched && !companyName"
                 class="text-red-500 text-xs mt-1"
-              >Company name is required.</small>
+              >{{ t('auth.companyRequired') }}</small>
             </div>
             <div class="flex flex-col">
               <label
                 for="password"
                 class="form-label-base"
-              >Password</label>
+              >{{ t('auth.password') }}</label>
               <Password
                 v-model="password"
                 input-id="password"
@@ -256,23 +258,23 @@ async function register() {
                 <template #footer>
                   <Divider />
                   <p class="mt-2 font-bold text-xs uppercase tracking-wider">
-                    Requirements
+                    {{ t('app.requirements') }}
                   </p>
                   <ul class="pl-2 ml-2 mt-2 list-disc flex flex-col gap-1 text-xs">
                     <li :class="passwordValidation.minLength ? 'text-green-600' : 'text-slate-400'">
-                      At least 8 characters
+                      {{ t('app.atLeast8Chars') }}
                     </li>
                     <li :class="passwordValidation.uppercase ? 'text-green-600' : 'text-slate-400'">
-                      At least one uppercase
+                      {{ t('app.atLeastOneUppercase') }}
                     </li>
                     <li :class="passwordValidation.lowercase ? 'text-green-600' : 'text-slate-400'">
-                      At least one lowercase
+                      {{ t('app.atLeastOneLowercase') }}
                     </li>
                     <li :class="passwordValidation.number ? 'text-green-600' : 'text-slate-400'">
-                      At least one number
+                      {{ t('app.atLeastOneNumber') }}
                     </li>
                     <li :class="passwordValidation.special ? 'text-green-600' : 'text-slate-400'">
-                      At least one special character
+                      {{ t('app.atLeastOneSpecial') }}
                     </li>
                   </ul>
                 </template>
@@ -280,14 +282,14 @@ async function register() {
               <small
                 v-if="passwordTouched && !isPasswordValid"
                 class="text-red-500 text-xs mt-1"
-              >Password does not meet requirements.</small>
+              >{{ t('auth.passwordRequirements') }}</small>
             </div>
 
             <div class="flex flex-col">
               <label
                 for="confirmPassword"
                 class="form-label-base"
-              >Confirm Password</label>
+              >{{ t('auth.confirmPassword') }}</label>
               <InputText
                 id="confirmPassword"
                 v-model="confirmPassword"
@@ -300,13 +302,13 @@ async function register() {
               <small
                 v-if="confirmPasswordTouched && !passwordValidation.match"
                 class="text-red-500 text-xs mt-1"
-              >Passwords do not match.</small>
+              >{{ t('auth.passwordsMatchRequired') }}</small>
             </div>
 
             <Button
               type="submit"
               severity="primary"
-              label="Continue"
+              :label="t('auth.continue')"
               :loading="loading"
               class="btn-primary w-full py-4 text-lg"
             />
@@ -327,22 +329,22 @@ async function register() {
                   for="terms"
                   class="text-sm text-slate-700 font-medium leading-relaxed cursor-pointer"
                 >
-                  I agree to the
+                  {{ t('auth.iAgreeTo') }}
                   <a
                     href="javascript:void(0)"
                     class="font-bold text-primary hover:underline"
                     @click="onClickShowTerms"
                   >
-                    Terms & Conditions (AGB)
+                    {{ t('auth.termsAndConditionsLink') }}
                   </a>
-                  of {{ companyLegal.companyName }}
-                  and I have read the
+                  {{ t('auth.of') }} {{ companyLegal.companyName }}
+                  {{ t('auth.andIHaveRead') }}
                   <a
                     href="javascript:void(0)"
                     class="text-primary font-bold hover:underline"
                     @click="downloadPrivacyPolicy(companyLegal.companyName)"
                   >
-                    Privacy Policy (Datenschutz)
+                    {{ t('auth.privacyPolicyLink') }}
                   </a>
                 </label>
               </div>
@@ -350,8 +352,7 @@ async function register() {
                 <label
                   class="text-sm text-slate-700 font-medium leading-relaxed cursor-pointer"
                 >
-                  The company <strong>{{ companyName }}</strong> could not be found.
-                  You can continue and a new company will be created.
+                  {{ t('auth.companyNotFound', { company: companyName }) }}
                 </label>
               </div>
             </div>
@@ -359,7 +360,7 @@ async function register() {
               <Button
                 type="button"
                 severity="secondary"
-                label="Back"
+                :label="t('app.back')"
                 icon="pi pi-arrow-left"
                 class="flex-1 py-4 text-lg"
                 outlined
@@ -368,7 +369,7 @@ async function register() {
               <Button
                 type="button"
                 severity="primary"
-                label="Accept & Create Account"
+                :label="t('auth.acceptAndCreate')"
                 :loading="loading"
                 :disabled="companyLegal.found ? !acceptedTerms : false"
                 class="flex-2 btn-primary py-4 text-lg"
@@ -380,12 +381,12 @@ async function register() {
 
         <div class="mt-8 pt-6 border-t border-slate-50 text-center">
           <p class="font-medium text-slate-600">
-            Already an athlete?
+            {{ t('auth.alreadyAthlete') }}
             <RouterLink
               to="/login"
               class="text-accent hover:brightness-90 font-bold underline-offset-4 hover:underline transition-all"
             >
-              Login here
+              {{ t('auth.registerHere') }}
             </RouterLink>
           </p>
         </div>
@@ -401,15 +402,15 @@ async function register() {
           </div>
         </div>
         <h2 class="text-3xl font-extrabold text-slate-900 mb-4">
-          Check Your Email
+          {{ t('auth.checkEmail') }}
         </h2>
         <p class="text-lg text-slate-600 mb-8 leading-relaxed">
-          Account created! We've sent a verification link to <strong>{{ email }}</strong>.<br>
-          Please verify your email address to activate your account. Then you can sign in.
+          {{ t('auth.accountCreated', { email: email }) }}<br>
+          {{ t('auth.verifyEmailInstruction') }}
         </p>
         <div class="flex flex-col gap-4">
           <Button
-            label="Go to Login"
+            :label="t('auth.goToLogin')"
             severity="primary"
             class="w-full py-4 text-lg"
             @click="router.push('/login')"

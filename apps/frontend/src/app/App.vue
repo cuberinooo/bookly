@@ -1,27 +1,152 @@
 <script setup lang="ts">
-import {RouterLink, RouterView} from 'vue-router';
+import { RouterLink, RouterView } from 'vue-router';
 import { useAuthStore } from '../store/useAuthStore';
 import { useSettingsStore } from '../store/useSettingsStore';
-import {useRouter} from 'vue-router';
-import {ref, computed, onMounted, watch, onUnmounted} from 'vue';
+import { useMeetupStore } from '../store/useMeetupStore';
+import { useRouter } from 'vue-router';
+import { ref, computed, onMounted, watch, onUnmounted } from 'vue';
 import api from '../services/api';
-import {useToast} from 'primevue/usetoast';
+import { useToast } from 'primevue/usetoast';
 import TheFooter from '../components/TheFooter.vue';
 import TheMobileNav from '../components/TheMobileNav.vue';
 import VersionUpdateToast from '../components/VersionUpdateToast.vue';
 import mercureService from '../services/mercure';
 import { useOnboarding } from '../composables/useOnboarding';
 import FloatingOnboardingWidget from '../components/FloatingOnboardingWidget.vue';
+import CookieConsent from '../components/CookieConsent.vue';
+import { useI18n } from 'vue-i18n';
+import { usePrimeVue } from 'primevue/config';
+import OverlayBadge from 'primevue/overlaybadge';
 
 const router = useRouter();
+const { t, locale } = useI18n();
+const primevue = usePrimeVue();
 const menu = ref();
 const toast = useToast();
 const authStore = useAuthStore();
 const settingsStore = useSettingsStore();
+const meetupStore = useMeetupStore();
 const { initRouteTracking } = useOnboarding();
 
+let notificationInterval: any = null;
+
 onMounted(() => {
+  // Clean up refresh query param if present from a version update hard reload
+  const url = new URL(window.location.href);
+  if (url.searchParams.has('refresh')) {
+    url.searchParams.delete('refresh');
+    const newUrl = url.pathname + url.search + url.hash;
+    window.history.replaceState({}, '', newUrl);
+  }
+
   initRouteTracking();
+  if (authStore.isLoggedIn) {
+      meetupStore.fetchNotificationCounts();
+      notificationInterval = setInterval(() => {
+          meetupStore.fetchNotificationCounts();
+      }, 60000); // Check every minute
+  }
+});
+
+onUnmounted(() => {
+    if (notificationInterval) clearInterval(notificationInterval);
+});
+
+watch(locale, (newLocale) => {
+  localStorage.setItem('app_locale', newLocale);
+  if (newLocale === 'de') {
+    primevue.config.locale = {
+      dayNames: [
+        'Sonntag',
+        'Montag',
+        'Dienstag',
+        'Mittwoch',
+        'Donnerstag',
+        'Freitag',
+        'Samstag',
+      ],
+      dayNamesShort: ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'],
+      dayNamesMin: ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'],
+      monthNames: [
+        'Januar',
+        'Februar',
+        'März',
+        'April',
+        'Mai',
+        'Juni',
+        'Juli',
+        'August',
+        'September',
+        'Oktober',
+        'November',
+        'Dezember',
+      ],
+      monthNamesShort: [
+        'Jan',
+        'Feb',
+        'Mär',
+        'Apr',
+        'Mai',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Okt',
+        'Nov',
+        'Dez',
+      ],
+      today: 'Heute',
+      clear: 'Löschen',
+      dateFormat: 'dd.mm.yy',
+      firstDayOfWeek: 1,
+    };
+  } else {
+    primevue.config.locale = {
+      dayNames: [
+        'Sunday',
+        'Monday',
+        'Tuesday',
+        'Wednesday',
+        'Thursday',
+        'Friday',
+        'Saturday',
+      ],
+      dayNamesShort: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+      dayNamesMin: ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'],
+      monthNames: [
+        'January',
+        'February',
+        'March',
+        'April',
+        'May',
+        'June',
+        'July',
+        'August',
+        'September',
+        'October',
+        'November',
+        'December',
+      ],
+      monthNamesShort: [
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec',
+      ],
+      today: 'Today',
+      clear: 'Clear',
+      dateFormat: 'mm/dd/yy',
+      firstDayOfWeek: 0,
+    };
+  }
 });
 
 const newPassword = ref('');
@@ -44,7 +169,9 @@ const passwordValidation = computed(() => {
     lowercase: /[a-z]/.test(newPassword.value),
     number: /[0-9]/.test(newPassword.value),
     special: /[^A-Za-z0-9]/.test(newPassword.value),
-    match: newPassword.value === confirmNewPassword.value && newPassword.value !== ''
+    match:
+      newPassword.value === confirmNewPassword.value &&
+      newPassword.value !== '',
   };
 });
 
@@ -73,8 +200,15 @@ const isAppReady = computed(() => {
 async function updatePassword() {
   changingPassword.value = true;
   try {
-    const response = await api.post('/user/change-password', {password: newPassword.value});
-    toast.add({severity: 'success', summary: 'Success', detail: 'Password updated successfully', life: 5000});
+    const response = await api.post('/user/change-password', {
+      password: newPassword.value,
+    });
+    toast.add({
+      severity: 'success',
+      summary: t('app.success'),
+      detail: t('app.passwordUpdated'),
+      life: 5000,
+    });
 
     if (response.data.token) {
       authStore.setToken(response.data.token);
@@ -84,9 +218,9 @@ async function updatePassword() {
   } catch (e: any) {
     toast.add({
       severity: 'error',
-      summary: 'Error',
-      detail: e.response?.data?.error || 'Failed to update password',
-      life: 5000
+      summary: t('app.error'),
+      detail: e.response?.data?.error || t('app.failedToUpdatePassword'),
+      life: 5000,
     });
   } finally {
     changingPassword.value = false;
@@ -94,64 +228,93 @@ async function updatePassword() {
 }
 
 const dashboardLabel = computed(() => {
-  return authStore.isTrainer && authStore.viewMode === 'trainer' ? 'Dashboard' : 'My bookings';
+  return authStore.isTrainer && authStore.viewMode === 'trainer'
+    ? t('app.dashboard')
+    : t('app.myBookings');
 });
 
 const canSeeLeaderboard = computed(() => {
   const allowedRoles = ['ROLE_MEMBER', 'ROLE_TRAINER', 'ROLE_ADMIN'];
-  return authStore.user?.roles.some(role => allowedRoles.includes(role));
+  return authStore.user?.roles.some((role) => allowedRoles.includes(role));
 });
 
 const menuItems = computed(() => {
-  const items = [];
-
-  // Personal Category
-  items.push({
-    label: 'Personal',
-    items: [
-      { label: 'Profile', icon: 'pi pi-user', command: () => router.push('/profile') },
-      { label: 'My Personal Bests', icon: 'pi pi-trophy', command: () => router.push('/personal-bests') }
-    ]
-  });
+  const items = [
+    {
+      label: t('app.personal'),
+      items: [
+        {
+          label: t('app.profile'),
+          icon: 'pi pi-user',
+          command: () => router.push('/profile'),
+        },
+        {
+          label: t('app.myPersonalBests'),
+          icon: 'pi pi-trophy',
+          command: () => router.push('/personal-bests'),
+        },
+      ],
+    },
+  ];
 
   // Management Category (Admin or Trainer)
   const managementItems = [];
   if (authStore.isAdmin) {
-    managementItems.push({ label: 'Athletes', icon: 'pi pi-users', command: () => router.push('/users') });
+    managementItems.push({
+      label: t('app.athletes'),
+      icon: 'pi pi-users',
+      command: () => router.push('/users'),
+    });
   }
   if (authStore.isTrainer) {
-    managementItems.push({ label: 'Statistics', icon: 'pi pi-chart-bar', command: () => router.push('/statistics') });
+    managementItems.push({
+      label: t('app.statistics'),
+      icon: 'pi pi-chart-bar',
+      command: () => router.push('/statistics'),
+    });
   }
 
   if (managementItems.length > 0) {
     items.push({
-      label: 'Management',
-      items: managementItems
+      label: t('app.management'),
+      items: managementItems,
     });
   }
 
   // Administration Category (Admin or Trainer)
   const administrationItems = [];
   if (authStore.isAdmin) {
-    administrationItems.push({ label: 'Payments', icon: 'pi pi-credit-card', command: () => router.push('/payments') });
+    administrationItems.push({
+      label: t('app.payments'),
+      icon: 'pi pi-credit-card',
+      command: () => router.push('/payments'),
+    });
   }
   if (authStore.isAdmin || authStore.isTrainer) {
-    administrationItems.push({ label: 'System Settings', icon: 'pi pi-cog', command: () => router.push('/settings') });
+    administrationItems.push({
+      label: t('app.systemSettings'),
+      icon: 'pi pi-cog',
+      command: () => router.push('/settings'),
+    });
   }
 
   if (administrationItems.length > 0) {
     items.push({
-      label: 'Administration',
-      items: administrationItems
+      label: t('app.administration'),
+      items: administrationItems,
     });
   }
 
   // Account Category
   items.push({
-    label: 'Account',
+    label: t('app.accountAction'),
     items: [
-      { label: 'Logout', icon: 'pi pi-sign-out', command: () => logout() }
-    ]
+      {
+        label: t('app.logout'),
+        icon: 'pi pi-sign-out',
+        command: () => logout(),
+      },
+    ],
   });
 
   return items;
@@ -171,7 +334,7 @@ const profilePictureUrl = computed(() => {
 
 async function logout() {
   await authStore.logout();
-  router.push({name: 'login'});
+  router.push({ name: 'login' });
 }
 
 watch(
@@ -184,7 +347,7 @@ watch(
       settingsStore.fetchSettings();
       mercureService.init();
     }
-  }
+  },
 );
 
 onMounted(async () => {
@@ -194,7 +357,6 @@ onMounted(async () => {
     mercureService.init();
   }
 });
-
 </script>
 
 <template>
@@ -225,7 +387,7 @@ onMounted(async () => {
             to="/"
             class="desktop-only"
           >
-            Courses
+            {{ t('app.courses') }}
           </RouterLink>
           <template v-if="authStore.isLoggedIn">
             <RouterLink
@@ -238,78 +400,111 @@ onMounted(async () => {
               to="/meetups"
               class="desktop-only"
             >
-              Meetups
+              <OverlayBadge
+                v-if="meetupStore.globalUnread > 0"
+                :value="meetupStore.globalUnread"
+                severity="danger"
+                size="small"
+              >
+                <span style="padding-right: 0.5rem;">{{ t('app.meetups') }}</span>
+              </OverlayBadge>
+              <span v-else>{{ t('app.meetups') }}</span>
             </RouterLink>
             <RouterLink
               v-if="canSeeLeaderboard"
               to="/leaderboard"
               class="desktop-only"
             >
-              Rankings
+              {{ t('app.rankings') }}
             </RouterLink>
-            <div class="profile-dropdown-wrapper">
-              <Button
-                type="button"
-                severity="secondary"
-                rounded
-                class="profile-btn"
-                @click="toggleMenu"
-              >
-                <img
-                  v-if="profilePictureUrl"
-                  :src="profilePictureUrl"
-                  alt="Profile"
-                  class="profile-image-small"
-                >
-                <i
-                  v-else
-                  class="pi pi-user"
-                />
-
-                <!-- Role Indicator Badge -->
-                <div
-                  v-if="authStore.isTrainer"
-                  class="role-badge"
-                  :class="authStore.viewMode"
-                >
-                  <i :class="authStore.viewMode === 'trainer' ? 'pi pi-star-fill' : 'pi pi-user'" />
-                </div>
-              </Button>
-              <Menu
-                ref="menu"
-                :model="menuItems"
-                :popup="true"
-              >
-                <template #start>
-                  <div
-                    v-if="authStore.user"
-                    class="menu-user-info"
-                  >
-                    <span class="p-2 menu-user-name">{{ authStore.user.name }}</span>
-                    <div
-                      v-if="authStore.isTrainer"
-                      class="toggle-container"
-                    >
-                      <ToggleButton
-                        on-label="Trainer Mode"
-                        off-label="Member Mode"
-                        on-icon="pi pi-star-fill"
-                        off-icon="pi pi-user"
-                        :model-value="authStore.viewMode === 'trainer'"
-                        @update:model-value="authStore.toggleViewMode()"
-                      />
-                    </div>
-                  </div>
-                </template>
-              </Menu>
-            </div>
           </template>
+
+          <div class="lang-switcher">
+            <Select
+              v-model="locale"
+              :options="[
+                { label: 'EN', value: 'en', flag: '🇺🇸' },
+                { label: 'DE', value: 'de', flag: '🇩🇪' },
+              ]"
+              option-label="label"
+              option-value="value"
+              class="lang-select"
+            />
+          </div>
+
+          <div
+            v-if="authStore.isLoggedIn"
+            class="profile-dropdown-wrapper"
+          >
+            <Button
+              type="button"
+              severity="secondary"
+              rounded
+              class="profile-btn"
+              @click="toggleMenu"
+            >
+              <img
+                v-if="profilePictureUrl"
+                :src="profilePictureUrl"
+                alt="Profile"
+                class="profile-image-small"
+              >
+              <i
+                v-else
+                class="pi pi-user"
+              />
+
+              <!-- Role Indicator Badge -->
+              <div
+                v-if="authStore.isTrainer"
+                class="role-badge"
+                :class="authStore.viewMode"
+              >
+                <i
+                  :class="
+                    authStore.viewMode === 'trainer'
+                      ? 'pi pi-star-fill'
+                      : 'pi pi-user'
+                  "
+                />
+              </div>
+            </Button>
+            <Menu
+              ref="menu"
+              :model="menuItems"
+              :popup="true"
+            >
+              <template #start>
+                <div
+                  v-if="authStore.user"
+                  class="menu-user-info"
+                >
+                  <span class="p-2 menu-user-name">{{
+                    authStore.user.name
+                  }}</span>
+                  <div
+                    v-if="authStore.isTrainer"
+                    class="toggle-container"
+                  >
+                    <ToggleButton
+                      :on-label="t('app.trainerMode')"
+                      :off-label="t('app.memberMode')"
+                      on-icon="pi pi-star-fill"
+                      off-icon="pi pi-user"
+                      :model-value="authStore.viewMode === 'trainer'"
+                      @update:model-value="authStore.toggleViewMode()"
+                    />
+                  </div>
+                </div>
+              </template>
+            </Menu>
+          </div>
           <template v-else>
             <RouterLink to="/login">
-              Login
+              {{ t('app.login') }}
             </RouterLink>
             <RouterLink to="/register">
-              Register
+              {{ t('app.register') }}
             </RouterLink>
           </template>
         </div>
@@ -332,24 +527,26 @@ onMounted(async () => {
     <Dialog
       v-if="authStore.user"
       v-model:visible="authStore.user.mustChangePassword"
-      header="Action Required: Update Password"
+      :header="t('app.securityUpdateRequired')"
       :modal="true"
       :closable="false"
       class="w-full max-w-md"
     >
       <div class="flex flex-col gap-6 py-4">
-        <div class="p-4 bg-amber-50 border-l-4 border-amber-500 text-amber-900 text-sm mb-2">
+        <div
+          class="p-4 bg-amber-50 border-l-4 border-amber-500 text-amber-900 text-sm mb-2"
+        >
           <p class="font-bold mb-1">
-            Security Update Required
+            {{ t('app.securityUpdateRequired') }}
           </p>
-          <p>Your account was created with a temporary password. Please set a new secure password to continue.</p>
+          <p>{{ t('app.tempPasswordInstruction') }}</p>
         </div>
 
         <div class="flex flex-col gap-2">
           <label
             for="newPassword"
             class="font-bold text-sm uppercase tracking-wider text-slate-500"
-          >New Password</label>
+          >{{ t('app.newPassword') }}</label>
           <Password
             v-model="newPassword"
             input-id="newPassword"
@@ -363,23 +560,53 @@ onMounted(async () => {
             <template #footer>
               <Divider />
               <p class="mt-2 font-bold text-xs uppercase tracking-wider">
-                Requirements
+                {{ t('app.requirements') }}
               </p>
               <ul class="pl-2 ml-2 mt-2 list-disc flex flex-col gap-1 text-xs">
-                <li :class="passwordValidation.minLength ? 'text-green-600' : 'text-slate-400'">
-                  At least 8 characters
+                <li
+                  :class="
+                    passwordValidation.minLength
+                      ? 'text-green-600'
+                      : 'text-slate-400'
+                  "
+                >
+                  {{ t('app.atLeast8Chars') }}
                 </li>
-                <li :class="passwordValidation.uppercase ? 'text-green-600' : 'text-slate-400'">
-                  At least one uppercase
+                <li
+                  :class="
+                    passwordValidation.uppercase
+                      ? 'text-green-600'
+                      : 'text-slate-400'
+                  "
+                >
+                  {{ t('app.atLeastOneUppercase') }}
                 </li>
-                <li :class="passwordValidation.lowercase ? 'text-green-600' : 'text-slate-400'">
-                  At least one lowercase
+                <li
+                  :class="
+                    passwordValidation.lowercase
+                      ? 'text-green-600'
+                      : 'text-slate-400'
+                  "
+                >
+                  {{ t('app.atLeastOneLowercase') }}
                 </li>
-                <li :class="passwordValidation.number ? 'text-green-600' : 'text-slate-400'">
-                  At least one number
+                <li
+                  :class="
+                    passwordValidation.number
+                      ? 'text-green-600'
+                      : 'text-slate-400'
+                  "
+                >
+                  {{ t('app.atLeastOneNumber') }}
                 </li>
-                <li :class="passwordValidation.special ? 'text-green-600' : 'text-slate-400'">
-                  At least one special character
+                <li
+                  :class="
+                    passwordValidation.special
+                      ? 'text-green-600'
+                      : 'text-slate-400'
+                  "
+                >
+                  {{ t('app.atLeastOneSpecial') }}
                 </li>
               </ul>
             </template>
@@ -392,31 +619,31 @@ onMounted(async () => {
               v-if="!passwordValidation.minLength"
               class="text-red-500"
             >
-              • At least 8 characters
+              • {{ t('app.atLeast8Chars') }}
             </li>
             <li
               v-if="!passwordValidation.uppercase"
               class="text-red-500"
             >
-              • At least one uppercase
+              • {{ t('app.atLeastOneUppercase') }}
             </li>
             <li
               v-if="!passwordValidation.lowercase"
               class="text-red-500"
             >
-              • At least one lowercase
+              • {{ t('app.atLeastOneLowercase') }}
             </li>
             <li
               v-if="!passwordValidation.number"
               class="text-red-500"
             >
-              • At least one number
+              • {{ t('app.atLeastOneNumber') }}
             </li>
             <li
               v-if="!passwordValidation.special"
               class="text-red-500"
             >
-              • At least one special character
+              • {{ t('app.atLeastOneSpecial') }}
             </li>
           </ul>
         </div>
@@ -425,23 +652,25 @@ onMounted(async () => {
           <label
             for="confirmNewPassword"
             class="font-bold text-sm uppercase tracking-wider text-slate-500"
-          >Confirm New Password</label>
+          >{{ t('app.confirmNewPassword') }}</label>
           <InputText
             id="confirmNewPassword"
             v-model="confirmNewPassword"
             type="password"
             placeholder="••••••••"
-            :class="{ 'p-invalid': confirmNewPassword && !passwordValidation.match }"
+            :class="{
+              'p-invalid': confirmNewPassword && !passwordValidation.match,
+            }"
           />
           <small
             v-if="confirmNewPassword && !passwordValidation.match"
             class="text-red-500 font-bold"
-          >Passwords do not match</small>
+          >{{ t('app.passwordsDoNotMatch') }}</small>
         </div>
       </div>
       <template #footer>
         <Button
-          label="Update Password & Continue"
+          :label="t('app.updatePasswordAndContinue')"
           severity="primary"
           class="w-full py-3"
           :loading="changingPassword"
@@ -453,12 +682,15 @@ onMounted(async () => {
     <VersionUpdateToast />
     <TheMobileNav />
     <FloatingOnboardingWidget v-if="authStore.isLoggedIn" />
+    <CookieConsent />
   </div>
 </template>
 
 <style scoped lang="scss">
 /* Essential: Prevents browser bounce physics from fighting your pull-to-refresh */
-html, body, #app {
+html,
+body,
+#app {
   overscroll-behavior-y: contain;
 }
 
@@ -549,6 +781,35 @@ html, body, #app {
     }
   }
 
+  .lang-switcher {
+    .lang-select {
+      background: rgba(255, 255, 255, 0.05) !important;
+      border: 1px solid rgba(255, 255, 255, 0.1) !important;
+      border-radius: 20px !important;
+      height: 40px !important;
+      width: 90px !important;
+      color: white !important;
+      transition: all 0.2s ease;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.1) !important;
+        border-color: var(--primary-color) !important;
+      }
+
+      :deep(.p-select-label) {
+        padding: 0 !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      :deep(.p-select-dropdown) {
+        width: 1.5rem !important;
+        color: rgba(255, 255, 255, 0.5);
+      }
+    }
+  }
+
   .profile-btn {
     background: rgba(255, 255, 255, 0.1) !important;
     border: 1px solid rgba(255, 255, 255, 0.2) !important;
@@ -592,13 +853,17 @@ html, body, #app {
 
       &.trainer {
         background: var(--bg-primary-color);
-        i { color: white; }
+        i {
+          color: white;
+        }
         box-shadow: 0 0 8px rgba(255, 193, 7, 0.4);
       }
 
       &.member {
         background: var(--bg-primary-color);
-        i { color: white; }
+        i {
+          color: white;
+        }
       }
     }
   }
@@ -694,7 +959,8 @@ html, body, #app {
 }
 
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {

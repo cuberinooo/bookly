@@ -13,18 +13,23 @@ use App\Repository\CourseRepository;
 use App\Repository\CourseSeriesRepository;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Messenger\MessageBusInterface;
+use Symfony\Component\Messenger\Stamp\DelayStamp;
 use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 class CourseService
 {
     public function __construct(
-        private CourseRepository $courseRepository,
-        private CourseSeriesRepository $seriesRepository,
-        private EntityManagerInterface $entityManager,
-        private BookingService $bookingService,
-        private ?SerializerInterface $serializer = null,
-        private ?TrainingCycleService $cycleService = null,
-        private ?UserRepository $userRepository = null
+        private readonly CourseRepository $courseRepository,
+        private readonly CourseSeriesRepository $seriesRepository,
+        private readonly EntityManagerInterface $entityManager,
+        private readonly BookingService $bookingService,
+        private readonly TranslatorInterface $translator,
+        private readonly MessageBusInterface $messageBus,
+        private readonly ?SerializerInterface $serializer = null,
+        private readonly ?TrainingCycleService $cycleService = null,
+        private readonly ?UserRepository $userRepository = null
     ) {
     }
 
@@ -58,6 +63,8 @@ class CourseService
             $this->entityManager->persist($course);
             $this->entityManager->flush();
 
+            $this->dispatchAutoCancelCheck($course);
+
             return [$course];
         }
 
@@ -78,6 +85,40 @@ class CourseService
         // No longer pre-generating courses for 3 months here.
         // The calendar will generate virtual occurrences on-the-fly.
         return [];
+    }
+
+    public function dispatchAutoCancelCheck(Course $course): void
+    {
+        $settings = $course->getCompany()->getGlobalSettings();
+        if (!$settings || !$settings->isAutoCancelEnabled()) {
+            return;
+        }
+
+        $now = new \DateTime();
+        $checkTime = (clone $course->getStartTime())->modify('-' . $settings->getAutoCancelHoursBefore() . ' hours');
+        
+        $delaySeconds = $checkTime->getTimestamp() - $now->getTimestamp();
+        $delay = max(0, $delaySeconds) * 1000;
+        
+        $this->messageBus->dispatch(new \App\Message\CheckCourseAutoCancelMessage($course->getId()), [new DelayStamp($delay)]);
+    }
+
+    public function queueFutureAutoCancelChecks(\App\Entity\Company $company): void
+    {
+        $now = new \DateTime();
+        $courses = $this->courseRepository->createQueryBuilder('c')
+            ->where('c.company = :company')
+            ->andWhere('c.startTime >= :now')
+            ->andWhere('c.status = :status')
+            ->setParameter('company', $company)
+            ->setParameter('now', $now)
+            ->setParameter('status', \App\Enum\CourseStatus::ACTIVE)
+            ->getQuery()
+            ->getResult();
+
+        foreach ($courses as $course) {
+            $this->dispatchAutoCancelCheck($course);
+        }
     }
 
     /**
@@ -189,6 +230,8 @@ class CourseService
         try {
             $this->entityManager->persist($course);
             $this->entityManager->flush();
+
+            $this->dispatchAutoCancelCheck($course);
 
             return $course;
         } catch (\Doctrine\DBAL\Exception\UniqueConstraintViolationException $e) {
@@ -315,6 +358,10 @@ class CourseService
             if (isset($updates['startTime']) || isset($updates['durationMinutes']) || isset($updates['trainer'])) {
                 $this->validateSchedule($course->getStartTime(), $course->getEndTime(), $course->getId(), $course->getUser()->getId());
             }
+            
+            if (isset($updates['startTime'])) {
+                $this->dispatchAutoCancelCheck($course);
+            }
         }
 
         if ($series) {
@@ -395,32 +442,32 @@ class CourseService
     {
         $overlappingCourses = $this->courseRepository->findOverlappingCourses($startTime, $endTime, $excludeId, $trainerId);
 
-        // Filter out postponed courses from conflict detection
+        // Filter out cancelled courses from conflict detection
         $overlappingCourses = array_filter($overlappingCourses, fn (Course $c) => \App\Enum\CourseStatus::ACTIVE === $c->getStatus());
 
         if (!empty($overlappingCourses)) {
             $conflict = reset($overlappingCourses);
-            $message = sprintf(
-                'Scheduling conflict: The proposed time (%s - %s) overlaps with an existing course "%s" (%s - %s).',
-                $startTime->format('d.m.Y H:i'),
-                $endTime->format('H:i'),
-                $conflict->getTitle(),
-                $conflict->getStartTime()->format('H:i'),
-                $conflict->getEndTime()->format('H:i')
-            );
+            $message = $this->translator->trans('error.schedule_conflict', [
+                '%start%' => $startTime->format('d.m.Y H:i'),
+                '%end%' => $endTime->format('H:i'),
+                '%title%' => $conflict->getTitle(),
+                '%conflict_start%' => $conflict->getStartTime()->format('H:i'),
+                '%conflict_end%' => $conflict->getEndTime()->format('H:i'),
+            ]);
 
             throw new ScheduleConflictException($message);
         }
     }
 
-    public function postponeCourse(Course $course, User $trainer): void
+    public function cancelCourse(Course $course, ?User $trainer = null): void
     {
-        if (\App\Enum\CourseStatus::POSTPONED === $course->getStatus()) {
-            throw new \LogicException('Course is already postponed.');
+        if (\App\Enum\CourseStatus::CANCELLED === $course->getStatus()) {
+            throw new \LogicException($this->translator->trans('error.course_already_cancelled'));
         }
 
-        $course->setStatus(\App\Enum\CourseStatus::POSTPONED);
-        $course->setPostponedBy($trainer);
+        $course->setStatus(\App\Enum\CourseStatus::CANCELLED);
+        $course->setCancelledBy($trainer);
+        $course->setAutoCancelled($trainer === null);
 
         $this->unbookAll($course);
 
@@ -478,13 +525,13 @@ class CourseService
            ->setParameter('endDate', $endDate);
 
         // If memberId is provided, we want to see ALL their bookings regardless of course status
-        // (so they see history, postponed ones, etc.), but NOT deleted ones.
-        // If NO memberId, we show ACTIVE and POSTPONED courses (for calendar/management)
+        // (so they see history, cancelled ones, etc.), but NOT deleted ones.
+        // If NO memberId, we show ACTIVE and CANCELLED courses (for calendar/management)
         if (!$memberId) {
             $qb->andWhere('c.status IN (:statuses)')
                ->setParameter('statuses', [
                    \App\Enum\CourseStatus::ACTIVE,
-                   \App\Enum\CourseStatus::POSTPONED,
+                   \App\Enum\CourseStatus::CANCELLED,
                ]);
         } else {
             $qb->andWhere('c.status != :deletedStatus')
@@ -664,5 +711,9 @@ class CourseService
         }
 
         $this->entityManager->flush();
+
+        if (isset($data['startTime'])) {
+            $this->dispatchAutoCancelCheck($course);
+        }
     }
 }

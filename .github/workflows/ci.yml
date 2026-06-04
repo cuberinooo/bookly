@@ -32,6 +32,9 @@ jobs:
       - name: Frontend Linter (Vue/Vite)
         run: npx nx run frontend:lint
 
+      - name: Frontend i18n Check (Missing & Unused Keys)
+        run: npm run i18n-check
+
       # --- Backend Checks (Symfony + Docker) ---
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4

@@ -66,10 +66,14 @@ class Course implements CompanyAwareInterface
     #[Groups(['course:read'])]
     private \App\Enum\CourseStatus $status = \App\Enum\CourseStatus::ACTIVE;
 
+    #[ORM\Column(type: 'boolean', options: ['default' => false])]
+    #[Groups(['course:read', 'managed-course:read'])]
+    private bool $autoCancelled = false;
+
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
     #[Groups(['course:read'])]
-    private ?User $postponedBy = null;
+    private ?User $cancelledBy = null;
 
     #[ORM\ManyToOne(inversedBy: 'courses')]
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
@@ -197,14 +201,14 @@ class Course implements CompanyAwareInterface
         return $this;
     }
 
-    public function getPostponedBy(): ?User
+    public function getCancelledBy(): ?User
     {
-        return $this->postponedBy;
+        return $this->cancelledBy;
     }
 
-    public function setPostponedBy(?User $postponedBy): static
+    public function setCancelledBy(?User $cancelledBy): static
     {
-        $this->postponedBy = $postponedBy;
+        $this->cancelledBy = $cancelledBy;
 
         return $this;
     }
@@ -297,6 +301,18 @@ class Course implements CompanyAwareInterface
                 $booking->setCourse(null);
             }
         }
+
+        return $this;
+    }
+
+    public function isAutoCancelled(): bool
+    {
+        return $this->autoCancelled;
+    }
+
+    public function setAutoCancelled(bool $autoCancelled): static
+    {
+        $this->autoCancelled = $autoCancelled;
 
         return $this;
     }

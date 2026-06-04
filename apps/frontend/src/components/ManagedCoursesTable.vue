@@ -2,6 +2,7 @@
 import { ref, onMounted, onUnmounted, watch, computed } from 'vue';
 import { useConfirm } from 'primevue/useconfirm';
 import { useToast } from 'primevue/usetoast';
+import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '../store/useAuthStore';
 import { useCourseStore } from '../store/useCourseStore';
 import { useCourseDeletion } from '../composables/useCourseDeletion';
@@ -16,6 +17,7 @@ const props = defineProps<{
 
 const emit = defineEmits(['edit']);
 
+const { t } = useI18n();
 const confirm = useConfirm();
 const toast = useToast();
 const authStore = useAuthStore();
@@ -38,22 +40,22 @@ const menuItems = computed(() => {
 
     return [
         {
-            label: 'Participants',
+            label: t('course.participants'),
             icon: 'pi pi-users',
-            disabled: activeCourse.value.status === 'postponed',
+            disabled: activeCourse.value.status === 'cancelled',
             command: () => {
                 selectedCourse.value = activeCourse.value;
                 participantsDialog.value = true;
             }
         },
         {
-            label: 'Postpone',
-            icon: 'pi pi-clock',
-            disabled: activeCourse.value.status === 'postponed',
-            command: () => confirmPostponeCourse(activeCourse.value)
+            label: t('course.cancel'),
+            icon: 'pi pi-times-circle',
+            disabled: activeCourse.value.status === 'cancelled',
+            command: () => confirmCancelCourse(activeCourse.value)
         },
         {
-            label: 'Edit',
+            label: t('app.edit'),
             icon: 'pi pi-pencil',
             command: () => emit('edit', activeCourse.value)
         },
@@ -61,7 +63,7 @@ const menuItems = computed(() => {
             separator: true
         },
         {
-            label: 'Delete',
+            label: t('app.delete'),
             icon: 'pi pi-trash',
             class: 'delete-menu-item',
             command: () => confirmDeleteCourse(activeCourse.value)
@@ -80,17 +82,23 @@ const lazyParams = ref({
     page: 1,
     startDate: (() => {
         const d = new Date();
-        const day = d.getDay();
-        const diff = (day === 0 ? 6 : day - 1);
-        d.setDate(d.getDate() - diff);
+        if (window.innerWidth <= 768) {
+            const day = d.getDay();
+            const diff = (day === 0 ? 6 : day - 1);
+            d.setDate(d.getDate() - diff);
+        }
         d.setHours(0, 0, 0, 0);
         return d;
     })(),
     endDate: (() => {
         const d = new Date();
-        const day = d.getDay();
-        const diff = (day === 0 ? 0 : 7 - day);
-        d.setDate(d.getDate() + diff);
+        if (window.innerWidth <= 768) {
+            const day = d.getDay();
+            const diff = (day === 0 ? 0 : 7 - day);
+            d.setDate(d.getDate() + diff);
+        } else {
+            d.setMonth(d.getMonth() + 1);
+        }
         d.setHours(23, 59, 59, 999);
         return d;
     })()
@@ -98,38 +106,29 @@ const lazyParams = ref({
 
 const isMobile = ref(window.innerWidth <= 768);
 
-const currentWeekStart = computed(() => {
-    const d = new Date(lazyParams.value.startDate);
-    const day = d.getDay();
-    const diff = (day === 0 ? 6 : day - 1);
-    d.setDate(d.getDate() - diff);
-    d.setHours(0, 0, 0, 0);
-    return d;
-});
+const rangeLabel = computed(() => {
+    const start = lazyParams.value.startDate;
+    const end = lazyParams.value.endDate;
 
-const currentWeekEnd = computed(() => {
-    const d = new Date(currentWeekStart.value);
-    d.setDate(d.getDate() + 6);
-    d.setHours(23, 59, 59, 999);
-    return d;
-});
-
-const weekLabel = computed(() => {
-    const start = currentWeekStart.value;
-    const end = currentWeekEnd.value;
     return `${start.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })} - ${end.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })}`;
 });
 
-function navigateWeek(direction: number) {
-    const newDate = new Date(currentWeekStart.value);
-    newDate.setDate(newDate.getDate() + (direction * 7));
+function navigateRange(direction: number) {
+    const start = new Date(lazyParams.value.startDate);
+    const end = new Date(lazyParams.value.endDate);
+
+    if (isMobile.value) {
+        start.setDate(start.getDate() + (direction * 7));
+        end.setDate(end.getDate() + (direction * 7));
+    } else {
+        start.setMonth(start.getMonth() + direction);
+        end.setMonth(end.getMonth() + direction);
+    }
 
     transitionName.value = direction > 0 ? 'slide-left' : 'slide-right';
 
-    lazyParams.value.startDate = newDate;
-    lazyParams.value.endDate = new Date(newDate);
-    lazyParams.value.endDate.setDate(newDate.getDate() + 6);
-    lazyParams.value.endDate.setHours(23, 59, 59, 999);
+    lazyParams.value.startDate = start;
+    lazyParams.value.endDate = end;
 
     onFilter();
 }
@@ -137,6 +136,21 @@ function navigateWeek(direction: number) {
 function handleResize() {
     isMobile.value = window.innerWidth <= 768;
 }
+
+watch(isMobile, () => {
+    clearFilters();
+});
+
+watch(
+  () => lazyParams.value.startDate,
+  (newStart) => {
+    if (newStart > lazyParams.value.endDate) {
+      const newEnd = new Date(newStart);
+      newEnd.setHours(23, 59, 59, 999);
+      lazyParams.value.endDate = newEnd;
+    }
+  }
+);
 
 watch(
   () => authStore.user?.id,
@@ -167,7 +181,7 @@ async function loadLazyData() {
 
         await courseStore.fetchCourses(params);
     } catch (e) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to fetch courses', life: 5000 });
+        toast.add({ severity: 'error', summary: t('app.error'), detail: t('course.fetchFailed'), life: 5000 });
     }
 }
 
@@ -199,7 +213,7 @@ function handleTouchEnd(e: TouchEvent) {
         if (deltaX < 0) {
             // Swipe Left -> Next Page
             if (isMobile.value) {
-                navigateWeek(1);
+                navigateRange(1);
             } else {
                 const nextFirst = lazyParams.value.first + lazyParams.value.rows;
                 if (nextFirst < totalRecords.value) {
@@ -214,7 +228,7 @@ function handleTouchEnd(e: TouchEvent) {
         } else {
             // Swipe Right -> Prev Page
             if (isMobile.value) {
-                navigateWeek(-1);
+                navigateRange(-1);
             } else {
                 const prevFirst = lazyParams.value.first - lazyParams.value.rows;
                 if (prevFirst >= 0) {
@@ -238,15 +252,21 @@ function onFilter() {
 
 function clearFilters() {
     const d = new Date();
-    const day = d.getDay();
-    const diff = (day === 0 ? 6 : day - 1);
-    d.setDate(d.getDate() - diff);
+    if (isMobile.value) {
+        const day = d.getDay();
+        const diff = (day === 0 ? 6 : day - 1);
+        d.setDate(d.getDate() - diff);
+    }
     d.setHours(0, 0, 0, 0);
 
     lazyParams.value.startDate = d;
 
     const end = new Date(d);
-    end.setDate(d.getDate() + 6);
+    if (isMobile.value) {
+        end.setDate(d.getDate() + 6);
+    } else {
+        end.setMonth(d.getMonth() + 1);
+    }
     end.setHours(23, 59, 59, 999);
     lazyParams.value.endDate = end;
 
@@ -256,31 +276,33 @@ function clearFilters() {
 defineExpose({ refresh: loadLazyData });
 
 function formatDuration(min: number) {
-    if (min < 60) return `${min}min`;
+    if (min < 60) return `${min}${t('course.minutes').substring(0, 3)}`;
     const hours = Math.floor(min / 60);
     const remaining = min % 60;
-    return remaining > 0 ? `${hours}h ${remaining}min` : `${hours} hour${hours > 1 ? 's' : ''}`;
+    return remaining > 0
+        ? `${hours}h ${remaining}${t('course.minutes').substring(0, 3)}`
+        : `${hours} ${hours > 1 ? t('course.hours') : t('course.hour')}`;
 }
-function confirmPostponeCourse(course: any) {
+function confirmCancelCourse(course: any) {
     confirm.require({
-        message: `Are you sure you want to postpone "${course.title}"? This will automatically unbook all participants and mark the course as postponed.`,
-        header: 'Confirm Postponement',
-        icon: 'pi pi-clock',
+        message: t('course.cancelConfirm', { title: course.title }),
+        header: t('course.cancel'),
+        icon: 'pi pi-times-circle',
         acceptProps: {
-            label: 'Postpone Course',
-            severity: 'warn'
+            label: t('course.cancel'),
+            severity: 'danger'
         },
         rejectProps: {
-            label: 'Cancel',
+            label: t('app.cancel'),
             severity: 'secondary'
         },
         accept: async () => {
             try {
-                await courseStore.postponeCourse(course.id);
-                toast.add({ severity: 'success', summary: 'Postponed', detail: 'Course postponed and members unbooked', life: 5000 });
+                await courseStore.cancelCourse(course.id);
+                toast.add({ severity: 'success', summary: t('course.cancel'), detail: t('course.cancelledSummary'), life: 5000 });
                 loadLazyData();
             } catch (e: any) {
-                toast.add({ severity: 'error', summary: 'Error', detail: e.response?.data?.error || 'Failed to postpone course', life: 5000 });
+                toast.add({ severity: 'error', summary: t('app.error'), detail: e.response?.data?.error || t('course.cancelError'), life: 5000 });
             }
         }
     });
@@ -288,28 +310,24 @@ function confirmPostponeCourse(course: any) {
 
 async function removeParticipant(bookingId: number) {
     confirm.require({
-        message: 'Remove this participant from the course?',
-        header: 'Confirm Removal',
+        message: t('course.removeParticipantConfirm'),
+        header: t('course.removeParticipantHeader'),
         icon: 'pi pi-user-minus',
         acceptProps: { severity: 'danger' },
         rejectProps: {
-          label: 'Cancel',
-          severity: 'primary', // Use base styling
+          label: t('app.cancel'),
+          severity: 'primary',
         },
         accept: async () => {
             try {
-                await api.delete(`/courses/0/bookings/${bookingId}`); // Note: ID 0 is placeholder as it's not strictly used for single booking delete if route is handled
-                // Wait, let's check the route for deleteBooking
-                // Route is #[Route('/api/courses/{id}/bookings/{bookingId}', methods: ['DELETE'])]
-                // So we need the course ID.
                 if (selectedCourse.value) {
                     await api.delete(`/courses/${selectedCourse.value.id}/bookings/${bookingId}`);
-                    toast.add({ severity: 'success', summary: 'Removed', detail: 'Participant removed', life: 5000 });
+                    toast.add({ severity: 'success', summary: t('app.success'), detail: t('course.participantRemoved'), life: 5000 });
                     loadLazyData();
                     participantsDialog.value = false;
                 }
             } catch (e) {
-                toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to remove participant', life: 5000 });
+                toast.add({ severity: 'error', summary: t('app.error'), detail: t('course.removeParticipantFailed'), life: 5000 });
             }
         }
     });
@@ -337,7 +355,7 @@ onUnmounted(() => {
 
     <div class="section-header mb-6">
       <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
-        <h2>Managed Courses</h2>
+        <h2>{{ t('dashboard.managedCourses') }}</h2>
         <div class="flex flex-wrap items-end gap-3 md:gap-4">
           <div
             v-if="authStore.isTrainer"
@@ -348,7 +366,7 @@ onUnmounted(() => {
               size="small"
               @change="onFilter"
             />
-            <span class="text-[10px] font-bold uppercase text-slate-600 whitespace-nowrap">Show All</span>
+            <span class="text-[10px] font-bold uppercase text-slate-600 whitespace-nowrap">{{ t('course.showAll') }}</span>
           </div>
           <div
             v-if="!isMobile"
@@ -357,14 +375,16 @@ onUnmounted(() => {
             <label
               for="filterFrom"
               class="text-[10px] md:text-xs font-bold uppercase text-slate-500"
-            >From</label>
+            >{{ t('course.from') }}</label>
             <DatePicker
               v-model="lazyParams.startDate"
               input-id="filterFrom"
-              placeholder="Start"
+              :placeholder="t('course.from')"
               size="small"
               date-format="dd.mm.yy"
               fluid
+              show-other-months
+              select-other-months
               @date-select="onFilter"
             />
           </div>
@@ -375,20 +395,23 @@ onUnmounted(() => {
             <label
               for="filterTo"
               class="text-[10px] md:text-xs font-bold uppercase text-slate-500"
-            >To</label>
+            >{{ t('course.to') }}</label>
             <DatePicker
               v-model="lazyParams.endDate"
               input-id="filterTo"
-              placeholder="End"
+              :placeholder="t('course.to')"
               size="small"
               date-format="dd.mm.yy"
               fluid
+              show-other-months
+              select-other-months
+              :min-date="lazyParams.startDate"
               @date-select="onFilter"
             />
           </div>
           <Button
             v-if="!isMobile"
-            v-tooltip="'Clear Filters'"
+            v-tooltip="t('course.clearFilters')"
             icon="pi pi-filter-slash"
             variant="text"
             class="h-10 w-10 md:h-8 md:w-8"
@@ -398,7 +421,7 @@ onUnmounted(() => {
       </div>
     </div>
 
-    <!-- Mobile Week Navigation -->
+    <!-- Mobile Range Navigation -->
     <div
       v-if="isMobile"
       class="mobile-week-nav mb-6"
@@ -409,18 +432,18 @@ onUnmounted(() => {
           variant="text"
           rounded
           class="!text-white"
-          @click="navigateWeek(-1)"
+          @click="navigateRange(-1)"
         />
         <div class="flex flex-col items-center">
-          <span class="text-[10px] font-black text-amber-500 uppercase tracking-widest">Selected Week</span>
-          <span class="text-sm font-black font-['Barlow_Condensed']">{{ weekLabel }}</span>
+          <span class="text-[10px] font-black text-amber-500 uppercase tracking-widest">{{ t('course.selectedWeek') }}</span>
+          <span class="text-sm font-black font-['Barlow_Condensed']">{{ rangeLabel }}</span>
         </div>
         <Button
           icon="pi pi-chevron-right"
           variant="text"
           rounded
           class="!text-white"
-          @click="navigateWeek(1)"
+          @click="navigateRange(1)"
         />
       </div>
     </div>
@@ -435,12 +458,12 @@ onUnmounted(() => {
         :rows="lazyParams.rows"
         :total-records="totalRecords"
         class="managed-table"
-        :row-class="(data) => ({ 'is-postponed': data.status === 'postponed' })"
+        :row-class="(data) => ({ 'is-cancelled': data.status === 'cancelled' })"
         @page="onPage"
       >
         <Column
           field="title"
-          header="Course"
+          :header="t('app.courses').substring(0, t('app.courses').length - 1)"
         >
           <template #body="slotProps">
             <Skeleton
@@ -453,16 +476,21 @@ onUnmounted(() => {
             >
               <span class="course-title-cell">{{ slotProps.data.title }}</span>
               <Tag
-                v-if="slotProps.data.status === 'postponed'"
+                v-if="slotProps.data.status === 'cancelled'"
                 severity="secondary"
                 class="w-fit text-[8px] uppercase font-black tracking-widest mt-1"
               >
-                Postponed by {{ slotProps.data.postponedBy?.name || 'Trainer' }}
+                <template v-if="slotProps.data.autoCancelled">
+                  {{ t('course.autoCancelledLabel') }}
+                </template>
+                <template v-else-if="slotProps.data.cancelledBy">
+                  {{ t('course.cancelledBy', { name: slotProps.data.cancelledBy.name }) }}
+                </template>
               </Tag>
             </div>
           </template>
         </Column>
-        <Column header="Schedule">
+        <Column :header="t('dashboard.courseSchedule')">
           <template #body="slotProps">
             <div
               v-if="loading"
@@ -481,7 +509,7 @@ onUnmounted(() => {
           </template>
         </Column>
         <Column
-          header="Trainer"
+          :header="t('dashboard.trainer')"
         >
           <template #body="slotProps">
             <Skeleton
@@ -493,11 +521,11 @@ onUnmounted(() => {
               class="text-sm font-medium"
               :class="{ 'text-amber-600_ font-bold': slotProps.data.user?.id === authStore.user?.id }"
             >
-              {{ slotProps.data.user?.id === authStore.user?.id ? 'YOU' : slotProps.data.user?.name }}
+              {{ slotProps.data.user?.id === authStore.user?.id ? t('course.you') : slotProps.data.user?.name }}
             </span>
           </template>
         </Column>
-        <Column header="Duration">
+        <Column :header="t('dashboard.duration')">
           <template #body="slotProps">
             <Skeleton
               v-if="loading"
@@ -508,7 +536,7 @@ onUnmounted(() => {
             </span>
           </template>
         </Column>
-        <Column header="Slots">
+        <Column :header="t('course.capacity')">
           <template #body="slotProps">
             <Skeleton
               v-if="loading"
@@ -519,14 +547,17 @@ onUnmounted(() => {
               v-else
               class="flex items-center gap-2"
             >
-              <span :class="['slot-badge', { 'is-full': slotProps.data.bookings.length >= slotProps.data.capacity }]">
-                {{ slotProps.data.bookings.length }} / {{ slotProps.data.capacity }}
+              <span :class="['slot-badge', { 'is-full': slotProps.data.bookings.filter(b => !b.isWaitlist).length >= slotProps.data.capacity }]">
+                {{ slotProps.data.bookings.filter(b => !b.isWaitlist).length }} / {{ slotProps.data.capacity }}
+                <template v-if="slotProps.data.bookings.filter(b => b.isWaitlist).length > 0">
+                  <span class="ml-1 opacity-70">(+{{ slotProps.data.bookings.filter(b => b.isWaitlist).length }})</span>
+                </template>
               </span>
             </div>
           </template>
         </Column>
         <Column
-          header="Actions"
+          :header="t('app.actions')"
           class="text-right"
         >
           <template #body="slotProps">
@@ -544,7 +575,7 @@ onUnmounted(() => {
               class="flex justify-end"
             >
               <Button
-                label="Manage"
+                :label="t('course.manage')"
                 icon="pi pi-cog"
                 variant="text"
                 size="small"
@@ -621,11 +652,16 @@ onUnmounted(() => {
                       {{ course.title }}
                     </span>
                     <Tag
-                      v-if="course.status === 'postponed'"
+                      v-if="course.status === 'cancelled'"
                       severity="secondary"
                       class="w-fit text-[8px] uppercase font-black tracking-widest mb-2"
                     >
-                      Postponed by {{ course.postponedBy?.name || 'Trainer' }}
+                      <template v-if="course.autoCancelled">
+                        {{ t('course.autoCancelledLabel') }}
+                      </template>
+                      <template v-else-if="course.cancelledBy">
+                        {{ t('course.cancelledBy', { name: course.cancelledBy.name }) }}
+                      </template>
                     </Tag>
                     <div class="flex items-center gap-2 text-xs font-bold text-slate-500">
                       <i class="pi pi-calendar text-[10px]" />
@@ -637,11 +673,14 @@ onUnmounted(() => {
                     >
                       <i class="pi pi-user text-[10px]" />
 
-                      {{ course.user?.id === authStore.user?.id ? 'YOU' : course.user?.name }}
+                      {{ course.user?.id === authStore.user?.id ? t('course.you') : course.user?.name }}
                     </div>
                   </div>
-                  <span :class="['slot-badge !py-1 !px-2', { 'is-full': course.bookings.length >= course.capacity }]">
-                    {{ course.bookings.length }} / {{ course.capacity }}
+                  <span :class="['slot-badge !py-1 !px-2', { 'is-full': course.bookings.filter(b => !b.isWaitlist).length >= course.capacity }]">
+                    {{ course.bookings.filter(b => !b.isWaitlist).length }} / {{ course.capacity }}
+                    <template v-if="course.bookings.filter(b => b.isWaitlist).length > 0">
+                      <span class="ml-1 opacity-70">(+{{ course.bookings.filter(b => b.isWaitlist).length }})</span>
+                    </template>
                   </span>
                 </div>
 
@@ -650,10 +689,10 @@ onUnmounted(() => {
                     class="text-[10px] font-black uppercase text-slate-400"
                     style="font-family: 'Barlow Condensed', sans-serif;"
                   >
-                    Duration: {{ formatDuration(course.durationMinutes) }}
+                    {{ t('dashboard.duration') }}: {{ formatDuration(course.durationMinutes) }}
                   </div>
                   <Button
-                    label="Manage"
+                    :label="t('course.manage')"
                     icon="pi pi-cog"
                     severity="secondary"
                     outlined
@@ -670,7 +709,7 @@ onUnmounted(() => {
               >
                 <i class="pi pi-calendar-slash text-4xl mb-2" />
                 <p class="font-bold uppercase text-sm">
-                  No courses found
+                  {{ t('course.noCoursesFound') }}
                 </p>
               </div>
             </template>
@@ -755,17 +794,17 @@ onUnmounted(() => {
             &:hover { @apply bg-slate-50/50; }
         }
 
-        &.is-postponed {
+        &.is-cancelled {
           @apply opacity-50 grayscale;
 
           .action-btn {
-            @apply pointer-events-auto; // Allow deletion/edit even if postponed
+            @apply pointer-events-auto; // Allow deletion/edit even if cancelled
           }
         }
     }
 }
 
-.is-postponed-card {
+.is-cancelled-card {
   @apply opacity-60 grayscale border-dashed;
 }
 

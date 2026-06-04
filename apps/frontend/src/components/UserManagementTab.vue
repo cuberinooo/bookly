@@ -4,7 +4,9 @@ import api from '../services/api';
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
 import { useAuthStore } from '../store/useAuthStore';
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n();
 const toast = useToast();
 const confirm = useConfirm();
 const authStore = useAuthStore();
@@ -38,6 +40,7 @@ const editingUser = ref<any>({ name: '', email: '', roles: ['ROLE_MEMBER'], pass
 const submitting = ref(false);
 const submitted = ref(false);
 const resettingPassword = ref(false);
+const sendingMembershipWelcome = ref(false);
 
 const getSortedRoles = (roles: string[]) => {
   const roleOrder = ['ROLE_ADMIN', 'ROLE_TRAINER', 'ROLE_MEMBER', 'ROLE_TRIAL'];
@@ -56,12 +59,12 @@ const isEmailValid = (email: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 };
 
-const roleOptions = [
-    { label: 'Member', value: 'ROLE_MEMBER' },
-    { label: 'Trainer', value: 'ROLE_TRAINER' },
-    { label: 'Admin', value: 'ROLE_ADMIN' },
-    { label: 'Trial', value: 'ROLE_TRIAL' }
-];
+const roleOptions = computed(() => [
+    { label: t('admin.users.roleMember'), value: 'ROLE_MEMBER' },
+    { label: t('admin.users.roleTrainer'), value: 'ROLE_TRAINER' },
+    { label: t('admin.users.roleAdmin'), value: 'ROLE_ADMIN' },
+    { label: t('admin.users.roleTrial'), value: 'ROLE_TRIAL' }
+]);
 
 async function fetchUsers() {
     loading.value = true;
@@ -69,7 +72,7 @@ async function fetchUsers() {
         const response = await api.get('/admin/users');
         users.value = response.data;
     } catch (e) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to fetch users', life: 5000 });
+        toast.add({ severity: 'error', summary: t('app.error'), detail: t('admin.users.fetchFailed'), life: 5000 });
     } finally {
         loading.value = false;
     }
@@ -106,7 +109,7 @@ async function saveUser() {
                 name: editingUser.value.name,
                 roles: editingUser.value.roles
             });
-            toast.add({ severity: 'success', summary: 'Updated', detail: 'User updated', life: 5000 });
+            toast.add({ severity: 'success', summary: t('app.updated'), detail: t('admin.users.statusUpdated'), life: 5000 });
 
             if (editingUser.value.id === authStore.user?.id) {
                 // Refresh current user info to update roles in session
@@ -118,16 +121,16 @@ async function saveUser() {
             }
         } else {
             await api.post('/admin/users', editingUser.value);
-            toast.add({ severity: 'success', summary: 'Created', detail: 'User created and email sent', life: 5000 });
+            toast.add({ severity: 'success', summary: t('app.created'), detail: t('admin.users.statusUpdated'), life: 5000 });
         }
         userDialog.value = false;
         fetchUsers();
     } catch (e: any) {
-        let detail = e.response?.data?.error || 'Operation failed';
+        let detail = e.response?.data?.error || t('app.error');
         if (e.response?.status === 409 || detail === 'Email already registered') {
-            detail = 'This email address is already in use by another athlete.';
+            detail = t('auth.emailAlreadyRegistered');
         }
-        toast.add({ severity: 'error', summary: 'Validation Error', detail: detail, life: 7000 });
+        toast.add({ severity: 'error', summary: t('app.error'), detail: detail, life: 7000 });
     } finally {
         submitting.value = false;
     }
@@ -137,12 +140,12 @@ async function resetPassword() {
     if (!editingUser.value.id) return;
 
     confirm.require({
-        message: `Are you sure you want to reset the password for ${editingUser.value.name}? A new temporary password will be emailed to them immediately.`,
-        header: 'Reset Password',
+        message: t('admin.users.resetPasswordConfirm', { name: editingUser.value.name }),
+        header: t('admin.users.resetPassword'),
         icon: 'pi pi-exclamation-lock',
-        acceptProps: { severity: 'warn', label: 'Reset Password' },
+        acceptProps: { severity: 'warn', label: t('admin.users.resetPassword') },
         rejectProps: {
-          label: 'Cancel',
+          label: t('app.cancel'),
           severity: 'secondary',
           text: true
         },
@@ -152,12 +155,12 @@ async function resetPassword() {
                 await api.post(`/admin/users/${editingUser.value.id}/reset-password`);
                 toast.add({
                     severity: 'success',
-                    summary: 'Password Reset',
-                    detail: 'A temporary password has been sent to the athlete.',
+                    summary: t('admin.users.passwordResetSuccess'),
+                    detail: t('admin.users.passwordResetDetail'),
                     life: 5000
                 });
             } catch (e) {
-                toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to reset password', life: 5000 });
+                toast.add({ severity: 'error', summary: t('app.error'), detail: t('app.error'), life: 5000 });
             } finally {
                 resettingPassword.value = false;
             }
@@ -165,34 +168,46 @@ async function resetPassword() {
     });
 }
 
+async function sendMembershipWelcomeMail(user: any) {
+    sendingMembershipWelcome.value = true;
+    try {
+        await api.post(`/admin/users/${user.id}/send-membership-welcome`);
+        user.membershipWelcomeMailSent = true;
+        toast.add({ severity: 'success', summary: t('app.success'), detail: t('admin.users.membershipWelcomeMailSuccess'), life: 5000 });
+    } catch (e: any) {
+        toast.add({ severity: 'error', summary: t('app.error'), detail: e.response?.data?.error || t('app.error'), life: 5000 });
+    } finally {
+        sendingMembershipWelcome.value = false;
+    }
+}
 async function toggleActive(user: any) {
     try {
         await api.patch(`/admin/users/${user.id}/toggle-active`);
         user.isActive = !user.isActive;
-        toast.add({ severity: 'success', summary: 'Status Updated', detail: `User ${user.isActive ? 'activated' : 'deactivated'}`, life: 5000 });
+        toast.add({ severity: 'success', summary: t('admin.users.statusUpdated'), detail: user.isActive ? t('admin.users.userActivated') : t('admin.users.userDeactivated'), life: 5000 });
     } catch (e) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to toggle status', life: 5000 });
+        toast.add({ severity: 'error', summary: t('app.error'), detail: t('app.error'), life: 5000 });
     }
 }
 
 async function deleteUser(user: any) {
     confirm.require({
-        message: `Are you sure you want to delete ${user.name}?`,
-        header: 'Delete Confirmation',
+        message: t('admin.users.deleteConfirm', { name: user.name }),
+        header: t('pb.deleteConfirmHeader'),
         icon: 'pi pi-exclamation-triangle',
-        acceptProps: { severity: 'danger', label: 'Delete' },
+        acceptProps: { severity: 'danger', label: t('app.delete') },
         rejectProps: {
-          label: 'Cancel',
+          label: t('app.cancel'),
           severity: 'secondary',
           text: true
         },
         accept: async () => {
             try {
-                const response = await api.delete(`/admin/users/${user.id}`);
-                toast.add({ severity: 'info', summary: 'Result', detail: response.data.status, life: 5000 });
+                await api.delete(`/admin/users/${user.id}`);
+                toast.add({ severity: 'info', summary: t('app.success'), detail: t('admin.users.deleteSuccess'), life: 5000 });
                 fetchUsers();
             } catch (e) {
-                toast.add({ severity: 'error', summary: 'Error', detail: 'Deletion failed', life: 5000 });
+                toast.add({ severity: 'error', summary: t('app.error'), detail: t('app.error'), life: 5000 });
             }
         }
     });
@@ -204,14 +219,20 @@ onMounted(fetchUsers);
 <template>
   <div class="user-management mt-6">
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-      <h2 class="text-2xl font-bold uppercase tracking-tight font-barlow">
-        User Directory
+      <h2 class="text-2xl font-bold uppercase tracking-tight font-barlow flex items-center gap-2">
+        {{ $t('admin.users.title') }}
+        <Tag
+          :value="filteredUsers.length"
+          severity="secondary"
+          rounded
+          class="font-mono"
+        />
       </h2>
       <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
         <div class="relative w-full sm:w-64">
           <InputText
             v-model="searchQuery"
-            placeholder="Search name/email..."
+            :placeholder="$t('admin.users.searchPlaceholder')"
             class="w-full"
           />
         </div>
@@ -221,22 +242,22 @@ onMounted(fetchUsers);
             :options="roleOptions"
             option-label="label"
             option-value="value"
-            placeholder="Filter Roles"
+            :placeholder="$t('admin.users.filterRoles')"
             class="flex-1"
             :max-selected-labels="1"
           />
           <Button
             v-if="searchQuery || selectedRoles.length > 0"
+            v-tooltip.top="$t('admin.users.clearFilters')"
             icon="pi pi-filter-slash"
             severity="secondary"
             variant="text"
-            v-tooltip.top="'Clear Filters'"
             class="flex-shrink-0"
             @click="searchQuery = ''; selectedRoles = []"
           />
         </div>
         <Button
-          label="Create User"
+          :label="$t('admin.users.createUser')"
           icon="pi pi-user-plus"
           severity="primary"
           @click="openNewUser"
@@ -254,7 +275,7 @@ onMounted(fetchUsers);
       >
         <Column
           field="name"
-          header="ATHLETE NAME"
+          :header="$t('admin.users.athleteName')"
           sortable
         >
           <template #body="{ data }">
@@ -280,19 +301,19 @@ onMounted(fetchUsers);
             </div>
           </template>
         </Column>
-        <Column header="ROLES">
+        <Column :header="$t('admin.users.roles')">
           <template #body="{ data }">
             <div class="flex flex-wrap gap-1">
               <Tag
                 v-for="role in getSortedRoles(data.roles)"
                 :key="role"
-                :value="role.replace('ROLE_', '')"
+                :value="role === 'ROLE_ADMIN' ? t('admin.users.roleAdmin') : (role === 'ROLE_TRAINER' ? t('admin.users.roleTrainer') : (role === 'ROLE_TRIAL' ? t('admin.users.roleTrial') : t('admin.users.roleMember')))"
                 :severity="role === 'ROLE_ADMIN' ? 'danger' : (role === 'ROLE_TRAINER' ? 'warn' : (role === 'ROLE_TRIAL' ? 'secondary' : 'info'))"
               />
             </div>
           </template>
         </Column>
-        <Column header="STATUS">
+        <Column :header="$t('admin.users.status')">
           <template #body="{ data }">
             <div class="flex items-center gap-2">
               <ToggleSwitch
@@ -302,7 +323,7 @@ onMounted(fetchUsers);
             </div>
           </template>
         </Column>
-        <Column header="VERIFIED">
+        <Column :header="$t('admin.users.verified')">
           <template #body="{ data }">
             <i
               class="pi"
@@ -310,13 +331,32 @@ onMounted(fetchUsers);
             />
           </template>
         </Column>
+        <Column :header="$t('admin.users.mail')">
+          <template #body="{ data }">
+            <div v-if="(data.roles.includes('ROLE_TRIAL'))">
+              <i
+                v-tooltip.top="data.membershipWelcomeMailSent ? $t('admin.users.membershipWelcomeMailSuccess') : $t('admin.users.mail')"
+                class="pi"
+                :class="data.membershipWelcomeMailSent ? 'pi-send text-accent' : 'pi-minus text-slate-300'"
+              />
+            </div>
+          </template>
+        </Column>
         <Column
-          header="ACTIONS"
+          :header="$t('admin.users.actions')"
           class="w-48"
         >
           <template #body="{ data }">
             <div class="flex gap-2">
               <Button
+                v-if="data.roles.includes('ROLE_TRIAL') && !data.membershipWelcomeMailSent"
+                v-tooltip.top="$t('admin.users.sendMembershipWelcome')"
+                icon="pi pi-envelope"
+                variant="text"
+                rounded
+                :loading="sendingMembershipWelcome"
+                @click="sendMembershipWelcomeMail(data)"
+              />
                 icon="pi pi-pencil"
                 variant="text"
                 rounded
@@ -354,7 +394,7 @@ onMounted(fetchUsers);
           >
             <i class="pi pi-users text-4xl text-slate-300 mb-3" />
             <p class="text-slate-500 font-medium">
-              No athletes found matching your search.
+              {{ $t('admin.users.noUsersFound') }}
             </p>
           </div>
           <div
@@ -385,15 +425,22 @@ onMounted(fetchUsers);
                   <Tag
                     v-for="role in getSortedRoles(user.roles)"
                     :key="role"
-                    :value="role.replace('ROLE_', '')"
+                    :value="role === 'ROLE_ADMIN' ? t('admin.users.roleAdmin') : (role === 'ROLE_TRAINER' ? t('admin.users.roleTrainer') : (role === 'ROLE_TRIAL' ? t('admin.users.roleTrial') : t('admin.users.roleMember')))"
                     :severity="role === 'ROLE_ADMIN' ? 'danger' : (role === 'ROLE_TRAINER' ? 'warn' : (role === 'ROLE_TRIAL' ? 'secondary' : 'info'))"
                     class="text-[10px] uppercase font-black"
+                  />
+                  <Tag
+                    v-if="user.roles.includes('ROLE_TRIAL') && user.membershipWelcomeMailSent"
+                    :value="$t('admin.users.membershipWelcomeMailSuccess')"
+                    severity="success"
+                    class="text-[10px] uppercase font-black"
+                    icon="pi pi-send"
                   />
                 </div>
               </div>
               <div class="flex items-center gap-2">
                 <i
-                  v-tooltip.left="user.isVerified ? 'Verified' : 'Unverified'"
+                  v-tooltip.left="user.isVerified ? $t('admin.users.verified') : $t('admin.users.verified')"
                   class="pi"
                   :class="user.isVerified ? 'pi-check-circle text-accent' : 'pi-times-circle text-slate-300'"
                 />
@@ -402,7 +449,7 @@ onMounted(fetchUsers);
 
             <div class="flex items-center justify-between pt-4 border-t border-slate-100 mt-2">
               <div class="flex items-center gap-3">
-                <span class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Active Status</span>
+                <span class="text-[10px] font-black uppercase text-slate-400 tracking-widest">{{ $t('admin.users.activeStatus') }}</span>
                 <ToggleSwitch
                   :model-value="user.isActive"
                   @update:model-value="toggleActive(user)"
@@ -432,7 +479,7 @@ onMounted(fetchUsers);
 
     <Dialog
       v-model:visible="userDialog"
-      :header="editingUser.id ? 'Edit Athlete' : 'Onboard New Athlete'"
+      :header="editingUser.id ? $t('admin.users.editAthlete') : $t('admin.users.onboardAthlete')"
       :modal="true"
       class="w-full max-w-md"
     >
@@ -441,23 +488,23 @@ onMounted(fetchUsers);
           <label
             for="userName"
             class="text-sm uppercase tracking-wider"
-          >Full Name</label>
+          >{{ $t('admin.users.fullName') }}</label>
           <InputText
             id="userName"
             v-model="editingUser.name"
-            placeholder="Name"
+            :placeholder="$t('admin.users.fullName')"
             :class="{ 'p-invalid': submitted && !editingUser.name }"
           />
           <small
             v-if="submitted && !editingUser.name"
             class="p-error"
-          >Name is required.</small>
+          >{{ $t('admin.users.nameRequired') }}</small>
         </div>
         <div class="flex flex-col gap-2">
           <label
             for="userEmail"
             class="text-sm uppercase tracking-wider"
-          >Email Address</label>
+          >{{ $t('auth.email') }}</label>
           <InputText
             id="userEmail"
             v-model="editingUser.email"
@@ -468,24 +515,24 @@ onMounted(fetchUsers);
           <small
             v-if="submitted && !editingUser.email"
             class="p-error"
-          >Email is required.</small>
+          >{{ $t('admin.users.emailRequired') }}</small>
           <small
             v-else-if="submitted && !isEmailValid(editingUser.email)"
             class="p-error"
-          >Invalid email format.</small>
+          >{{ $t('admin.users.invalidEmail') }}</small>
         </div>
         <div class="flex flex-col gap-2">
           <label
             for="userRoles"
             class="text-sm uppercase tracking-wider"
-          >Roles</label>
+          >{{ $t('admin.users.roles') }}</label>
           <MultiSelect
             v-model="editingUser.roles"
             input-id="userRoles"
             :options="roleOptions"
             option-label="label"
             option-value="value"
-            placeholder="Select Roles"
+            :placeholder="$t('admin.users.selectRoles')"
             class="w-full"
             display="chip"
           />
@@ -497,13 +544,13 @@ onMounted(fetchUsers);
           <label
             for="userPassword"
             class="text-sm uppercase tracking-wider"
-          >Temporary Password</label>
+          >{{ $t('admin.users.tempPassword') }}</label>
           <InputText
             id="userPassword"
             v-model="editingUser.password"
             placeholder="Temporary password"
           />
-          <small class="italic">User will be forced to change this on first login.</small>
+          <small class="italic">{{ $t('admin.users.tempPasswordNote') }}</small>
         </div>
       </div>
       <template #footer>
@@ -511,7 +558,7 @@ onMounted(fetchUsers);
           <div>
             <Button
               v-if="editingUser.id"
-              label="Reset Password"
+              :label="$t('admin.users.resetPassword')"
               icon="pi pi-key"
               severity="warn"
               variant="text"
@@ -522,13 +569,13 @@ onMounted(fetchUsers);
           </div>
           <div class="flex gap-2">
             <Button
-              label="Cancel"
+              :label="$t('app.cancel')"
               severity="secondary"
               variant="text"
               @click="userDialog = false"
             />
             <Button
-              label="Save User"
+              :label="$t('admin.users.saveUser')"
               severity="primary"
               :loading="submitting"
               @click="saveUser"

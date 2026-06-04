@@ -69,10 +69,28 @@ export function useVersionPolling(intervalMs = 30000) {
     }
   });
 
-  const refreshApp = () => {
-    // Force reload from server to get new chunks
-    // @ts-expect-error - reload(true) is non-standard but supported by some browsers for force-reload
-    window.location.reload(true);
+  const refreshApp = async () => {
+    console.info('[VersionPolling] Refreshing application to latest version...');
+
+    // 1. Clear Cache API storage (Service Worker caches, etc.)
+    if ('caches' in window) {
+      try {
+        const cacheNames = await caches.keys();
+        await Promise.all(cacheNames.map((name) => caches.delete(name)));
+        console.debug('[VersionPolling] Cache Storage cleared');
+      } catch (error) {
+        console.warn('[VersionPolling] Cache clearance failed:', error);
+      }
+    }
+
+    // 2. Force a hard reload by appending a temporary cache-busting query parameter.
+    // This is the most reliable way to bypass stubborn browser or proxy caches 
+    // when window.location.reload(true) is not supported.
+    const url = new URL(window.location.href);
+    url.searchParams.set('refresh', Date.now().toString());
+    
+    // Use location.replace to avoid cluttering the browser history with the refresh URL
+    window.location.replace(url.toString());
   };
 
   return {

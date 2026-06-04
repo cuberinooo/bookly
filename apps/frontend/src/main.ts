@@ -1,4 +1,4 @@
-import './styles.scss';
+import './styles.css';
 import 'primeicons/primeicons.css';
 import router from './router';
 import { createApp } from 'vue';
@@ -38,10 +38,13 @@ import Chart from 'primevue/chart';
 import Message from 'primevue/message';
 import {Checkbox, Divider, FileUpload, Paginator, Panel, Password, Tag, ToggleButton, Tooltip} from "primevue";
 import {createPinia} from "pinia";
+import i18n from './i18n';
+import OverlayBadge from "primevue/overlaybadge";
 
 const app = createApp(App);
 const pinia = createPinia();
 
+app.use(i18n);
 app.use(pinia);
 app.use(PrimeVue, {
     theme: {
@@ -105,5 +108,6 @@ app.component('AvatarGroup', AvatarGroup);
 app.component('ProgressSpinner', ProgressSpinner);
 app.component('Chart', Chart);
 app.component('Message', Message);
+app.component('OverlayBadge', OverlayBadge);
 
 app.mount('#root');

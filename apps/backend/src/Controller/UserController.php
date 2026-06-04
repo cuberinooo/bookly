@@ -107,6 +107,7 @@ class UserController extends AbstractController
         return new Response($content, 200, [
             'Content-Type' => $contentType,
             'Content-Disposition' => 'inline; filename="'.basename($key).'"',
+            'Cache-Control' => 'public, max-age=31536000, immutable',
         ]);
     }
 

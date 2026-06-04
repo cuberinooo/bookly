@@ -211,6 +211,7 @@ class AdminSettingsController extends AbstractController
             return new Response($content, 200, [
                 'Content-Type' => $contentType,
                 'Content-Disposition' => 'attachment; filename="privacy-policy.pdf"',
+                'Cache-Control' => 'public, max-age=31536000, immutable',
             ]);
 
         } catch (S3Exception $e) {
@@ -263,6 +264,7 @@ class AdminSettingsController extends AbstractController
             return new Response($content, 200, [
                 'Content-Type' => $contentType,
                 'Content-Disposition' => 'attachment; filename="'.$fileName.'"',
+                'Cache-Control' => 'public, max-age=31536000, immutable',
             ]);
 
         } catch (\Exception $e) {

@@ -1,20 +1,22 @@
 {% extends 'emails/base.html.twig' %}
 
+{% block title %}{{ 'email.meetup_confirmation.subject'|trans({'%meetupTitle%': meetup.title}) }}{% endblock %}
+
 {% block body %}
-    <h1>Meetup Confirmed: {{ meetup.title }}</h1>
-    <p>Hi {{ user.name }},</p>
-    <p>Great news! The meetup <strong>{{ meetup.title }}</strong> has been confirmed.</p>
+    <h1>{{ 'email.meetup_confirmation.title'|trans({'%meetupTitle%': meetup.title}) }}</h1>
+    <p>{{ 'email.meetup_confirmation.greeting'|trans({'%userName%': user.name}) }}</p>
+    <p>{{ 'email.meetup_confirmation.message'|trans({'%meetupTitle%': meetup.title})|raw }}</p>
     <p>
-        <strong>When:</strong> {{ meetup.meetupDate|date('d.m.Y H:i') }}<br>
-        <strong>Where:</strong> 
+        <strong>{{ 'email.meetup_confirmation.when'|trans }}</strong> {{ meetup.meetupDate|date('d.m.Y H:i') }}<br>
+        <strong>{{ 'email.meetup_confirmation.where'|trans }}</strong> 
         {% if meetup.location starts with 'http' %}
             <a href="{{ meetup.location }}">{{ meetup.location }}</a>
         {% else %}
             {{ meetup.location }}
         {% endif %}
     </p>
-    <p>See you there!</p>
+    <p>{{ 'email.meetup_confirmation.closing'|trans }}</p>
     <p>
-        <a href="{{ loginUrl }}" class="button">View Details</a>
+        <a href="{{ loginUrl }}" class="button">{{ 'email.meetup_confirmation.view_details'|trans }}</a>
     </p>
 {% endblock %}

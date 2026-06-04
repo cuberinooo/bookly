@@ -6,6 +6,8 @@ export interface EntityUpdate {
   action: 'created' | 'updated' | 'deleted';
   id: number;
   companyId: number;
+  meetupId?: number;
+  [key: string]: any;
 }
 
 const pendingUpdates: EntityUpdate[] = [];
@@ -41,6 +43,8 @@ function flushQueue(): void {
         break;
       case 'Meetup':
       case 'MeetupRsvp':
+      case 'MeetupComment':
+      case 'MeetupUserReadState':
         useMeetupStore().applyBatchUpdate(deduped);
         break;
     }

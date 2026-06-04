@@ -7,8 +7,8 @@
 ---
 
 **Project:** Phoenix Booking
-**Generated:** 2026-05-27 20:34:54
-**Category:** Subscription Box Service
+**Generated:** 2026-05-30 22:41:36
+**Category:** Fitness/Gym App
 
 ---
 
@@ -20,11 +20,11 @@
 |------|-----|--------------|
 | Primary | `#7C3AED` | `--color-primary` |
 | Secondary | `#A78BFA` | `--color-secondary` |
-| CTA/Accent | `#22C55E` | `--color-cta` |
+| CTA/Accent | `#F97316` | `--color-cta` |
 | Background | `#FAF5FF` | `--color-background` |
 | Text | `#4C1D95` | `--color-text` |
 
-**Color Notes:** Community purple + join green
+**Color Notes:** Excitement purple + action orange
 
 ### Typography
 
@@ -62,7 +62,7 @@
 ```css
 /* Primary Button */
 .btn-primary {
-  background: #22C55E;
+  background: #F97316;
   color: white;
   padding: 12px 24px;
   border-radius: 8px;
@@ -157,18 +157,17 @@
 
 ### Page Pattern
 
-**Pattern Name:** Pricing-Focused Landing
+**Pattern Name:** Feature-Rich + Data
 
-- **Conversion Strategy:** Annual discount 20-30%. Recommend mid-tier (most popular badge). Address objections in FAQ.
-- **CTA Placement:** Each pricing card + Sticky CTA in nav + Bottom
-- **Section Order:** 1. Hero (value proposition), 2. Pricing cards (3 tiers), 3. Feature comparison, 4. FAQ, 5. Final CTA
+- **CTA Placement:** Above fold
+- **Section Order:** Hero > Features > CTA
 
 ---
 
 ## Anti-Patterns (Do NOT Use)
 
-- ❌ Confusing pricing
-- ❌ No unboxing preview
+- ❌ Static design
+- ❌ No gamification
 
 ### Additional Forbidden Patterns
 

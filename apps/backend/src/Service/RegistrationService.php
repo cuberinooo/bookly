@@ -12,17 +12,17 @@ use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Uid\Uuid;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 class RegistrationService
 {
     public function __construct(
         private EntityManagerInterface $entityManager,
         private UserPasswordHasherInterface $passwordHasher,
-        private MailerInterface $mailer,
         private PasswordValidator $passwordValidator,
-        private AdminSettingsRepository $adminSettingsRepository,
         private Security $security,
-        private EmailService $emailService
+        private EmailService $emailService,
+        private TranslatorInterface $translator
     ) {
     }
 
@@ -30,7 +30,7 @@ class RegistrationService
     {
         $existingUser = $this->entityManager->getRepository(User::class)->findOneBy(['email' => $data['email']]);
         if ($existingUser) {
-            throw new \Exception('Email already registered');
+            throw new \Exception($this->translator->trans('error.email_already_registered'));
         }
 
         $password = $data['password'] ?? '';
@@ -111,37 +111,12 @@ class RegistrationService
             $this->emailService->sendCompanySpecificWelcomeEmail($user);
 
             if (!$isAdminCreation) {
-                $this->sendAdminNotificationEmail($user);
+                $admins = $this->entityManager->getRepository(User::class)->findByRole('ROLE_ADMIN', $user->getCompany());
+                $this->emailService->sendAdminNotificationEmail($user, $admins);
             }
         }
 
         return $user;
-    }
-
-    private function sendAdminNotificationEmail(User $user): void
-    {
-        $admins = $this->entityManager->getRepository(User::class)->findByRole('ROLE_ADMIN', $user->getCompany());
-        $adminEmails = array_map(fn (User $admin) => $admin->getEmail(), $admins);
-
-        if (empty($adminEmails)) {
-            // Fallback to a configured admin email if no admin users found in DB
-            $fallbackAdmin = $_ENV['ADMIN_EMAIL'] ?? 'admin@example.com';
-            $adminEmails = [$fallbackAdmin];
-        }
-
-        $email = (new TemplatedEmail())
-            ->from($_ENV['NO_REPLY_MAIL'] ?? 'noreply@example.com')
-            ->to(...$adminEmails)
-            ->subject('New User Registration: '.$user->getName())
-            ->htmlTemplate('emails/admin_new_user.html.twig')
-            ->context([
-                'name' => $user->getName(),
-                'userEmail' => $user->getEmail(),
-                'siteName' => $user->getCompany()->getName(),
-                'role' => implode(', ', array_map(fn ($r) => str_replace('ROLE_', '', $r), $user->getRoles())),
-            ]);
-
-        $this->mailer->send($email);
     }
 
     public function verifyEmail(string $token): void
@@ -149,11 +124,11 @@ class RegistrationService
         $user = $this->entityManager->getRepository(User::class)->findOneBy(['verificationToken' => $token]);
 
         if (!$user) {
-            throw new \Exception('Invalid token');
+            throw new \Exception($this->translator->trans('error.invalid_token'));
         }
 
         if ($user->getVerificationTokenExpiresAt() < new \DateTime()) {
-            throw new \Exception('Token expired');
+            throw new \Exception($this->translator->trans('error.token_expired'));
         }
 
         $user->setIsVerified(true);

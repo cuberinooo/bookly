@@ -1,19 +1,22 @@
 @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@300;400;500;600;700&display=swap');
+@import "tailwindcss";
+@import "tailwindcss-primeui";
+@import "primeicons/primeicons.css";
 
 :root {
-  --primary-color: #ffc107;      // Amber yellow (Brand Primary)
-  --accent-color: #ffc107;       // Consistent with primary
-  --success-color: #22c55e;      // Vibrant Green (Success)
-  --success-bg: #f0fdf4;         // Light green background
-  --danger-color: #ef4444;       // Vibrant Red (Danger)
-  --danger-bg: #fef2f2;          // Light red background
-  --bg-color: #ffffff;           // Clean white
-  --bg-primary-color: #0f172a;   // Deep slate (Primary Background)
+  --primary-color: #ffc107;      /* Amber yellow (Brand Primary) */
+  --accent-color: #ffc107;       /* Consistent with primary */
+  --success-color: #22c55e;      /* Vibrant Green (Success) */
+  --success-bg: #f0fdf4;         /* Light green background */
+  --danger-color: #ef4444;       /* Vibrant Red (Danger) */
+  --danger-bg: #fef2f2;          /* Light red background */
+  --bg-color: #ffffff;           /* Clean white */
+  --bg-primary-color: #0f172a;   /* Deep slate (Primary Background) */
   --card-bg: #ffffff;
-  --text-color: rgb(71 85 105);  // Slate 600 (Body Text)
-  --text-header: #0f172a;        // Slate 900 (Headers for contrast)
-  --text-muted: #8d99ac;         // Slate 400
-  --border-color: #e2e8f0;      // Slate 200
+  --text-color: rgb(71 85 105);  /* Slate 600 (Body Text) */
+  --text-header: #0f172a;        /* Slate 900 (Headers for contrast) */
+  --text-muted: #8d99ac;         /* Slate 400 */
+  --border-color: #e2e8f0;      /* Slate 200 */
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
 }
 
@@ -54,7 +57,7 @@ td {
   }
 }
 
-// Global PrimeVue Overrides
+/* Global PrimeVue Overrides */
 .p-button {
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 700;
@@ -67,7 +70,7 @@ td {
 
     &.p-button-primary, &.p-button-info, &.show-btn {
         background-color: var(--primary-color) !important;
-        color: #000 !important; // Dark text on Amber for contrast
+        color: #000 !important; /* Dark text on Amber for contrast */
         &:hover {
             background-color: #eab308 !important;
             transform: translateY(-1px);
@@ -84,7 +87,7 @@ td {
 
     &.p-button-danger {
       background-color: var(--danger-color) !important;
-      color: #000 !important; // Dark text on Amber for contrast
+      color: #000 !important; /* Dark text on Amber for contrast */
       &:hover {
         background-color: #7a2222 !important;
         transform: translateY(-1px);
@@ -102,7 +105,7 @@ td {
     }
 
     &.p-confirmdialog-reject-button {
-      //background-color: var(--primary-color) !important;
+      /* background-color: var(--primary-color) !important; */
     }
 }
 
@@ -179,7 +182,7 @@ td {
   background-color: var(--primary-color) !important;
 }
 
-// Uniform Form Styling
+/* Uniform Form Styling */
 .field, .form-group {
     margin-bottom: 1.5rem;
     width: 100%;
@@ -288,29 +291,29 @@ td {
   background-color: var(--primary-color) !important;
 }
 
-// Container
+/* Container */
 .container {
   max-width: 1400px;
   margin: 0 auto;
   padding: 3rem 2rem;
 
   @media (max-width: 768px) {
-    padding: 1.5rem 1rem 80px; // Extra bottom padding for mobile nav
+    padding: 1.5rem 1rem 80px; /* Extra bottom padding for mobile nav */
   }
 
   @media (max-width: 480px) {
-    padding: 1rem 0.5rem 80px; // Extra bottom padding for mobile nav
+    padding: 1rem 0.5rem 80px; /* Extra bottom padding for mobile nav */
   }
 }
 
-// Main Header
+/* Main Header */
 .main-header {
-background-color: #0f172a !important; // Deep slate for header
+background-color: #0f172a !important; /* Deep slate for header */
 padding: 1rem 2rem;
 border-bottom: 4px solid var(--primary-color);
 }
 
-// Calendar styling
+/* Calendar styling */
 .schedule-container {
 background: white;
 border-radius: 12px;
@@ -367,7 +370,7 @@ box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 }
 
-// Dialog Consistency
+/* Dialog Consistency */
 .p-dialog {
 border: none !important;
 box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25) !important;
@@ -386,7 +389,7 @@ box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25) !important;
 color: var(--accent-color);
 }
 
-// Global Toast Styling
+/* Global Toast Styling */
 .p-toast {
   .p-toast-message {
     border-radius: 12px;
@@ -437,7 +440,7 @@ color: var(--accent-color);
   }
 }
 
-// Global ConfirmDialog Styling
+/* Global ConfirmDialog Styling */
 .p-confirmdialog {
   .p-dialog-content {
     display: flex;

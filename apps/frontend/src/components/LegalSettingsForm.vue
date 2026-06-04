@@ -4,7 +4,9 @@ import api from '../services/api';
 import { useToast } from 'primevue/usetoast';
 import {downloadPrivacyPolicy} from "../services/download";
 import MarkdownPreview from './MarkdownPreview.vue';
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n();
 const toast = useToast();
 const settings = ref({
     legalNoticeRepresentative: '',
@@ -43,7 +45,7 @@ async function fetchSettings() {
             privacyPolicyPdfPath: response.data.privacyPolicyPdfPath || ''
         };
     } catch (e) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load settings', life: 5000 });
+        toast.add({ severity: 'error', summary: t('app.error'), detail: t('profile.loadFailed'), life: 5000 });
     } finally {
         loading.value = false;
     }
@@ -53,9 +55,9 @@ async function updateSettings() {
     saving.value = true;
     try {
         await api.patch('/admin-settings', settings.value);
-        toast.add({ severity: 'success', summary: 'Updated', detail: 'Settings saved successfully', life: 5000 });
+        toast.add({ severity: 'success', summary: t('app.updated'), detail: t('profile.updateSuccess'), life: 5000 });
     } catch (e) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to update settings', life: 5000 });
+        toast.add({ severity: 'error', summary: t('app.error'), detail: t('profile.updateError'), life: 5000 });
     } finally {
         saving.value = false;
     }
@@ -76,9 +78,9 @@ async function onUpload(event: any) {
             }
         });
         settings.value.privacyPolicyPdfPath = response.data.path;
-        toast.add({ severity: 'success', summary: 'Uploaded', detail: 'Privacy Policy PDF updated successfully', life: 5000 });
+        toast.add({ severity: 'success', summary: t('app.uploaded'), detail: t('profile.updateSuccess'), life: 5000 });
     } catch (e) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to upload PDF', life: 5000 });
+        toast.add({ severity: 'error', summary: t('app.error'), detail: t('profile.uploadFailed'), life: 5000 });
     } finally {
         uploading.value = false;
     }
@@ -102,34 +104,34 @@ onMounted(fetchSettings);
     >
       <div class="settings-card phoenix-card">
         <h3 class="settings-title">
-          Legal Notice (Impressum)
+          {{ $t('settings.legalNoticeTitle') }}
         </h3>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div class="md:col-span-2">
             <div class="p-4 bg-amber-50 border-l-4 border-amber-500 text-amber-900 text-sm mb-6">
               <p class="font-bold mb-1">
-                Markdown Enabled
+                {{ $t('settings.markdownEnabled') }}
               </p>
-              <p>You can use Markdown to format your Legal Notice. This will replace the structured fields in the footer if provided.</p>
+              <p>{{ $t('settings.legalNoticeMarkdownNote') }}</p>
             </div>
             <div class="field">
               <label
                 class="secondary-text"
                 for="markdown"
-              >Content (Markdown)</label>
+              >{{ $t('settings.contentMarkdown') }}</label>
               <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <Textarea
                   id="markdown"
                   v-model="settings.legalNoticeMarkdown"
                   rows="15"
-                  placeholder="# Impressum&#10;&#10;Angaben gemäß § 5 TMG..."
+                  :placeholder="$t('settings.legalNoticePlaceholder')"
                   class="w-full font-mono text-sm"
                 />
-                <MarkdownPreview 
-                  :content="settings.legalNoticeMarkdown" 
-                  title="Legal Notice Preview"
-                  placeholder="Your legal notice will appear here..."
+                <MarkdownPreview
+                  :content="settings.legalNoticeMarkdown"
+                  :title="$t('settings.legalNoticePreview')"
+                  :placeholder="$t('settings.legalNoticePlaceholder')"
                 />
               </div>
             </div>
@@ -139,7 +141,7 @@ onMounted(fetchSettings);
 
           <div class="md:col-span-2">
             <h4 class="text-sm font-bold uppercase tracking-wider text-slate-400 mb-4">
-              Structured Data (Fallback)
+              {{ $t('settings.fallbackData') }}
             </h4>
           </div>
 
@@ -147,7 +149,7 @@ onMounted(fetchSettings);
             <label
               class="secondary-text"
               for="representative"
-            >Representative</label>
+            >{{ $t('settings.representative') }}</label>
             <InputText
               id="representative"
               v-model="settings.legalNoticeRepresentative"
@@ -160,7 +162,7 @@ onMounted(fetchSettings);
               <label
                 class="secondary-text"
                 for="street"
-              >Street</label>
+              >{{ $t('settings.street') }}</label>
               <InputText
                 id="street"
                 v-model="settings.legalNoticeStreet"
@@ -171,7 +173,7 @@ onMounted(fetchSettings);
               <label
                 class="secondary-text"
                 for="houseNumber"
-              >Number</label>
+              >{{ $t('settings.number') }}</label>
               <InputText
                 id="houseNumber"
                 v-model="settings.legalNoticeHouseNumber"
@@ -185,7 +187,7 @@ onMounted(fetchSettings);
               <label
                 class="secondary-text"
                 for="zipCode"
-              >Zip Code (PLZ)</label>
+              >{{ $t('settings.zipCode') }}</label>
               <InputText
                 id="zipCode"
                 v-model="settings.legalNoticeZipCode"
@@ -196,7 +198,7 @@ onMounted(fetchSettings);
               <label
                 class="secondary-text"
                 for="city"
-              >Location (City)</label>
+              >{{ $t('settings.city') }}</label>
               <InputText
                 id="city"
                 v-model="settings.legalNoticeCity"
@@ -209,7 +211,7 @@ onMounted(fetchSettings);
             <label
               class="secondary-text"
               for="email"
-            >Email</label>
+            >{{ $t('auth.email') }}</label>
             <InputText
               id="email"
               v-model="settings.legalNoticeEmail"
@@ -221,7 +223,7 @@ onMounted(fetchSettings);
             <label
               class="secondary-text"
               for="phone"
-            >Phone</label>
+            >{{ $t('settings.phone') }}</label>
             <InputText
               id="phone"
               v-model="settings.legalNoticePhone"
@@ -233,7 +235,7 @@ onMounted(fetchSettings);
             <label
               class="secondary-text"
               for="taxId"
-            >Tax ID (Steuernummer) <span class="text-xs text-slate-400 normal-case font-normal">(Optional)</span></label>
+            >{{ $t('settings.taxId') }} <span class="text-xs text-slate-400 normal-case font-normal">({{ $t('settings.optional') }})</span></label>
             <InputText
               id="taxId"
               v-model="settings.legalNoticeTaxId"
@@ -244,7 +246,7 @@ onMounted(fetchSettings);
             <label
               class="secondary-text"
               for="vatId"
-            >VAT ID (USt-IdNr.) <span class="text-xs text-slate-400 normal-case font-normal">(Optional)</span></label>
+            >{{ $t('settings.vatId') }} <span class="text-xs text-slate-400 normal-case font-normal">({{ $t('settings.optional') }})</span></label>
             <InputText
               id="vatId"
               v-model="settings.legalNoticeVatId"
@@ -256,7 +258,7 @@ onMounted(fetchSettings);
         <div class="mt-6 flex justify-end">
           <Button
             severity="primary"
-            label="Save Legal Notice"
+            :label="$t('settings.saveLegalNotice')"
             icon="pi pi-save"
             :loading="saving"
             @click="updateSettings"
@@ -266,17 +268,17 @@ onMounted(fetchSettings);
 
       <div class="settings-card phoenix-card">
         <h3 class="settings-title">
-          Terms & Conditions (AGB)
+          {{ $t('settings.termsTitle') }}
         </h3>
         <div class="flex flex-col gap-4">
           <p class="text-sm text-slate-600">
-            Define the general terms and conditions for your athletes. These will be linked during registration.
+            {{ $t('settings.termsNote') }}
           </p>
           <div class="field">
             <label
               class="secondary-text"
               for="termsMarkdown"
-            >Content (Markdown)</label>
+            >{{ $t('settings.contentMarkdown') }}</label>
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Textarea
                 id="termsMarkdown"
@@ -285,17 +287,17 @@ onMounted(fetchSettings);
                 placeholder="# Allgemeine Geschäftsbedingungen (AGB)&#10;&#10;1. Geltungsbereich..."
                 class="w-full font-mono text-sm"
               />
-              <MarkdownPreview 
-                :content="settings.termsAndConditionsMarkdown" 
-                title="T&C Preview"
-                placeholder="Your terms and conditions will appear here..."
+              <MarkdownPreview
+                :content="settings.termsAndConditionsMarkdown"
+                :title="$t('settings.termsPreview')"
+                :placeholder="$t('settings.termsPlaceholder')"
               />
             </div>
           </div>
           <div class="mt-4 flex justify-end">
             <Button
               severity="primary"
-              label="Save AGB"
+              :label="$t('settings.saveTerms')"
               icon="pi pi-save"
               :loading="saving"
               @click="updateSettings"
@@ -306,11 +308,11 @@ onMounted(fetchSettings);
 
       <div class="settings-card phoenix-card">
         <h3 class="settings-title">
-          Privacy Policy (Datenschutz)
+          {{ $t('settings.privacyTitle') }}
         </h3>
         <div class="flex flex-col gap-4">
           <p class="text-sm text-slate-600">
-            Upload the official Privacy Policy PDF that users can download from the footer.
+            {{ $t('settings.privacyNote') }}
           </p>
 
           <div
@@ -320,18 +322,18 @@ onMounted(fetchSettings);
             <div class="flex items-center gap-3">
               <i class="pi pi-file-pdf text-red-500 text-2xl" />
               <div>
-                <span class="font-bold text-slate-700">Current Document</span>
+                <span class="font-bold text-slate-700">{{ $t('settings.currentDocument') }}</span>
                 <p class="text-xs text-slate-500">
                   {{ settings.privacyPolicyPdfPath }}
                 </p>
               </div>
             </div>
-            <Button 
-              icon="pi pi-download" 
-              severity="secondary" 
-              variant="text" 
+            <Button
+              icon="pi pi-download"
+              severity="secondary"
+              variant="text"
               rounded
-              @click="downloadPrivacyPolicy()" 
+              @click="downloadPrivacyPolicy()"
             />
           </div>
           <FileUpload
@@ -340,7 +342,7 @@ onMounted(fetchSettings);
             accept="application/pdf"
             :auto="true"
             custom-upload
-            :choose-label="settings.privacyPolicyPdfPath ? 'Replace PDF' : 'Upload PDF'"
+            :choose-label="settings.privacyPolicyPdfPath ? $t('settings.replacePdf') : $t('settings.uploadPdf')"
             :disabled="uploading"
             class="w-full"
             @uploader="onUpload"
@@ -349,7 +351,7 @@ onMounted(fetchSettings);
             v-if="uploading"
             class="text-center mt-2"
           >
-            <i class="pi pi-spin pi-spinner mr-2" /> Uploading...
+            <i class="pi pi-spin pi-spinner mr-2" /> {{ $t('settings.uploading') }}
           </div>
         </div>
       </div>

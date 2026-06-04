@@ -21,12 +21,15 @@ const processQueue = (error: unknown, token: string | null = null) => {
   failedQueue = [];
 };
 
+import i18n from '../i18n';
+
 api.interceptors.request.use((config) => {
   const authStore = useAuthStore();
   const token = authStore.token;
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  config.headers['Accept-Language'] = i18n.global.locale.value;
   return config;
 });
 

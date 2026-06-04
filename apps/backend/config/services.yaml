@@ -51,6 +51,10 @@ services:
         tags:
             - { name: kernel.event_listener, event: lexik_jwt_authentication.on_authentication_success, method: onAuthenticationSuccessResponse }
 
+    App\EventListener\LocaleListener:
+        arguments:
+            $defaultLocale: '%kernel.default_locale%'
+
     App\Service\MercurePublisherService:
         arguments:
             $topicPrefix: '%env(MERCURE_TOPIC_PREFIX)%'

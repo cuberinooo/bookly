@@ -1,11 +1,13 @@
 {% extends 'emails/base.html.twig' %}
 
+{% block title %}{{ 'email.meetup_cancellation.subject'|trans({'%meetupTitle%': meetup.title}) }}{% endblock %}
+
 {% block body %}
-    <h1>Meetup Cancelled: {{ meetup.title }}</h1>
-    <p>Hi {{ user.name }},</p>
-    <p>We're sorry to inform you that the meetup <strong>{{ meetup.title }}</strong> has been cancelled.</p>
-    <p>This usually happens if the minimum number of participants was not met or the organizer cancelled the event manually.</p>
+    <h1>{{ 'email.meetup_cancellation.title'|trans({'%meetupTitle%': meetup.title}) }}</h1>
+    <p>{{ 'email.meetup_cancellation.greeting'|trans({'%userName%': user.name}) }}</p>
+    <p>{{ 'email.meetup_cancellation.message'|trans({'%meetupTitle%': meetup.title})|raw }}</p>
+    <p>{{ 'email.meetup_cancellation.reason'|trans }}</p>
     <p>
-        <a href="{{ loginUrl }}" class="button">Browse other Meetups</a>
+        <a href="{{ loginUrl }}" class="button">{{ 'email.meetup_cancellation.browse_other'|trans }}</a>
     </p>
 {% endblock %}

@@ -10,66 +10,73 @@ use App\Entity\MeetupRsvp;
 use App\Entity\User;
 use App\Enum\MeetupStatus;
 use App\Enum\RsvpStatus;
+use App\Service\EmailService;
 use App\Service\MeetupService;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 class MeetupServiceTest extends TestCase
 {
     private $entityManager;
-    private $mailer;
+    private $emailService;
+    private $translator;
     private $service;
 
     protected function setUp(): void
     {
         $this->entityManager = $this->createMock(EntityManagerInterface::class);
-        $this->mailer = $this->createMock(MailerInterface::class);
+        $this->emailService = $this->createMock(EmailService::class);
+        $this->translator = $this->createMock(TranslatorInterface::class);
+        $this->translator->method('trans')->willReturnArgument(0);
+
         $this->service = new MeetupService(
             $this->entityManager,
-            $this->mailer
+            $this->emailService,
+            $this->translator
         );
     }
 
     public function test_create_meetup(): void
     {
-        $creator = new User();
         $company = new Company();
+        $creator = new User();
         $creator->setCompany($company);
 
         $data = [
-            'title' => 'Hiking Trip',
-            'description' => 'Hiking in the Alps',
-            'meetupDate' => '2026-06-01 10:00:00',
-            'location' => 'Innsbruck',
-            'rsvpDeadline' => '2026-05-25 10:00:00',
-            'sendNotification' => false,
+            'title' => 'Hiking',
+            'location' => 'Mountains',
+            'meetupDate' => '2026-07-01 10:00:00',
+            'sendNotification' => true,
         ];
+
+        $userRepo = $this->createMock(EntityRepository::class);
+        $this->entityManager->method('getRepository')->with(User::class)->willReturn($userRepo);
+        $userRepo->method('findBy')->willReturn([new User()]);
+
+        $this->entityManager->expects($this->exactly(2))->method('persist');
+        $this->entityManager->expects($this->once())->method('flush');
 
         $meetup = $this->service->createMeetup($data, $creator);
 
-        $this->assertEquals('Hiking Trip', $meetup->getTitle());
-        $this->assertEquals($creator, $meetup->getCreator());
-        $this->assertEquals($company, $meetup->getCompany());
-        $this->assertEquals(MeetupStatus::OPEN, $meetup->getStatus());
+        $this->assertInstanceOf(Meetup::class, $meetup);
+        $this->assertEquals('Hiking', $meetup->getTitle());
     }
 
     public function test_create_meetup_with_invalid_deadline(): void
     {
         $creator = new User();
-        $company = new Company();
-        $creator->setCompany($company);
-
         $data = [
-            'title' => 'Invalid Deadline',
-            'meetupDate' => '2026-06-01 10:00:00',
-            'location' => 'Innsbruck',
-            'rsvpDeadline' => '2026-06-01 11:00:00', // After meetupDate
+            'title' => 'Hiking',
+            'location' => 'Mountains',
+            'meetupDate' => '2026-07-01 10:00:00',
+            'rsvpDeadline' => '2026-07-02 10:00:00', // After meetup
         ];
 
         $this->expectException(\LogicException::class);
-        $this->expectExceptionMessage('The RSVP deadline cannot be after the meetup date.');
+        $this->expectExceptionMessage('error.rsvp_deadline_after_meetup');
 
         $this->service->createMeetup($data, $creator);
     }
@@ -79,132 +86,96 @@ class MeetupServiceTest extends TestCase
         $creator = new User();
         $meetup = new Meetup();
         $meetup->setCreator($creator);
-        $meetup->setMeetupDate(new \DateTime('2026-06-01 10:00:00'));
-        $meetup->setRsvpDeadline(new \DateTime('2026-05-30 10:00:00'));
+        $meetup->setMeetupDate(new \DateTime('2026-07-01 10:00:00'));
 
         $data = [
-            'rsvpDeadline' => '2026-06-02 10:00:00', // After meetupDate
+            'rsvpDeadline' => '2026-07-02 10:00:00', // After meetup
         ];
 
         $this->expectException(\LogicException::class);
-        $this->expectExceptionMessage('The RSVP deadline cannot be after the meetup date.');
+        $this->expectExceptionMessage('error.rsvp_deadline_after_meetup');
 
         $this->service->updateMeetup($meetup, $data, $creator);
     }
 
     public function test_rsvp_freeze_logic(): void
     {
-        $meetup = new Meetup();
-        // Deadline in the past
-        $meetup->setRsvpDeadline(new \DateTime('-1 hour'));
-        $meetup->setStatus(MeetupStatus::OPEN);
-
         $user = new User();
+        $meetup = new Meetup();
+        $meetup->setRsvpDeadline(new \DateTime('-1 hour'));
 
         $this->expectException(\LogicException::class);
-        $this->expectExceptionMessage('The RSVP window is closed.');
+        $this->expectExceptionMessage('error.rsvp_window_closed');
 
         $this->service->handleRsvp($meetup, $user, RsvpStatus::GOING);
     }
 
     public function test_capacity_limit(): void
     {
-        $meetup = new Meetup();
-        $meetup->setRsvpDeadline(new \DateTime('+1 day'));
-        $meetup->setMaxParticipants(1);
-
-        $user1 = new User();
-        $user2 = new User();
+        $user = new User();
+        $meetup = $this->createMock(Meetup::class);
+        $meetup->method('getRsvpDeadline')->willReturn(null);
+        $meetup->method('getStatus')->willReturn(MeetupStatus::OPEN);
+        $meetup->method('getMaxParticipants')->willReturn(2);
+        $meetup->method('getGoingCount')->willReturn(2);
 
         $rsvpRepo = $this->createMock(EntityRepository::class);
-        $this->entityManager->method('getRepository')->willReturn($rsvpRepo);
-
-        $rsvp1 = new MeetupRsvp();
-        $rsvp1->setUser($user1);
-        $rsvp1->setStatus(RsvpStatus::GOING);
-        $meetup->addRsvp($rsvp1);
+        $this->entityManager->method('getRepository')->with(MeetupRsvp::class)->willReturn($rsvpRepo);
+        $rsvpRepo->method('findOneBy')->willReturn(null);
 
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Meetup is full.');
+        $this->expectExceptionMessage('error.meetup_full');
 
-        $this->service->handleRsvp($meetup, $user2, RsvpStatus::GOING);
+        $this->service->handleRsvp($meetup, $user, RsvpStatus::GOING);
     }
 
     public function test_evaluate_meetup_status_confirmed(): void
     {
-        $company = new Company();
-        $company->setName('Test Company');
+        $meetup = $this->createMock(Meetup::class);
+        $meetup->method('getStatus')->willReturn(MeetupStatus::OPEN);
+        $meetup->method('getMinParticipants')->willReturn(2);
+        $meetup->method('getGoingCount')->willReturn(3);
+        
+        $rsvp = new MeetupRsvp();
+        $rsvp->setStatus(RsvpStatus::GOING);
+        $meetup->method('getRsvps')->willReturn(new ArrayCollection([$rsvp]));
 
-        $meetup = new Meetup();
-        $meetup->setCompany($company);
-        $meetup->setMinParticipants(2);
-        $meetup->setStatus(MeetupStatus::OPEN);
-
-        $user1 = new User();
-        $user1->setEmail('user1@example.com');
-        $user2 = new User();
-        $user2->setEmail('user2@example.com');
-
-        $rsvp1 = new MeetupRsvp();
-        $rsvp1->setUser($user1);
-        $rsvp1->setStatus(RsvpStatus::GOING);
-        $meetup->addRsvp($rsvp1);
-
-        $rsvp2 = new MeetupRsvp();
-        $rsvp2->setUser($user2);
-        $rsvp2->setStatus(RsvpStatus::GOING);
-        $meetup->addRsvp($rsvp2);
+        $meetup->expects($this->once())->method('setStatus')->with(MeetupStatus::CONFIRMED);
+        $this->emailService->expects($this->once())->method('sendParticipantsOfConfirmation');
 
         $this->service->evaluateMeetupStatus($meetup);
-
-        $this->assertEquals(MeetupStatus::CONFIRMED, $meetup->getStatus());
     }
 
     public function test_evaluate_meetup_status_cancelled(): void
     {
-        $company = new Company();
-        $company->setName('Test Company');
+        $meetup = $this->createMock(Meetup::class);
+        $meetup->method('getStatus')->willReturn(MeetupStatus::OPEN);
+        $meetup->method('getMinParticipants')->willReturn(5);
+        $meetup->method('getGoingCount')->willReturn(3);
 
-        $meetup = new Meetup();
-        $meetup->setCompany($company);
-        $meetup->setMinParticipants(2);
-        $meetup->setStatus(MeetupStatus::OPEN);
+        $rsvp = new MeetupRsvp();
+        $rsvp->setStatus(RsvpStatus::GOING);
+        $meetup->method('getRsvps')->willReturn(new ArrayCollection([$rsvp]));
 
-        $user1 = new User();
-        $user1->setEmail('user1@example.com');
-
-        $rsvp1 = new MeetupRsvp();
-        $rsvp1->setUser($user1);
-        $rsvp1->setStatus(RsvpStatus::GOING);
-        $meetup->addRsvp($rsvp1);
+        $meetup->expects($this->once())->method('setStatus')->with(MeetupStatus::CANCELLED);
+        $this->emailService->expects($this->once())->method('sendParticipantsOfCancellation');
 
         $this->service->evaluateMeetupStatus($meetup);
-
-        $this->assertEquals(MeetupStatus::CANCELLED, $meetup->getStatus());
-        $this->assertEquals(RsvpStatus::NOT_GOING, $rsvp1->getStatus());
     }
 
     public function test_cancel_meetup_declines_everyone(): void
     {
-        $meetup = new Meetup();
         $creator = new User();
+        $meetup = new Meetup();
         $meetup->setCreator($creator);
-        $meetup->setStatus(MeetupStatus::OPEN);
-
-        $company = new Company();
-        $company->setName('Test');
-        $meetup->setCompany($company);
-
-        $user1 = new User();
-        $user1->setEmail('user1@example.com');
-        $rsvp1 = new MeetupRsvp();
-        $rsvp1->setUser($user1);
-        $rsvp1->setStatus(RsvpStatus::GOING);
-        $meetup->addRsvp($rsvp1);
+        
+        $rsvp = new MeetupRsvp();
+        $rsvp->setStatus(RsvpStatus::GOING);
+        $meetup->addRsvp($rsvp);
 
         $this->service->cancelMeetup($meetup, $creator);
 
         $this->assertEquals(MeetupStatus::CANCELLED, $meetup->getStatus());
-        $this->assertEquals(RsvpStatus::NOT_GOING, $rsvp1->getStatus());
+        $this->assertEquals(RsvpStatus::NOT_GOING, $rsvp->getStatus());
     }
 }

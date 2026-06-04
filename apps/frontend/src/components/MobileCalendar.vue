@@ -2,6 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import { formatDate, formatTime } from '../services/date-utils';
 import { useAuthStore } from '../store/useAuthStore';
+import { useI18n } from 'vue-i18n';
 
 const props = defineProps<{
     courses: any[];
@@ -13,6 +14,7 @@ const props = defineProps<{
 
 const emit = defineEmits(['course-click', 'update:baseDate']);
 
+const { t, locale } = useI18n();
 const authStore = useAuthStore();
 const internalBaseDate = ref(new Date(props.baseDate || new Date()));
 const transitionName = ref('slide-left');
@@ -29,10 +31,10 @@ watch(() => props.baseDate, (newVal) => {
 
 const displayedCycleWeek = computed(() => {
     if (!props.cycleInfo || !props.cycleInfo.startDate) return 0;
-    
+
     const cycleStart = new Date(props.cycleInfo.startDate);
     cycleStart.setHours(0, 0, 0, 0);
-    
+
     // Find Monday of the cycle start week
     const day = cycleStart.getDay();
     const diff = (day === 0 ? 6 : day - 1);
@@ -40,7 +42,7 @@ const displayedCycleWeek = computed(() => {
 
     const currentBase = new Date(internalBaseDate.value);
     currentBase.setHours(0, 0, 0, 0);
-    
+
     // Find Monday of the current base week
     const currentDay = currentBase.getDay();
     const currentDiff = (currentDay === 0 ? 6 : currentDay - 1);
@@ -48,9 +50,9 @@ const displayedCycleWeek = computed(() => {
 
     const diffDays = Math.round((currentBase.getTime() - cycleStart.getTime()) / (24 * 60 * 60 * 1000));
     const weeksElapsed = Math.floor(diffDays / 7);
-    
+
     if (weeksElapsed < 0) return 1;
-    
+
     return (weeksElapsed % props.cycleInfo.totalWeeks) + 1;
 });
 
@@ -71,7 +73,7 @@ const currentWeek = computed(() => {
 const currentWeekLabel = computed(() => {
     const start = currentWeek.value[0];
     const end = currentWeek.value[6];
-    return `${start.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })} - ${end.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })}`;
+    return `${start.toLocaleDateString(locale.value, { day: '2-digit', month: '2-digit' })} - ${end.toLocaleDateString(locale.value, { day: '2-digit', month: '2-digit', year: 'numeric' })}`;
 });
 
 function handleTouchStart(e: TouchEvent) {
@@ -136,6 +138,11 @@ function isBookedByUser(course: any) {
     return course.bookings?.some((b: any) => b.user?.id === props.userId);
 }
 
+function isWaitlistByUser(course: any) {
+    if (!props.userId) return false;
+    return course.bookings?.some((b: any) => b.user?.id === props.userId && b.isWaitlist);
+}
+
 function isRestrictedForTrial(course: any) {
     return authStore.isTrial && course.allowTrial === false;
 }
@@ -145,7 +152,7 @@ function isPastCourse(course: any) {
 }
 
 function formatDayName(date: Date) {
-    return date.toLocaleDateString('de-DE', { weekday: 'long' });
+    return date.toLocaleDateString(locale.value, { weekday: 'long' });
 }
 </script>
 
@@ -163,7 +170,7 @@ function formatDayName(date: Date) {
         <i class="pi pi-sync text-amber-400 animate-spin-slow text-xs" />
         <span class="text-[10px] font-black text-white uppercase tracking-widest">{{ cycleInfo.name }}</span>
       </div>
-      <span class="text-[10px] font-black text-amber-400 uppercase">WEEK {{ displayedCycleWeek }} / {{ cycleInfo.totalWeeks }}</span>
+      <span class="text-[10px] font-black text-amber-400 uppercase">{{ t('calendar.week') }} {{ displayedCycleWeek }} / {{ cycleInfo.totalWeeks }}</span>
     </div>
 
     <div class="mobile-nav">
@@ -178,7 +185,7 @@ function formatDayName(date: Date) {
           @click="navigate(-1)"
         />
         <Button
-          label="TODAY"
+          :label="t('home.today')"
           variant="outlined"
           size="small"
           class="today-btn"
@@ -210,7 +217,7 @@ function formatDayName(date: Date) {
           >
             <div class="day-header-sticky">
               <span class="day-name">{{ formatDayName(date) }}</span>
-              <span class="day-date">{{ date.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' }) }}</span>
+              <span class="day-date">{{ date.toLocaleDateString(locale.value, { day: '2-digit', month: '2-digit' }) }}</span>
             </div>
 
             <div class="courses-stack">
@@ -232,7 +239,7 @@ function formatDayName(date: Date) {
                   v-if="getCoursesForDay(date).length === 0"
                   class="empty-day"
                 >
-                  No sessions scheduled
+                  {{ t('calendar.noSessions') }}
                 </div>
                 <div
                   v-for="course in getCoursesForDay(date)"
@@ -241,7 +248,8 @@ function formatDayName(date: Date) {
                   :class="{
                     'is-booked': isBookedByUser(course),
                     'is-restricted': isRestrictedForTrial(course),
-                    'is-past': isPastCourse(course)
+                    'is-past': isPastCourse(course),
+                    'is-cancelled': course.status === 'cancelled'
                   }"
                   :style="course.cycleCategory ? { borderLeft: `6px solid ${course.cycleCategory.colorHex}` } : {}"
                   @click="$emit('course-click', course)"
@@ -258,44 +266,75 @@ function formatDayName(date: Date) {
                       {{ formatTime(course.startTime) }}
                     </div>
                     <div class="course-duration">
-                      {{ course.durationMinutes }} MIN
+                      {{ course.durationMinutes }} {{ t('course.minutes').toUpperCase() }}
                     </div>
                   </div>
 
                   <div class="card-main">
+                    <div
+                      v-if="course.status === 'cancelled'"
+                      class="cancelled-badge-mobile mb-1"
+                    >
+                      <i class="pi pi-clock" /> {{ course.autoCancelled ? t('calendar.autoCancelled') : t('calendar.cancelled') }}
+                    </div>
                     <div class="course-title">
                       {{ course.title }}
                       <span
                         v-if="isRestrictedForTrial(course)"
                         class="ml-2 text-[10px] text-slate-500 font-black"
                       >
-                        <i class="pi pi-lock" /> RESTRICTED
+                        <i class="pi pi-lock" /> {{ t('calendar.restricted') }}
                       </span>
                       <span
                         v-if="isPastCourse(course)"
                         class="ml-2 text-[10px] text-slate-400 font-black"
                       >
-                        <i class="pi pi-history" /> PAST
+                        <i class="pi pi-history" /> {{ t('calendar.past') }}
                       </span>
                     </div>
+                    <div
+                      v-if="course.status === 'cancelled'"
+                      class="course-coach !text-red-500 font-bold"
+                    >
+                      <template v-if="course.autoCancelled">
+                        <i class="pi pi-cog text-[10px]" /> {{ t('course.autoCancelledLabel') }}
+                      </template>
+                      <template v-else-if="course.cancelledBy">
+                        <i class="pi pi-user text-[10px]" /> {{ t('course.cancelledByLabel') }} {{ course.cancelledBy.name }}
+                      </template>
+                    </div>
                     <div class="course-coach">
-                      Coach: {{ course.user?.name }}
+                      {{ t('calendar.coach') }}: {{ course.user?.name }}
                     </div>
                   </div>
 
                   <div class="card-right">
                     <div
                       v-if="isBookedByUser(course)"
-                      class="booked-indicator"
+                      class="booked-indicator-wrapper"
                     >
-                      <i class="pi pi-check-circle" />
+                      <div
+                        v-if="isWaitlistByUser(course)"
+                        class="waitlist-badge-mobile"
+                      >
+                        {{ t('app.waitlist').toUpperCase() }}
+                      </div>
+                      <i
+                        v-else
+                        class="pi pi-check-circle booked-indicator"
+                      />
                     </div>
                     <div
                       v-else
                       class="spots-pill"
                       :class="{ 'is-full': course.bookings.filter(b => !b.isWaitlist).length >= course.capacity }"
                     >
-                      {{ course.capacity - course.bookings.filter(b => !b.isWaitlist).length }}
+                      <template v-if="course.bookings.filter(b => !b.isWaitlist).length < course.capacity">
+                        {{ course.bookings.filter(b => !b.isWaitlist).length }} / {{ course.capacity }}
+                      </template>
+                      <template v-else>
+                        {{ t('calendar.full').toUpperCase() }}
+                      </template>
                       <i class="pi pi-users" />
                     </div>
                   </div>
@@ -463,6 +502,19 @@ function formatDayName(date: Date) {
         background: #fffbeb;
     }
 
+    &.is-cancelled {
+        background: #f1f5f9;
+        border-color: #94a3b8;
+        border-left: 4px dashed #64748b;
+        opacity: 0.8;
+        filter: grayscale(0.5);
+
+        .card-main .course-title {
+            text-decoration: line-through;
+            color: #64748b;
+        }
+    }
+
     &.is-restricted {
         background: #f1f5f9;
         border-color: #cbd5e1;
@@ -533,6 +585,40 @@ function formatDayName(date: Date) {
     }
 
     .card-right {
+        .booked-indicator-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        .waitlist-badge-mobile {
+            background: #64748b;
+            color: white;
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.6rem;
+            font-weight: 900;
+            font-family: 'Barlow Condensed', sans-serif;
+            letter-spacing: 0.05em;
+        }
+
+        .cancelled-badge-mobile {
+            background: #ef4444; // red-500
+            color: white;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.65rem;
+            font-weight: 900;
+            font-family: 'Barlow Condensed', sans-serif;
+            letter-spacing: 0.05em;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            width: fit-content;
+
+            i { font-size: 0.65rem; }
+        }
+
         .booked-indicator {
             color: #ffc107;
             font-size: 1.5rem;

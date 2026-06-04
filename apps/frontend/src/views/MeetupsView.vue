@@ -3,6 +3,7 @@ import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { useMeetupStore } from '../store/useMeetupStore';
 import { useTimeStore } from '../store/useTimeStore';
 import { RsvpStatus } from '../app/enums/RsvpStatus';
+import { useI18n } from 'vue-i18n';
 import MeetupCard from '../components/MeetupCard.vue';
 import MeetupForm from '../components/MeetupForm.vue';
 import Button from 'primevue/button';
@@ -16,6 +17,7 @@ import ProgressSpinner from 'primevue/progressspinner';
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
 
+const { t } = useI18n();
 const toast = useToast();
 const confirm = useConfirm();
 const meetupStore = useMeetupStore();
@@ -46,28 +48,28 @@ const handleTabChange = () => {
 const handleRsvp = async (meetupId: number, status: RsvpStatus) => {
   try {
     await meetupStore.rsvp(meetupId, status);
-    toast.add({ severity: 'success', summary: 'Success', detail: 'RSVP updated', life: 3000 });
+    toast.add({ severity: 'success', summary: t('app.success'), detail: t('app.updated'), life: 3000 });
   } catch (e: any) {
-    toast.add({ severity: 'error', summary: 'Error', detail: e, life: 5000 });
+    toast.add({ severity: 'error', summary: t('app.error'), detail: e, life: 5000 });
   }
 };
 
 const handleCancelMeetup = (meetupId: number) => {
   confirm.require({
-    message: 'Are you sure you want to cancel this meetup?',
-    header: 'Cancel Meetup',
+    message: t('meetup.cancelConfirm'),
+    header: t('meetup.cancelHeader'),
     icon: 'pi pi-exclamation-triangle',
     acceptClass: 'p-button-danger',
     rejectProps: {
-      label: 'Cancel',
+      label: t('app.cancel'),
       severity: 'primary',
     },
     accept: async () => {
       try {
         await meetupStore.cancelMeetup(meetupId);
-        toast.add({ severity: 'success', summary: 'Cancelled', detail: 'Meetup has been cancelled', life: 3000 });
+        toast.add({ severity: 'success', summary: t('meetup.status.cancelled'), detail: t('meetup.status.cancelled'), life: 3000 });
       } catch (e: any) {
-        toast.add({ severity: 'error', summary: 'Error', detail: e, life: 5000 });
+        toast.add({ severity: 'error', summary: t('app.error'), detail: e, life: 5000 });
       }
     }
   });
@@ -88,14 +90,14 @@ const handleSubmit = async (data: any) => {
   try {
     if (editingMeetup.value) {
       await meetupStore.updateMeetup((editingMeetup.value as any).id, data);
-      toast.add({ severity: 'success', summary: 'Updated', detail: 'Meetup updated successfully', life: 3000 });
+      toast.add({ severity: 'success', summary: t('app.updated'), detail: t('app.updated'), life: 3000 });
     } else {
       await meetupStore.createMeetup(data);
-      toast.add({ severity: 'success', summary: 'Created', detail: 'Meetup created successfully', life: 3000 });
+      toast.add({ severity: 'success', summary: t('app.created'), detail: t('app.created'), life: 3000 });
     }
     showCreateDialog.value = false;
   } catch (e: any) {
-    toast.add({ severity: 'error', summary: 'Error', detail: e, life: 5000 });
+    toast.add({ severity: 'error', summary: t('app.error'), detail: e, life: 5000 });
   } finally {
     submitting.value = false;
   }
@@ -107,15 +109,15 @@ const handleSubmit = async (data: any) => {
     <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-8">
       <div class="hidden md:block">
         <h1 class="text-3xl font-black mb-2">
-          Community Meetups
+          {{ t('meetup.communityMeetups') }}
         </h1>
         <p class="text-slate-500">
-          Discover and organize casual gatherings with your community.
+          {{ t('meetup.communitySubtitle') }}
         </p>
       </div>
       <Button
         icon="pi pi-plus"
-        label="Organize Meetup"
+        :label="t('meetup.organize')"
         class="p-button-primary w-full md:w-auto"
         @click="openCreate"
       />
@@ -128,16 +130,16 @@ const handleSubmit = async (data: any) => {
     >
       <TabList>
         <Tab value="active">
-          Upcoming
+          {{ t('meetup.tabs.upcoming') }}
         </Tab>
         <Tab value="joined">
-          I'm Going
+          {{ t('meetup.tabs.myMeetups') }}
         </Tab>
         <Tab value="past">
-          Past Events
+          {{ t('meetup.tabs.past') }}
         </Tab>
         <Tab value="cancelled">
-          Cancelled
+          {{ t('meetup.tabs.cancelled') }}
         </Tab>
       </TabList>
 
@@ -156,13 +158,13 @@ const handleSubmit = async (data: any) => {
           >
             <i class="pi pi-calendar-minus text-4xl text-slate-300 mb-4" />
             <h3 class="text-xl font-bold text-slate-400">
-              No meetups found
+              {{ t('meetup.noMeetupsFound') }}
             </h3>
             <p class="text-slate-400">
-              Why not organize one yourself?
+              {{ t('meetup.organizePrompt') }}
             </p>
             <Button
-              label="Start Something"
+              :label="t('meetup.startSomething')"
               icon="pi pi-plus"
               class="p-button-text mt-4"
               @click="openCreate"
@@ -188,7 +190,7 @@ const handleSubmit = async (data: any) => {
 
     <Dialog
       v-model:visible="showCreateDialog"
-      :header="editingMeetup ? 'Edit Meetup' : 'Organize a Meetup'"
+      :header="editingMeetup ? t('meetup.editMeetup') : t('meetup.organize')"
       :modal="true"
       :style="{ width: '500px' }"
       class="p-fluid"

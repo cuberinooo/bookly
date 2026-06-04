@@ -6,7 +6,6 @@ namespace App\Tests\Service;
 
 use App\Entity\Company;
 use App\Entity\User;
-use App\Repository\AdminSettingsRepository;
 use App\Repository\CompanyRepository;
 use App\Repository\UserRepository;
 use App\Service\EmailService;
@@ -15,33 +14,32 @@ use App\Service\RegistrationService;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
 use Symfony\Bundle\SecurityBundle\Security;
-use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 class RegistrationServiceTest extends TestCase
 {
     private $entityManager;
     private $passwordHasher;
-    private $mailer;
     private $passwordValidator;
+    private $translator;
     private $service;
     private $userRepository;
     private $companyRepository;
-    private $adminSettingsRepository;
     private $security;
-    private $welcomeEmailService;
+    private $emailService;
 
     protected function setUp(): void
     {
         $this->entityManager = $this->createMock(EntityManagerInterface::class);
         $this->passwordHasher = $this->createMock(UserPasswordHasherInterface::class);
-        $this->mailer = $this->createMock(MailerInterface::class);
         $this->userRepository = $this->createMock(UserRepository::class);
         $this->companyRepository = $this->createMock(CompanyRepository::class);
-        $this->passwordValidator = new PasswordValidator();
-        $this->adminSettingsRepository = $this->createMock(AdminSettingsRepository::class);
+        $this->translator = $this->createMock(TranslatorInterface::class);
+        $this->translator->method('trans')->willReturnArgument(0);
+        $this->passwordValidator = new PasswordValidator($this->translator);
         $this->security = $this->createMock(Security::class);
-        $this->welcomeEmailService = $this->createMock(EmailService::class);
+        $this->emailService = $this->createMock(EmailService::class);
 
         $this->entityManager->method('getRepository')->willReturnMap([
             [User::class, $this->userRepository],
@@ -51,11 +49,10 @@ class RegistrationServiceTest extends TestCase
         $this->service = new RegistrationService(
             $this->entityManager,
             $this->passwordHasher,
-            $this->mailer,
             $this->passwordValidator,
-            $this->adminSettingsRepository,
             $this->security,
-            $this->welcomeEmailService
+            $this->emailService,
+            $this->translator
         );
     }
 
@@ -69,13 +66,12 @@ class RegistrationServiceTest extends TestCase
         ];
 
         $this->userRepository->method('findOneBy')->willReturn(null);
-        $this->userRepository->method('findByRole')->with('ROLE_ADMIN')->willReturn([]);
         $this->companyRepository->method('findOneBy')->willReturn(null); // New company
         $this->passwordHasher->method('hashPassword')->willReturn('hashed_password');
 
         $this->entityManager->expects($this->atLeastOnce())->method('persist');
         $this->entityManager->expects($this->once())->method('flush');
-        $this->welcomeEmailService->expects($this->once())->method('sendVerificationEmail');
+        $this->emailService->expects($this->once())->method('sendVerificationEmail');
 
         $user = $this->service->register($data);
 
@@ -105,8 +101,8 @@ class RegistrationServiceTest extends TestCase
         $this->companyRepository->method('findOneBy')->willReturn($existingCompany);
         $this->passwordHasher->method('hashPassword')->willReturn('hashed_password');
 
-        $this->welcomeEmailService->expects($this->once())->method('sendVerificationEmail');
-        $this->mailer->expects($this->once())->method('send'); // Admin notification
+        $this->emailService->expects($this->once())->method('sendVerificationEmail');
+        $this->emailService->expects($this->once())->method('sendAdminNotificationEmail');
 
         $user = $this->service->register($data);
 
@@ -128,7 +124,7 @@ class RegistrationServiceTest extends TestCase
 
         $this->entityManager->expects($this->atLeastOnce())->method('persist');
         $this->entityManager->expects($this->once())->method('flush');
-        $this->welcomeEmailService->expects($this->once())->method('sendVerificationEmail');
+        $this->emailService->expects($this->once())->method('sendVerificationEmail');
 
         $user = $this->service->register($data, true);
 
@@ -174,7 +170,7 @@ class RegistrationServiceTest extends TestCase
         $this->userRepository->method('findOneBy')->willReturn(new User());
 
         $this->expectException(\Exception::class);
-        $this->expectExceptionMessage('Email already registered');
+        $this->expectExceptionMessage('error.email_already_registered');
 
         $this->service->register($data);
     }
@@ -205,7 +201,7 @@ class RegistrationServiceTest extends TestCase
         $this->userRepository->method('findOneBy')->willReturn($user);
 
         $this->expectException(\Exception::class);
-        $this->expectExceptionMessage('Token expired');
+        $this->expectExceptionMessage('error.token_expired');
 
         $this->service->verifyEmail($token);
     }

@@ -6,6 +6,7 @@ namespace App\Controller;
 
 use App\Entity\Meetup;
 use App\Enum\RsvpStatus;
+use App\Repository\MeetupCommentRepository;
 use App\Repository\MeetupRepository;
 use App\Service\ApiCacheService;
 use App\Service\MeetupService;
@@ -27,6 +28,7 @@ class MeetupController extends AbstractController
         private string $s3Bucket,
         private SluggerInterface $slugger,
         private readonly ApiCacheService $apiCache,
+        private readonly MeetupCommentRepository $commentRepository,
     ) {
     }
 
@@ -84,7 +86,10 @@ class MeetupController extends AbstractController
             $qb = $meetupRepository->createQueryBuilder('m');
 
             if ('active' === $filter) {
-                $qb->andWhere('m.meetupDate >= :now')
+                $qb->andWhere($qb->expr()->orX(
+                    'm.meetupDate IS NULL',
+                    'm.meetupDate >= :now'
+                ))
                 ->andWhere('m.status != :cancelled')
                 ->setParameter('now', new \DateTime())
                 ->setParameter('cancelled', \App\Enum\MeetupStatus::CANCELLED);
@@ -106,16 +111,48 @@ class MeetupController extends AbstractController
                 ->setParameter('cancelled', \App\Enum\MeetupStatus::CANCELLED);
             }
 
-            $meetups = $qb->orderBy('m.meetupDate', 'DESC')
+            $meetups = $qb->orderBy('m.meetupDate', 'ASC')
+                ->addOrderBy('m.createdAt', 'DESC')
                 ->getQuery()
                 ->getResult();
 
-            $json = $serializer->serialize($meetups, 'json', ['groups' => 'meetup:read']);
+            $meetupsArray = json_decode($serializer->serialize($meetups, 'json', ['groups' => 'meetup:read']), true);
 
-            return json_decode($json, true);
+            foreach ($meetupsArray as $index => $meetupData) {
+                $meetup = $meetups[$index];
+                $meetupsArray[$index]['unreadCommentsCount'] = $this->commentRepository->countUnreadComments($user, $meetup);
+            }
+
+            return $meetupsArray;
         }, 300);
 
         return new JsonResponse($data, Response::HTTP_OK);
+    }
+
+    #[Route('/notifications', name: 'meetup_notifications', methods: ['GET'])]
+    public function notifications(MeetupRepository $meetupRepository): JsonResponse
+    {
+        /** @var \App\Entity\User $user */
+        $user = $this->getUser();
+
+        // Get all active meetups (where comments can be relevant)
+        $qb = $meetupRepository->createQueryBuilder('m');
+        $qb->andWhere($qb->expr()->orX(
+               'm.meetupDate IS NULL',
+               'm.meetupDate >= :now'
+           ))
+           ->andWhere('m.status != :cancelled')
+           ->setParameter('now', new \DateTime())
+           ->setParameter('cancelled', \App\Enum\MeetupStatus::CANCELLED);
+
+        $relevantMeetups = $qb->getQuery()->getResult();
+        $totalUnread = 0;
+
+        foreach ($relevantMeetups as $meetup) {
+            $totalUnread += $this->commentRepository->countUnreadComments($user, $meetup);
+        }
+
+        return new JsonResponse(['totalUnread' => $totalUnread], Response::HTTP_OK);
     }
 
     #[Route('', name: 'meetup_new', methods: ['POST'])]
@@ -128,8 +165,10 @@ class MeetupController extends AbstractController
         try {
             $meetup = $meetupService->createMeetup($data, $user);
             $json = $serializer->serialize($meetup, 'json', ['groups' => 'meetup:read']);
+            $meetupData = json_decode($json, true);
+            $meetupData['unreadCommentsCount'] = 0;
 
-            return new JsonResponse(json_decode($json, true), Response::HTTP_CREATED);
+            return new JsonResponse($meetupData, Response::HTTP_CREATED);
         } catch (\Exception $e) {
             return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
         }
@@ -147,10 +186,12 @@ class MeetupController extends AbstractController
             'userId' => $user->getId(),
         ];
 
-        $data = $this->apiCache->get('meetup', $companyId, $context, function () use ($meetup, $serializer) {
+        $data = $this->apiCache->get('meetup', $companyId, $context, function () use ($meetup, $serializer, $user) {
             $json = $serializer->serialize($meetup, 'json', ['groups' => 'meetup:read']);
+            $meetupData = json_decode($json, true);
+            $meetupData['unreadCommentsCount'] = $this->commentRepository->countUnreadComments($user, $meetup);
 
-            return json_decode($json, true);
+            return $meetupData;
         }, 300);
 
         return new JsonResponse($data, Response::HTTP_OK);

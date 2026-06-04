@@ -1,6 +1,6 @@
 {% extends 'emails/base.html.twig' %}
 
-{% block title %}Booking Cancelled: {{ courseName }}{% endblock %}
+{% block title %}{{ 'email.booking_cancellation.subject'|trans({'%courseName%': courseName}) }}{% endblock %}
 
 {% block extra_head %}
 <script type="application/ld+json">
@@ -27,18 +27,26 @@
 {% endblock %}
 
 {% block body %}
-    <h2>Booking Cancelled</h2>
-    <p>Hello <strong>{{ userName }}</strong>,</p>
-    <p>We are confirming that your booking for <strong>{{ courseName }}</strong> on <strong>{{ startTime|date('d.m.Y H:i') }}</strong> has been cancelled.</p>
+    <h2>{{ 'email.booking_cancellation.title'|trans }}</h2>
+    <p>{{ 'email.booking_cancellation.greeting'|trans({'%userName%': userName})|raw }}</p>
+    <p>{{ 'email.booking_cancellation.message'|trans({'%courseName%': courseName, '%startTime%': startTime|date('d.m.Y H:i')})|raw }}</p>
 
-    <div style="background-color: #fef2f2; padding: 20px; border-radius: 8px; border-left: 4px solid #ef4444; margin-bottom: 30px;">
-        <h3 style="margin-top: 0; font-family: 'Barlow Condensed', sans-serif; font-size: 16px; color: #991b1b;">CANCELLATION DETAILS</h3>
-        <p style="margin-bottom: 5px; color: #991b1b;"><strong>Course:</strong> {{ courseName }}</p>
-        <p style="margin-bottom: 5px; color: #991b1b;"><strong>Original Time:</strong> {{ startTime|date('d.m.Y H:i') }}</p>
+    {% if isAutoCancelled %}
+        <div style="background-color: #fef2f2; padding: 15px; border-radius: 8px; border-left: 4px solid #ef4444; margin-bottom: 20px;">
+            <p style="margin: 0; color: #991b1b; font-weight: bold;">
+                {{ 'email.booking_cancellation.auto_cancelled_message'|trans }}
+            </p>
+        </div>
+    {% endif %}
+
+    <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; border-left: 4px solid #e2e8f0; margin-bottom: 30px;">
+        <h3 style="margin-top: 0; font-family: 'Barlow Condensed', sans-serif; font-size: 16px; color: #991b1b;">{{ 'email.booking_cancellation.details_title'|trans }}</h3>
+        <p style="margin-bottom: 5px; color: #991b1b;"><strong>{{ 'email.booking_cancellation.course'|trans }}</strong> {{ courseName }}</p>
+        <p style="margin-bottom: 5px; color: #991b1b;"><strong>{{ 'email.booking_cancellation.original_time'|trans }}</strong> {{ startTime|date('d.m.Y H:i') }}</p>
     </div>
 
-    <p>If this was a mistake, you can always head back to the app and book another session.</p>
+    <p>{{ 'email.booking_cancellation.mistake_message'|trans }}</p>
     
-    <p>Best regards,</p>
-    <p>The {{ siteName }} Team</p>
+    <p>{{ 'email.booking_cancellation.best_regards'|trans }}</p>
+    <p>{{ 'email.booking_cancellation.team'|trans({'%siteName%': siteName}) }}</p>
 {% endblock %}

@@ -1,19 +1,19 @@
 {% extends 'emails/base.html.twig' %}
 
-{% block title %}Spot Available: {{ courseTitle }}{% endblock %}
+{% block title %}{{ 'email.waitlist_promoted.subject'|trans({'%courseTitle%': courseTitle}) }}{% endblock %}
 
 {% block body %}
-    <h2>You're In!</h2>
-    <p>Hello {{ name }},</p>
-    <p>Good news! A spot has opened up for <strong>{{ courseTitle }}</strong> and you have been moved from the waitlist to the confirmed participant list.</p>
+    <h2>{{ 'email.waitlist_promoted.title'|trans }}</h2>
+    <p>{{ 'email.waitlist_promoted.greeting'|trans({'%name%': name}) }}</p>
+    <p>{{ 'email.waitlist_promoted.message'|trans({'%courseTitle%': courseTitle})|markdown_to_html|raw }}</p>
     
     <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
-        <p><strong>Course:</strong> {{ courseTitle }}</p>
-        <p><strong>Time:</strong> {{ startTime|date('d.m.Y H:i') }}</p>
+        <p><strong>{{ 'email.waitlist_promoted.course'|trans }}</strong> {{ courseTitle }}</p>
+        <p><strong>{{ 'email.waitlist_promoted.time'|trans }}</strong> {{ startTime|date('d.m.Y H:i') }}</p>
     </div>
 
-    <p>We look forward to seeing you there!</p>
-    <p>If you can no longer attend, please make sure to cancel your booking as soon as possible to give others a chance.</p>
+    <p>{{ 'email.waitlist_promoted.see_you'|trans }}</p>
+    <p>{{ 'email.waitlist_promoted.cancel_instruction'|trans }}</p>
     
-    <p>Regards,<br>{{ siteName }} Team</p>
+    <p>{{ 'email.waitlist_promoted.regards'|trans }}<br>{{ 'email.waitlist_promoted.team'|trans({'%siteName%': siteName}) }}</p>
 {% endblock %}

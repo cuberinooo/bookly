@@ -5,14 +5,13 @@ declare(strict_types=1);
 namespace App\Command;
 
 use App\Repository\CourseRepository;
+use App\Service\EmailService;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
-use Symfony\Component\Mailer\MailerInterface;
 
 #[AsCommand(
     name: 'app:course-reminder',
@@ -23,7 +22,7 @@ class CourseReminderCommand extends Command
     public function __construct(
         private CourseRepository $courseRepository,
         private EntityManagerInterface $entityManager,
-        private MailerInterface $mailer
+        private EmailService $emailService
     ) {
         parent::__construct();
     }
@@ -59,7 +58,7 @@ class CourseReminderCommand extends Command
             $reminderTime = (clone $course->getStartTime())->modify("-{$leadTimeMinutes} minutes");
 
             if ($now >= $reminderTime) {
-                $this->sendReminder($course);
+                $this->emailService->sendCourseReminderEmail($course);
                 $course->setReminderSent(true);
                 ++$sentCount;
             }
@@ -74,31 +73,5 @@ class CourseReminderCommand extends Command
         }
 
         return Command::SUCCESS;
-    }
-
-    private function sendReminder($course): void
-    {
-        $trainer = $course->getUser();
-        $participants = [];
-        foreach ($course->getBookings() as $booking) {
-            if (!$booking->isWaitlist()) {
-                $participants[] = [
-                    'name' => $booking->getUser()->getName(),
-                    'email' => $booking->getUser()->getEmail(),
-                ];
-            }
-        }
-
-        $email = (new TemplatedEmail())
-            ->from($_ENV['NO_REPLY_MAIL'] ?? 'noreply@example.com')
-            ->to($trainer->getEmail())
-            ->subject('Course Reminder: '.$course->getTitle())
-            ->htmlTemplate('emails/course_reminder.html.twig')
-            ->context([
-                'course' => $course,
-                'participants' => $participants,
-            ]);
-
-        $this->mailer->send($email);
     }
 }

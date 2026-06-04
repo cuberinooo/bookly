@@ -14,25 +14,31 @@ use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Address;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 class MeetupService
 {
     public function __construct(
         private EntityManagerInterface $entityManager,
-        private MailerInterface $mailer
+        private EmailService $emailService,
+        private TranslatorInterface $translator
     ) {
     }
 
     public function createMeetup(array $data, User $creator): Meetup
     {
-        $meetupDate = new \DateTime($data['meetupDate']);
-        $meetupDate->setTimezone(new \DateTimeZone(date_default_timezone_get()));
+        $meetupDate = isset($data['meetupDate']) ? new \DateTime($data['meetupDate']) : null;
+        if ($meetupDate) {
+            $meetupDate->setTimezone(new \DateTimeZone(date_default_timezone_get()));
+        }
 
-        $rsvpDeadline = new \DateTime($data['rsvpDeadline']);
-        $rsvpDeadline->setTimezone(new \DateTimeZone(date_default_timezone_get()));
+        $rsvpDeadline = isset($data['rsvpDeadline']) ? new \DateTime($data['rsvpDeadline']) : null;
+        if ($rsvpDeadline) {
+            $rsvpDeadline->setTimezone(new \DateTimeZone(date_default_timezone_get()));
+        }
 
-        if ($rsvpDeadline > $meetupDate) {
-            throw new \LogicException('The RSVP deadline cannot be after the meetup date.');
+        if ($rsvpDeadline && $meetupDate && $rsvpDeadline > $meetupDate) {
+            throw new \LogicException($this->translator->trans('error.rsvp_deadline_after_meetup'));
         }
 
         $meetup = new Meetup();
@@ -73,8 +79,8 @@ class MeetupService
             throw new AccessDeniedException('Only the creator or an admin can edit this meetup.');
         }
 
-        if (new \DateTime() > $meetup->getMeetupDate()) {
-            throw new \LogicException('Cannot edit a past meetup.');
+        if ($meetup->getMeetupDate() && new \DateTime() > $meetup->getMeetupDate()) {
+            throw new \LogicException($this->translator->trans('error.cannot_edit_past_meetup'));
         }
 
         if (isset($data['title'])) {
@@ -89,28 +95,32 @@ class MeetupService
         if (isset($data['imageUrl'])) {
             $meetup->setImageUrl($data['imageUrl']);
         }
-        if (isset($data['meetupDate'])) {
-            $newMeetupDate = new \DateTime($data['meetupDate']);
-            $newMeetupDate->setTimezone(new \DateTimeZone(date_default_timezone_get()));
+        if (array_key_exists('meetupDate', $data)) {
+            $newMeetupDate = $data['meetupDate'] ? new \DateTime($data['meetupDate']) : null;
+            if ($newMeetupDate) {
+                $newMeetupDate->setTimezone(new \DateTimeZone(date_default_timezone_get()));
+            }
 
-            $currentDeadline = isset($data['rsvpDeadline']) ? new \DateTime($data['rsvpDeadline']) : $meetup->getRsvpDeadline();
+            $currentDeadline = array_key_exists('rsvpDeadline', $data) ? ($data['rsvpDeadline'] ? new \DateTime($data['rsvpDeadline']) : null) : $meetup->getRsvpDeadline();
             if ($currentDeadline instanceof \DateTime) {
                 $currentDeadline->setTimezone(new \DateTimeZone(date_default_timezone_get()));
             }
 
-            if ($currentDeadline > $newMeetupDate) {
-                throw new \LogicException('The RSVP deadline cannot be after the meetup date.');
+            if ($currentDeadline && $newMeetupDate && $currentDeadline > $newMeetupDate) {
+                throw new \LogicException($this->translator->trans('error.rsvp_deadline_after_meetup'));
             }
             $meetup->setMeetupDate($newMeetupDate);
         }
 
-        if (isset($data['rsvpDeadline'])) {
-            $newDeadline = new \DateTime($data['rsvpDeadline']);
-            $newDeadline->setTimezone(new \DateTimeZone(date_default_timezone_get()));
+        if (array_key_exists('rsvpDeadline', $data)) {
+            $newDeadline = $data['rsvpDeadline'] ? new \DateTime($data['rsvpDeadline']) : null;
+            if ($newDeadline) {
+                $newDeadline->setTimezone(new \DateTimeZone(date_default_timezone_get()));
+            }
 
             $currentMeetupDate = $meetup->getMeetupDate();
-            if ($newDeadline > $currentMeetupDate) {
-                throw new \LogicException('The RSVP deadline cannot be after the meetup date.');
+            if ($newDeadline && $currentMeetupDate && $newDeadline > $currentMeetupDate) {
+                throw new \LogicException($this->translator->trans('error.rsvp_deadline_after_meetup'));
             }
             $meetup->setRsvpDeadline($newDeadline);
         }
@@ -132,13 +142,13 @@ class MeetupService
     public function handleRsvp(Meetup $meetup, User $user, RsvpStatus $status): MeetupRsvp
     {
         // RSVP Freeze Logic
-        if (new \DateTime() > $meetup->getRsvpDeadline()) {
+        if ($meetup->getRsvpDeadline() && new \DateTime() > $meetup->getRsvpDeadline()) {
             $this->evaluateMeetupStatus($meetup);
-            throw new \LogicException('The RSVP window is closed.');
+            throw new \LogicException($this->translator->trans('error.rsvp_window_closed'));
         }
 
         if (MeetupStatus::CANCELLED === $meetup->getStatus()) {
-            throw new \LogicException('This meetup has been cancelled.');
+            throw new \LogicException($this->translator->trans('error.meetup_cancelled'));
         }
 
         $rsvpRepo = $this->entityManager->getRepository(MeetupRsvp::class);
@@ -155,7 +165,7 @@ class MeetupService
 
         if (RsvpStatus::GOING === $status) {
             if ($meetup->getMaxParticipants() && $meetup->getGoingCount() >= $meetup->getMaxParticipants() && RsvpStatus::GOING !== $previousStatus) {
-                throw new \RuntimeException('Meetup is full.');
+                throw new \RuntimeException($this->translator->trans('error.meetup_full'));
             }
         }
 
@@ -175,8 +185,8 @@ class MeetupService
 
         if ($meetup->getMinParticipants() && $goingCount < $meetup->getMinParticipants()) {
             $meetup->setStatus(MeetupStatus::CANCELLED);
-            $this->declineAllParticipants($meetup);
             $this->notifyParticipantsOfCancellation($meetup);
+            $this->declineAllParticipants($meetup);
         } else {
             $meetup->setStatus(MeetupStatus::CONFIRMED);
             $this->notifyParticipantsOfConfirmation($meetup);
@@ -191,8 +201,8 @@ class MeetupService
         }
 
         $meetup->setStatus(MeetupStatus::CANCELLED);
-        $this->declineAllParticipants($meetup);
         $this->notifyParticipantsOfCancellation($meetup);
+        $this->declineAllParticipants($meetup);
         $this->entityManager->flush();
     }
 
@@ -215,19 +225,7 @@ class MeetupService
                 continue;
             }
 
-            $email = (new TemplatedEmail())
-                ->from(new Address($_ENV['NO_REPLY_MAIL'] ?? 'noreply@example.com', $meetup->getCompany()->getName()))
-                ->to($user->getEmail())
-                ->subject(sprintf('New Meetup: %s', $meetup->getTitle()))
-                ->htmlTemplate('emails/meetup_invitation.html.twig')
-                ->context([
-                    'meetup' => $meetup,
-                    'user' => $user,
-                    'siteName' => $meetup->getCompany()->getName(),
-                    'loginUrl' => $this->getLoginUrl(),
-                ]);
-
-            $this->mailer->send($email);
+            $this->emailService->sendNotificationEmailOnMeetup($user, $meetup);
         }
     }
 
@@ -245,19 +243,7 @@ class MeetupService
                 continue;
             }
 
-            $email = (new TemplatedEmail())
-                ->from(new Address($_ENV['NO_REPLY_MAIL'] ?? 'noreply@example.com', $meetup->getCompany()->getName()))
-                ->to($rsvp->getUser()->getEmail())
-                ->subject(sprintf('Meetup Cancelled: %s', $meetup->getTitle()))
-                ->htmlTemplate('emails/meetup_cancellation.html.twig')
-                ->context([
-                    'meetup' => $meetup,
-                    'user' => $rsvp->getUser(),
-                    'siteName' => $meetup->getCompany()->getName(),
-                    'loginUrl' => $this->getLoginUrl(),
-                ]);
-
-            $this->mailer->send($email);
+            $this->emailService->sendParticipantsOfCancellation($meetup, $rsvp);
         }
     }
 
@@ -268,19 +254,7 @@ class MeetupService
                 continue;
             }
 
-            $email = (new TemplatedEmail())
-                ->from(new Address($_ENV['NO_REPLY_MAIL'] ?? 'noreply@example.com', $meetup->getCompany()->getName()))
-                ->to($rsvp->getUser()->getEmail())
-                ->subject(sprintf('Meetup Confirmed: %s', $meetup->getTitle()))
-                ->htmlTemplate('emails/meetup_confirmation.html.twig')
-                ->context([
-                    'meetup' => $meetup,
-                    'user' => $rsvp->getUser(),
-                    'siteName' => $meetup->getCompany()->getName(),
-                    'loginUrl' => $this->getLoginUrl(),
-                ]);
-
-            $this->mailer->send($email);
+            $this->emailService->sendParticipantsOfConfirmation($meetup, $rsvp);
         }
     }
 }

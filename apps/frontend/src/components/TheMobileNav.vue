@@ -1,12 +1,17 @@
 <script setup lang="ts">
 import { RouterLink } from 'vue-router';
 import { useAuthStore } from '../store/useAuthStore';
+import { useMeetupStore } from '../store/useMeetupStore';
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
+import OverlayBadge from 'primevue/overlaybadge';
 
 const authStore = useAuthStore();
+const meetupStore = useMeetupStore();
+const { t } = useI18n();
 
 const dashboardLabel = computed(() => {
-  return authStore.isTrainer && authStore.viewMode === 'trainer' ? 'Dashboard' : 'Bookings';
+  return authStore.isTrainer && authStore.viewMode === 'trainer' ? t('app.dashboard') : t('app.myBookings');
 });
 </script>
 
@@ -20,9 +25,9 @@ const dashboardLabel = computed(() => {
       class="mobile-nav-item"
     >
       <i class="pi pi-calendar" />
-      <span>Courses</span>
+      <span>{{ t('app.courses') }}</span>
     </RouterLink>
-    
+
     <RouterLink
       to="/dashboard"
       class="mobile-nav-item"
@@ -30,21 +35,32 @@ const dashboardLabel = computed(() => {
       <i class="pi pi-th-large" />
       <span>{{ dashboardLabel }}</span>
     </RouterLink>
-    
+
     <RouterLink
       to="/meetups"
       class="mobile-nav-item"
     >
-      <i class="pi pi-users" />
-      <span>Meetups</span>
+      <OverlayBadge
+        v-if="meetupStore.globalUnread > 0"
+        :value="meetupStore.globalUnread"
+        severity="danger"
+        size="small"
+      >
+        <i class="pi pi-users" />
+      </OverlayBadge>
+      <i
+        v-else
+        class="pi pi-users"
+      />
+      <span>{{ t('app.meetups') }}</span>
     </RouterLink>
-    
+
     <RouterLink
       to="/leaderboard"
       class="mobile-nav-item"
     >
       <i class="pi pi-trophy" />
-      <span>Rankings</span>
+      <span>{{ t('app.rankings') }}</span>
     </RouterLink>
   </nav>
 </template>
@@ -96,7 +112,7 @@ const dashboardLabel = computed(() => {
 
   &.router-link-active {
     color: var(--primary-color);
-    
+
     i {
       transform: scale(1.1);
     }

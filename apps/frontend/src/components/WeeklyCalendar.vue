@@ -2,6 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import { formatDate, formatTime } from '../services/date-utils';
 import { useAuthStore } from '../store/useAuthStore';
+import { useI18n } from 'vue-i18n';
 
 const props = withDefaults(defineProps<{
     courses: any[];
@@ -20,6 +21,7 @@ const props = withDefaults(defineProps<{
 
 const emit = defineEmits(['course-click', 'cell-click', 'update:baseDate']);
 
+const { t, locale } = useI18n();
 const authStore = useAuthStore();
 const internalBaseDate = ref(new Date(props.baseDate));
 
@@ -31,10 +33,10 @@ watch(() => props.baseDate, (newVal) => {
 
 const displayedCycleWeek = computed(() => {
     if (!props.cycleInfo || !props.cycleInfo.startDate) return 0;
-    
+
     const cycleStart = new Date(props.cycleInfo.startDate);
     cycleStart.setHours(0, 0, 0, 0);
-    
+
     // Find Monday of the cycle start week
     const day = cycleStart.getDay();
     const diff = (day === 0 ? 6 : day - 1);
@@ -42,7 +44,7 @@ const displayedCycleWeek = computed(() => {
 
     const currentBase = new Date(internalBaseDate.value);
     currentBase.setHours(0, 0, 0, 0);
-    
+
     // Find Monday of the current base week
     const currentDay = currentBase.getDay();
     const currentDiff = (currentDay === 0 ? 6 : currentDay - 1);
@@ -50,13 +52,21 @@ const displayedCycleWeek = computed(() => {
 
     const diffDays = Math.round((currentBase.getTime() - cycleStart.getTime()) / (24 * 60 * 60 * 1000));
     const weeksElapsed = Math.floor(diffDays / 7);
-    
+
     if (weeksElapsed < 0) return 1;
-    
+
     return (weeksElapsed % props.cycleInfo.totalWeeks) + 1;
 });
 
-const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+const days = computed(() => [
+    t('app.days.monday'),
+    t('app.days.tuesday'),
+    t('app.days.wednesday'),
+    t('app.days.thursday'),
+    t('app.days.friday'),
+    t('app.days.saturday'),
+    t('app.days.sunday')
+]);
 const hours = Array.from({ length: 16 }, (_, i) => i + 6); // 6:00 to 22:00
 
 const currentWeek = computed(() => {
@@ -76,7 +86,7 @@ const currentWeek = computed(() => {
 const currentWeekLabel = computed(() => {
     const start = currentWeek.value[0];
     const end = currentWeek.value[6];
-    return `${start.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })} - ${end.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })}`;
+    return `${start.toLocaleDateString(locale.value, { day: '2-digit', month: '2-digit' })} - ${end.toLocaleDateString(locale.value, { day: '2-digit', month: '2-digit', year: 'numeric' })}`;
 });
 
 function navigate(direction: number) {
@@ -124,6 +134,11 @@ function isBookedByUser(course: any) {
     return course.bookings?.some((b: any) => b.user?.id === props.userId);
 }
 
+function isWaitlistByUser(course: any) {
+    if (!props.userId) return false;
+    return course.bookings?.some((b: any) => b.user?.id === props.userId && b.isWaitlist);
+}
+
 function isRestrictedForTrial(course: any) {
     const isTrial = authStore.isTrial;
     return isTrial && course.allowTrial === false;
@@ -154,13 +169,13 @@ function onSlotClick(day: Date, hour: number) {
           <i class="pi pi-sync text-amber-600 animate-spin-slow" />
         </div>
         <div class="flex flex-col">
-          <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Active Programming</span>
+          <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">{{ t('calendar.activeProgramming') }}</span>
           <span class="text-lg font-black text-slate-900 font-barlow uppercase">{{ cycleInfo.name }}</span>
         </div>
       </div>
       <div class="flex items-center gap-2 bg-white px-4 py-2 rounded-lg border border-slate-200 shadow-sm">
-        <span class="text-xs font-bold text-slate-400 uppercase">Cycle Progress</span>
-        <span class="text-sm font-black text-amber-600">WEEK {{ displayedCycleWeek }} / {{ cycleInfo.totalWeeks }}</span>
+        <span class="text-xs font-bold text-slate-400 uppercase">{{ t('calendar.cycleProgress') }}</span>
+        <span class="text-sm font-black text-amber-600">{{ t('calendar.week') }} {{ displayedCycleWeek }} / {{ cycleInfo.totalWeeks }}</span>
       </div>
     </div>
 
@@ -176,7 +191,7 @@ function onSlotClick(day: Date, hour: number) {
             @click="navigate(-1)"
           />
           <Button
-            label="TODAY"
+            :label="t('home.today')"
             variant="outlined"
             size="small"
             class="today-btn"
@@ -275,7 +290,7 @@ function onSlotClick(day: Date, hour: number) {
                     'is-booked': isBookedByUser(course),
                     'is-restricted': isRestrictedForTrial(course),
                     'is-past': isPastCourse(course),
-                    'is-postponed': course.status === 'postponed'
+                    'is-cancelled': course.status === 'cancelled'
                   }"
                   :style="[
                     !isCompactView ? { gridRow: getGridRow(course.startTime, course.durationMinutes) } : {},
@@ -295,30 +310,32 @@ function onSlotClick(day: Date, hour: number) {
 
                   <div class="flex flex-col gap-1 w-full mb-1">
                     <div
-                      v-if="course.status === 'postponed'"
-                      class="postponed-badge"
+                      v-if="course.status === 'cancelled'"
+                      class="cancelled-badge"
                     >
-                      <i class="pi pi-clock" /> POSTPONED
+                      <i class="pi pi-clock" /> {{ course.autoCancelled ? t('calendar.autoCancelled') : t('calendar.cancelled') }}
                     </div>
                     <div class="flex justify-between items-start w-full gap-1">
                       <div
                         v-if="isBookedByUser(course)"
                         class="booked-badge"
+                        :class="{ 'is-waitlist': isWaitlistByUser(course) }"
                       >
-                        <i class="pi pi-check" /> BOOKED
+                        <i :class="isWaitlistByUser(course) ? 'pi pi-clock' : 'pi pi-check'" />
+                        {{ isWaitlistByUser(course) ? t('app.waitlist').toUpperCase() : t('calendar.booked') }}
                       </div>
                       <div
                         v-if="isRestrictedForTrial(course)"
                         class="restricted-badge"
-                        title="Restricted for Trial Members"
+                        :title="t('calendar.restrictedTooltip')"
                       >
-                        <i class="pi pi-lock" /> TRIAL RESTRICTED
+                        <i class="pi pi-lock" /> {{ t('calendar.restricted') }}
                       </div>
                       <div
                         v-if="isPastCourse(course)"
                         class="past-badge"
                       >
-                        <i class="pi pi-history" /> PAST
+                        <i class="pi pi-history" /> {{ t('calendar.past') }}
                       </div>
                     </div>
                   </div>
@@ -327,7 +344,7 @@ function onSlotClick(day: Date, hour: number) {
                     <span
                       v-if="!isCompactView"
                       class="duration-tag"
-                    >/ {{ course.durationMinutes }} MIN</span>
+                    >/ {{ course.durationMinutes }} {{ t('app.minutesShort').toUpperCase() }}</span>
                   </div>
                   <div class="course-title">
                     {{ course.title }}
@@ -335,10 +352,15 @@ function onSlotClick(day: Date, hour: number) {
 
                   <div class="course-meta">
                     <div
-                      v-if="course.status === 'postponed' && course.postponedBy"
+                      v-if="course.status === 'cancelled'"
                       class="coach-line !text-red-500 font-bold"
                     >
-                      POSTPONED BY {{ course.postponedBy.name }}
+                      <template v-if="course.autoCancelled">
+                        <i class="pi pi-cog text-[10px]" /> {{ t('course.autoCancelledLabel') }}
+                      </template>
+                      <template v-else-if="course.cancelledBy">
+                        <i class="pi pi-user text-[10px]" /> {{ t('course.cancelledByLabel') }} {{ course.cancelledBy.name }}
+                      </template>
                     </div>
                     <div class="coach-line">
                       <i class="pi pi-user text-[10px]" /> {{ course.user?.name }}
@@ -348,7 +370,7 @@ function onSlotClick(day: Date, hour: number) {
                         {{ course.bookings.filter(b => !b.isWaitlist).length }} / {{ course.capacity }} <i class="pi pi-users text-[10px]" />
                       </template>
                       <template v-else>
-                        <span class="text-amber-500">FULL</span>
+                        <span class="text-amber-500">{{ t('calendar.full') }}</span>
                       </template>
                     </div>
                   </div>
@@ -611,7 +633,7 @@ $border-color: #e2e8f0;
         }
     }
 
-    &.is-postponed {
+    &.is-cancelled {
         background: #f1f5f9;
         border-color: #94a3b8;
         border-left: 4px dashed #64748b;
@@ -638,9 +660,14 @@ $border-color: #e2e8f0;
         z-index: 2;
 
         i { font-size: 0.5rem; }
+
+        &.is-waitlist {
+            background: #64748b;
+            color: white;
+        }
     }
 
-    .postponed-badge {
+    .cancelled-badge {
         font-family: 'Barlow Condensed', sans-serif;
         font-weight: 800;
         font-size: 0.6rem;

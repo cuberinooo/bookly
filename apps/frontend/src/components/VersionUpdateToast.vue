@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { useVersionPolling } from '@/services/version-polling';
 import Button from 'primevue/button';
+import { useI18n } from 'vue-i18n';
 
 /**
  * VersionUpdateToast
  * Displays a non-intrusive notification when a new version of the app is available.
  */
+const { t } = useI18n();
 const { isNewVersionAvailable, refreshApp } = useVersionPolling();
 </script>
 
@@ -20,16 +22,16 @@ const { isNewVersionAvailable, refreshApp } = useVersionPolling();
         <div class="toast-content">
           <i class="pi pi-info-circle toast-icon" />
           <div class="toast-text">
-            <span class="message">A new version of the app is available.</span>
-            <span class="sub-message">Please refresh to update.</span>
+            <span class="message">{{ t('versionUpdate.available') }}</span>
+            <span class="sub-message">{{ t('versionUpdate.pleaseRefresh') }}</span>
           </div>
         </div>
-        <Button 
-          label="Refresh" 
-          size="small" 
-          severity="primary" 
+        <Button
+          :label="t('versionUpdate.refresh')"
+          size="small"
+          severity="primary"
           icon="pi pi-refresh"
-          @click="refreshApp" 
+          @click="refreshApp"
         />
       </div>
     </div>
@@ -103,12 +105,12 @@ const { isNewVersionAvailable, refreshApp } = useVersionPolling();
   .version-update-toast {
     bottom: 1rem;
   }
-  
+
   .toast-inner {
     padding: 0.75rem 1rem;
     gap: 1rem;
   }
-  
+
   .sub-message {
     display: none;
   }

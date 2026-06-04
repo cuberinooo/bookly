@@ -12,7 +12,7 @@ use App\Enum\CourseStatus;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\HttpFoundation\Response;
 
-class CoursePostponeTest extends WebTestCase
+class CourseCancelTest extends WebTestCase
 {
     private function createCompany($entityManager): Company
     {
@@ -62,7 +62,7 @@ class CoursePostponeTest extends WebTestCase
         return $member;
     }
 
-    public function test_postpone_course_unbooks_members_and_excludes_from_stats(): void
+    public function test_cancel_course_unbooks_members_and_excludes_from_stats(): void
     {
         $client = static::createClient();
         $container = $client->getContainer();
@@ -96,31 +96,31 @@ class CoursePostponeTest extends WebTestCase
 
         $authHeader = ['HTTP_AUTHORIZATION' => 'Basic '.base64_encode($trainer->getEmail().':password')];
 
-        // 3. Check stats before postponement
+        // 3. Check stats before cancellation
         $client->request('GET', '/api/trainer/statistics', [], [], $authHeader);
         $this->assertEquals(Response::HTTP_OK, $client->getResponse()->getStatusCode());
         $statsBefore = json_decode($client->getResponse()->getContent(), true);
-        $this->assertEquals(1, $statsBefore['totalCourses'], 'Course should be counted in stats before postponement');
-        $this->assertEquals(1, $statsBefore['uniqueMembers'], 'Member should be counted in stats before postponement');
+        $this->assertEquals(1, $statsBefore['totalCourses'], 'Course should be counted in stats before cancellation');
+        $this->assertEquals(1, $statsBefore['uniqueMembers'], 'Member should be counted in stats before cancellation');
 
-        // 4. Postpone course
-        $client->request('POST', '/api/courses/'.$courseId.'/postpone', [], [], $authHeader);
+        // 4. Cancel course
+        $client->request('POST', '/api/courses/'.$courseId.'/cancel', [], [], $authHeader);
         $this->assertEquals(Response::HTTP_OK, $client->getResponse()->getStatusCode());
 
         // 5. Verify course status and unbooking
         $entityManager->clear();
         $updatedCourse = $entityManager->getRepository(Course::class)->find($courseId);
-        $this->assertEquals(CourseStatus::POSTPONED, $updatedCourse->getStatus());
-        $this->assertEquals($trainer->getId(), $updatedCourse->getPostponedBy()->getId());
+        $this->assertEquals(CourseStatus::CANCELLED, $updatedCourse->getStatus());
+        $this->assertEquals($trainer->getId(), $updatedCourse->getCancelledBy()->getId());
 
         $deletedBooking = $entityManager->getRepository(Booking::class)->find($bookingId);
-        $this->assertNull($deletedBooking, 'Booking should be removed after postponement');
+        $this->assertNull($deletedBooking, 'Booking should be removed after cancellation');
 
-        // 6. Check stats after postponement
+        // 6. Check stats after cancellation
         $client->request('GET', '/api/trainer/statistics', [], [], $authHeader);
         $this->assertEquals(Response::HTTP_OK, $client->getResponse()->getStatusCode());
         $statsAfter = json_decode($client->getResponse()->getContent(), true);
-        $this->assertEquals(0, $statsAfter['totalCourses'], 'Postponed course should NOT be counted in stats');
-        $this->assertEquals(0, $statsAfter['uniqueMembers'], 'Unbooked member from postponed course should NOT be counted in stats');
+        $this->assertEquals(0, $statsAfter['totalCourses'], 'Cancelled course should NOT be counted in stats');
+        $this->assertEquals(0, $statsAfter['uniqueMembers'], 'Unbooked member from cancelled course should NOT be counted in stats');
     }
 }

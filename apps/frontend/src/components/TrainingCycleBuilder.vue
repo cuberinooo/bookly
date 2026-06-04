@@ -10,6 +10,9 @@ import ToggleSwitch from 'primevue/toggleswitch';
 import { useToast } from 'primevue/usetoast';
 import TrainingCategoryManager from './TrainingCategoryManager.vue';
 
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 const toast = useToast();
 
 const categories = ref<TrainingCategory[]>([]);
@@ -24,13 +27,13 @@ const isActive = ref(true);
 const matrix = ref<Record<string, number>>({}); // Key: "week-day", Value: categoryId
 
 const days = [
-    { label: 'Mon', value: 1 },
-    { label: 'Tue', value: 2 },
-    { label: 'Wed', value: 3 },
-    { label: 'Thu', value: 4 },
-    { label: 'Fri', value: 5 },
-    { label: 'Sat', value: 6 },
-    { label: 'Sun', value: 7 }
+    { label: t('app.daysShort.mon'), value: 1 },
+    { label: t('app.daysShort.tue'), value: 2 },
+    { label: t('app.daysShort.wed'), value: 3 },
+    { label: t('app.daysShort.thu'), value: 4 },
+    { label: t('app.daysShort.fri'), value: 5 },
+    { label: t('app.daysShort.sat'), value: 6 },
+    { label: t('app.daysShort.sun'), value: 7 }
 ];
 
 const weekRanges = computed(() => {
@@ -44,11 +47,11 @@ const weekRanges = computed(() => {
     for (let i = 0; i < cycleWeeks.value; i++) {
         const weekStart = new Date(start);
         weekStart.setDate(start.getDate() + (i * 7));
-        
+
         const weekEnd = new Date(weekStart);
         weekEnd.setDate(weekStart.getDate() + 6);
 
-        const format = (d: Date) => d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
+        const format = (d: Date) => d.toLocaleDateString(t('app.language') === 'English' ? 'en-GB' : 'de-DE', { day: '2-digit', month: '2-digit' });
         ranges.push(`${format(weekStart)} - ${format(weekEnd)}`);
     }
     return ranges;
@@ -62,7 +65,7 @@ async function loadData() {
             trainingCycleService.getCycles()
         ]);
         categories.value = catData;
-        
+
         if (cycleData.length > 0) {
             const active = cycleData[0]; // Take the only cycle
             currentCycle.value = active;
@@ -82,7 +85,7 @@ async function loadData() {
 async function addCategory(data: { name: string; colorHex: string }) {
     try {
         await trainingCycleService.createCategory(data);
-        toast.add({ severity: 'success', summary: 'Success', detail: 'Category added', life: 3000 });
+        toast.add({ severity: 'success', summary: t('app.success'), detail: t('admin.cycle.categoryAdded'), life: 3000 });
         await loadData();
     } catch (e) {}
 }
@@ -90,7 +93,7 @@ async function addCategory(data: { name: string; colorHex: string }) {
 async function deleteCategory(id: number) {
     try {
         await trainingCycleService.deleteCategory(id);
-        toast.add({ severity: 'info', summary: 'Deleted', detail: 'Category removed', life: 3000 });
+        toast.add({ severity: 'info', summary: t('app.deleted'), detail: t('admin.cycle.categoryRemoved'), life: 3000 });
         await loadData();
     } catch (e) {}
 }
@@ -99,7 +102,7 @@ async function updateCategory(data: { id: number; name?: string; colorHex?: stri
     try {
         const { id, ...payload } = data;
         await trainingCycleService.updateCategory(id, payload);
-        toast.add({ severity: 'success', summary: 'Updated', detail: 'Category updated', life: 3000 });
+        toast.add({ severity: 'success', summary: t('app.updated'), detail: t('admin.cycle.categoryUpdated'), life: 3000 });
         await loadData();
     } catch (e) {}
 }
@@ -110,7 +113,7 @@ function toggleCell(week: number, day: number) {
         delete matrix.value[key];
         return;
     }
-    
+
     if (matrix.value[key] === selectedCategory.value.id) {
         delete matrix.value[key];
     } else {
@@ -137,7 +140,7 @@ async function saveCycle() {
             isActive: isActive.value,
             assignments
         });
-        toast.add({ severity: 'success', summary: 'Saved', detail: 'Cycle saved and activated', life: 3000 });
+        toast.add({ severity: 'success', summary: t('app.updated'), detail: t('admin.cycle.cycleSaved'), life: 3000 });
         await loadData();
     } catch (e) {}
 }
@@ -145,11 +148,11 @@ async function saveCycle() {
 async function toggleCycleStatus() {
     try {
         await trainingCycleService.toggleStatus(isActive.value);
-        toast.add({ 
-            severity: 'info', 
-            summary: isActive.value ? 'Activated' : 'Deactivated', 
-            detail: isActive.value ? 'Cycle is now visible on calendar' : 'Cycle is hidden from calendar', 
-            life: 3000 
+        toast.add({
+            severity: 'info',
+            summary: isActive.value ? t('admin.cycle.active') : t('admin.cycle.deactivated'),
+            detail: isActive.value ? t('admin.cycle.active') : t('admin.cycle.deactivated'),
+            life: 3000
         });
     } catch (e) {
         isActive.value = !isActive.value; // Revert on error
@@ -187,11 +190,11 @@ onMounted(loadData);
         <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
           <div class="flex flex-col gap-4">
             <h2 class="text-2xl font-black uppercase">
-              Training Cycle Matrix
+              {{ $t('admin.cycle.matrixTitle') }}
             </h2>
             <div class="flex flex-wrap gap-4 items-center">
               <div class="flex flex-col gap-1">
-                <label class="text-[10px] font-bold text-slate-400 uppercase">Start Date (Week 1)</label>
+                <label class="text-[10px] font-bold text-slate-400 uppercase">{{ $t('admin.cycle.startDate') }}</label>
                 <DatePicker
                   v-model="cycleStartDate"
                   size="small"
@@ -199,7 +202,7 @@ onMounted(loadData);
                 />
               </div>
               <div class="flex flex-col gap-1">
-                <label class="text-[10px] font-bold text-slate-400 uppercase">Weeks</label>
+                <label class="text-[10px] font-bold text-slate-400 uppercase">{{ $t('admin.cycle.weeks') }}</label>
                 <Select
                   v-model="cycleWeeks"
                   :options="[4, 5, 6, 8, 12]"
@@ -212,13 +215,13 @@ onMounted(loadData);
                   @change="toggleCycleStatus"
                 />
                 <span class="text-xs font-bold uppercase text-slate-500">
-                  {{ isActive ? 'Active' : 'Deactivated' }}
+                  {{ isActive ? $t('admin.cycle.active') : $t('admin.cycle.deactivated') }}
                 </span>
               </div>
             </div>
           </div>
           <Button
-            label="Save & Apply"
+            :label="$t('admin.cycle.saveApply')"
             icon="pi pi-save"
             severity="primary"
             @click="saveCycle"
@@ -230,7 +233,7 @@ onMounted(loadData);
             <!-- Header Row -->
             <div class="grid grid-cols-[120px_repeat(7,1fr)] gap-2 mb-2">
               <div class="flex items-center justify-center font-black text-[10px] uppercase text-slate-400">
-                Week Range
+                {{ $t('admin.cycle.weekRange') }}
               </div>
               <div
                 v-for="day in days"
@@ -248,12 +251,12 @@ onMounted(loadData);
               class="grid grid-cols-[120px_repeat(7,1fr)] gap-2 mb-2"
             >
               <div class="flex flex-col items-center justify-center bg-slate-100 rounded-lg p-2">
-                <span class="font-black text-[10px] uppercase text-slate-400 leading-none mb-1">Week {{ idx + 1 }}</span>
+                <span class="font-black text-[10px] uppercase text-slate-400 leading-none mb-1">{{ $t('admin.cycle.week') }} {{ idx + 1 }}</span>
                 <span class="font-bold text-[9px] text-slate-600">{{ range }}</span>
               </div>
-              <div 
-                v-for="day in 7" 
-                :key="day" 
+              <div
+                v-for="day in 7"
+                :key="day"
                 class="aspect-square rounded-lg border-2 border-slate-100 cursor-pointer transition-all hover:scale-105"
                 :class="{ 'ring-2 ring-amber-400 ring-offset-1': selectedCategory && matrix[`${idx + 1}-${day}`] === selectedCategory.id }"
                 :style="{ backgroundColor: getCellColor(idx + 1, day) }"

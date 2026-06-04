@@ -11,12 +11,17 @@ export interface Course {
   capacity: number;
   allowTrial: boolean;
   status: string;
+  autoCancelled: boolean;
   seriesId: string | null;
   user: {
     id: number;
     name: string;
     profilePicture: string | null;
   };
+  cancelledBy: {
+    id: number;
+    name: string;
+  } | null;
   bookings: any[];
   bookingCount: number;
   cycleCategory?: any;
@@ -142,12 +147,12 @@ export const useCourseStore = defineStore('course', {
       }
     },
 
-    async postponeCourse(id: string | number) {
+    async cancelCourse(id: string | number) {
       try {
-        await api.post(`/courses/${id}/postpone`);
+        await api.post(`/courses/${id}/cancel`);
         await this.fetchCourses();
       } catch (err) {
-        console.error(`Failed to postpone course ${id}`, err);
+        console.error(`Failed to cancel course ${id}`, err);
         throw err;
       }
     },

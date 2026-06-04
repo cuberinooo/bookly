@@ -13,6 +13,7 @@ use App\Repository\GlobalSettingsRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 class BookingService
 {
@@ -20,7 +21,8 @@ class BookingService
         private EntityManagerInterface $entityManager,
         private BookingRepository $bookingRepository,
         private GlobalSettingsRepository $settingsRepository,
-        private MailerInterface $mailer
+        private TranslatorInterface $translator,
+        private EmailService $emailService
     ) {
     }
 
@@ -35,12 +37,12 @@ class BookingService
     {
         // Check if the course is already done
         if ($course->getEndTime() < new \DateTime()) {
-            throw new \Exception('You cannot book a course that has already finished');
+            throw new \Exception($this->translator->trans('error.cannot_book_finished'));
         }
 
-        // Check if the course is postponed
-        if (\App\Enum\CourseStatus::POSTPONED === $course->getStatus()) {
-            throw new \Exception('This course has been postponed and is currently not bookable.');
+        // Check if the course is cancelled
+        if (\App\Enum\CourseStatus::CANCELLED === $course->getStatus()) {
+            throw new \Exception($this->translator->trans('error.course_cancelled_no_book'));
         }
 
         // Validate booking window
@@ -48,18 +50,18 @@ class BookingService
 
         // Check if trial members are allowed
         if (in_array('ROLE_TRIAL', $user->getRoles(), true) && !$course->isAllowTrial()) {
-            throw new \Exception('This course is not available for trial members.');
+            throw new \Exception($this->translator->trans('error.not_for_trial'));
         }
 
         // Check if the user is the trainer of the course
         if ($course->getUser()->getId() === $user->getId()) {
-            throw new \Exception('As a trainer, you cannot book your own course');
+            throw new \Exception($this->translator->trans('error.trainer_cannot_book_own'));
         }
 
         // Check if already booked
         $existingBooking = $this->bookingRepository->findOneBy(['user' => $user, 'course' => $course]);
         if ($existingBooking) {
-            throw new \Exception('You already booked this course');
+            throw new \Exception($this->translator->trans('error.already_booked'));
         }
 
         // Trial limit check
@@ -70,7 +72,7 @@ class BookingService
             if ($limit > 0) {
                 $totalBookings = $this->bookingRepository->count(['user' => $user]);
                 if ($totalBookings >= $limit) {
-                    throw new \Exception(sprintf('Trial limit reached. You can only have %d bookings during your trial. Please upgrade to a full membership.', $limit));
+                    throw new \Exception($this->translator->trans('error.trial_limit_reached', ['%limit%' => $limit]));
                 }
             }
         }
@@ -90,7 +92,7 @@ class BookingService
 
         // Send confirmation email if not on waitlist
         if (!$isWaitlist) {
-            $this->sendBookingConfirmationEmail($booking);
+            $this->emailService->sendBookingConfirmationEmail($booking);
         }
 
         return [$booking, $isWaitlist];
@@ -105,19 +107,19 @@ class BookingService
     {
         // Check if the course is already done
         if ($course->getEndTime() < new \DateTime()) {
-            throw new \Exception('You cannot cancel a booking for a course that has already finished');
+            throw new \Exception($this->translator->trans('error.cannot_cancel_finished'));
         }
 
         $booking = $this->bookingRepository->findOneBy(['user' => $user, 'course' => $course]);
         if (!$booking) {
-            throw new \Exception('Booking not found');
+            throw new \Exception($this->translator->trans('error.booking_not_found'));
         }
 
         $wasWaitlist = $booking->isWaitlist();
 
         // Send cancellation email if it was a confirmed booking
         if (!$wasWaitlist) {
-            $this->sendBookingCancellationEmail($booking);
+            $this->emailService->sendBookingCancellationEmail($booking);
         }
 
         $this->entityManager->remove($booking);
@@ -138,7 +140,7 @@ class BookingService
         $wasWaitlist = $booking->isWaitlist();
 
         if (!$wasWaitlist) {
-            $this->sendBookingCancellationEmail($booking);
+            $this->emailService->sendBookingCancellationEmail($booking);
         }
 
         $this->entityManager->remove($booking);
@@ -167,7 +169,7 @@ class BookingService
         if ($booking) {
             $wasWaitlist = $booking->isWaitlist();
             if (!$wasWaitlist) {
-                $this->sendBookingCancellationEmail($booking);
+                $this->emailService->sendBookingCancellationEmail($booking);
             }
             $this->entityManager->remove($booking);
             $this->entityManager->flush();
@@ -196,8 +198,8 @@ class BookingService
                 $this->entityManager->flush();
 
                 // Send both waitlist promotion and formal confirmation
-                $this->sendWaitlistPromotedEmail($nextInWaitlist);
-                $this->sendBookingConfirmationEmail($nextInWaitlist);
+                $this->emailService->sendWaitlistPromotedEmail($nextInWaitlist);
+                $this->emailService->sendBookingConfirmationEmail($nextInWaitlist);
 
                 // Recursively check if there's more space (e.g. if capacity was increased)
                 $this->processWaitlist($course);
@@ -205,117 +207,7 @@ class BookingService
         }
     }
 
-    private function sendBookingConfirmationEmail(Booking $booking): void
-    {
-        $user = $booking->getUser();
-        $course = $booking->getCourse();
-        $company = $course->getCompany();
-        $uid = sprintf('booking_%d_%d', $course->getId(), $user->getId());
 
-        $email = (new TemplatedEmail())
-            ->from($_ENV['NO_REPLY_MAIL'] ?? 'noreply@example.com')
-            ->to($user->getEmail())
-            ->subject('Booking Confirmed: '.$course->getTitle())
-            ->htmlTemplate('emails/booking_confirmation.html.twig')
-            ->context([
-                'userName' => $user->getName(),
-                'courseName' => $course->getTitle(),
-                'startTime' => $course->getStartTime(),
-                'endTime' => $course->getEndTime(),
-                'location' => $company->getName(),
-                'uid' => $uid,
-                'siteName' => $company->getName(),
-            ]);
-
-        $icsContent = $this->generateIcsContent($booking);
-        $email->attach($icsContent, 'booking.ics', 'text/calendar');
-
-        $this->mailer->send($email);
-    }
-
-    private function sendBookingCancellationEmail(Booking $booking): void
-    {
-        $user = $booking->getUser();
-        $course = $booking->getCourse();
-        $company = $course->getCompany();
-        $uid = sprintf('booking_%d_%d', $course->getId(), $user->getId());
-
-        $email = (new TemplatedEmail())
-            ->from($_ENV['NO_REPLY_MAIL'] ?? 'noreply@example.com')
-            ->to($user->getEmail())
-            ->subject('Booking Cancelled: '.$course->getTitle())
-            ->htmlTemplate('emails/booking_cancellation.html.twig')
-            ->context([
-                'userName' => $user->getName(),
-                'courseName' => $course->getTitle(),
-                'startTime' => $course->getStartTime(),
-                'location' => $company->getName(),
-                'uid' => $uid,
-                'siteName' => $company->getName(),
-            ]);
-
-        $icsContent = $this->generateIcsContent($booking, true);
-        $email->attach($icsContent, 'cancel_booking.ics', 'text/calendar');
-
-        $this->mailer->send($email);
-    }
-
-    private function generateIcsContent(Booking $booking, bool $isCancellation = false): string
-    {
-        $user = $booking->getUser();
-        $course = $booking->getCourse();
-        $company = $course->getCompany();
-        $uid = sprintf('booking_%d_%d', $course->getId(), $user->getId());
-
-        $dtStart = $course->getStartTime()->setTimezone(new \DateTimeZone('UTC'))->format('Ymd\\THis\\Z');
-        $dtEnd = $course->getEndTime()->setTimezone(new \DateTimeZone('UTC'))->format('Ymd\\THis\\Z');
-        $dtStamp = (new \DateTime('now', new \DateTimeZone('UTC')))->format('Ymd\\THis\\Z');
-
-        $method = $isCancellation ? 'CANCEL' : 'PUBLISH';
-        $status = $isCancellation ? 'CANCELLED' : 'CONFIRMED';
-        $summary = ($isCancellation ? 'CANCELLED: ' : '').$course->getTitle();
-        $sequence = $isCancellation ? '1' : '0';
-
-        $ics = [
-            'BEGIN:VCALENDAR',
-            'VERSION:2.0',
-            'PRODID:-//Phoenix Booking//Course Booking//EN',
-            'METHOD:'.$method,
-            'BEGIN:VEVENT',
-            'UID:'.$uid,
-            'DTSTAMP:'.$dtStamp,
-            'DTSTART:'.$dtStart,
-            'DTEND:'.$dtEnd,
-            'SUMMARY:'.$summary,
-            'LOCATION:'.$company->getName(),
-            'DESCRIPTION:'.($isCancellation ? 'Booking Cancellation' : 'Booking Confirmation').' for '.$user->getName(),
-            'STATUS:'.$status,
-            'SEQUENCE:'.$sequence,
-            'END:VEVENT',
-            'END:VCALENDAR',
-        ];
-
-        return implode("\r\n", $ics);
-    }
-
-    private function sendWaitlistPromotedEmail(Booking $booking): void
-    {
-        $user = $booking->getUser();
-        $course = $booking->getCourse();
-
-        $email = (new TemplatedEmail())
-            ->from($_ENV['NO_REPLY_MAIL'] ?? 'noreply@example.com')
-            ->to($user->getEmail())
-            ->subject('Spot Available: '.$course->getTitle())
-            ->htmlTemplate('emails/waitlist_promoted.html.twig')
-            ->context([
-                'name' => $user->getName(),
-                'courseTitle' => $course->getTitle(),
-                'startTime' => $course->getStartTime(),
-            ]);
-
-        $this->mailer->send($email);
-    }
 
     private function validateBookingWindow(Course $course): void
     {
@@ -330,10 +222,10 @@ class BookingService
 
         if ($course->getStartTime() > $deadline) {
             $message = match ($window) {
-                BookingWindow::CURRENT_WEEK => 'Bookings are only allowed for the current week.',
-                BookingWindow::TWO_WEEKS => 'Bookings are only allowed for the next two weeks.',
-                BookingWindow::MONTH => 'Bookings are only allowed for the next month.',
-                default => 'Course is outside the booking window.',
+                BookingWindow::CURRENT_WEEK => $this->translator->trans('error.booking_window_current_week'),
+                BookingWindow::TWO_WEEKS => $this->translator->trans('error.booking_window_two_weeks'),
+                BookingWindow::MONTH => $this->translator->trans('error.booking_window_month'),
+                default => $this->translator->trans('error.booking_window_outside'),
             };
             throw new \Exception($message);
         }
