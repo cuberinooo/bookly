@@ -21,8 +21,8 @@ class BookingService
         private EntityManagerInterface $entityManager,
         private BookingRepository $bookingRepository,
         private GlobalSettingsRepository $settingsRepository,
-        private MailerInterface $mailer,
-        private TranslatorInterface $translator
+        private TranslatorInterface $translator,
+        private EmailService $emailService
     ) {
     }
 
@@ -92,7 +92,7 @@ class BookingService
 
         // Send confirmation email if not on waitlist
         if (!$isWaitlist) {
-            $this->sendBookingConfirmationEmail($booking);
+            $this->emailService->sendBookingConfirmationEmail($booking);
         }
 
         return [$booking, $isWaitlist];
@@ -119,7 +119,7 @@ class BookingService
 
         // Send cancellation email if it was a confirmed booking
         if (!$wasWaitlist) {
-            $this->sendBookingCancellationEmail($booking);
+            $this->emailService->sendBookingCancellationEmail($booking);
         }
 
         $this->entityManager->remove($booking);
@@ -140,7 +140,7 @@ class BookingService
         $wasWaitlist = $booking->isWaitlist();
 
         if (!$wasWaitlist) {
-            $this->sendBookingCancellationEmail($booking);
+            $this->emailService->sendBookingCancellationEmail($booking);
         }
 
         $this->entityManager->remove($booking);
@@ -169,7 +169,7 @@ class BookingService
         if ($booking) {
             $wasWaitlist = $booking->isWaitlist();
             if (!$wasWaitlist) {
-                $this->sendBookingCancellationEmail($booking);
+                $this->emailService->sendBookingCancellationEmail($booking);
             }
             $this->entityManager->remove($booking);
             $this->entityManager->flush();
@@ -198,8 +198,8 @@ class BookingService
                 $this->entityManager->flush();
 
                 // Send both waitlist promotion and formal confirmation
-                $this->sendWaitlistPromotedEmail($nextInWaitlist);
-                $this->sendBookingConfirmationEmail($nextInWaitlist);
+                $this->emailService->sendWaitlistPromotedEmail($nextInWaitlist);
+                $this->emailService->sendBookingConfirmationEmail($nextInWaitlist);
 
                 // Recursively check if there's more space (e.g. if capacity was increased)
                 $this->processWaitlist($course);
@@ -207,118 +207,7 @@ class BookingService
         }
     }
 
-    private function sendBookingConfirmationEmail(Booking $booking): void
-    {
-        $user = $booking->getUser();
-        $course = $booking->getCourse();
-        $company = $course->getCompany();
-        $uid = sprintf('booking_%d_%d', $course->getId(), $user->getId());
 
-        $email = (new TemplatedEmail())
-            ->from($_ENV['NO_REPLY_MAIL'] ?? 'noreply@example.com')
-            ->to($user->getEmail())
-            ->subject('Booking Confirmed: '.$course->getTitle())
-            ->htmlTemplate('emails/booking_confirmation.html.twig')
-            ->context([
-                'userName' => $user->getName(),
-                'courseName' => $course->getTitle(),
-                'startTime' => $course->getStartTime(),
-                'endTime' => $course->getEndTime(),
-                'location' => $company->getName(),
-                'uid' => $uid,
-                'siteName' => $company->getName(),
-            ]);
-
-        $icsContent = $this->generateIcsContent($booking);
-        $email->attach($icsContent, 'booking.ics', 'text/calendar');
-
-        $this->mailer->send($email);
-    }
-
-    private function sendBookingCancellationEmail(Booking $booking): void
-    {
-        $user = $booking->getUser();
-        $course = $booking->getCourse();
-        $company = $course->getCompany();
-        $uid = sprintf('booking_%d_%d', $course->getId(), $user->getId());
-
-        $email = (new TemplatedEmail())
-            ->from($_ENV['NO_REPLY_MAIL'] ?? 'noreply@example.com')
-            ->to($user->getEmail())
-            ->subject('Booking Cancelled: '.$course->getTitle())
-            ->htmlTemplate('emails/booking_cancellation.html.twig')
-            ->context([
-                'userName' => $user->getName(),
-                'courseName' => $course->getTitle(),
-                'startTime' => $course->getStartTime(),
-                'location' => $company->getName(),
-                'uid' => $uid,
-                'siteName' => $company->getName(),
-                'isAutoCancelled' => $course->isAutoCancelled(),
-            ]);
-
-        $icsContent = $this->generateIcsContent($booking, true);
-        $email->attach($icsContent, 'cancel_booking.ics', 'text/calendar');
-
-        $this->mailer->send($email);
-    }
-
-    private function generateIcsContent(Booking $booking, bool $isCancellation = false): string
-    {
-        $user = $booking->getUser();
-        $course = $booking->getCourse();
-        $company = $course->getCompany();
-        $uid = sprintf('booking_%d_%d', $course->getId(), $user->getId());
-
-        $dtStart = $course->getStartTime()->setTimezone(new \DateTimeZone('UTC'))->format('Ymd\\THis\\Z');
-        $dtEnd = $course->getEndTime()->setTimezone(new \DateTimeZone('UTC'))->format('Ymd\\THis\\Z');
-        $dtStamp = (new \DateTime('now', new \DateTimeZone('UTC')))->format('Ymd\\THis\\Z');
-
-        $method = $isCancellation ? 'CANCEL' : 'PUBLISH';
-        $status = $isCancellation ? 'CANCELLED' : 'CONFIRMED';
-        $summary = ($isCancellation ? 'CANCELLED: ' : '').$course->getTitle();
-        $sequence = $isCancellation ? '1' : '0';
-
-        $ics = [
-            'BEGIN:VCALENDAR',
-            'VERSION:2.0',
-            'PRODID:-//Phoenix Booking//Course Booking//EN',
-            'METHOD:'.$method,
-            'BEGIN:VEVENT',
-            'UID:'.$uid,
-            'DTSTAMP:'.$dtStamp,
-            'DTSTART:'.$dtStart,
-            'DTEND:'.$dtEnd,
-            'SUMMARY:'.$summary,
-            'LOCATION:'.$company->getName(),
-            'DESCRIPTION:'.($isCancellation ? 'Booking Cancellation' : 'Booking Confirmation').' for '.$user->getName(),
-            'STATUS:'.$status,
-            'SEQUENCE:'.$sequence,
-            'END:VEVENT',
-            'END:VCALENDAR',
-        ];
-
-        return implode("\r\n", $ics);
-    }
-
-    private function sendWaitlistPromotedEmail(Booking $booking): void
-    {
-        $user = $booking->getUser();
-        $course = $booking->getCourse();
-
-        $email = (new TemplatedEmail())
-            ->from($_ENV['NO_REPLY_MAIL'] ?? 'noreply@example.com')
-            ->to($user->getEmail())
-            ->subject('Spot Available: '.$course->getTitle())
-            ->htmlTemplate('emails/waitlist_promoted.html.twig')
-            ->context([
-                'name' => $user->getName(),
-                'courseTitle' => $course->getTitle(),
-                'startTime' => $course->getStartTime(),
-            ]);
-
-        $this->mailer->send($email);
-    }
 
     private function validateBookingWindow(Course $course): void
     {

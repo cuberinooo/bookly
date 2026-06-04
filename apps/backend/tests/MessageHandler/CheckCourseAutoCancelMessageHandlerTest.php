@@ -14,33 +14,27 @@ use App\Message\CheckCourseAutoCancelMessage;
 use App\MessageHandler\CheckCourseAutoCancelMessageHandler;
 use App\Repository\CourseRepository;
 use App\Service\CourseService;
+use App\Service\EmailService;
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\DelayStamp;
-use Symfony\Contracts\Translation\TranslatorInterface;
 
 class CheckCourseAutoCancelMessageHandlerTest extends TestCase
 {
     private $courseRepository;
     private $courseService;
-    private $entityManager;
     private $messageBus;
-    private $mailer;
-    private $translator;
+    private $emailService;
     private $handler;
 
     protected function setUp(): void
     {
         $this->courseRepository = $this->createMock(CourseRepository::class);
         $this->courseService = $this->createMock(CourseService::class);
-        $this->entityManager = $this->createMock(EntityManagerInterface::class);
         $this->messageBus = $this->createMock(MessageBusInterface::class);
-        $this->mailer = $this->createMock(MailerInterface::class);
-        $this->translator = $this->createMock(TranslatorInterface::class);
+        $this->emailService = $this->createMock(EmailService::class);
 
         // MessageBus dispatch returns Envelope (final class)
         $this->messageBus->method('dispatch')->willReturnCallback(function($message, $stamps = []) {
@@ -50,10 +44,8 @@ class CheckCourseAutoCancelMessageHandlerTest extends TestCase
         $this->handler = new CheckCourseAutoCancelMessageHandler(
             $this->courseRepository,
             $this->courseService,
-            $this->entityManager,
             $this->messageBus,
-            $this->mailer,
-            $this->translator
+            $this->emailService
         );
     }
 
@@ -142,7 +134,7 @@ class CheckCourseAutoCancelMessageHandlerTest extends TestCase
             ->method('cancelCourse')
             ->with($course, null);
         
-        $this->mailer->expects($this->once())->method('send');
+        $this->emailService->expects($this->once())->method('sendNotifyTrainerOnAutoCancel');
         
         ($this->handler)(new CheckCourseAutoCancelMessage(1));
     }

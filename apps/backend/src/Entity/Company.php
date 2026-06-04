@@ -31,6 +31,10 @@ class Company
     #[ORM\JoinColumn(nullable: false)]
     private ?GlobalSettings $globalSettings = null;
 
+    #[ORM\OneToOne(inversedBy: 'company', cascade: ['persist', 'remove'])]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?SmtpSettings $smtpSettings = null;
+
     /**
      * @var Collection<int, User>
      */
@@ -42,10 +46,12 @@ class Company
         $this->users = new ArrayCollection();
         $this->adminSettings = new AdminSettings();
         $this->globalSettings = new GlobalSettings();
+        $this->smtpSettings = new SmtpSettings();
 
         // Synchronize the inverse side
         $this->adminSettings->setCompany($this);
         $this->globalSettings->setCompany($this);
+        $this->smtpSettings->setCompany($this);
     }
 
     public function getId(): ?int
@@ -87,6 +93,48 @@ class Company
         $this->globalSettings = $globalSettings;
 
         return $this;
+    }
+
+    public function getSmtpSettings(): ?SmtpSettings
+    {
+        return $this->smtpSettings;
+    }
+
+    public function setSmtpSettings(?SmtpSettings $smtpSettings): static
+    {
+        $this->smtpSettings = $smtpSettings;
+
+        return $this;
+    }
+
+    public function getSmtpUser(): ?string
+    {
+        return $this->smtpSettings?->getUsername();
+    }
+
+    public function getSmtpPassword(): ?string
+    {
+        return $this->smtpSettings?->getPassword();
+    }
+
+    public function getSmtpHost(): ?string
+    {
+        return $this->smtpSettings?->getHost();
+    }
+
+    public function getSmtpPort(): ?int
+    {
+        return $this->smtpSettings?->getPort();
+    }
+
+    public function getSmtpEncryption(): ?string
+    {
+        return $this->smtpSettings?->getEncryption();
+    }
+
+    public function isCustomSmtpEnabled(): bool
+    {
+        return $this->smtpSettings?->isUseCustomSmtp() ?? false;
     }
 
     /**

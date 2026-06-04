@@ -24,10 +24,8 @@ class CheckCourseAutoCancelMessageHandler
     public function __construct(
         private readonly CourseRepository $courseRepository,
         private readonly CourseService $courseService,
-        private readonly EntityManagerInterface $entityManager,
         private readonly MessageBusInterface $messageBus,
-        private readonly MailerInterface $mailer,
-        private readonly TranslatorInterface $translator
+        private readonly EmailService $emailService,
     ) {
     }
 
@@ -65,44 +63,13 @@ class CheckCourseAutoCancelMessageHandler
         }
 
         $confirmedBookings = array_filter($course->getBookings()->toArray(), fn($b) => !$b->isWaitlist());
-        
+
         if (count($confirmedBookings) < $settings->getAutoCancelMinParticipants()) {
             // Automatically cancel the course
             $this->courseService->cancelCourse($course, null);
-            
+
             // Notify the trainer
-            $this->notifyTrainer($course, count($confirmedBookings));
+            $this->emailService->sendNotifyTrainerOnAutoCancel($course, count($confirmedBookings));
         }
-    }
-
-    private function notifyTrainer(Course $course, int $participantCount): void
-    {
-        $trainer = $course->getUser();
-        if (!$trainer) {
-            return;
-        }
-
-        $siteName = $course->getCompany()->getName();
-        $email = (new TemplatedEmail())
-            ->from(new Address($_ENV['NO_REPLY_MAIL'] ?? 'noreply@example.com', $siteName))
-            ->to($trainer->getEmail())
-            ->subject(sprintf('[%s] Automatic Cancellation: %s', $siteName, $course->getTitle()))
-            ->htmlTemplate('emails/auto_cancel_notification.html.twig')
-            ->context([
-                'course' => $course,
-                'participantCount' => $participantCount,
-                'minParticipants' => $course->getCompany()->getGlobalSettings()->getAutoCancelMinParticipants(),
-                'siteName' => $siteName,
-                'loginUrl' => $this->getLoginUrl()
-            ]);
-
-        $this->mailer->send($email);
-    }
-
-    private function getLoginUrl(): string
-    {
-        $frontendUrl = $_ENV['FRONTEND_URL'] ?? 'http://localhost:4200';
-
-        return $frontendUrl.'/login';
     }
 }

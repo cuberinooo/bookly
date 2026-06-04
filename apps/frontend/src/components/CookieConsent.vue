@@ -86,11 +86,17 @@ const saveChoice = () => {
       <div class="cookie-banner-content">
         <div class="flex flex-col md:flex-row items-center justify-between gap-6">
           <div class="text-content">
-            <h2 id="cookie-title" class="text-lg font-bold primary-text mb-2 flex items-center gap-2">
-              <i class="pi pi-info-circle primary-text"></i>
+            <h2
+              id="cookie-title"
+              class="text-lg font-bold primary-text mb-2 flex items-center gap-2"
+            >
+              <i class="pi pi-info-circle primary-text" />
               {{ t('cookies.title') }}
             </h2>
-            <p id="cookie-desc" class="text-sm text-slate-300 leading-relaxed">
+            <p
+              id="cookie-desc"
+              class="text-sm text-slate-300 leading-relaxed"
+            >
               {{ t('cookies.description') }}
             </p>
           </div>
@@ -139,10 +145,17 @@ const saveChoice = () => {
       <div class="preference-item">
         <div class="flex items-center justify-between gap-4">
           <div>
-            <h3 class="font-bold primary-text">{{ t('cookies.essentialTitle') }}</h3>
-            <p class="text-xs text-slate-500">{{ t('cookies.essentialDesc') }}</p>
+            <h3 class="font-bold primary-text">
+              {{ t('cookies.essentialTitle') }}
+            </h3>
+            <p class="text-xs text-slate-500">
+              {{ t('cookies.essentialDesc') }}
+            </p>
           </div>
-          <ToggleSwitch v-model="consent.essential" disabled />
+          <ToggleSwitch
+            v-model="consent.essential"
+            disabled
+          />
         </div>
         <Divider />
       </div>
@@ -150,8 +163,12 @@ const saveChoice = () => {
       <div class="preference-item">
         <div class="flex items-center justify-between gap-4">
           <div>
-            <h3 class="font-bold primary-text">{{ t('cookies.functionalTitle') }}</h3>
-            <p class="text-xs text-slate-500">{{ t('cookies.functionalDesc') }}</p>
+            <h3 class="font-bold primary-text">
+              {{ t('cookies.functionalTitle') }}
+            </h3>
+            <p class="text-xs text-slate-500">
+              {{ t('cookies.functionalDesc') }}
+            </p>
           </div>
           <ToggleSwitch v-model="consent.functional" />
         </div>
@@ -161,8 +178,12 @@ const saveChoice = () => {
       <div class="preference-item">
         <div class="flex items-center justify-between gap-4">
           <div>
-            <h3 class="font-bold primary-text">{{ t('cookies.analyticalTitle') }}</h3>
-            <p class="text-xs text-slate-500">{{ t('cookies.analyticalDesc') }}</p>
+            <h3 class="font-bold primary-text">
+              {{ t('cookies.analyticalTitle') }}
+            </h3>
+            <p class="text-xs text-slate-500">
+              {{ t('cookies.analyticalDesc') }}
+            </p>
           </div>
           <ToggleSwitch v-model="consent.analytical" />
         </div>
@@ -172,8 +193,12 @@ const saveChoice = () => {
       <div class="preference-item">
         <div class="flex items-center justify-between gap-4">
           <div>
-            <h3 class="font-bold primary-text">{{ t('cookies.marketingTitle') }}</h3>
-            <p class="text-xs text-slate-500">{{ t('cookies.marketingDesc') }}</p>
+            <h3 class="font-bold primary-text">
+              {{ t('cookies.marketingTitle') }}
+            </h3>
+            <p class="text-xs text-slate-500">
+              {{ t('cookies.marketingDesc') }}
+            </p>
           </div>
           <ToggleSwitch v-model="consent.marketing" />
         </div>

@@ -20,7 +20,7 @@ class MeetupService
 {
     public function __construct(
         private EntityManagerInterface $entityManager,
-        private MailerInterface $mailer,
+        private EmailService $emailService,
         private TranslatorInterface $translator
     ) {
     }
@@ -185,8 +185,8 @@ class MeetupService
 
         if ($meetup->getMinParticipants() && $goingCount < $meetup->getMinParticipants()) {
             $meetup->setStatus(MeetupStatus::CANCELLED);
-            $this->declineAllParticipants($meetup);
             $this->notifyParticipantsOfCancellation($meetup);
+            $this->declineAllParticipants($meetup);
         } else {
             $meetup->setStatus(MeetupStatus::CONFIRMED);
             $this->notifyParticipantsOfConfirmation($meetup);
@@ -201,8 +201,8 @@ class MeetupService
         }
 
         $meetup->setStatus(MeetupStatus::CANCELLED);
-        $this->declineAllParticipants($meetup);
         $this->notifyParticipantsOfCancellation($meetup);
+        $this->declineAllParticipants($meetup);
         $this->entityManager->flush();
     }
 
@@ -225,19 +225,7 @@ class MeetupService
                 continue;
             }
 
-            $email = (new TemplatedEmail())
-                ->from(new Address($_ENV['NO_REPLY_MAIL'] ?? 'noreply@example.com', $meetup->getCompany()->getName()))
-                ->to($user->getEmail())
-                ->subject(sprintf('New Meetup: %s', $meetup->getTitle()))
-                ->htmlTemplate('emails/meetup_invitation.html.twig')
-                ->context([
-                    'meetup' => $meetup,
-                    'user' => $user,
-                    'siteName' => $meetup->getCompany()->getName(),
-                    'loginUrl' => $this->getLoginUrl(),
-                ]);
-
-            $this->mailer->send($email);
+            $this->emailService->sendNotificationEmailOnMeetup($user, $meetup);
         }
     }
 
@@ -255,19 +243,7 @@ class MeetupService
                 continue;
             }
 
-            $email = (new TemplatedEmail())
-                ->from(new Address($_ENV['NO_REPLY_MAIL'] ?? 'noreply@example.com', $meetup->getCompany()->getName()))
-                ->to($rsvp->getUser()->getEmail())
-                ->subject(sprintf('Meetup Cancelled: %s', $meetup->getTitle()))
-                ->htmlTemplate('emails/meetup_cancellation.html.twig')
-                ->context([
-                    'meetup' => $meetup,
-                    'user' => $rsvp->getUser(),
-                    'siteName' => $meetup->getCompany()->getName(),
-                    'loginUrl' => $this->getLoginUrl(),
-                ]);
-
-            $this->mailer->send($email);
+            $this->emailService->sendParticipantsOfCancellation($meetup, $rsvp);
         }
     }
 
@@ -278,19 +254,7 @@ class MeetupService
                 continue;
             }
 
-            $email = (new TemplatedEmail())
-                ->from(new Address($_ENV['NO_REPLY_MAIL'] ?? 'noreply@example.com', $meetup->getCompany()->getName()))
-                ->to($rsvp->getUser()->getEmail())
-                ->subject(sprintf('Meetup Confirmed: %s', $meetup->getTitle()))
-                ->htmlTemplate('emails/meetup_confirmation.html.twig')
-                ->context([
-                    'meetup' => $meetup,
-                    'user' => $rsvp->getUser(),
-                    'siteName' => $meetup->getCompany()->getName(),
-                    'loginUrl' => $this->getLoginUrl(),
-                ]);
-
-            $this->mailer->send($email);
+            $this->emailService->sendParticipantsOfConfirmation($meetup, $rsvp);
         }
     }
 }

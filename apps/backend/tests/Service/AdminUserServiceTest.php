@@ -8,13 +8,13 @@ use App\Entity\Company;
 use App\Entity\Course;
 use App\Entity\User;
 use App\Service\AdminUserService;
+use App\Service\EmailService;
 use Aws\MockHandler;
 use Aws\Result;
 use Aws\S3\S3Client;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\String\Slugger\SluggerInterface;
 use Symfony\Component\String\UnicodeString;
@@ -23,7 +23,7 @@ class AdminUserServiceTest extends TestCase
 {
     private $entityManager;
     private $passwordHasher;
-    private $mailer;
+    private $emailService;
     private $slugger;
     private $s3Client;
     private $mockHandler;
@@ -34,7 +34,7 @@ class AdminUserServiceTest extends TestCase
     {
         $this->entityManager = $this->createMock(EntityManagerInterface::class);
         $this->passwordHasher = $this->createMock(UserPasswordHasherInterface::class);
-        $this->mailer = $this->createMock(MailerInterface::class);
+        $this->emailService = $this->createMock(EmailService::class);
         $this->slugger = $this->createMock(SluggerInterface::class);
 
         $this->mockHandler = new MockHandler();
@@ -52,7 +52,7 @@ class AdminUserServiceTest extends TestCase
         $this->service = new AdminUserService(
             $this->entityManager,
             $this->passwordHasher,
-            $this->mailer,
+            $this->emailService,
             $this->s3Client,
             $this->slugger,
             $this->s3Bucket
@@ -112,5 +112,19 @@ class AdminUserServiceTest extends TestCase
 
         $result = $this->service->deleteUser($user, true);
         $this->assertFalse($result);
+    }
+
+    public function test_reset_password(): void
+    {
+        $user = $this->createMock(User::class);
+        $user->expects($this->once())->method('setPassword');
+        $user->expects($this->once())->method('setMustChangePassword')->with(true);
+
+        $this->passwordHasher->expects($this->once())->method('hashPassword')->willReturn('hashed_password');
+        $this->entityManager->expects($this->once())->method('flush');
+        $this->emailService->expects($this->once())->method('sendPasswordResetEmail');
+
+        $tempPassword = $this->service->resetPassword($user);
+        $this->assertNotEmpty($tempPassword);
     }
 }

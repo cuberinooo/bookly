@@ -11,9 +11,9 @@ use App\Entity\User;
 use App\Repository\BookingRepository;
 use App\Repository\GlobalSettingsRepository;
 use App\Service\BookingService;
+use App\Service\EmailService;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 class BookingServiceTest extends TestCase
@@ -21,7 +21,7 @@ class BookingServiceTest extends TestCase
     private $entityManager;
     private $bookingRepository;
     private $settingsRepository;
-    private $mailer;
+    private $emailService;
     private $translator;
     private $service;
     private $defaultCompany;
@@ -33,7 +33,7 @@ class BookingServiceTest extends TestCase
         $this->bookingRepository = $this->createMock(BookingRepository::class);
         $this->settingsRepository = $this->createMock(GlobalSettingsRepository::class);
         $this->settingsRepository->method('find')->willReturn(new GlobalSettings());
-        $this->mailer = $this->createMock(MailerInterface::class);
+        $this->emailService = $this->createMock(EmailService::class);
         $this->translator = $this->createMock(TranslatorInterface::class);
         $this->translator->method('trans')->willReturnArgument(0);
 
@@ -41,8 +41,8 @@ class BookingServiceTest extends TestCase
             $this->entityManager,
             $this->bookingRepository,
             $this->settingsRepository,
-            $this->mailer,
-            $this->translator
+            $this->translator,
+            $this->emailService
         );
 
         $this->defaultCompany = new \App\Entity\Company();
@@ -56,6 +56,8 @@ class BookingServiceTest extends TestCase
         $user->method('getId')->willReturn(1);
         $user->method('getName')->willReturn('John Doe');
         $user->method('getEmail')->willReturn('john@example.com');
+        $user->method('getRoles')->willReturn(['ROLE_MEMBER']);
+        $user->method('getCompany')->willReturn($this->defaultCompany);
 
         $trainer = $this->createMock(User::class);
         $trainer->method('getId')->willReturn(2);
@@ -76,6 +78,7 @@ class BookingServiceTest extends TestCase
 
         $this->entityManager->expects($this->once())->method('persist');
         $this->entityManager->expects($this->once())->method('flush');
+        $this->emailService->expects($this->once())->method('sendBookingConfirmationEmail');
 
         [$booking, $isWaitlist] = $this->service->book($course, $user);
 
@@ -89,6 +92,7 @@ class BookingServiceTest extends TestCase
         $user = $this->createMock(User::class);
         $user->method('getId')->willReturn(1);
         $user->method('getName')->willReturn('Jane Doe');
+        $user->method('getRoles')->willReturn(['ROLE_MEMBER']);
 
         $trainer = $this->createMock(User::class);
         $trainer->method('getId')->willReturn(2);
@@ -97,6 +101,7 @@ class BookingServiceTest extends TestCase
         $course = $this->createMock(Course::class);
         $course->method('getId')->willReturn(11);
         $course->method('getEndTime')->willReturn(new \DateTime('+1 hour'));
+        $course->method('getStartTime')->willReturn(new \DateTime('+30 minutes'));
         $course->method('getUser')->willReturn($trainer);
         $course->method('getCapacity')->willReturn(1);
         $course->method('getTitle')->willReturn('Pilates');
@@ -105,6 +110,8 @@ class BookingServiceTest extends TestCase
 
         $this->bookingRepository->method('findOneBy')->willReturn(null);
         $this->bookingRepository->method('count')->willReturn(1);
+
+        $this->emailService->expects($this->never())->method('sendBookingConfirmationEmail');
 
         [$booking, $isWaitlist] = $this->service->book($course, $user);
 
@@ -153,7 +160,10 @@ class BookingServiceTest extends TestCase
         $this->bookingRepository->method('count')->willReturn(0);
         $this->bookingRepository->method('findNextInWaitlist')->willReturnOnConsecutiveCalls($waitlistedBooking, null);
 
-        $this->mailer->expects($this->atLeastOnce())->method('send');
+        $this->emailService->expects($this->once())->method('sendBookingCancellationEmail');
+        $this->emailService->expects($this->once())->method('sendWaitlistPromotedEmail');
+        $this->emailService->expects($this->once())->method('sendBookingConfirmationEmail');
+        
         $this->entityManager->expects($this->atLeastOnce())->method('flush');
 
         $this->service->unbook($course, $user);
@@ -165,6 +175,7 @@ class BookingServiceTest extends TestCase
     {
         $user = $this->createMock(User::class);
         $user->method('getId')->willReturn(1);
+        $user->method('getRoles')->willReturn(['ROLE_MEMBER']);
 
         $trainer = $this->createMock(User::class);
         $trainer->method('getId')->willReturn(2);
@@ -172,6 +183,7 @@ class BookingServiceTest extends TestCase
 
         $course = $this->createMock(Course::class);
         $course->method('getEndTime')->willReturn(new \DateTime('+1 hour'));
+        $course->method('getStartTime')->willReturn(new \DateTime('+30 minutes'));
         $course->method('getUser')->willReturn($trainer);
         $course->method('getStatus')->willReturn(\App\Enum\CourseStatus::ACTIVE);
 
@@ -188,9 +200,11 @@ class BookingServiceTest extends TestCase
         $user = $this->createMock(User::class);
         $user->method('getId')->willReturn(1);
         $user->method('getCompany')->willReturn($this->defaultCompany);
+        $user->method('getRoles')->willReturn(['ROLE_MEMBER', 'ROLE_TRAINER']);
 
         $course = $this->createMock(Course::class);
         $course->method('getEndTime')->willReturn(new \DateTime('+1 hour'));
+        $course->method('getStartTime')->willReturn(new \DateTime('+30 minutes'));
         $course->method('getUser')->willReturn($user);
         $course->method('getStatus')->willReturn(\App\Enum\CourseStatus::ACTIVE);
 
@@ -226,6 +240,7 @@ class BookingServiceTest extends TestCase
 
         $this->entityManager->expects($this->once())->method('remove')->with($booking);
         $this->entityManager->expects($this->once())->method('flush');
+        $this->emailService->expects($this->once())->method('sendBookingCancellationEmail');
 
         $this->service->unbook($course, $user);
     }
@@ -250,6 +265,7 @@ class BookingServiceTest extends TestCase
 
         $this->entityManager->expects($this->once())->method('remove')->with($booking);
         $this->entityManager->expects($this->once())->method('flush');
+        $this->emailService->expects($this->once())->method('sendBookingCancellationEmail');
 
         $this->service->deleteBooking($booking);
     }
@@ -311,6 +327,7 @@ class BookingServiceTest extends TestCase
 
         $this->bookingRepository->method('findOneBy')->willReturn($booking);
         $this->entityManager->expects($this->once())->method('remove')->with($booking);
+        $this->emailService->expects($this->once())->method('sendBookingCancellationEmail');
 
         $this->service->removeBookingIfExists($course, $user);
     }

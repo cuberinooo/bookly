@@ -7,6 +7,7 @@ import UserManagementTab from '../components/UserManagementTab.vue';
 import LegalSettingsForm from '../components/LegalSettingsForm.vue';
 import CompanySettingsForm from '../components/CompanySettingsForm.vue';
 import MailSettingsTab from '../components/MailSettingsTab.vue';
+import SmtpSettingsTab from '../components/SmtpSettingsTab.vue';
 
 const { t } = useI18n();
 const authStore = useAuthStore();
@@ -17,6 +18,7 @@ const activeTabs = computed(() => {
         tabs.push({ id: 'users', label: t('settings.tabs.athletes'), component: UserManagementTab });
         tabs.push({ id: 'company', label: t('settings.tabs.identity'), component: CompanySettingsForm });
         tabs.push({ id: 'mail', label: t('settings.tabs.emailTemplates'), component: MailSettingsTab });
+        tabs.push({ id: 'smtp', label: t('settings.tabs.smtp'), component: SmtpSettingsTab });
         tabs.push({ id: 'legal', label: t('settings.tabs.legal'), component: LegalSettingsForm });
     }
     if (authStore.isTrainer) {

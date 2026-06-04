@@ -589,6 +589,7 @@
       "athletes": "ATHLETES",
       "identity": "IDENTITY",
       "emailTemplates": "EMAIL TEMPLATES",
+      "smtp": "SMTP",
       "legal": "LEGAL & COMPLIANCE",
       "system": "SYSTEM & ALERTS",
       "privacy": "PRIVACY"
@@ -599,6 +600,18 @@
     "identityNote": "This is your registered company identity used throughout the system.",
     "title": "System Settings",
     "subtitle": "Configure your athletic workspace and system preferences",
+    "smtpSaved": "SMTP settings saved successfully",
+    "smtp": {
+      "title": "SMTP Configuration",
+      "subtitle": "Configure a custom mail server to send system emails for your company.",
+      "enableCustom": "Use Custom SMTP Server",
+      "enableCustomNote": "When enabled, emails will be sent using your configured credentials instead of Bookly.",
+      "host": "SMTP Host",
+      "port": "Port",
+      "username": "Username / Email",
+      "password": "Password",
+      "encryption": "Encryption"
+    },
     "memberPrivacyTitle": "Member Privacy",
     "memberPrivacyNote": "Your privacy is managed by the course trainers. You can update your personal profile information in the Profile section.",
     "goToProfile": "Go to Profile",

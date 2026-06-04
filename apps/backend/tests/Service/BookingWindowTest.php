@@ -11,9 +11,9 @@ use App\Enum\BookingWindow;
 use App\Repository\BookingRepository;
 use App\Repository\GlobalSettingsRepository;
 use App\Service\BookingService;
+use App\Service\EmailService;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 class BookingWindowTest extends TestCase
@@ -21,7 +21,7 @@ class BookingWindowTest extends TestCase
     private $entityManager;
     private $bookingRepository;
     private $settingsRepository;
-    private $mailer;
+    private $emailService;
     private $translator;
     private $bookingService;
 
@@ -32,7 +32,7 @@ class BookingWindowTest extends TestCase
         $this->settingsRepository = $this->getMockBuilder(GlobalSettingsRepository::class)
             ->disableOriginalConstructor()
             ->getMock();
-        $this->mailer = $this->createMock(MailerInterface::class);
+        $this->emailService = $this->createMock(EmailService::class);
         $this->translator = $this->createMock(TranslatorInterface::class);
         $this->translator->method('trans')->willReturnArgument(0);
 
@@ -40,8 +40,8 @@ class BookingWindowTest extends TestCase
             $this->entityManager,
             $this->bookingRepository,
             $this->settingsRepository,
-            $this->mailer,
-            $this->translator
+            $this->translator,
+            $this->emailService
         );
     }
 
@@ -92,10 +92,12 @@ class BookingWindowTest extends TestCase
         $user->method('getId')->willReturn(2);
         $user->method('getName')->willReturn('Member');
         $user->method('getEmail')->willReturn('member@example.com');
+        $user->method('getRoles')->willReturn(['ROLE_MEMBER']);
 
         $company = new \App\Entity\Company();
         $globalSettings = new GlobalSettings();
         $company->setGlobalSettings($globalSettings);
+        $user->method('getCompany')->willReturn($company);
 
         $trainer->method('getCompany')->willReturn($company);
 

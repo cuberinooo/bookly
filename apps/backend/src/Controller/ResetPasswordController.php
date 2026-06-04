@@ -7,13 +7,11 @@ namespace App\Controller;
 use App\Entity\User;
 use App\Service\PasswordValidator;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\RateLimiter\RateLimiterFactory;
 use Symfony\Component\Routing\Attribute\Route;
@@ -25,8 +23,7 @@ class ResetPasswordController extends AbstractController
     public function forgotPassword(
         Request $request,
         EntityManagerInterface $entityManager,
-        MailerInterface $mailer,
-        \App\Repository\AdminSettingsRepository $adminSettingsRepository,
+        \App\Service\EmailService $emailService,
         #[Autowire(service: 'limiter.forgot_password')] RateLimiterFactory $forgotPasswordLimiter
     ): JsonResponse {
         $limiter = $forgotPasswordLimiter->create($request->getClientIp());
@@ -50,21 +47,7 @@ class ResetPasswordController extends AbstractController
             $user->setPasswordResetTokenExpiresAt(new \DateTime('+1 hour'));
             $entityManager->flush();
 
-            $frontendUrl = $_ENV['FRONTEND_URL'] ?? 'http://localhost:4200';
-            $resetUrl = $frontendUrl.'/reset-password?token='.$token;
-            $siteName = $user->getCompany() ? $user->getCompany()->getName() : 'Phoenix Athletics';
-
-            $emailMessage = new TemplatedEmail()
-                ->from($_ENV['NO_REPLY_MAIL'] ?? 'noreply@example.com')
-                ->to($user->getEmail())
-                ->subject(sprintf('Reset your %s password', $siteName))
-                ->htmlTemplate('emails/reset_password.html.twig')
-                ->context([
-                    'name' => $user->getName(),
-                    'url' => $resetUrl,
-                ]);
-
-            $mailer->send($emailMessage);
+            $emailService->sendForgotPasswordEmail($user, $token);
         }
 
         return new JsonResponse(['status' => 'If your email is registered, you will receive a reset link shortly.']);

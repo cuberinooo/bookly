@@ -92,7 +92,7 @@ class AdminUserController extends AbstractController
     }
 
     #[Route('/{id}/send-join-us', name: 'admin_user_send_join_us', methods: ['POST'])]
-    public function sendJoinUsMail(User $user, \App\Service\EmailService $welcomeEmailService, EntityManagerInterface $entityManager): JsonResponse
+    public function sendJoinUsMail(User $user, \App\Service\EmailService $emailService, EntityManagerInterface $entityManager): JsonResponse
     {
         $allowedRoles = ['ROLE_TRIAL', 'ROLE_MEMBER'];
         $hasAllowedRole = false;
@@ -111,7 +111,7 @@ class AdminUserController extends AbstractController
             return new JsonResponse(['error' => 'Welcome mail has already been sent to this user.'], Response::HTTP_BAD_REQUEST);
         }
 
-        $welcomeEmailService->sendTrialJoinUsEmail($user);
+        $emailService->sendTrialJoinUsEmail($user);
 
         $user->setJoinUsMailSent(true);
         $entityManager->flush();
