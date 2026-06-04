@@ -81,6 +81,20 @@
       "friday": "Friday",
       "saturday": "Saturday",
       "sunday": "Sunday"
+    },
+    "months": {
+      "january": "January",
+      "february": "February",
+      "march": "March",
+      "april": "April",
+      "may": "May",
+      "june": "June",
+      "july": "July",
+      "august": "August",
+      "september": "September",
+      "october": "October",
+      "november": "November",
+      "december": "December"
     }
   },
   "home": {
@@ -677,6 +691,31 @@
     "saveNotification": "Save Personal Alerts",
     "hours": "Hours",
     "minutes": "Minutes"
+  },
+  "statistics": {
+    "title": "Trainer Statistics",
+    "yourPerformance": "Your Performance",
+    "performanceSubtitle": "Personal coaching metrics and volume",
+    "totalCourses": "Total Courses",
+    "totalCoursesSubtitle": "All-time coached sessions",
+    "uniqueMembers": "Unique Members",
+    "uniqueMembersSubtitle": "Different students reached",
+    "courseVolume": "Course Volume (12 Months)",
+    "globalInsights": "Global Insights",
+    "globalInsightsSubtitle": "Gym-wide trends and community behavior",
+    "avgFillRate": "Avg. Fill Rate",
+    "avgFillRateSubtitle": "Overall class capacity utilization",
+    "popularTimeSlots": "Popular Time Slots",
+    "popularDays": "Popularity by Day of the Week",
+    "popularCourseTypes": "Most Popular Course Types",
+    "sessions": "sessions",
+    "attempts": "attempts",
+    "noData": "No course data available yet.",
+    "charts": {
+      "coursesCoached": "Courses Coached",
+      "sessions": "Sessions",
+      "userAttempts": "User Attempts"
+    }
   },
   "calendar": {
     "activeProgramming": "Active Programming",

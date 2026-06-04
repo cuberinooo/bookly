@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import api from '../services/api';
 
+const { t } = useI18n();
 const stats = ref<any>(null);
 const loading = ref(true);
 
@@ -31,10 +33,10 @@ function setupCharts() {
 
   // Line Chart: Monthly Stats
   lineData.value = {
-    labels: stats.value.monthlyStats.map((s: any) => s.month),
+    labels: stats.value.monthlyStats.map((s: any) => t('app.months.' + s.month.toLowerCase())),
     datasets: [
       {
-        label: 'Courses Coached',
+        label: t('statistics.charts.coursesCoached'),
         data: stats.value.monthlyStats.map((s: any) => s.count),
         fill: false,
         borderColor: primaryColor,
@@ -80,14 +82,14 @@ function setupCharts() {
     labels: stats.value.popularTimeSlots.map((s: any) => s.hour),
     datasets: [
       {
-        label: 'Sessions',
+        label: t('statistics.charts.sessions'),
         backgroundColor: '#cbd5e1', // Slate 300
         borderColor: '#cbd5e1',
         data: stats.value.popularTimeSlots.map((s: any) => s.count),
         borderRadius: 4
       },
       {
-        label: 'User Attempts',
+        label: t('statistics.charts.userAttempts'),
         backgroundColor: primaryColor,
         borderColor: primaryColor,
         data: stats.value.popularTimeSlots.map((s: any) => s.attempts),
@@ -153,7 +155,7 @@ onMounted(() => {
   <div class="statistics-page">
     <div class="flex items-center gap-4 mb-8">
       <h1 class="page-title">
-        Trainer Statistics
+        {{ t('statistics.title') }}
       </h1>
     </div>
 
@@ -177,10 +179,10 @@ onMounted(() => {
       <div class="section-header mb-6">
         <h2 class="text-2xl font-black text-slate-800 uppercase tracking-tight flex items-center gap-3">
           <i class="pi pi-user text-amber-500" />
-          Your Performance
+          {{ t('statistics.yourPerformance') }}
         </h2>
         <p class="text-slate-400 text-sm font-bold uppercase tracking-widest mt-1">
-          Personal coaching metrics and volume
+          {{ t('statistics.performanceSubtitle') }}
         </p>
       </div>
 
@@ -189,7 +191,7 @@ onMounted(() => {
           <template #title>
             <div class="flex items-center gap-2 text-slate-400 text-xs uppercase font-bold tracking-widest mb-2">
               <i class="pi pi-calendar" />
-              <span>Total Courses</span>
+              <span>{{ t('statistics.totalCourses') }}</span>
             </div>
           </template>
           <template #content>
@@ -197,7 +199,7 @@ onMounted(() => {
               {{ stats.totalCourses }}
             </div>
             <p class="text-slate-400 text-xs mt-3">
-              All-time coached sessions
+              {{ t('statistics.totalCoursesSubtitle') }}
             </p>
           </template>
         </Card>
@@ -206,7 +208,7 @@ onMounted(() => {
           <template #title>
             <div class="flex items-center gap-2 text-slate-400 text-xs uppercase font-bold tracking-widest mb-2">
               <i class="pi pi-users" />
-              <span>Unique Members</span>
+              <span>{{ t('statistics.uniqueMembers') }}</span>
             </div>
           </template>
           <template #content>
@@ -214,7 +216,7 @@ onMounted(() => {
               {{ stats.uniqueMembers }}
             </div>
             <p class="text-slate-400 text-xs mt-3">
-              Different students reached
+              {{ t('statistics.uniqueMembersSubtitle') }}
             </p>
           </template>
         </Card>
@@ -224,7 +226,7 @@ onMounted(() => {
         <Card class="chart-card overflow-hidden">
           <template #title>
             <div class="text-sm font-bold uppercase tracking-wider text-slate-600 mb-4">
-              Course Volume (12 Months)
+              {{ t('statistics.courseVolume') }}
             </div>
           </template>
           <template #content>
@@ -242,10 +244,10 @@ onMounted(() => {
       <div class="section-header mb-6">
         <h2 class="text-2xl font-black text-slate-800 uppercase tracking-tight flex items-center gap-3">
           <i class="pi pi-globe text-amber-500" />
-          Global Insights
+          {{ t('statistics.globalInsights') }}
         </h2>
         <p class="text-slate-400 text-sm font-bold uppercase tracking-widest mt-1">
-          Gym-wide trends and community behavior
+          {{ t('statistics.globalInsightsSubtitle') }}
         </p>
       </div>
 
@@ -254,7 +256,7 @@ onMounted(() => {
           <template #title>
             <div class="flex items-center gap-2 text-slate-400 text-xs uppercase font-bold tracking-widest mb-2">
               <i class="pi pi-chart-line" />
-              <span>Avg. Fill Rate</span>
+              <span>{{ t('statistics.avgFillRate') }}</span>
             </div>
           </template>
           <template #content>
@@ -265,7 +267,7 @@ onMounted(() => {
               {{ stats.averageFillRate }}%
             </div>
             <p class="text-slate-400 text-xs mt-3">
-              Overall class capacity utilization
+              {{ t('statistics.avgFillRateSubtitle') }}
             </p>
           </template>
         </Card>
@@ -273,7 +275,7 @@ onMounted(() => {
         <Card class="chart-card overflow-hidden col-span-1 md:col-span-2">
           <template #title>
             <div class="text-sm font-bold uppercase tracking-wider text-slate-600 mb-4">
-              Popular Time Slots
+              {{ t('statistics.popularTimeSlots') }}
             </div>
           </template>
           <template #content>
@@ -291,7 +293,7 @@ onMounted(() => {
         <Card class="chart-card">
           <template #title>
             <div class="text-sm font-bold uppercase tracking-wider text-slate-600 mb-6">
-              Popularity by Day of the Week
+              {{ t('statistics.popularDays') }}
             </div>
           </template>
           <template #content>
@@ -302,10 +304,10 @@ onMounted(() => {
                 class="popular-item"
               >
                 <div class="flex justify-between items-center mb-2">
-                  <span class="font-bold text-slate-800">{{ dayStat.day }}</span>
+                  <span class="font-bold text-slate-800">{{ t('app.days.' + dayStat.day.toLowerCase()) }}</span>
                   <div class="flex gap-2">
-                    <span class="text-[10px] font-black bg-slate-100 text-slate-500 px-2 py-0.5 rounded uppercase">{{ dayStat.count }} sessions</span>
-                    <span class="text-[10px] font-black bg-amber-100 text-amber-600 px-2 py-0.5 rounded uppercase">{{ dayStat.attempts }} attempts</span>
+                    <span class="text-[10px] font-black bg-slate-100 text-slate-500 px-2 py-0.5 rounded uppercase">{{ dayStat.count }} {{ t('statistics.sessions') }}</span>
+                    <span class="text-[10px] font-black bg-amber-100 text-amber-600 px-2 py-0.5 rounded uppercase">{{ dayStat.attempts }} {{ t('statistics.attempts') }}</span>
                   </div>
                 </div>
                 <div class="w-full bg-slate-100 rounded-full h-3">
@@ -319,7 +321,7 @@ onMounted(() => {
                 v-if="!stats.popularDaysOfWeek || stats.popularDaysOfWeek.length === 0"
                 class="text-center py-10 text-slate-400 italic"
               >
-                No course data available yet.
+                {{ t('statistics.noData') }}
               </div>
             </div>
           </template>
@@ -328,7 +330,7 @@ onMounted(() => {
         <Card class="chart-card">
           <template #title>
             <div class="text-sm font-bold uppercase tracking-wider text-slate-600 mb-6">
-              Most Popular Course Types
+              {{ t('statistics.popularCourseTypes') }}
             </div>
           </template>
           <template #content>
@@ -341,8 +343,8 @@ onMounted(() => {
                 <div class="flex justify-between items-center mb-2">
                   <span class="font-bold text-slate-800">{{ course.title }}</span>
                   <div class="flex gap-2">
-                    <span class="text-[10px] font-black bg-slate-100 text-slate-500 px-2 py-0.5 rounded uppercase">{{ course.count }} sessions</span>
-                    <span class="text-[10px] font-black bg-amber-100 text-amber-600 px-2 py-0.5 rounded uppercase">{{ course.attempts }} attempts</span>
+                    <span class="text-[10px] font-black bg-slate-100 text-slate-500 px-2 py-0.5 rounded uppercase">{{ course.count }} {{ t('statistics.sessions') }}</span>
+                    <span class="text-[10px] font-black bg-amber-100 text-amber-600 px-2 py-0.5 rounded uppercase">{{ course.attempts }} {{ t('statistics.attempts') }}</span>
                   </div>
                 </div>
                 <div class="w-full bg-slate-100 rounded-full h-3">
@@ -356,7 +358,7 @@ onMounted(() => {
                 v-if="stats.popularCourseTypes.length === 0"
                 class="text-center py-10 text-slate-400 italic"
               >
-                No course data available yet.
+                {{ t('statistics.noData') }}
               </div>
             </div>
           </template>

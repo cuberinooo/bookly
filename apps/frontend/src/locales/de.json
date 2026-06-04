@@ -81,6 +81,20 @@
       "friday": "Freitag",
       "saturday": "Samstag",
       "sunday": "Sonntag"
+    },
+    "months": {
+      "january": "Januar",
+      "february": "Februar",
+      "march": "März",
+      "april": "April",
+      "may": "Mai",
+      "june": "Juni",
+      "july": "Juli",
+      "august": "August",
+      "september": "September",
+      "october": "Oktober",
+      "november": "November",
+      "december": "Dezember"
     }
   },
   "home": {
@@ -677,6 +691,31 @@
     "saveNotification": "Benachrichtigung speichern",
     "hours": "Stunden",
     "minutes": "Minuten"
+  },
+  "statistics": {
+    "title": "Trainer-Statistiken",
+    "yourPerformance": "Deine Leistung",
+    "performanceSubtitle": "Persönliche Coaching-Kennzahlen und Volumen",
+    "totalCourses": "Kurse Gesamt",
+    "totalCoursesSubtitle": "Alle gecoachten Einheiten",
+    "uniqueMembers": "Einzigartige Mitglieder",
+    "uniqueMembersSubtitle": "Erreichte Athleten",
+    "courseVolume": "Kursvolumen (12 Monate)",
+    "globalInsights": "Globale Einblicke",
+    "globalInsightsSubtitle": "Community-Trends und Verhalten",
+    "avgFillRate": "Durchschn. Auslastung",
+    "avgFillRateSubtitle": "Gesamte Kapazitätsnutzung",
+    "popularTimeSlots": "Beliebte Zeitfenster",
+    "popularDays": "Beliebtheit nach Wochentag",
+    "popularCourseTypes": "Beliebteste Kursarten",
+    "sessions": "Einheiten",
+    "attempts": "Versuche",
+    "noData": "Noch keine Kursdaten verfügbar.",
+    "charts": {
+      "coursesCoached": "Gecoachte Kurse",
+      "sessions": "Einheiten",
+      "userAttempts": "Benutzer-Versuche"
+    }
   },
   "calendar": {
     "activeProgramming": "Aktive Programmierung",
