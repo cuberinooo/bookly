@@ -112,7 +112,35 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, Company
     private bool $isPublic = false;
 
     #[ORM\Column(length: 20, nullable: true)]
+    #[Groups(['user:read'])]
     private ?string $phoneNumber = null;
+
+    #[ORM\Column(options: ['default' => false])]
+    #[Groups(['user:read'])]
+    private bool $membershipWelcomeMailSent = false;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['user:read'])]
+    private ?string $emergencyContactName = null;
+
+    #[ORM\Column(length: 20, nullable: true)]
+    #[Groups(['user:read'])]
+    private ?string $emergencyContactPhone = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['user:read'])]
+    private ?string $stripeCustomerId = null;
+
+    #[ORM\Column(type: 'json', options: ['default' => '[]'])]
+    #[Groups(['user:read'])]
+    private array $onboardingState = [];
+
+    public function __construct()
+    {
+        $this->courses = new ArrayCollection();
+        $this->bookings = new ArrayCollection();
+        $this->meetups = new ArrayCollection();
+    }
 
     public function getGender(): ?\App\Enum\Gender
     {
@@ -137,12 +165,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, Company
 
         return $this;
     }
-
-    #[ORM\Column(length: 255, nullable: true)]
-    private ?string $emergencyContactName = null;
-
-    #[ORM\Column(length: 20, nullable: true)]
-    private ?string $emergencyContactPhone = null;
 
     public function getPhoneNumber(): ?string
     {
@@ -192,14 +214,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, Company
         return $this;
     }
 
-    #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(['user:read'])]
-    private ?string $stripeCustomerId = null;
-
-    #[ORM\Column(type: 'json', options: ['default' => '[]'])]
-    #[Groups(['user:read'])]
-    private array $onboardingState = [];
-
     public function getOnboardingState(): array
     {
         return $this->onboardingState;
@@ -212,10 +226,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, Company
         return $this;
     }
 
-    #[ORM\Column(options: ['default' => false])]
-    #[Groups(['user:read'])]
-    private bool $membershipWelcomeMailSent = false;
-
     public function isMembershipWelcomeMailSent(): bool
     {
         return $this->membershipWelcomeMailSent;
@@ -226,13 +236,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, Company
         $this->membershipWelcomeMailSent = $membershipWelcomeMailSent;
 
         return $this;
-    }
-
-    public function __construct()
-    {
-        $this->courses = new ArrayCollection();
-        $this->bookings = new ArrayCollection();
-        $this->meetups = new ArrayCollection();
     }
 
     public function isVerified(): ?bool

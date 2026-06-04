@@ -357,6 +357,7 @@ onMounted(fetchUsers);
                 :loading="sendingMembershipWelcome"
                 @click="sendMembershipWelcomeMail(data)"
               />
+              <Button
                 icon="pi pi-pencil"
                 variant="text"
                 rounded

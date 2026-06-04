@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue';
 import { useAuthStore } from '../store/useAuthStore';
+import { useSettingsStore } from '../store/useSettingsStore';
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
 import { useRouter, useRoute } from 'vue-router';
@@ -17,6 +18,7 @@ const confirm = useConfirm();
 const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
+const settingsStore = useSettingsStore();
 const { markTaskComplete } = useOnboarding();
 
 const isAthlete = computed(() => !authStore.isAdmin);
@@ -220,7 +222,7 @@ onMounted(() => {
           <i class="pi pi-user" />
           <span>{{ t('profile.myAccount') }}</span>
         </Tab>
-        <Tab v-if="isAthlete" value="abo" class="flex items-center gap-2">
+        <Tab v-if="isAthlete && settingsStore.paymentEnabled" value="abo" class="flex items-center gap-2">
           <i class="pi pi-credit-card" />
           <span>{{ t('profile.subscription') }}</span>
         </Tab>
@@ -303,10 +305,10 @@ onMounted(() => {
                   class="flex flex-col gap-6"
                   @submit.prevent="updateProfile"
                 >
-                  <div class="flex flex-col">
+                  <div class="field">
                     <label
                       for="profileName"
-                      class="form-label-base"
+                      class="font-bold text-sm text-slate-500 uppercase tracking-wider"
                     >{{ t('auth.fullName') }}</label>
                     <InputText
                       id="profileName"
@@ -314,10 +316,10 @@ onMounted(() => {
                     />
                   </div>
 
-                  <div class="flex flex-col">
+                  <div class="field">
                     <label
                       for="profileEmail"
-                      class="form-label-base"
+                      class="font-bold text-sm text-slate-500 uppercase tracking-wider"
                     >{{ t('auth.email') }}</label>
                     <InputText
                       id="profileEmail"
@@ -330,10 +332,10 @@ onMounted(() => {
                   </div>
 
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="flex flex-col">
+                    <div class="field">
                       <label
                         for="phoneNumber"
-                        class="form-label-base"
+                        class="font-bold text-sm text-slate-500 uppercase tracking-wider"
                       >{{ t('profile.phoneNumber') }}</label>
                       <InputText
                         id="phoneNumber"
@@ -341,14 +343,15 @@ onMounted(() => {
                         placeholder="+49 123 456789"
                       />
                     </div>
-                    <div class="flex flex-col">
-                      <label class="form-label-base">{{ t('auth.gender') }}</label>
+                    <div class="field">
+                      <label class="font-bold text-sm text-slate-500 uppercase tracking-wider">{{ t('auth.gender') }}</label>
                       <Select
                         v-model="user.gender"
                         :options="genderOptions"
                         option-label="label"
                         option-value="value"
                         :placeholder="t('auth.selectGender')"
+                        class="w-full"
                       />
                     </div>
                   </div>
@@ -372,10 +375,10 @@ onMounted(() => {
                     </h3>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-                      <div class="flex flex-col">
+                      <div class="field">
                         <label
                           for="emergencyName"
-                          class="form-label-base"
+                          class="font-bold text-sm text-slate-500 uppercase tracking-wider"
                         >{{ t('profile.emergencyContactName') }}</label>
                         <InputText
                           id="emergencyName"
@@ -383,10 +386,10 @@ onMounted(() => {
                           :placeholder="t('profile.placeholderEmergencyName')"
                         />
                       </div>
-                      <div class="flex flex-col">
+                      <div class="field">
                         <label
                           for="emergencyPhone"
-                          class="form-label-base"
+                          class="font-bold text-sm text-slate-500 uppercase tracking-wider"
                         >{{ t('profile.emergencyContactPhone') }}</label>
                         <InputText
                           id="emergencyPhone"
@@ -443,7 +446,7 @@ onMounted(() => {
           </div>
         </TabPanel>
 
-        <TabPanel v-if="isAthlete" value="abo">
+        <TabPanel v-if="isAthlete && settingsStore.paymentEnabled" value="abo">
           <UserAboTab />
         </TabPanel>
 

@@ -15,6 +15,7 @@ export const useSettingsStore = defineStore('settings', () => {
   const stripePriceMembershipId = ref('');
   const billingCycleAnchorDay = ref(0);
   const yearlyFeeEnabled = ref(true);
+  const paymentEnabled = ref(false);
   const initialized = ref(false);
 
   async function fetchSettings() {
@@ -36,6 +37,7 @@ export const useSettingsStore = defineStore('settings', () => {
       stripePriceMembershipId.value = adminResponse.data.stripePriceMembershipId || '';
       billingCycleAnchorDay.value = adminResponse.data.billingCycleAnchorDay || 0;
       yearlyFeeEnabled.value = adminResponse.data.yearlyFeeEnabled ?? true;
+      paymentEnabled.value = adminResponse.data.paymentEnabled ?? false;
     } catch (e) {
       console.error('Failed to fetch global settings', e);
     } finally {
@@ -66,6 +68,7 @@ export const useSettingsStore = defineStore('settings', () => {
     stripePriceMembershipId,
     billingCycleAnchorDay,
     yearlyFeeEnabled,
+    paymentEnabled,
     initialized,
     fetchSettings,
     reset

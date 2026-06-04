@@ -64,6 +64,10 @@
     "close": "Schließen",
     "back": "Zurück",
     "submit": "Absenden",
+    "immediate": "Sofort (keine Ausrichtung)",
+    "firstOfMonth": "1. des Monats",
+    "fifteenthOfMonth": "15. des Monats",
+    "lastOfMonth": "Letzter Tag des Monats",
     "hour": "Stunde",
     "hours": "Stunden",
     "hourShort": "Std.",
@@ -268,7 +272,7 @@
       "categoryName": "Kategoriename",
       "color": "Farbe",
       "descriptionNote": "Beschreibung / Notiz",
-      "deleteConfirm": "Bist du sicher, dass du die Kategorie '{name}' löschen möchstand?",
+      "deleteConfirm": "Bist du sicher, dass du die Kategorie '{name}' löschen möchtest?",
       "categoryAdded": "Kategorie erfolgreich hinzugefügt",
       "categoryRemoved": "Kategorie entfernt",
       "categoryUpdated": "Kategorie aktualisiert",
@@ -292,7 +296,7 @@
       "status": "Status",
       "verified": "Verifiziert",
       "mail": "Mail",
-      "actions": "Aktionen",
+      "actions": "Actions",
       "noUsersFound": "Keine Benutzer gefunden.",
       "activeStatus": "Aktiver Status",
       "editAthlete": "Athlet bearbeiten",
@@ -512,7 +516,66 @@
     "refresh": "Aktualisieren"
   },
   "profile": {
+    "title": "Mein Profil",
+    "subtitle": "Verwalte deine persönlichen Informationen und Einstellungen.",
     "myAccount": "Mein Konto",
+    "subscription": "Mitgliedschaft",
+    "subscriptionStatus": {
+        "active": "Deine Mitgliedschaft ist aktiv",
+        "cancelling": "Mitgliedschaft wird gekündigt",
+        "accessUntil": "Zugriff bis",
+        "renewsOn": "Verlängert sich am",
+        "cancelBtn": "Mitgliedschaft kündigen",
+        "manageStripe": "In Stripe verwalten"
+    },
+    "trial": {
+        "title": "Du befindest dich im Probetraining",
+        "subtitle": "Upgrade jetzt, um das volle Potenzial deines Trainings auszuschöpfen."
+    },
+    "benefits": {
+        "title": "Vorteile der Mitgliedschaft",
+        "features": {
+            "unlimited": {
+                "title": "Unbegrenzte Buchungen",
+                "desc": "Buche jeden Monat so viele Kurse, wie du möchtest."
+            },
+            "pb": {
+                "title": "Bestleistungen verfolgen",
+                "desc": "Erfasse und visualisiere deine Fortschritte über die Zeit."
+            },
+            "rankings": {
+                "title": "Community-Ranglisten",
+                "desc": "Sieh dir an, wo du auf dem Leaderboard stehst."
+            },
+            "stats": {
+                "title": "Erweiterte Statistiken",
+                "desc": "Detaillierte Analyse deiner Trainingsleistung."
+            }
+        }
+    },
+    "pricing": {
+        "title": "Voller Zugriff",
+        "subtitle": "Alles, was du für deinen Erfolg brauchst.",
+        "perMonth": "/ Monat",
+        "yearlyFee": "Jährliche Verwaltungsgebühr",
+        "yearlyFeeNote": "Wird einmal pro Jahr berechnet",
+        "monthlyMember": "Monatliche Mitgliedschaft",
+        "monthlyMemberNote": "Unbegrenzter Zugriff",
+        "upgradeBtn": "Jetzt upgraden",
+        "isMember": "Du bist ein Mitglied",
+        "securePayment": "Sichere Zahlung via Stripe. Keine versteckten Kosten. Jederzeit kündbar."
+    },
+    "actions": {
+        "loadFailed": "Abonnement-Details konnten nicht geladen werden",
+        "cancelConfirm": "Bist du sicher, dass du deine Mitgliedschaft kündigen möchtest? Du hast weiterhin Zugriff bis zum Ende deines aktuellen Abrechnungszeitraums.",
+        "cancelHeader": "Mitgliedschaft kündigen",
+        "staySubscribed": "Mitglied bleiben",
+        "cancelSuccess": "Deine Mitgliedschaft wurde gekündigt und wird nicht verlängert.",
+        "cancelFailed": "Kündigung fehlgeschlagen.",
+        "checkoutFailed": "Checkout konnte nicht initialisiert werden.",
+        "portalFailed": "Billing-Portal konnte nicht geöffnet werden."
+    },
+    "onboardingGuide": "Onboarding-Guide",
     "personalInfo": "Persönliche Informationen",
     "emailNote": "E-Mail kann nicht geändert werden",
     "phoneNumber": "Deine Telefonnummer",
@@ -523,9 +586,6 @@
     "updateSuccess": "Profil erfolgreich aktualisiert",
     "updateError": "Fehler beim Aktualisieren des Profils",
     "avatarUpdated": "Profilbild aktualisiert",
-    "title": "Mein Profil",
-    "subtitle": "Verwalte deine persönlichen Informationen und Einstellungen.",
-    "onboardingGuide": "Onboarding-Guide",
     "changePicture": "Bild ändern",
     "publicProfile": "Öffentliches Profil",
     "publicProfileNote": "Wenn aktiviert, sind deine Statistiken und PBs für andere Mitglieder sichtbar.",
@@ -620,6 +680,38 @@
       "password": "Passwort",
       "encryption": "Verschlüsselung"
     },
+    "stripe": {
+      "title": "Stripe-Integration",
+      "subtitle": "Konfiguriere deine Zahlungsabwicklung, Mitgliedsbeiträge und Abrechnungszyklen.",
+      "connectTitle": "Mit Stripe verbinden",
+      "connectDesc": "Richte Zahlungen über Stripe ein, um Mitgliedsbeiträge und Gebühren einfach von deinen Athleten einzuziehen.",
+      "connectBtn": "Zahlungen über Stripe einrichten",
+      "connected": "Stripe-Konto erfolgreich verbunden!",
+      "dashboardBtn": "Stripe-Dashboard",
+      "enablePayments": "Globale Zahlungen aktivieren",
+      "enablePaymentsNote": "Schalte alle Zahlungsfunktionen (Abonnements, Gebühren) systemweit ein oder aus.",
+      "active": "Aktiv",
+      "disabled": "Deaktiviert",
+      "paymentDisabledWarning": "Wenn deaktiviert, werden Mitglieder nicht zum Abonnieren aufgefordert und die Abonnement-Benutzeroberfläche wird in ihren Profilen ausgeblendet. Bestehende Testlimits gelten weiterhin, sofern sie nicht manuell von einem Admin aktualisiert werden.",
+      "pricing": "Mitgliedschaftspreise",
+      "yearlyFee": "Jährliche Verwaltungsgebühr (€)",
+      "yearlyFeeNote": "Wiederkehrende jährliche Gebühr, die bei der Registrierung und alle 12 Monate erhoben wird.",
+      "monthlyFee": "Monatliche Mitgliedschaft (€)",
+      "monthlyFeeNote": "Standardmäßige monatliche Abonnementgebühr für alle Mitglieder.",
+      "billingSchedule": "Abrechnungsplan",
+      "billingAlignment": "Monatliche Abrechnungsausrichtung",
+      "billingAlignmentNote": "Wähle einen bestimmten Tag im Monat für alle Mitgliederabonnements. Neue Mitglieder werden anteilig bis zu diesem Tag abgerechnet.",
+      "selectBillingDay": "Abrechnungstag wählen",
+      "saveBtn": "Einstellungen speichern & synchronisieren",
+      "saveSuccess": "Einstellungen gespeichert und mit Stripe synchronisiert",
+      "saveFailed": "Fehler beim Speichern der Einstellungen.",
+      "copyAccount": "Account-ID kopieren",
+      "copyAccountSuccess": "Account-ID in Zwischenablage kopiert",
+      "onboardFailed": "Stripe-Onboarding konnte nicht gestartet werden.",
+      "priceCreated": "Preis in Stripe erstellt",
+      "priceWillBeCreated": "Preis wird beim Speichern erstellt",
+      "refreshPrices": "Preise von Stripe aktualisieren"
+    },
     "memberPrivacyTitle": "Privatsphäre der Mitglieder",
     "memberPrivacyNote": "Deine Privatsphäre wird von den Kurstrainern verwaltet. Du kannst deine persönlichen Profilinformationen im Bereich Profil aktualisieren.",
     "goToProfile": "Zum Profil",
@@ -678,7 +770,7 @@
     "showNames": "Teilnehmernamen anzeigen",
     "showNamesNote": "Vollständige Namen in der öffentlichen Teilnehmerliste anzeigen.",
     "waitlistControl": "Wartelisten-Steuerung",
-    "showWaitlist": "Warteliste anzeigen",
+    "showWaitlist": "Show Waitlist",
     "showWaitlistNote": "Aktuelle Warteschlange und Position für andere Mitglieder anzeigen.",
     "bookingRestriction": "Buchungsbeschränkung",
     "memberWindow": "Buchungsfenster für Mitglieder",
@@ -775,5 +867,33 @@
     "marketingDesc": "Verwendet für maßgeschneiderte Inhalte und Werbung.",
     "savePreferences": "Einstellungen speichern",
     "declineAll": "Alle ablehnen"
+  },
+  "payments": {
+    "title": "Zahlungs- & Abrechnungs-Dashboard",
+    "subtitle": "Verwalte Abonnements, Abrechnungszyklen und Stripe-Integration",
+    "tabs": {
+        "config": "KONFIGURATION",
+        "subscribers": "ABONNENTEN",
+        "analytics": "ANALYSE"
+    },
+    "activeSubscriptions": "Aktive Abonnements",
+    "fetchFailed": "Abonnements konnten nicht geladen werden",
+    "missingAccountId": "Fehlende Account-ID",
+    "missingAccountIdNote": "Stripe Account-ID ist nicht konfiguriert.",
+    "customer": "Kunde",
+    "mappedAthlete": "Zugeordneter Athlet",
+    "activePlans": "Aktive Pläne",
+    "status": "Status",
+    "lastPayments": "Letzte Zahlungen",
+    "nextRenewal": "Nächste Verlängerung",
+    "actions": "Aktionen",
+    "manage": "Verwalten",
+    "noSubscriptionsFound": "Keine aktiven Abonnements in Stripe gefunden.",
+    "unmapped": "Nicht zugeordnet",
+    "cancellingAtPeriodEnd": "Kündigung zum Periodenende",
+    "noPaymentYet": "Noch keine Zahlung",
+    "totalSubscribers": "Abonnenten Gesamt",
+    "estimatedMrr": "Geschätzter MRR",
+    "failedPayments": "Fehlgeschlagene Zahlungen"
   }
 }

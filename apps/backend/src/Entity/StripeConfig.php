@@ -49,12 +49,48 @@ class StripeConfig
     private ?string $stripePriceMembershipId = null;
 
     #[ORM\Column(nullable: true)]
+    #[Groups(['admin:read'])]
+    private ?int $monthlyFeeAmount = null;
+
+    #[ORM\Column(nullable: true)]
+    #[Groups(['admin:read'])]
+    private ?int $setupFeeAmount = null;
+
+    #[ORM\Column(nullable: true)]
     #[Groups(['company:read', 'admin:read', 'admin:write'])]
     private ?int $billingCycleAnchorDay = null;
+
+    public function getMonthlyFeeAmount(): ?int
+    {
+        return $this->monthlyFeeAmount;
+    }
+
+    public function setMonthlyFeeAmount(?int $monthlyFeeAmount): static
+    {
+        $this->monthlyFeeAmount = $monthlyFeeAmount;
+
+        return $this;
+    }
+
+    public function getSetupFeeAmount(): ?int
+    {
+        return $this->setupFeeAmount;
+    }
+
+    public function setSetupFeeAmount(?int $setupFeeAmount): static
+    {
+        $this->setupFeeAmount = $setupFeeAmount;
+
+        return $this;
+    }
 
     #[ORM\Column(options: ['default' => true])]
     #[Groups(['company:read', 'admin:read', 'admin:write'])]
     private bool $yearlyFeeEnabled = true;
+
+    #[ORM\Column(options: ['default' => false])]
+    #[Groups(['company:read', 'admin:read', 'admin:write'])]
+    private bool $paymentEnabled = false;
 
     public function getId(): ?int
     {
@@ -69,6 +105,18 @@ class StripeConfig
     public function setCompany(?Company $company): static
     {
         $this->company = $company;
+
+        return $this;
+    }
+
+    public function isPaymentEnabled(): bool
+    {
+        return $this->paymentEnabled;
+    }
+
+    public function setPaymentEnabled(bool $paymentEnabled): static
+    {
+        $this->paymentEnabled = $paymentEnabled;
 
         return $this;
     }

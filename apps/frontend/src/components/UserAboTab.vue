@@ -4,7 +4,9 @@ import api from '../services/api';
 import { useAuthStore } from '../store/useAuthStore';
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n();
 const authStore = useAuthStore();
 const toast = useToast();
 const confirm = useConfirm();
@@ -26,7 +28,7 @@ const fetchAboData = async () => {
         prices.value = priceRes.data;
     } catch (error) {
         console.error('Failed to fetch abo data', error);
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Could not load subscription details', life: 3000 });
+        toast.add({ severity: 'error', summary: t('app.error'), detail: t('profile.actions.loadFailed'), life: 3000 });
     } finally {
         isLoading.value = false;
     }
@@ -34,12 +36,12 @@ const fetchAboData = async () => {
 
 const confirmCancellation = () => {
     confirm.require({
-        message: 'Are you sure you want to cancel your subscription? You will still have access until the end of your current billing period.',
-        header: 'Cancel Subscription',
+        message: t('profile.actions.cancelConfirm'),
+        header: t('profile.actions.cancelHeader'),
         icon: 'pi pi-exclamation-triangle',
         acceptClass: 'p-button-danger',
         rejectProps: {
-          label: 'Stay Subscribed',
+          label: t('profile.actions.staySubscribed'),
           severity: 'secondary',
           text: true
         },
@@ -53,10 +55,10 @@ const cancelSubscription = async () => {
     isCancelling.value = true;
     try {
         await api.delete('/stripe/my-subscription');
-        toast.add({ severity: 'success', summary: 'Cancelled', detail: 'Your subscription has been cancelled and will not renew.', life: 5000 });
+        toast.add({ severity: 'success', summary: t('app.success'), detail: t('profile.actions.cancelSuccess'), life: 5000 });
         await fetchAboData();
     } catch (e: any) {
-        toast.add({ severity: 'error', summary: 'Error', detail: e.response?.data?.error || 'Failed to cancel subscription.', life: 3000 });
+        toast.add({ severity: 'error', summary: t('app.error'), detail: e.response?.data?.error || t('profile.actions.cancelFailed'), life: 3000 });
     } finally {
         isCancelling.value = false;
     }
@@ -68,7 +70,7 @@ const upgrade = async () => {
         const response = await api.post('/stripe/checkout');
         window.location.href = response.data.url;
     } catch (e: any) {
-        toast.add({ severity: 'error', summary: 'Error', detail: e.response?.data?.error || 'Failed to initialize checkout.', life: 3000 });
+        toast.add({ severity: 'error', summary: t('app.error'), detail: e.response?.data?.error || t('profile.actions.checkoutFailed'), life: 3000 });
     } finally {
         isUpgrading.value = false;
     }
@@ -80,7 +82,7 @@ const manageSubscription = async () => {
         const response = await api.post('/stripe/portal-session');
         window.location.href = response.data.url;
     } catch (e: any) {
-        toast.add({ severity: 'error', summary: 'Error', detail: e.response?.data?.error || 'Failed to open billing portal.', life: 3000 });
+        toast.add({ severity: 'error', summary: t('app.error'), detail: e.response?.data?.error || t('profile.actions.portalFailed'), life: 3000 });
     } finally {
         isUpgrading.value = false;
     }
@@ -103,12 +105,12 @@ const formatDate = (timestamp: number) => {
     return new Date(timestamp * 1000).toLocaleDateString();
 };
 
-const features = [
-    { title: 'Unlimited Bookings', desc: 'Book as many courses as you want every month.' },
-    { title: 'Personal Best Tracking', desc: 'Record and visualize your progress over time.' },
-    { title: 'Community Rankings', desc: 'See where you stand on the leaderboard.' },
-    { title: 'Advanced Statistics', desc: 'Detailed analysis of your training performance.' },
-];
+const features = computed(() => [
+    { title: t('profile.benefits.features.unlimited.title'), desc: t('profile.benefits.features.unlimited.desc') },
+    { title: t('profile.benefits.features.pb.title'), desc: t('profile.benefits.features.pb.desc') },
+    { title: t('profile.benefits.features.rankings.title'), desc: t('profile.benefits.features.rankings.desc') },
+    { title: t('profile.benefits.features.stats.title'), desc: t('profile.benefits.features.stats.desc') },
+]);
 
 onMounted(fetchAboData);
 </script>
@@ -133,12 +135,12 @@ onMounted(fetchAboData);
             </div>
             <div>
               <h3 class="text-xl font-black uppercase tracking-tight text-slate-900">
-                {{ subscription.cancel_at_period_end ? 'Subscription Cancelling' : 'Your Subscription is Active' }}
+                {{ subscription.cancel_at_period_end ? t('profile.subscriptionStatus.cancelling') : t('profile.subscriptionStatus.active') }}
               </h3>
               <div class="flex items-center gap-2 mt-1">
                 <Tag :value="subscription.display_status.toUpperCase()" :severity="getStatusSeverity(subscription.display_status)" />
                 <span class="text-sm text-slate-500 font-medium">
-                  {{ subscription.cancel_at_period_end ? 'Access until' : 'Renews on' }} {{ formatDate(subscription.current_period_end) }}
+                  {{ subscription.cancel_at_period_end ? t('profile.subscriptionStatus.accessUntil') : t('profile.subscriptionStatus.renewsOn') }} {{ formatDate(subscription.current_period_end) }}
                 </span>
               </div>
             </div>
@@ -146,7 +148,7 @@ onMounted(fetchAboData);
           <div class="flex items-center gap-3">
              <Button
                 v-if="!subscription.cancel_at_period_end && (subscription.status === 'active' || subscription.status === 'trialing')"
-                label="Cancel Subscription"
+                :label="t('profile.subscriptionStatus.cancelBtn')"
                 icon="pi pi-times-circle"
                 severity="danger"
                 text
@@ -155,7 +157,7 @@ onMounted(fetchAboData);
                 @click="confirmCancellation"
              />
              <Button
-                label="Manage in Stripe"
+                :label="t('profile.subscriptionStatus.manageStripe')"
                 icon="pi pi-external-link"
                 severity="secondary"
                 outlined
@@ -173,8 +175,8 @@ onMounted(fetchAboData);
             <i class="pi pi-bolt text-2xl" />
           </div>
           <div>
-            <h3 class="text-xl font-black uppercase tracking-tight text-slate-900">You are on a Trial Period</h3>
-            <p class="text-sm text-slate-600 font-medium mt-1">Upgrade now to unlock the full potential of your training.</p>
+            <h3 class="text-xl font-black uppercase tracking-tight text-slate-900">{{ t('profile.trial.title') }}</h3>
+            <p class="text-sm text-slate-600 font-medium mt-1">{{ t('profile.trial.subtitle') }}</p>
           </div>
         </div>
       </div>
@@ -185,7 +187,7 @@ onMounted(fetchAboData);
         <div class="phoenix-card p-6 md:p-8 flex flex-col">
           <h3 class="text-lg font-black uppercase tracking-widest text-slate-900 mb-6 flex items-center gap-2">
             <i class="pi pi-star-fill text-amber-500" />
-            Membership Benefits
+            {{ t('profile.benefits.title') }}
           </h3>
           <ul class="space-y-6 flex-1">
             <li v-for="feature in features" :key="feature.title" class="flex gap-4">
@@ -202,31 +204,27 @@ onMounted(fetchAboData);
 
         <!-- Pricing Card -->
         <div class="phoenix-card p-6 md:p-8 border-2 border-slate-900 flex flex-col relative overflow-hidden">
-          <div class="absolute top-4 right-4 rotate-12 bg-amber-400 text-slate-900 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest shadow-sm">
-            Most Popular
-          </div>
-
-          <h3 class="text-lg font-black uppercase tracking-widest text-slate-900 mb-2">Full Access</h3>
-          <p class="text-xs text-slate-500 mb-6 font-medium">Everything you need to succeed.</p>
+          <h3 class="text-lg font-black uppercase tracking-widest text-slate-900 mb-2">{{ t('profile.pricing.title') }}</h3>
+          <p class="text-xs text-slate-500 mb-6 font-medium">{{ t('profile.pricing.subtitle') }}</p>
 
           <div class="flex items-baseline gap-1 mb-8">
             <span class="text-4xl font-black text-slate-900">{{ prices?.monthlyFee?.toFixed(2) }}€</span>
-            <span class="text-slate-500 font-bold">/ month</span>
+            <span class="text-slate-500 font-bold">{{ t('profile.pricing.perMonth') }}</span>
           </div>
 
           <div class="space-y-4 mb-8">
             <div v-if="prices?.yearlyFeeEnabled && prices?.setupFee" class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-200">
               <div class="flex flex-col">
-                <span class="text-xs font-bold text-slate-900">Yearly Admin Fee</span>
-                <span class="text-[10px] text-slate-500">Charged once per year</span>
+                <span class="text-xs font-bold text-slate-900">{{ t('profile.pricing.yearlyFee') }}</span>
+                <span class="text-[10px] text-slate-500">{{ t('profile.pricing.yearlyFeeNote') }}</span>
               </div>
               <span class="font-black text-slate-900">{{ prices.setupFee.toFixed(2) }}€</span>
             </div>
 
             <div class="flex items-center justify-between p-3 bg-blue-50/50 rounded-xl border border-blue-100">
               <div class="flex flex-col">
-                <span class="text-xs font-bold text-blue-900">Monthly Membership</span>
-                <span class="text-[10px] text-blue-600">Unlimited access</span>
+                <span class="text-xs font-bold text-blue-900">{{ t('profile.pricing.monthlyMember') }}</span>
+                <span class="text-[10px] text-blue-600">{{ t('profile.pricing.monthlyMemberNote') }}</span>
               </div>
               <span class="font-black text-blue-900">{{ prices?.monthlyFee?.toFixed(2) }}€</span>
             </div>
@@ -235,7 +233,7 @@ onMounted(fetchAboData);
           <div class="mt-auto">
              <Button
                 v-if="subscription?.status !== 'active'"
-                label="Upgrade Now"
+                :label="t('profile.pricing.upgradeBtn')"
                 icon="pi pi-bolt"
                 class="w-full upgrade-btn py-4"
                 :loading="isUpgrading"
@@ -243,14 +241,14 @@ onMounted(fetchAboData);
               />
               <Button
                 v-else
-                label="You are a Member"
+                :label="t('profile.pricing.isMember')"
                 icon="pi pi-verified"
                 class="w-full py-4"
                 disabled
                 severity="primary"
               />
               <p class="text-[10px] text-center text-slate-400 mt-4 leading-relaxed">
-                Secure payment via Stripe. No hidden costs. Cancel anytime.
+                {{ t('profile.pricing.securePayment') }}
               </p>
           </div>
         </div>

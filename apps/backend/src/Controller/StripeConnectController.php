@@ -16,6 +16,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
@@ -348,39 +349,51 @@ class StripeConnectController extends AbstractController
     {
         /** @var User $user */
         $user = $this->getUser();
+        if (!$user) {
+            return new JsonResponse(['error' => 'Not authenticated'], 401);
+        }
+
         $company = $user->getCompany();
 
         if (!$company || !$company->getStripeConfig()->getStripeAccountId()) {
             return new JsonResponse(['error' => 'No stripe account associated'], 400);
         }
 
-        $stripeAccountHeader = ['stripe_account' => $company->getStripeConfig()->getStripeAccountId()];
-        $setupFeeId = $company->getStripeConfig()->getStripePriceSetupFeeId();
-        $membershipId = $company->getStripeConfig()->getStripePriceMembershipId();
+        $stripeConfig = $company->getStripeConfig();
+        $stripeAccountHeader = ['stripe_account' => $stripeConfig->getStripeAccountId()];
+        $setupFeeId = $stripeConfig->getStripePriceSetupFeeId();
+        $membershipId = $stripeConfig->getStripePriceMembershipId();
 
         $data = [
-            'setupFee' => null,
-            'monthlyFee' => null,
-            'yearlyFeeEnabled' => $company->getStripeConfig()->isYearlyFeeEnabled(),
-            'billingCycleAnchorDay' => $company->getStripeConfig()->getBillingCycleAnchorDay(),
+            'setupFee' => $stripeConfig->getSetupFeeAmount() ? $stripeConfig->getSetupFeeAmount() / 100 : null,
+            'monthlyFee' => $stripeConfig->getMonthlyFeeAmount() ? $stripeConfig->getMonthlyFeeAmount() / 100 : null,
+            'yearlyFeeEnabled' => $stripeConfig->isYearlyFeeEnabled(),
+            'paymentEnabled' => $stripeConfig->isPaymentEnabled(),
+            'billingCycleAnchorDay' => $stripeConfig->getBillingCycleAnchorDay(),
         ];
 
-        if ($setupFeeId) {
+        // Fallback: If local amounts are missing but we have IDs, fetch from Stripe and update local records
+        $needsFlush = false;
+        if ($setupFeeId && $data['setupFee'] === null) {
             try {
                 $price = Price::retrieve($setupFeeId, $stripeAccountHeader);
+                $stripeConfig->setSetupFeeAmount($price->unit_amount);
                 $data['setupFee'] = $price->unit_amount / 100;
-            } catch (\Exception $e) {
-                // Price might have been deleted in Stripe
-            }
+                $needsFlush = true;
+            } catch (\Exception $e) {}
         }
 
-        if ($membershipId) {
+        if ($membershipId && $data['monthlyFee'] === null) {
             try {
                 $price = Price::retrieve($membershipId, $stripeAccountHeader);
+                $stripeConfig->setMonthlyFeeAmount($price->unit_amount);
                 $data['monthlyFee'] = $price->unit_amount / 100;
-            } catch (\Exception $e) {
-                // Price might have been deleted in Stripe
-            }
+                $needsFlush = true;
+            } catch (\Exception $e) {}
+        }
+
+        if ($needsFlush) {
+            $this->em->flush();
         }
 
         return new JsonResponse($data);
@@ -393,8 +406,9 @@ class StripeConnectController extends AbstractController
         /** @var User $user */
         $user = $this->getUser();
         $company = $user->getCompany();
+        $stripeConfig = $company->getStripeConfig();
 
-        if (!$company || !$company->getStripeConfig()->getStripeAccountId()) {
+        if (!$company || !$stripeConfig->getStripeAccountId()) {
             return new JsonResponse(['error' => 'No stripe account associated'], 400);
         }
 
@@ -406,39 +420,64 @@ class StripeConnectController extends AbstractController
             return new JsonResponse(['error' => 'Invalid monthly fee amount'], 400);
         }
 
-        $stripeAccountHeader = ['stripe_account' => $company->getStripeConfig()->getStripeAccountId()];
+        $stripeAccountHeader = ['stripe_account' => $stripeConfig->getStripeAccountId()];
 
-        // Update company billing preferences
+        // 1. Handle Payment Enabled Toggle & Validation
+        if (isset($data['paymentEnabled'])) {
+            $newValue = (bool)$data['paymentEnabled'];
+            $oldValue = $stripeConfig->isPaymentEnabled();
+
+            if ($oldValue && !$newValue) {
+                // Check for ANY active/trialing/past_due subscriptions in Stripe before allowing disable
+                $subscriptions = \Stripe\Subscription::all([
+                    'status' => 'all',
+                    'limit' => 10,
+                ], $stripeAccountHeader);
+
+                $activeCount = 0;
+                foreach ($subscriptions->data as $sub) {
+                    if (!in_array($sub->status, ['canceled', 'incomplete_expired'], true)) {
+                        $activeCount++;
+                    }
+                }
+
+                if ($activeCount > 0) {
+                    return new JsonResponse(['error' => 'Cannot disable payments while active or pending subscriptions exist.'], Response::HTTP_BAD_REQUEST);
+                }
+            }
+            $stripeConfig->setPaymentEnabled($newValue);
+        }
+
+        // 2. Update company billing preferences
         if (isset($data['yearlyFeeEnabled'])) {
-            $company->getStripeConfig()->setYearlyFeeEnabled((bool)$data['yearlyFeeEnabled']);
+            $stripeConfig->setYearlyFeeEnabled((bool)$data['yearlyFeeEnabled']);
         }
         if (isset($data['billingCycleAnchorDay'])) {
-            $company->getStripeConfig()->setBillingCycleAnchorDay($data['billingCycleAnchorDay'] === 0 ? null : (int)$data['billingCycleAnchorDay']);
+            $stripeConfig->setBillingCycleAnchorDay($data['billingCycleAnchorDay'] === 0 ? null : (int)$data['billingCycleAnchorDay']);
         }
 
-        // 1. Manage Membership Product & Price
-        $membershipProductId = $company->getStripeConfig()->getStripeProductMembershipId();
+        // 3. Manage Membership Product & Price
+        $membershipProductId = $stripeConfig->getStripeProductMembershipId();
         if (!$membershipProductId) {
             $membershipProduct = Product::create([
                 'name' => 'Monatliche Mitgliedschaft',
                 'type' => 'service',
             ], $stripeAccountHeader);
             $membershipProductId = $membershipProduct->id;
-            $company->getStripeConfig()->setStripeProductMembershipId($membershipProductId);
+            $stripeConfig->setStripeProductMembershipId($membershipProductId);
         }
 
-        $currentMembershipPriceId = $company->getStripeConfig()->getStripePriceMembershipId();
-        $needsNewMembershipPrice = true;
+        $currentMembershipPriceId = $stripeConfig->getStripePriceMembershipId();
+        $localMonthlyAmount = $stripeConfig->getMonthlyFeeAmount();
+
+        $needsNewMembershipPrice = false;
         $membershipPriceChanged = false;
-        if ($currentMembershipPriceId) {
-            try {
-                $currentPrice = Price::retrieve($currentMembershipPriceId, $stripeAccountHeader);
-                if ($currentPrice->unit_amount === $monthlyFeeAmount) {
-                    $needsNewMembershipPrice = false;
-                } else {
-                    $membershipPriceChanged = true;
-                }
-            } catch (\Exception $e) {}
+
+        if (!$currentMembershipPriceId || $localMonthlyAmount !== $monthlyFeeAmount) {
+            $needsNewMembershipPrice = true;
+            if ($currentMembershipPriceId) {
+                $membershipPriceChanged = true;
+            }
         }
 
         if ($needsNewMembershipPrice) {
@@ -448,7 +487,8 @@ class StripeConnectController extends AbstractController
                 'currency' => 'eur',
                 'recurring' => ['interval' => 'month'],
             ], $stripeAccountHeader);
-            $company->getStripeConfig()->setStripePriceMembershipId($membershipPrice->id);
+            $stripeConfig->setStripePriceMembershipId($membershipPrice->id);
+            $stripeConfig->setMonthlyFeeAmount($monthlyFeeAmount);
 
             // IF PRICE CHANGED: Update existing subscribers
             if ($membershipPriceChanged) {
@@ -481,57 +521,44 @@ class StripeConnectController extends AbstractController
             }
         }
 
-        // 2. Manage Yearly Admin Fee Product & Prices
+        // 4. Manage Yearly Admin Fee Product & Prices
         if ($setupFeeAmount > 0) {
-            $yearlyFeeProductId = $company->getStripeProductSetupFeeId();
+            $yearlyFeeProductId = $stripeConfig->getStripeProductSetupFeeId();
             if (!$yearlyFeeProductId) {
                 $yearlyFeeProduct = Product::create([
                     'name' => 'Jährliche Verwaltungsgebühr',
                     'type' => 'service',
                 ], $stripeAccountHeader);
                 $yearlyFeeProductId = $yearlyFeeProduct->id;
-                $company->setStripeProductSetupFeeId($yearlyFeeProductId);
+                $stripeConfig->setStripeProductSetupFeeId($yearlyFeeProductId);
             }
 
-            // A. One-Time Price (initial checkout)
-            $currentOneTimeId = $company->getStripeConfig()->getStripePriceSetupFeeId();
-            $needsNewOneTime = true;
-            if ($currentOneTimeId) {
-                try {
-                    $p = Price::retrieve($currentOneTimeId, $stripeAccountHeader);
-                    if ($p->unit_amount === $setupFeeAmount) $needsNewOneTime = false;
-                } catch (\Exception $e) {}
-            }
-            if ($needsNewOneTime) {
+            $currentOneTimeId = $stripeConfig->getStripePriceSetupFeeId();
+            $localSetupAmount = $stripeConfig->getSetupFeeAmount();
+
+            if (!$currentOneTimeId || $localSetupAmount !== $setupFeeAmount) {
+                // A. One-Time Price (initial checkout)
                 $p = Price::create(['product' => $yearlyFeeProductId, 'unit_amount' => $setupFeeAmount, 'currency' => 'eur'], $stripeAccountHeader);
-                $company->setStripePriceSetupFeeId($p->id);
-            }
+                $stripeConfig->setStripePriceSetupFeeId($p->id);
 
-            // B. Recurring Price (renewals)
-            $currentRecurringId = $company->getStripePriceYearlyRecurringId();
-            $needsNewRecurring = true;
-            if ($currentRecurringId) {
-                try {
-                    $p = Price::retrieve($currentRecurringId, $stripeAccountHeader);
-                    if ($p->unit_amount === $setupFeeAmount) $needsNewRecurring = false;
-                } catch (\Exception $e) {}
-            }
-            if ($needsNewRecurring) {
-                $p = Price::create([
+                // B. Recurring Price (renewals)
+                $pRec = Price::create([
                     'product' => $yearlyFeeProductId,
                     'unit_amount' => $setupFeeAmount,
                     'currency' => 'eur',
                     'recurring' => ['interval' => 'year']
                 ], $stripeAccountHeader);
-                $company->setStripePriceYearlyRecurringId($p->id);
+                $stripeConfig->setStripePriceYearlyRecurringId($pRec->id);
+
+                $stripeConfig->setSetupFeeAmount($setupFeeAmount);
             }
         }
 
         $this->em->flush();
 
         return new JsonResponse([
-            'setupFeePriceId' => $company->getStripeConfig()->getStripePriceSetupFeeId(),
-            'monthlyFeePriceId' => $company->getStripeConfig()->getStripePriceMembershipId(),
+            'setupFeePriceId' => $stripeConfig->getStripePriceSetupFeeId(),
+            'monthlyFeePriceId' => $stripeConfig->getStripePriceMembershipId(),
         ]);
     }
     #[Route('/checkout', name: 'stripe_checkout', methods: ['POST'])]

@@ -14,16 +14,16 @@ final class Version20260604130000 extends AbstractMigration
 {
     public function getDescription(): string
     {
-        return 'Add membership_welcome_mail_sent to user table.';
+        return 'Rename join_us_mail_sent to membership_welcome_mail_sent.';
     }
 
     public function up(Schema $schema): void
     {
-        $this->addSql('ALTER TABLE "user" ADD membership_welcome_mail_sent BOOLEAN DEFAULT false NOT NULL');
+        $this->addSql('ALTER TABLE "user" RENAME COLUMN join_us_mail_sent TO membership_welcome_mail_sent');
     }
 
     public function down(Schema $schema): void
     {
-        $this->addSql('ALTER TABLE "user" DROP membership_welcome_mail_sent');
+        $this->addSql('ALTER TABLE "user" RENAME COLUMN membership_welcome_mail_sent TO join_us_mail_sent');
     }
 }

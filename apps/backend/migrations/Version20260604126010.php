@@ -10,7 +10,7 @@ use Doctrine\Migrations\AbstractMigration;
 /**
  * Auto-generated Migration: Please modify to your needs!
  */
-final class Version20260522115209 extends AbstractMigration
+final class Version20260604126010 extends AbstractMigration
 {
     public function getDescription(): string
     {
@@ -24,7 +24,6 @@ final class Version20260522115209 extends AbstractMigration
         $this->addSql('ALTER TABLE company ADD stripe_onboarding_complete BOOLEAN DEFAULT NULL');
         $this->addSql('ALTER TABLE company ADD stripe_price_setup_fee_id VARCHAR(255) DEFAULT NULL');
         $this->addSql('ALTER TABLE company ADD stripe_price_membership_id VARCHAR(255) DEFAULT NULL');
-        $this->addSql('ALTER TABLE "user" ADD membership_status VARCHAR(255) DEFAULT \'trial\' NOT NULL');
         $this->addSql('ALTER TABLE "user" ADD stripe_customer_id VARCHAR(255) DEFAULT NULL');
     }
 
@@ -35,7 +34,6 @@ final class Version20260522115209 extends AbstractMigration
         $this->addSql('ALTER TABLE company DROP stripe_onboarding_complete');
         $this->addSql('ALTER TABLE company DROP stripe_price_setup_fee_id');
         $this->addSql('ALTER TABLE company DROP stripe_price_membership_id');
-        $this->addSql('ALTER TABLE "user" DROP membership_status');
         $this->addSql('ALTER TABLE "user" DROP stripe_customer_id');
     }
 }

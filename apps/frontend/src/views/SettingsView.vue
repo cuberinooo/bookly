@@ -15,7 +15,6 @@ const authStore = useAuthStore();
 const activeTabs = computed(() => {
     const tabs = [];
     if (authStore.isAdmin) {
-        tabs.push({ id: 'users', label: t('settings.tabs.athletes'), component: UserManagementTab });
         tabs.push({ id: 'company', label: t('settings.tabs.identity'), component: CompanySettingsForm });
         tabs.push({ id: 'mail', label: t('settings.tabs.emailTemplates'), component: MailSettingsTab });
         tabs.push({ id: 'smtp', label: t('settings.tabs.smtp'), component: SmtpSettingsTab });

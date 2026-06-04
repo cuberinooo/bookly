@@ -10,7 +10,7 @@ use Doctrine\Migrations\AbstractMigration;
 /**
  * Auto-generated Migration: Please modify to your needs!
  */
-final class Version20260528053624 extends AbstractMigration
+final class Version20260604126050 extends AbstractMigration
 {
     public function getDescription(): string
     {
@@ -24,9 +24,9 @@ final class Version20260528053624 extends AbstractMigration
         $this->addSql('ALTER TABLE company ADD stripe_config_id INT DEFAULT NULL');
 
         // Data migration: Move existing data from company to stripe_config
-        $this->addSql('INSERT INTO stripe_config (stripe_account_id, stripe_onboarding_complete, stripe_price_setup_fee_id, stripe_price_membership_id, billing_cycle_anchor_day, yearly_fee_enabled, stripe_price_yearly_recurring_id, stripe_product_setup_fee_id, stripe_product_membership_id) 
+        $this->addSql('INSERT INTO stripe_config (stripe_account_id, stripe_onboarding_complete, stripe_price_setup_fee_id, stripe_price_membership_id, billing_cycle_anchor_day, yearly_fee_enabled, stripe_price_yearly_recurring_id, stripe_product_setup_fee_id, stripe_product_membership_id)
                        SELECT stripe_account_id, stripe_onboarding_complete, stripe_price_setup_fee_id, stripe_price_membership_id, billing_cycle_anchor_day, yearly_fee_enabled, stripe_price_yearly_recurring_id, stripe_product_setup_fee_id, stripe_product_membership_id FROM company');
-        
+
         $this->addSql('UPDATE company SET stripe_config_id = (SELECT id FROM stripe_config sc WHERE sc.stripe_account_id = company.stripe_account_id OR (sc.stripe_account_id IS NULL AND company.stripe_account_id IS NULL) LIMIT 1)');
 
         // Make stripe_config_id NOT NULL after data migration

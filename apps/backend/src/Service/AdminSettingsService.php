@@ -63,6 +63,10 @@ class AdminSettingsService
             $company->getStripeConfig()->setYearlyFeeEnabled((bool)$data['yearlyFeeEnabled']);
         }
 
+        if (array_key_exists('paymentEnabled', $data)) {
+            $company->getStripeConfig()->setPaymentEnabled((bool)$data['paymentEnabled']);
+        }
+
         $this->entityManager->flush();
 
         return $settings;
