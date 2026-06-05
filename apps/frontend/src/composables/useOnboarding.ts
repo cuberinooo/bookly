@@ -1,48 +1,79 @@
 import { ref, computed, watch } from 'vue';
 import { useAuthStore } from '../store/useAuthStore';
+import { useCourseStore } from '../store/useCourseStore';
 import { useRouter, useRoute } from 'vue-router';
 import api from '../services/api';
 
 export const ONBOARDING_TASKS = {
+  // Athlete tasks
   PROFILE_UPDATE: 'profile_update',
   FIRST_BOOKING: 'first_booking',
   EXPLORE_MEETUPS: 'explore_meetups',
   PERSONAL_BESTS: 'personal_bests',
   LEADERBOARD: 'leaderboard',
+  // Admin tasks
+  ADMIN_SETTINGS: 'admin_settings',
+  ADMIN_PAYMENTS: 'admin_payments',
+  ADMIN_USERS: 'admin_users',
+  ADMIN_COURSES: 'admin_courses'
 } as const;
 
 export type OnboardingTaskId = typeof ONBOARDING_TASKS[keyof typeof ONBOARDING_TASKS];
 
-export const TASK_METADATA: Record<OnboardingTaskId, { title: string; description: string; routeName: string; icon: string }> = {
+export const TASK_METADATA: Record<OnboardingTaskId, { titleKey: string; descriptionKey: string; routeName: string; icon: string }> = {
   [ONBOARDING_TASKS.PROFILE_UPDATE]: {
-    title: 'Complete Profile',
-    description: 'Update your name, gender, and emergency contact info to stay safe.',
+    titleKey: 'onboarding.steps.profileUpdate.title',
+    descriptionKey: 'onboarding.steps.profileUpdate.description',
     routeName: 'profile',
     icon: 'pi pi-user',
   },
   [ONBOARDING_TASKS.FIRST_BOOKING]: {
-    title: 'Book Your First Course',
-    description: 'Find a session in the calendar and reserve your spot with a single click.',
+    titleKey: 'onboarding.steps.firstBooking.title',
+    descriptionKey: 'onboarding.steps.firstBooking.description',
     routeName: 'home',
     icon: 'pi pi-calendar-plus',
   },
   [ONBOARDING_TASKS.EXPLORE_MEETUPS]: {
-    title: 'Explore Community Meetups',
-    description: 'Connect with other athletes by joining or creating social meetups.',
+    titleKey: 'onboarding.steps.exploreMeetups.title',
+    descriptionKey: 'onboarding.steps.exploreMeetups.description',
     routeName: 'meetups',
     icon: 'pi pi-users',
   },
   [ONBOARDING_TASKS.PERSONAL_BESTS]: {
-    title: 'Log Personal Bests',
-    description: 'Track your strength and performance progress by logging your max weights.',
+    titleKey: 'onboarding.steps.personalBests.title',
+    descriptionKey: 'onboarding.steps.personalBests.description',
     routeName: 'personal-bests',
     icon: 'pi pi-chart-line',
   },
   [ONBOARDING_TASKS.LEADERBOARD]: {
-    title: 'Check the Rankings',
-    description: 'See how you stack up against others on the leaderboard (and make your profile public!).',
+    titleKey: 'onboarding.steps.leaderboard.title',
+    descriptionKey: 'onboarding.steps.leaderboard.description',
     routeName: 'leaderboard',
     icon: 'pi pi-trophy',
+  },
+  [ONBOARDING_TASKS.ADMIN_SETTINGS]: {
+    titleKey: 'onboarding.steps.adminSettings.title',
+    descriptionKey: 'onboarding.steps.adminSettings.description',
+    routeName: 'settings',
+    icon: 'pi pi-cog',
+  },
+  [ONBOARDING_TASKS.ADMIN_PAYMENTS]: {
+    titleKey: 'onboarding.steps.adminPayments.title',
+    descriptionKey: 'onboarding.steps.adminPayments.description',
+    routeName: 'payments',
+    icon: 'pi pi-credit-card',
+  },
+  [ONBOARDING_TASKS.ADMIN_USERS]: {
+    titleKey: 'onboarding.steps.adminUsers.title',
+    descriptionKey: 'onboarding.steps.adminUsers.description',
+    routeName: 'users',
+    icon: 'pi pi-users',
+  },
+  [ONBOARDING_TASKS.ADMIN_COURSES]: {
+    titleKey: 'onboarding.steps.adminCourses.title',
+    descriptionKey: 'onboarding.steps.adminCourses.description',
+    routeName: 'home',
+    icon: 'pi pi-calendar-plus',
   },
 };
 
@@ -55,7 +86,22 @@ export function useOnboarding() {
   const isSkipped = computed(() => onboardingState.value.includes('skipped'));
 
   const filteredMetadata = computed(() => {
-    const metadata = { ...TASK_METADATA };
+    if (authStore.isAdmin) {
+      return {
+        [ONBOARDING_TASKS.ADMIN_SETTINGS]: TASK_METADATA[ONBOARDING_TASKS.ADMIN_SETTINGS],
+        [ONBOARDING_TASKS.ADMIN_PAYMENTS]: TASK_METADATA[ONBOARDING_TASKS.ADMIN_PAYMENTS],
+        [ONBOARDING_TASKS.ADMIN_USERS]: TASK_METADATA[ONBOARDING_TASKS.ADMIN_USERS],
+        [ONBOARDING_TASKS.ADMIN_COURSES]: TASK_METADATA[ONBOARDING_TASKS.ADMIN_COURSES],
+      };
+    }
+
+    const metadata = {
+      [ONBOARDING_TASKS.PROFILE_UPDATE]: TASK_METADATA[ONBOARDING_TASKS.PROFILE_UPDATE],
+      [ONBOARDING_TASKS.FIRST_BOOKING]: TASK_METADATA[ONBOARDING_TASKS.FIRST_BOOKING],
+      [ONBOARDING_TASKS.EXPLORE_MEETUPS]: TASK_METADATA[ONBOARDING_TASKS.EXPLORE_MEETUPS],
+      [ONBOARDING_TASKS.PERSONAL_BESTS]: TASK_METADATA[ONBOARDING_TASKS.PERSONAL_BESTS],
+      [ONBOARDING_TASKS.LEADERBOARD]: TASK_METADATA[ONBOARDING_TASKS.LEADERBOARD],
+    };
     if (authStore.isTrial) {
       delete metadata[ONBOARDING_TASKS.LEADERBOARD];
     }
@@ -126,19 +172,43 @@ export function useOnboarding() {
 
   // Tracking logic for route-based tasks
   function initRouteTracking() {
+    const courseStore = useCourseStore();
+
     watch(
       () => route.name,
       (newName) => {
-        if (newName === 'meetups') {
-          markTaskComplete(ONBOARDING_TASKS.EXPLORE_MEETUPS);
-        } else if (newName === 'personal-bests') {
-          markTaskComplete(ONBOARDING_TASKS.PERSONAL_BESTS);
-        } else if (newName === 'leaderboard') {
-          markTaskComplete(ONBOARDING_TASKS.LEADERBOARD);
+        if (authStore.isAdmin) {
+          if (newName === 'settings') {
+            markTaskComplete(ONBOARDING_TASKS.ADMIN_SETTINGS);
+          } else if (newName === 'payments') {
+            markTaskComplete(ONBOARDING_TASKS.ADMIN_PAYMENTS);
+          } else if (newName === 'users') {
+            markTaskComplete(ONBOARDING_TASKS.ADMIN_USERS);
+          }
+        } else {
+          if (newName === 'meetups') {
+            markTaskComplete(ONBOARDING_TASKS.EXPLORE_MEETUPS);
+          } else if (newName === 'personal-bests') {
+            markTaskComplete(ONBOARDING_TASKS.PERSONAL_BESTS);
+          } else if (newName === 'leaderboard') {
+            markTaskComplete(ONBOARDING_TASKS.LEADERBOARD);
+          }
         }
       },
       { immediate: true }
     );
+
+    if (authStore.isAdmin) {
+      watch(
+        () => courseStore.courseList.length,
+        (newLength) => {
+          if (newLength > 0) {
+            markTaskComplete(ONBOARDING_TASKS.ADMIN_COURSES);
+          }
+        },
+        { immediate: true }
+      );
+    }
   }
 
   return {

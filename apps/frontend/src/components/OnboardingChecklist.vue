@@ -45,13 +45,13 @@ function navigate(route: string) {
   >
     <template #title>
       <div class="flex items-center justify-between mb-2">
-        <span class="text-xl font-bold text-primary">Onboarding Progress</span>
-        <span class="text-sm font-medium text-gray-500">{{ completionPercentage }}% Complete</span>
+        <span class="text-xl font-bold text-primary">{{ $t('onboarding.progress') }}</span>
+        <span class="text-sm font-medium text-gray-500">{{ completionPercentage }}% {{ $t('onboarding.complete') }}</span>
       </div>
     </template>
     <template #subtitle>
       <p class="m-0 text-gray-600">
-        Complete your setup to unlock the full potential of your training journey.
+        {{ $t('onboarding.setupUnlock') }}
       </p>
     </template>
     <template #content>
@@ -63,10 +63,10 @@ function navigate(route: string) {
           <i class="pi pi-check-circle text-3xl" />
         </div>
         <h3 class="text-gray-900 font-bold mb-2">
-          You're all set!
+          {{ $t('onboarding.allSet') }}
         </h3>
         <p class="text-gray-600 m-0">
-          You've completed all onboarding tasks. Welcome to the community!
+          {{ $t('onboarding.welcomeCommunity') }}
         </p>
       </div>
       <div v-else>
@@ -101,23 +101,23 @@ function navigate(route: string) {
                   class="m-0 text-gray-900 font-bold mb-1"
                   :class="{'line-through text-gray-500': isTaskDone(task.id)}"
                 >
-                  {{ task.title }}
+                  {{ $t(task.titleKey) }}
                 </h4>
                 <p
                   class="m-0 text-sm text-gray-600 mb-2"
                   :class="{'line-through': isTaskDone(task.id)}"
                 >
-                  {{ task.description }}
+                  {{ $t(task.descriptionKey) }}
                 </p>
                 <span
                   v-if="isTaskDone(task.id)"
                   class="text-xs text-green-600 font-bold uppercase tracking-wider"
-                >Completed</span>
+                >{{ $t('onboarding.complete') }}</span>
                 <span
                   v-else
                   class="text-xs text-primary font-bold uppercase tracking-wider flex items-center"
                 >
-                  Start Task <i class="pi pi-arrow-right ml-1 text-[10px]" />
+                  {{ $t('onboarding.startTask') }} <i class="pi pi-arrow-right ml-1 text-[10px]" />
                 </span>
               </div>
             </div>
@@ -131,7 +131,7 @@ function navigate(route: string) {
         class="flex justify-end pt-2"
       >
         <Button
-          label="Skip Onboarding"
+          :label="$t('onboarding.skipOnboarding')"
           icon="pi pi-times"
           text
           severity="secondary"

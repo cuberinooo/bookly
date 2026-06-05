@@ -113,7 +113,10 @@
     "subtitle": "Meistere deine Disziplin. Buche deine nächste Session.",
     "viewStandard": "STANDARD",
     "viewCompact": "KOMPAKT",
-    "today": "HEUTE"
+    "today": "HEUTE",
+    "welcomeAdminTitle": "Willkommen auf deiner neuen Buchungsplattform! 🚀",
+    "welcomeAdminText": "Lass uns deinen ersten Kurs planen, damit deine Athleten mit dem Buchen beginnen können! Du kannst einen Kurs erstellen, indem du auf ein beliebiges Zeitfenster im Kalender klickst oder den Schnellstart-Button verwendest.",
+    "scheduleFirstCourse": "Ersten Kurs planen"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -417,11 +420,52 @@
     "done": "Erledigt",
     "tasks": "Aufgaben",
     "skip": "Überspringen",
+    "next": "Weiter",
     "progress": "Onboarding-Fortschritt",
     "complete": "Abgeschlossen",
     "welcomeCommunity": "Willkommen in der Community!",
     "allSet": "Alles bereit!",
-    "setupUnlock": "Schließe dein Setup ab, um das volle Potenzial deiner Trainingsreise auszuschöpfen."
+    "setupUnlock": "Schließe dein Setup ab, um das volle Potenzial deiner Trainingsreise auszuschöpfen.",
+    "startTask": "Aufgabe starten",
+    "skipOnboarding": "Onboarding überspringen",
+    "steps": {
+      "profileUpdate": {
+        "title": "Profil vervollständigen",
+        "description": "Aktualisiere deinen Namen, dein Geschlecht und deinen Notfallkontakt."
+      },
+      "firstBooking": {
+        "title": "Ersten Kurs buchen",
+        "description": "Finde eine Einheit im Kalender und reserviere deinen Platz mit einem Klick."
+      },
+      "exploreMeetups": {
+        "title": "Community-Meetups erkunden",
+        "description": "Tritt mit anderen Athleten in Kontakt, indem du an Meetups teilnimmst oder eigene erstellst."
+      },
+      "personalBests": {
+        "title": "Bestleistungen protokollieren",
+        "description": "Verfolge deinen Kraft- und Leistungsfortschritt durch das Eintragen deiner Maximalgewichte."
+      },
+      "leaderboard": {
+        "title": "Rangliste prüfen",
+        "description": "Sieh dir an, wie du im Vergleich zu anderen abschneidest (und mache dein Profil öffentlich!)."
+      },
+      "adminSettings": {
+        "title": "Unternehmenseinstellungen konfigurieren",
+        "description": "Richte das Profil, Branding und die allgemeinen Einstellungen deines Studios ein."
+      },
+      "adminPayments": {
+        "title": "Stripe-Zahlungen einrichten",
+        "description": "Verbinde dein Stripe-Konto, um automatische Mitgliedsbeiträge zu aktivieren."
+      },
+      "adminUsers": {
+        "title": "Mitglieder & Trainer verwalten",
+        "description": "Erstelle dein Trainer-Team und pflege die Athleten-Datenbank."
+      },
+      "adminCourses": {
+        "title": "Ersten Kurs erstellen",
+        "description": "Plane eine neue Trainingseinheit oder eine Kursreihe im Kalender."
+      }
+    }
   },
   "participants": {
     "title": "Teilnehmer",

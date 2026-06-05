@@ -112,7 +112,10 @@
     "subtitle": "Master your discipline. Book your next session.",
     "viewStandard": "STANDARD",
     "viewCompact": "COMPACT",
-    "today": "TODAY"
+    "today": "TODAY",
+    "welcomeAdminTitle": "Welcome to your new booking platform! 🚀",
+    "welcomeAdminText": "Let's schedule your first course so your athletes can start booking! You can create a course by clicking any time slot on the calendar below, or using the quick setup button.",
+    "scheduleFirstCourse": "Schedule First Course"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -416,11 +419,52 @@
     "done": "Done",
     "tasks": "Tasks",
     "skip": "Skip",
+    "next": "Next",
     "progress": "Onboarding Progress",
     "complete": "Complete",
     "welcomeCommunity": "Welcome to the community!",
     "allSet": "You're all set!",
-    "setupUnlock": "Complete your setup to unlock the full potential of your training journey."
+    "setupUnlock": "Complete your setup to unlock the full potential of your training journey.",
+    "startTask": "Start Task",
+    "skipOnboarding": "Skip Onboarding",
+    "steps": {
+      "profileUpdate": {
+        "title": "Complete Profile",
+        "description": "Update your name, gender, and emergency contact info to stay safe."
+      },
+      "firstBooking": {
+        "title": "Book Your First Course",
+        "description": "Find a session in the calendar and reserve your spot with a single click."
+      },
+      "exploreMeetups": {
+        "title": "Explore Community Meetups",
+        "description": "Connect with other athletes by joining or creating social meetups."
+      },
+      "personalBests": {
+        "title": "Log Personal Bests",
+        "description": "Track your strength and performance progress by logging your max weights."
+      },
+      "leaderboard": {
+        "title": "Check the Rankings",
+        "description": "See how you stack up against others on the leaderboard (and make your profile public!)."
+      },
+      "adminSettings": {
+        "title": "Configure Company Settings",
+        "description": "Set up your company profile, branding, and general preferences."
+      },
+      "adminPayments": {
+        "title": "Setup Stripe Payments",
+        "description": "Connect your Stripe account to enable automated membership fees."
+      },
+      "adminUsers": {
+        "title": "Manage Members & Trainers",
+        "description": "Create your trainer staff and onboard athletes into your database."
+      },
+      "adminCourses": {
+        "title": "Create Your First Course",
+        "description": "Schedule a new class or course series on the calendar page."
+      }
+    }
   },
   "participants": {
     "title": "Participants",

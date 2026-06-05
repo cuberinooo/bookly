@@ -6,11 +6,8 @@ namespace App\Service;
 
 use App\Entity\User;
 use App\Exception\EmailAlreadyRegisteredException;
-use App\Repository\AdminSettingsRepository;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Bundle\SecurityBundle\Security;
-use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Uid\Uuid;
 use Symfony\Contracts\Translation\TranslatorInterface;
@@ -96,7 +93,7 @@ class RegistrationService
         } else {
             // Public registration logic
             if ($isNewCompany) {
-                $finalRoles = ['ROLE_ADMIN'];
+                $finalRoles = ['ROLE_ADMIN', 'ROLE_TRAINER'];
             } else {
                 $finalRoles = ['ROLE_TRIAL'];
             }
