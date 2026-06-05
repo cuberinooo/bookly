@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Exception\EmailAlreadyRegisteredException;
 use App\Repository\CompanyRepository;
 use App\Service\RegistrationService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -32,13 +33,10 @@ class RegistrationController extends AbstractController
 
         try {
             $registrationService->register($data);
+        } catch (EmailAlreadyRegisteredException $e) {
+            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_CONFLICT);
         } catch (\Exception $e) {
-            $statusCode = Response::HTTP_BAD_REQUEST;
-            if ('Email already registered' === $e->getMessage()) {
-                $statusCode = Response::HTTP_CONFLICT;
-            }
-
-            return new JsonResponse(['error' => $e->getMessage()], $statusCode);
+            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
         }
 
         return new JsonResponse(['status' => 'User created. Please check your email to verify your account.'], Response::HTTP_CREATED);

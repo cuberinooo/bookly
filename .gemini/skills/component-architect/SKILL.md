@@ -32,3 +32,22 @@ When encountering a "huge" component (like a multi-section dashboard):
 2. **Extract with Props**: Create a new component file. Move the relevant HTML and CSS. Define props for any dynamic data.
 3. **Replace and Verify**: Import the new component into the parent, pass the required props, and ensure functionality remains identical.
 4. **Cleanup**: Remove the extracted CSS and logic from the parent component.
+
+## Tech Stack Context
+
+This project uses a modern, Dockerized full-stack architecture. All component development and architectural decisions must align with these technologies:
+
+### Frontend
+- **Framework**: Vue.js 3 (Composition API with `<script setup>`).
+- **UI Library**: **PrimeVue** (latest version). Use PrimeVue components for complex UI elements (tables, modals, inputs).
+- **Styling**: **TailwindCSS** for layout and utility-first styling. Avoid writing custom CSS unless absolutely necessary.
+- **Build Tool**: Vite.
+- **Live Updates**: **Mercure Hub** integration for real-time data reactivity.
+
+### Backend & Infrastructure
+- **Framework**: **Symfony** (PHP).
+- **ORM**: **Doctrine**.
+- **Database**: **PostgreSQL 18**.
+- **Storage**: **MinIO** (S3-compatible object storage).
+- **Email Testing**: **MailHog**.
+- **Containerization**: Full Docker environment (see `docker-compose.yml`).

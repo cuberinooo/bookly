@@ -113,7 +113,10 @@
     "subtitle": "Meistere deine Disziplin. Buche deine nächste Session.",
     "viewStandard": "STANDARD",
     "viewCompact": "KOMPAKT",
-    "today": "HEUTE"
+    "today": "HEUTE",
+    "welcomeAdminTitle": "Willkommen auf deiner neuen Buchungsplattform! 🚀",
+    "welcomeAdminText": "Lass uns deinen ersten Kurs planen, damit deine Athleten mit dem Buchen beginnen können! Du kannst einen Kurs erstellen, indem du auf ein beliebiges Zeitfenster im Kalender klickst oder den Schnellstart-Button verwendest.",
+    "scheduleFirstCourse": "Ersten Kurs planen"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -276,7 +279,12 @@
       "categoryAdded": "Kategorie erfolgreich hinzugefügt",
       "categoryRemoved": "Kategorie entfernt",
       "categoryUpdated": "Kategorie aktualisiert",
-      "cycleSaved": "Trainingszyklus erfolgreich gespeichert"
+      "cycleSaved": "Trainingszyklus erfolgreich gespeichert",
+      "infoTitle": "Wie funktioniert der Trainingszyklus? 💡",
+      "infoPaletteTitle": "Kategorie-Zuweisung",
+      "infoPaletteText": "Wähle links eine Kategorie aus der Palette aus (oder erstelle eine neue) und klicke auf die gewünschten Felder im Grid rechts, um die Trainingstage zuzuweisen.",
+      "infoImpactTitle": "Auswirkung auf den Kursplan",
+      "infoImpactText": "Die zugewiesenen Kategorien werden farblich auf dem Kursplan im Kalender hinterlegt. Wenn Athleten einen Kurs buchen, sehen sie das spezifische Thema/Fokus dieses Tages direkt am Kurs-Tag im Kalender."
     },
     "users": {
       "athleteName": "Athleten-Name",
@@ -331,7 +339,8 @@
       "noAttachments": "Noch keine Anhänge hochgeladen.",
       "welcomeUpload": "Willkommens-Anhang hochladen",
       "membershipWelcomeMailTitle": "Willkommens-Mail für Mitglieder",
-      "membershipWelcomeMailNote": "Diese E-Mail wird automatisch gesendet, wenn ein Benutzer erfolgreich eine kostenpflichtige Mitgliedschaft abschließt.",
+       "membershipWelcomeMailNote": "Diese E-Mail wird automatisch gesendet, wenn ein Benutzer erfolgreich eine kostenpflichtige Mitgliedschaft abschließt.",
+      "membershipWelcomeMailNoteManual": "Diese E-Mail kann in der Mitgliederverwaltung manuell an Probetrainierende gesendet werden.",
       "membershipWelcomePreview": "Vorschau Mitglieder-Willkommens-Mail",
       "membershipWelcomeUpload": "Mitglieder-Willkommens-Anhang hochladen",
       "noMembershipWelcomeAttachments": "Keine Anhänge für Mitglieder-Willkommens-Mail.",
@@ -416,11 +425,52 @@
     "done": "Erledigt",
     "tasks": "Aufgaben",
     "skip": "Überspringen",
+    "next": "Weiter",
     "progress": "Onboarding-Fortschritt",
     "complete": "Abgeschlossen",
     "welcomeCommunity": "Willkommen in der Community!",
     "allSet": "Alles bereit!",
-    "setupUnlock": "Schließe dein Setup ab, um das volle Potenzial deiner Trainingsreise auszuschöpfen."
+    "setupUnlock": "Schließe dein Setup ab, um das volle Potenzial deiner Trainingsreise auszuschöpfen.",
+    "startTask": "Aufgabe starten",
+    "skipOnboarding": "Onboarding überspringen",
+    "steps": {
+      "profileUpdate": {
+        "title": "Profil vervollständigen",
+        "description": "Aktualisiere deinen Namen, dein Geschlecht und deinen Notfallkontakt."
+      },
+      "firstBooking": {
+        "title": "Ersten Kurs buchen",
+        "description": "Finde eine Einheit im Kalender und reserviere deinen Platz mit einem Klick."
+      },
+      "exploreMeetups": {
+        "title": "Community-Meetups erkunden",
+        "description": "Tritt mit anderen Athleten in Kontakt, indem du an Meetups teilnimmst oder eigene erstellst."
+      },
+      "personalBests": {
+        "title": "Bestleistungen protokollieren",
+        "description": "Verfolge deinen Kraft- und Leistungsfortschritt durch das Eintragen deiner Maximalgewichte."
+      },
+      "leaderboard": {
+        "title": "Rangliste prüfen",
+        "description": "Sieh dir an, wie du im Vergleich zu anderen abschneidest (und mache dein Profil öffentlich!)."
+      },
+      "adminSettings": {
+        "title": "Unternehmenseinstellungen konfigurieren",
+        "description": "Richte das Profil, Branding und die allgemeinen Einstellungen deines Studios ein."
+      },
+      "adminPayments": {
+        "title": "Stripe-Zahlungen einrichten",
+        "description": "Verbinde dein Stripe-Konto, um automatische Mitgliedsbeiträge zu aktivieren."
+      },
+      "adminUsers": {
+        "title": "Mitglieder & Trainer verwalten",
+        "description": "Erstelle dein Trainer-Team und pflege die Athleten-Datenbank."
+      },
+      "adminCourses": {
+        "title": "Ersten Kurs erstellen",
+        "description": "Plane eine neue Trainingseinheit oder eine Kursreihe im Kalender."
+      }
+    }
   },
   "participants": {
     "title": "Teilnehmer",
@@ -494,9 +544,9 @@
     "join": "Beitreten",
     "legalAgreement": "Rechtliche Vereinbarung",
     "createNewCompany": "Neues Unternehmen erstellen",
-    "startTransformation": "Start deine Transformation noch heute.",
-    "reviewTerms": "Bitte überprüfe und akzeptiere unsere rechtlichen Bedingungen.",
-    "confirmDetails": "Bestätige deine Registrierungsdetails.",
+    "startTransformation": "Starte deine Transformation noch heute.",
+    "reviewTerms": "Bitte überprüfe und akzeptiere die rechtlichen Bedingungen deines Unternehmens.",
+    "confirmDetails": "Bestätige deine Angaben zur Erstellung deines Unternehmens.",
     "continue": "Weiter",
     "iAgreeTo": "Ich stimme den",
     "termsAndConditionsLink": "AGB",
@@ -508,7 +558,24 @@
     "alreadyAthlete": "Bereits ein Athlet?",
     "checkEmail": "Überprüfe deine E-Mails",
     "verifyEmailInstruction": "Wir haben einen Bestätigungslink an deine E-Mail gesendet. Bitte klicke auf den Link, um dein Konto zu aktivieren.",
-    "goToLogin": "Zum Login"
+    "goToLogin": "Zum Login",
+    "registerModeLabel": "Was möchtest du tun?",
+    "modeCreate": "Neues Unternehmen registrieren",
+    "modeJoin": "Bestehendem Unternehmen beitreten",
+    "modeLockedByLink": "Der Beitritts-Modus wurde über den Einladungs-Link vorausgewählt.",
+    "companyNameCreate": "Name deines neuen Unternehmens",
+    "companyNameJoin": "Name des Unternehmens, dem du beitreten möchtest",
+    "companyAlreadyExists": "Ein Unternehmen namens '{company}' existiert bereits. Bitte wähle einen anderen Namen oder wechsle zum Beitritts-Modus.",
+    "companyNotFoundForJoin": "Das Unternehmen '{company}' wurde nicht gefunden. Bitte überprüfe die Schreibweise.",
+    "newCompanyWelcomeTitle": "Dein neues Unternehmen einrichten",
+    "newCompanyWelcomeText": "Du bist dabei, das neue Unternehmen '{company}' zu erstellen. Du wirst als Administrator registriert und kannst im nächsten Schritt deinen Kursplan erstellen, Trainer verwalten und deine Athleten einladen!",
+    "newCompanyAdminHint": "Als Administrator besitzt du vollen Zugriff auf die Plattform und kannst alle Einstellungen anpassen.",
+    "joinCompanyWelcomeTitle": "Einem bestehenden Unternehmen beitreten",
+    "joinCompanyWelcomeText": "Du bist dabei, dem Unternehmen '{company}' beizutreten. Du startest als Testmitglied und kannst danach Kurse deines Unternehmens buchen.",
+    "acceptAndCreateNewCompany": "Unternehmen erstellen & registrieren",
+    "acceptAndJoin": "Konto erstellen & beitreten",
+    "registerNewCompanyTitle": "Unternehmen erstellen",
+    "joinExistingCompanyTitle": "Unternehmen beitreten"
   },
   "versionUpdate": {
     "available": "Eine neue Version der App ist verfügbar.",
@@ -847,7 +914,7 @@
   "footer": {
     "legal": "Impressum & Rechtliches",
     "hosting": "Infrastruktur",
-    "hostedBy": "Gehostet in Deutschland 🇩🇪"
+    "hostedBy": "Gehostet von"
   },
   "cookies": {
     "title": "Ihre Privatsphäre ist uns wichtig",
@@ -876,6 +943,10 @@
         "subscribers": "ABONNENTEN",
         "analytics": "ANALYSE"
     },
+    "connectStripeTitle": "Stripe-Konto verbinden",
+    "connectStripeDesc": "Verbinde zunächst dein Stripe-Konto, um Abonnements zu verwalten, Zahlungen einzuziehen und Analysen einzusehen. Die Tabs \"Abonnenten\" und \"Analyse\" werden nach der Verbindung freigeschaltet.",
+    "connectStripeHint": "Stripe nicht verbunden",
+    "connectStripeNote": "Nutze den Tab Konfiguration unten, um dein Stripe-Konto einzurichten.",
     "activeSubscriptions": "Aktive Abonnements",
     "fetchFailed": "Abonnements konnten nicht geladen werden",
     "missingAccountId": "Fehlende Account-ID",

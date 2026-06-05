@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, computed } from 'vue';
 import StripeSettingsTab from '../components/StripeSettingsTab.vue';
 import api from '../services/api';
 import { useToast } from 'primevue/usetoast';
@@ -11,19 +11,31 @@ const toast = useToast();
 const settingsStore = useSettingsStore();
 const subscriptions = ref<any[]>([]);
 const isLoadingSubscriptions = ref(false);
+const subscriptionsFetched = ref(false);
 
 const activeTab = ref('config');
+const stripeOnboardingComplete = computed(() => settingsStore.stripeOnboardingComplete);
 const stripeAccountId = computed(() => settingsStore.stripeAccountId);
 
 const fetchSubscriptions = async () => {
+    if (!stripeOnboardingComplete.value) return;
     isLoadingSubscriptions.value = true;
     try {
         const response = await api.get('/stripe/subscriptions');
         subscriptions.value = response.data;
+        subscriptionsFetched.value = true;
     } catch (error) {
         toast.add({ severity: 'error', summary: t('app.error'), detail: t('payments.fetchFailed'), life: 3000 });
     } finally {
         isLoadingSubscriptions.value = false;
+    }
+};
+
+const onTabChange = (value: string) => {
+    activeTab.value = value;
+    // Lazy-load subscriptions only when the subscribers tab is first activated
+    if (value === 'subscribers' && !subscriptionsFetched.value) {
+        fetchSubscriptions();
     }
 };
 
@@ -51,10 +63,6 @@ const openStripeCustomer = (customerId: string) => {
         toast.add({ severity: 'warn', summary: t('payments.missingAccountId'), detail: t('payments.missingAccountIdNote'), life: 3000 });
     }
 };
-
-onMounted(() => {
-    fetchSubscriptions();
-});
 </script>
 
 <template>
@@ -68,9 +76,40 @@ onMounted(() => {
       </p>
     </div>
 
+    <!-- Stripe Not Connected Banner -->
+    <div
+      v-if="!stripeOnboardingComplete"
+      class="stripe-connect-banner mb-8 rounded-2xl overflow-hidden"
+    >
+      <div class="banner-inner p-6 md:p-8 flex flex-col md:flex-row items-center gap-6">
+        <div class="banner-icon-wrap w-16 h-16 rounded-2xl flex items-center justify-center flex-shrink-0">
+          <i class="pi pi-credit-card text-3xl text-white" />
+        </div>
+        <div class="flex-1">
+          <h2 class="text-lg md:text-xl font-black primary-text uppercase tracking-wider mb-1">
+            {{ t('payments.connectStripeTitle') }}
+          </h2>
+          <p class="text-sm text-white/70 font-medium leading-relaxed">
+            {{ t('payments.connectStripeDesc') }}
+          </p>
+        </div>
+        <div class="flex-shrink-0 flex flex-col items-center">
+          <Tag
+            :value="t('payments.connectStripeHint')"
+            severity="warn"
+            class="mb-2"
+          />
+          <p class="text-[11px] text-white/50 text-center">
+            {{ t('payments.connectStripeNote') }}
+          </p>
+        </div>
+      </div>
+    </div>
+
     <Tabs
-      v-model:value="activeTab"
+      :value="activeTab"
       class="payments-tabs"
+      @update:value="onTabChange"
     >
       <TabList>
         <Tab
@@ -80,13 +119,14 @@ onMounted(() => {
           <i class="pi pi-cog mr-2" /> {{ t('payments.tabs.config') }}
         </Tab>
         <Tab
+          v-if="stripeOnboardingComplete"
           value="subscribers"
           class="font-barlow font-bold"
-          @click="fetchSubscriptions"
         >
           <i class="pi pi-users mr-2" /> {{ t('payments.tabs.subscribers') }}
         </Tab>
         <Tab
+          v-if="stripeOnboardingComplete"
           value="analytics"
           class="font-barlow font-bold"
         >
@@ -309,6 +349,17 @@ onMounted(() => {
 
     :deep(.p-tablist-content) {
       border-bottom: 2px solid var(--border-color);
+    }
+
+    .stripe-connect-banner {
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(99, 102, 241, 0.15);
+
+        .banner-icon-wrap {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.3), rgba(168, 85, 247, 0.3));
+            border: 1px solid rgba(99, 102, 241, 0.3);
+        }
     }
 }
 </style>

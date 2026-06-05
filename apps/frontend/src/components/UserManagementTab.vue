@@ -4,12 +4,14 @@ import api from '../services/api';
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
 import { useAuthStore } from '../store/useAuthStore';
+import { useSettingsStore } from '../store/useSettingsStore';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 const toast = useToast();
 const confirm = useConfirm();
 const authStore = useAuthStore();
+const settingsStore = useSettingsStore();
 const users = ref<any[]>([]);
 const searchQuery = ref('');
 const selectedRoles = ref<string[]>([]);
@@ -41,6 +43,7 @@ const submitting = ref(false);
 const submitted = ref(false);
 const resettingPassword = ref(false);
 const sendingMembershipWelcome = ref(false);
+const emailTakenError = ref(false);
 
 const getSortedRoles = (roles: string[]) => {
   const roleOrder = ['ROLE_ADMIN', 'ROLE_TRAINER', 'ROLE_MEMBER', 'ROLE_TRIAL'];
@@ -81,6 +84,7 @@ async function fetchUsers() {
 function openNewUser() {
     editingUser.value = { name: '', email: '', roles: ['ROLE_MEMBER'], password: Math.random().toString(36).slice(-10) + 'A1!' };
     submitted.value = false;
+    emailTakenError.value = false;
     userDialog.value = true;
 }
 
@@ -92,6 +96,7 @@ function editUser(user: any) {
         roles: [...user.roles].filter(r => r !== 'ROLE_USER') // Filter out internal base role
     };
     submitted.value = false;
+    emailTakenError.value = false;
     userDialog.value = true;
 }
 
@@ -104,6 +109,7 @@ async function saveUser() {
 
     submitting.value = true;
     try {
+        emailTakenError.value = false;
         if (editingUser.value.id) {
             await api.patch(`/admin/users/${editingUser.value.id}`, {
                 name: editingUser.value.name,
@@ -129,6 +135,7 @@ async function saveUser() {
         let detail = e.response?.data?.error || t('app.error');
         if (e.response?.status === 409 || detail === 'Email already registered') {
             detail = t('auth.emailAlreadyRegistered');
+            emailTakenError.value = true;
         }
         toast.add({ severity: 'error', summary: t('app.error'), detail: detail, life: 7000 });
     } finally {
@@ -213,7 +220,10 @@ async function deleteUser(user: any) {
     });
 }
 
-onMounted(fetchUsers);
+onMounted(() => {
+    fetchUsers();
+    settingsStore.fetchSettings();
+});
 </script>
 
 <template>
@@ -331,7 +341,10 @@ onMounted(fetchUsers);
             />
           </template>
         </Column>
-        <Column :header="$t('admin.users.mail')">
+        <Column
+          v-if="!settingsStore.paymentEnabled"
+          :header="$t('admin.users.mail')"
+        >
           <template #body="{ data }">
             <div v-if="(data.roles.includes('ROLE_TRIAL'))">
               <i
@@ -349,7 +362,7 @@ onMounted(fetchUsers);
           <template #body="{ data }">
             <div class="flex gap-2">
               <Button
-                v-if="data.roles.includes('ROLE_TRIAL') && !data.membershipWelcomeMailSent"
+                v-if="!settingsStore.paymentEnabled && data.roles.includes('ROLE_TRIAL') && !data.membershipWelcomeMailSent"
                 v-tooltip.top="$t('admin.users.sendMembershipWelcome')"
                 icon="pi pi-envelope"
                 variant="text"
@@ -511,7 +524,8 @@ onMounted(fetchUsers);
             v-model="editingUser.email"
             :disabled="!!editingUser.id"
             placeholder="email@example.com"
-            :class="{ 'p-invalid': submitted && (!editingUser.email || !isEmailValid(editingUser.email)) }"
+            :class="{ 'p-invalid': (submitted && (!editingUser.email || !isEmailValid(editingUser.email))) || emailTakenError }"
+            @input="emailTakenError = false"
           />
           <small
             v-if="submitted && !editingUser.email"
@@ -521,6 +535,10 @@ onMounted(fetchUsers);
             v-else-if="submitted && !isEmailValid(editingUser.email)"
             class="p-error"
           >{{ $t('admin.users.invalidEmail') }}</small>
+          <small
+            v-else-if="emailTakenError"
+            class="p-error"
+          >{{ $t('auth.emailAlreadyRegistered') }}</small>
         </div>
         <div class="flex flex-col gap-2">
           <label

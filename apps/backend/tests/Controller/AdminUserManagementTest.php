@@ -73,6 +73,54 @@ class AdminUserManagementTest extends WebTestCase
         $this->assertFalse($member->isMustChangePassword());
     }
 
+    public function test_admin_cannot_create_user_with_duplicate_email(): void
+    {
+        $client = static::createClient();
+        $container = $client->getContainer();
+        $entityManager = $container->get('doctrine.orm.entity_manager');
+
+        // Create two companies
+        $company1 = new \App\Entity\Company();
+        $company1->setName('Company One '.uniqid('', true));
+        $entityManager->persist($company1);
+
+        $company2 = new \App\Entity\Company();
+        $company2->setName('Company Two '.uniqid('', true));
+        $entityManager->persist($company2);
+
+        // Create Admin in Company One
+        $admin = $this->createUser($entityManager, ['ROLE_ADMIN']);
+        $admin->setCompany($company1);
+        $entityManager->flush();
+
+        // Create an existing user in Company Two
+        $existingEmail = 'taken_email_'.uniqid().'@example.com';
+        $otherUser = $this->createUser($entityManager, ['ROLE_MEMBER']);
+        $otherUser->setEmail($existingEmail);
+        $otherUser->setCompany($company2);
+        $entityManager->flush();
+
+        $token = $this->getToken($client, $admin);
+
+        // Admin of Company One tries to create a new user in Company One with the same email as Company Two's user
+        $client->request('POST', '/api/admin/users', [], [], [
+            'CONTENT_TYPE' => 'application/json',
+            'HTTP_AUTHORIZATION' => 'Bearer '.$token,
+        ], json_encode([
+            'email' => $existingEmail,
+            'name' => 'Duplicate Email User',
+            'password' => 'TempPass123!',
+            'role' => 'ROLE_MEMBER',
+        ]));
+
+        // Should return 409 Conflict
+        $this->assertEquals(Response::HTTP_CONFLICT, $client->getResponse()->getStatusCode());
+
+        $responseContent = json_decode($client->getResponse()->getContent(), true);
+        $this->assertArrayHasKey('error', $responseContent);
+        $this->assertNotEmpty($responseContent['error']);
+    }
+
     public function test_delete_member_with_bookings(): void
     {
         $client = static::createClient();

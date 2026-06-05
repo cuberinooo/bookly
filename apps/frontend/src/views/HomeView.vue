@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useRouter } from 'vue-router';
 import { formatDate, formatTime, formatDateWithDay } from '../services/date-utils';
 import api from '../services/api';
 import { useAuthStore } from '../store/useAuthStore';
@@ -19,6 +20,7 @@ const toast = useToast();
 const confirm = useConfirm();
 const authStore = useAuthStore();
 const courseStore = useCourseStore();
+const router = useRouter();
 
 const courses = computed(() => courseStore.courseList);
 const cycleInfo = computed(() => courseStore.cycleInfo);
@@ -177,6 +179,19 @@ function handleCellClick(date: Date) {
     formVisible.value = true;
 }
 
+function handleQuickCreateCourse() {
+    const nextHour = new Date();
+    nextHour.setHours(nextHour.getHours() + 1, 0, 0, 0);
+    editingCourse.value = {
+        startTime: nextHour,
+        title: 'Functional Training',
+        capacity: 10,
+        durationMinutes: 60,
+        description: ''
+    };
+    formVisible.value = true;
+}
+
 async function onSaveCourse(formData: any, transferAll: boolean = false) {
     submitting.value = true;
     try {
@@ -286,6 +301,42 @@ onUnmounted(() => {
           </div>
         </div>
       </header>
+
+      <div
+        v-if="authStore.isAdmin && courses.length === 0"
+        class="onboarding-welcome-banner mb-6 p-6 rounded-2xl border bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border-amber-500/20 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
+      >
+        <div class="flex items-start gap-4">
+          <div class="w-12 h-12 rounded-xl bg-amber-500 text-white flex items-center justify-center flex-shrink-0 shadow-md">
+            <i class="pi pi-compass text-2xl animate-pulse" />
+          </div>
+          <div>
+            <h2 class="text-lg font-black uppercase tracking-tight text-slate-900 mb-1">
+              {{ t('home.welcomeAdminTitle') }}
+            </h2>
+            <p class="text-sm text-slate-600 max-w-xl">
+              {{ t('home.welcomeAdminText') }}
+            </p>
+          </div>
+        </div>
+        <div class="flex items-center gap-3 w-full md:w-auto">
+          <Button
+            :label="t('home.scheduleFirstCourse')"
+            icon="pi pi-calendar-plus"
+            severity="primary"
+            class="w-full md:w-auto font-bold"
+            @click="handleQuickCreateCourse"
+          />
+          <Button
+            label="Settings"
+            icon="pi pi-cog"
+            severity="secondary"
+            variant="outlined"
+            class="w-full md:w-auto font-bold bg-white"
+            @click="router.push({ name: 'settings' })"
+          />
+        </div>
+      </div>
 
       <div v-if="isMobile">
         <MobileCalendar

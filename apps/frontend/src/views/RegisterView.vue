@@ -23,6 +23,11 @@ const genderOptions = computed(() => [
 ]);
 const companyName = ref('Bookly');
 const companyNameTouched = ref(false);
+const registerMode = ref<'create' | 'join'>('create');
+const registerModeOptions = computed(() => [
+    { label: t('auth.modeCreate'), value: 'create' },
+    { label: t('auth.modeJoin'), value: 'join' }
+]);
 const password = ref('');
 const passwordTouched = ref(false);
 const confirmPassword = ref('');
@@ -42,6 +47,7 @@ const isEmailValid = computed(() => {
 onMounted(() => {
     if (route.query.companyName) {
         companyName.value = route.query.companyName as string;
+        registerMode.value = 'join';
     }
 });
 
@@ -72,7 +78,11 @@ const isStep1Valid = computed(() => {
 });
 
 const isFormValid = computed(() => {
-    return isStep1Valid.value && (!companyLegal.value.found || acceptedTerms.value);
+    if (!isStep1Valid.value) return false;
+    if (registerMode.value === 'join') {
+        return companyLegal.value.found && acceptedTerms.value;
+    }
+    return !companyLegal.value.found;
 });
 
 async function goToStep2() {
@@ -93,10 +103,29 @@ async function goToStep2() {
     const response = await api.get(`/register/company-legal?name=${encodeURIComponent(companyName.value)}`);
     companyLegal.value = response.data;
 
-    // Fetch terms and conditions only if company exists
-    if (companyLegal.value.found) {
-        const termsResponse = await api.get(`/register/terms-and-conditions?name=${encodeURIComponent(companyName.value)}`);
-        companyLegal.value.termsAndConditionsMarkdown = termsResponse.data.termsAndConditionsMarkdown;
+    if (registerMode.value === 'create') {
+      if (companyLegal.value.found) {
+        toast.add({
+          severity: 'error',
+          summary: t('app.error'),
+          detail: t('auth.companyAlreadyExists', { company: companyName.value }),
+          life: 5000
+        });
+        return;
+      }
+    } else {
+      if (!companyLegal.value.found) {
+        toast.add({
+          severity: 'error',
+          summary: t('app.error'),
+          detail: t('auth.companyNotFoundForJoin', { company: companyName.value }),
+          life: 5000
+        });
+        return;
+      }
+      // Fetch terms and conditions only if company exists
+      const termsResponse = await api.get(`/register/terms-and-conditions?name=${encodeURIComponent(companyName.value)}`);
+      companyLegal.value.termsAndConditionsMarkdown = termsResponse.data.termsAndConditionsMarkdown;
     }
 
     step.value = 2;
@@ -149,10 +178,20 @@ async function register() {
       <div v-if="!isRegistered">
         <div class="text-center mb-10">
           <h1 class="text-3xl font-extrabold tracking-tight">
-            {{ step === 1 ? t('auth.join', { company: companyName }) : (companyLegal.found ? t('auth.legalAgreement') : t('auth.createNewCompany')) }}
+            <template v-if="step === 1">
+              {{ registerMode === 'create' ? t('auth.registerNewCompanyTitle') : t('auth.joinExistingCompanyTitle') }}
+            </template>
+            <template v-else>
+              {{ registerMode === 'create' ? t('auth.createNewCompany') : t('auth.legalAgreement') }}
+            </template>
           </h1>
           <p class="text-slate-600 mt-2 font-medium">
-            {{ step === 1 ? t('auth.startTransformation') : (companyLegal.found ? t('auth.reviewTerms') : t('auth.confirmDetails')) }}
+            <template v-if="step === 1">
+              {{ t('auth.startTransformation') }}
+            </template>
+            <template v-else>
+              {{ registerMode === 'create' ? t('auth.confirmDetails') : t('auth.reviewTerms') }}
+            </template>
           </p>
         </div>
 
@@ -161,6 +200,25 @@ async function register() {
             class="flex flex-col gap-6"
             @submit.prevent="goToStep2"
           >
+            <!-- Mode Selector -->
+            <div class="flex flex-col gap-2">
+              <label class="form-label-base">{{ t('auth.registerModeLabel') }}</label>
+              <SelectButton
+                v-model="registerMode"
+                :options="registerModeOptions"
+                option-label="label"
+                option-value="value"
+                :disabled="!!route.query.companyName"
+                class="w-full select-button-full"
+              />
+              <small
+                v-if="!!route.query.companyName"
+                class="text-slate-400 text-xs mt-1"
+              >
+                {{ t('auth.modeLockedByLink') }}
+              </small>
+            </div>
+
             <div class="flex flex-col">
               <label
                 for="name"
@@ -225,12 +283,14 @@ async function register() {
               <label
                 for="companyName"
                 class="form-label-base"
-              >{{ t('auth.companyName') }}</label>
+              >
+                {{ registerMode === 'create' ? t('auth.companyNameCreate') : t('auth.companyNameJoin') }}
+              </label>
               <InputText
                 id="companyName"
                 v-model="companyName"
                 required
-                placeholder="Foo GmbH"
+                :placeholder="registerMode === 'create' ? 'CrossFit Hamburg' : 'Enter existing studio name'"
                 :class="{ 'p-invalid': companyNameTouched && !companyName }"
                 :disabled="!!route.query.companyName"
                 @blur="companyNameTouched = true"
@@ -317,45 +377,75 @@ async function register() {
 
         <div v-else-if="step === 2">
           <div class="space-y-8">
-            <div class="flex items-start gap-4 p-5 bg-primary/5 rounded-2xl border border-primary/10">
-              <div v-if="companyLegal.found">
-                <Checkbox
-                  v-model="acceptedTerms"
-                  input-id="terms"
-                  :binary="true"
-                  class="mt-1"
-                />
-                <label
-                  for="terms"
-                  class="text-sm text-slate-700 font-medium leading-relaxed cursor-pointer"
-                >
-                  {{ t('auth.iAgreeTo') }}
-                  <a
-                    href="javascript:void(0)"
-                    class="font-bold text-primary hover:underline"
-                    @click="onClickShowTerms"
-                  >
-                    {{ t('auth.termsAndConditionsLink') }}
-                  </a>
-                  {{ t('auth.of') }} {{ companyLegal.companyName }}
-                  {{ t('auth.andIHaveRead') }}
-                  <a
-                    href="javascript:void(0)"
-                    class="text-primary font-bold hover:underline"
-                    @click="downloadPrivacyPolicy(companyLegal.companyName)"
-                  >
-                    {{ t('auth.privacyPolicyLink') }}
-                  </a>
-                </label>
+            <!-- New Company Info Card (Create Mode) -->
+            <div
+              v-if="registerMode === 'create'"
+              class="flex flex-col gap-4 p-6 bg-slate-50 rounded-2xl border border-slate-100 shadow-sm text-left"
+            >
+              <div class="flex items-center gap-3 text-primary">
+                <i class="pi pi-building text-2xl text-amber-500" />
+                <h3 class="text-lg font-black uppercase tracking-tight text-slate-900">
+                  {{ t('auth.newCompanyWelcomeTitle') }}
+                </h3>
               </div>
-              <div v-else>
-                <label
-                  class="text-sm text-slate-700 font-medium leading-relaxed cursor-pointer"
-                >
-                  {{ t('auth.companyNotFound', { company: companyName }) }}
-                </label>
+              <p class="text-sm text-slate-600 leading-relaxed">
+                {{ t('auth.newCompanyWelcomeText', { company: companyName }) }}
+              </p>
+              <div class="mt-2 text-xs text-slate-600 bg-amber-50 border border-amber-100 rounded-xl p-4 flex gap-3 text-left">
+                <i class="pi pi-info-circle text-amber-500 text-lg flex-shrink-0" />
+                <span>{{ t('auth.newCompanyAdminHint') }}</span>
               </div>
             </div>
+
+            <!-- Existing Company Terms Agreement (Join Mode) -->
+            <div
+              v-else
+              class="flex flex-col gap-4 p-6 bg-slate-50 rounded-2xl border border-slate-100 shadow-sm text-left"
+            >
+              <div class="flex items-center gap-3 text-primary">
+                <i class="pi pi-users text-2xl text-amber-500" />
+                <h3 class="text-lg font-black uppercase tracking-tight text-slate-900">
+                  {{ t('auth.joinCompanyWelcomeTitle') }}
+                </h3>
+              </div>
+              <p class="text-sm text-slate-600 leading-relaxed">
+                {{ t('auth.joinCompanyWelcomeText', { company: companyName }) }}
+              </p>
+
+              <div class="mt-4 p-4 bg-white rounded-xl border border-slate-150">
+                <div class="flex items-start gap-4">
+                  <Checkbox
+                    v-model="acceptedTerms"
+                    input-id="terms"
+                    :binary="true"
+                    class="mt-1"
+                  />
+                  <label
+                    for="terms"
+                    class="text-sm text-slate-700 font-medium leading-relaxed cursor-pointer"
+                  >
+                    {{ t('auth.iAgreeTo') }}
+                    <a
+                      href="javascript:void(0)"
+                      class="font-bold text-amber-500 hover:underline"
+                      @click="onClickShowTerms"
+                    >
+                      {{ t('auth.termsAndConditionsLink') }}
+                    </a>
+                    {{ t('auth.of') }} {{ companyLegal.companyName }}
+                    {{ t('auth.andIHaveRead') }}
+                    <a
+                      href="javascript:void(0)"
+                      class="text-amber-500 font-bold hover:underline"
+                      @click="downloadPrivacyPolicy(companyLegal.companyName)"
+                    >
+                      {{ t('auth.privacyPolicyLink') }}
+                    </a>
+                  </label>
+                </div>
+              </div>
+            </div>
+
             <div class="flex gap-4">
               <Button
                 type="button"
@@ -369,9 +459,9 @@ async function register() {
               <Button
                 type="button"
                 severity="primary"
-                :label="t('auth.acceptAndCreate')"
+                :label="registerMode === 'create' ? t('auth.acceptAndCreateNewCompany') : t('auth.acceptAndJoin')"
                 :loading="loading"
-                :disabled="companyLegal.found ? !acceptedTerms : false"
+                :disabled="registerMode === 'join' ? !acceptedTerms : false"
                 class="flex-2 btn-primary py-4 text-lg"
                 @click="register"
               />

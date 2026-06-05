@@ -80,13 +80,13 @@ function navigateToTask(task: any) {
           </div>
           <div class="flex flex-col pr-2 overflow-hidden">
             <div class="text-xs font-bold text-gray-900 tracking-tight whitespace-nowrap overflow-hidden text-ellipsis max-w-[12rem]">
-              {{ (isContextual ? t('onboarding.activeHere') : 'Next') + ': ' + displayedTask.title }}
+              {{ (isContextual ? t('onboarding.activeHere') : t('onboarding.next')) + ': ' + t(displayedTask.titleKey) }}
             </div>
             <div
               v-if="isContextual"
               class="text-[9px] text-gray-600 leading-none mt-0.5 whitespace-nowrap overflow-hidden text-ellipsis max-w-[12rem]"
             >
-              {{ displayedTask.description }}
+              {{ t(displayedTask.descriptionKey) }}
             </div>
           </div>
           <i class="pi pi-chevron-up text-primary-300 mr-2 text-xs" />
@@ -146,7 +146,7 @@ function navigateToTask(task: any) {
                         class="m-0 text-sm font-bold"
                         :class="task.isDone ? 'text-gray-500 line-through' : 'text-gray-900'"
                       >
-                        {{ index + 1 }}. {{ task.title }}
+                        {{ index + 1 }}. {{ t(task.titleKey) }}
                       </h5>
                       <span
                         v-if="!task.isDone && task.isCurrentRoute"
@@ -162,7 +162,7 @@ function navigateToTask(task: any) {
                     class="m-0 text-xs leading-relaxed"
                     :class="task.isDone ? 'text-gray-400' : 'text-gray-600'"
                   >
-                    {{ task.description }}
+                    {{ t(task.descriptionKey) }}
                   </p>
                 </div>
               </div>

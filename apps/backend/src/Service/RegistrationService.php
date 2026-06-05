@@ -5,11 +5,9 @@ declare(strict_types=1);
 namespace App\Service;
 
 use App\Entity\User;
-use App\Repository\AdminSettingsRepository;
+use App\Exception\EmailAlreadyRegisteredException;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Bundle\SecurityBundle\Security;
-use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Uid\Uuid;
 use Symfony\Contracts\Translation\TranslatorInterface;
@@ -28,9 +26,22 @@ class RegistrationService
 
     public function register(array $data, bool $isAdminCreation = false): User
     {
-        $existingUser = $this->entityManager->getRepository(User::class)->findOneBy(['email' => $data['email']]);
+        $filters = $this->entityManager->getFilters();
+        $companyFilterEnabled = $filters->isEnabled('company_filter');
+        if ($companyFilterEnabled) {
+            $filters->disable('company_filter');
+        }
+
+        try {
+            $existingUser = $this->entityManager->getRepository(User::class)->findOneBy(['email' => $data['email']]);
+        } finally {
+            if ($companyFilterEnabled) {
+                $filters->enable('company_filter');
+            }
+        }
+
         if ($existingUser) {
-            throw new \Exception($this->translator->trans('error.email_already_registered'));
+            throw new EmailAlreadyRegisteredException($this->translator->trans('error.email_already_registered'));
         }
 
         $password = $data['password'] ?? '';
@@ -82,7 +93,7 @@ class RegistrationService
         } else {
             // Public registration logic
             if ($isNewCompany) {
-                $finalRoles = ['ROLE_ADMIN'];
+                $finalRoles = ['ROLE_ADMIN', 'ROLE_TRAINER'];
             } else {
                 $finalRoles = ['ROLE_TRIAL'];
             }
