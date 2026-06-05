@@ -139,7 +139,7 @@ function navigateToTask(task: any) {
                 >
                   <i :class="task.isDone ? 'pi pi-check text-xs' : task.icon + ' text-xs'" />
                 </div>
-                 <div class="flex-grow">
+                <div class="flex-grow">
                   <div class="flex items-center justify-between mb-1">
                     <div class="flex items-center gap-2">
                       <h5

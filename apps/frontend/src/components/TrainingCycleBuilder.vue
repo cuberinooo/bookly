@@ -196,11 +196,15 @@ onMounted(loadData);
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs leading-relaxed">
             <div class="flex flex-col gap-1">
               <span class="font-bold text-slate-900 uppercase tracking-wider text-[10px]">{{ $t('admin.cycle.infoPaletteTitle') }}</span>
-              <p class="text-slate-600">{{ $t('admin.cycle.infoPaletteText') }}</p>
+              <p class="text-slate-600">
+                {{ $t('admin.cycle.infoPaletteText') }}
+              </p>
             </div>
             <div class="flex flex-col gap-1">
               <span class="font-bold text-slate-900 uppercase tracking-wider text-[10px]">{{ $t('admin.cycle.infoImpactTitle') }}</span>
-              <p class="text-slate-600">{{ $t('admin.cycle.infoImpactText') }}</p>
+              <p class="text-slate-600">
+                {{ $t('admin.cycle.infoImpactText') }}
+              </p>
             </div>
           </div>
         </div>

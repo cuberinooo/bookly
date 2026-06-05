@@ -378,7 +378,10 @@ async function register() {
         <div v-else-if="step === 2">
           <div class="space-y-8">
             <!-- New Company Info Card (Create Mode) -->
-            <div v-if="registerMode === 'create'" class="flex flex-col gap-4 p-6 bg-slate-50 rounded-2xl border border-slate-100 shadow-sm text-left">
+            <div
+              v-if="registerMode === 'create'"
+              class="flex flex-col gap-4 p-6 bg-slate-50 rounded-2xl border border-slate-100 shadow-sm text-left"
+            >
               <div class="flex items-center gap-3 text-primary">
                 <i class="pi pi-building text-2xl text-amber-500" />
                 <h3 class="text-lg font-black uppercase tracking-tight text-slate-900">
@@ -395,7 +398,10 @@ async function register() {
             </div>
 
             <!-- Existing Company Terms Agreement (Join Mode) -->
-            <div v-else class="flex flex-col gap-4 p-6 bg-slate-50 rounded-2xl border border-slate-100 shadow-sm text-left">
+            <div
+              v-else
+              class="flex flex-col gap-4 p-6 bg-slate-50 rounded-2xl border border-slate-100 shadow-sm text-left"
+            >
               <div class="flex items-center gap-3 text-primary">
                 <i class="pi pi-users text-2xl text-amber-500" />
                 <h3 class="text-lg font-black uppercase tracking-tight text-slate-900">
