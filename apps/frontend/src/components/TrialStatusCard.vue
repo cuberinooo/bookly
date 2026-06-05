@@ -66,6 +66,7 @@ const upgrade = async () => {
       <Button
         label="Sign Contract & Pay"
         icon="pi pi-file-edit"
+        severity="primary"
         class="w-full upgrade-btn"
         :loading="isUpgrading"
         @click="upgrade"
@@ -116,7 +117,6 @@ const upgrade = async () => {
     }
 
     .upgrade-btn {
-        background: #0f172a;
         border: none;
         font-weight: 800;
         letter-spacing: 0.05em;

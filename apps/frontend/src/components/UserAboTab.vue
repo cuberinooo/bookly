@@ -284,6 +284,7 @@ onMounted(fetchAboData);
             <Button
               v-if="subscription?.status !== 'active'"
               :label="t('profile.pricing.upgradeBtn')"
+              severity="primary"
               icon="pi pi-bolt"
               class="w-full upgrade-btn py-4"
               :loading="isUpgrading"
@@ -312,7 +313,6 @@ onMounted(fetchAboData);
     .font-barlow { font-family: 'Barlow Condensed', sans-serif; }
 
     .upgrade-btn {
-        background: #0f172a;
         border: none;
         font-weight: 800;
         letter-spacing: 0.1em;
