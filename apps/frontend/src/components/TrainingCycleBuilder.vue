@@ -187,6 +187,24 @@ onMounted(loadData);
 
       <!-- RIGHT: The Matrix -->
       <main>
+        <!-- Info Banner -->
+        <div class="mb-6 p-5 rounded-xl border border-blue-100 bg-blue-50/50 text-slate-700">
+          <h4 class="text-sm font-black uppercase text-blue-800 tracking-wide mb-3 flex items-center gap-2">
+            <i class="pi pi-info-circle text-base" />
+            {{ $t('admin.cycle.infoTitle') }}
+          </h4>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs leading-relaxed">
+            <div class="flex flex-col gap-1">
+              <span class="font-bold text-slate-900 uppercase tracking-wider text-[10px]">{{ $t('admin.cycle.infoPaletteTitle') }}</span>
+              <p class="text-slate-600">{{ $t('admin.cycle.infoPaletteText') }}</p>
+            </div>
+            <div class="flex flex-col gap-1">
+              <span class="font-bold text-slate-900 uppercase tracking-wider text-[10px]">{{ $t('admin.cycle.infoImpactTitle') }}</span>
+              <p class="text-slate-600">{{ $t('admin.cycle.infoImpactText') }}</p>
+            </div>
+          </div>
+        </div>
+
         <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
           <div class="flex flex-col gap-4">
             <h2 class="text-2xl font-black uppercase">

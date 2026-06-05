@@ -279,7 +279,12 @@
       "categoryAdded": "Kategorie erfolgreich hinzugefügt",
       "categoryRemoved": "Kategorie entfernt",
       "categoryUpdated": "Kategorie aktualisiert",
-      "cycleSaved": "Trainingszyklus erfolgreich gespeichert"
+      "cycleSaved": "Trainingszyklus erfolgreich gespeichert",
+      "infoTitle": "Wie funktioniert der Trainingszyklus? 💡",
+      "infoPaletteTitle": "Kategorie-Zuweisung",
+      "infoPaletteText": "Wähle links eine Kategorie aus der Palette aus (oder erstelle eine neue) und klicke auf die gewünschten Felder im Grid rechts, um die Trainingstage zuzuweisen.",
+      "infoImpactTitle": "Auswirkung auf den Kursplan",
+      "infoImpactText": "Die zugewiesenen Kategorien werden farblich auf dem Kursplan im Kalender hinterlegt. Wenn Athleten einen Kurs buchen, sehen sie das spezifische Thema/Fokus dieses Tages direkt am Kurs-Tag im Kalender."
     },
     "users": {
       "athleteName": "Athleten-Name",

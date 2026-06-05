@@ -278,7 +278,12 @@
       "categoryAdded": "Category added successfully",
       "categoryRemoved": "Category removed",
       "categoryUpdated": "Category updated",
-      "cycleSaved": "Training cycle saved successfully"
+      "cycleSaved": "Training cycle saved successfully",
+      "infoTitle": "How does the training cycle work? 💡",
+      "infoPaletteTitle": "Category Assignment",
+      "infoPaletteText": "Select a category from the left palette (or create a new one) and click any time cell in the right grid to assign training days.",
+      "infoImpactTitle": "Visual Impact on Courses",
+      "infoImpactText": "Assigned categories are highlighted with their respective colors on the course calendar. When athletes book a course, they will see the specific category focus directly on that calendar day."
     },
     "users": {
       "athleteName": "Athlete Name",
