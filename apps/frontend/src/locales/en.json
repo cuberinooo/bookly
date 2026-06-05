@@ -331,6 +331,7 @@
       "welcomeUpload": "Upload Welcome Attachment",
       "membershipWelcomeMailTitle": "Membership Welcome Mail (Subscribers)",
       "membershipWelcomeMailNote": "This email is automatically sent when a user successfully subscribes to a paid membership. Use this to provide essential onboarding information, studio rules, or access details.",
+      "membershipWelcomeMailNoteManual": "This email can be manually sent to trial users in the user management view.",
       "membershipWelcomePreview": "Membership Welcome Email Preview",
       "membershipWelcomeUpload": "Upload Membership Welcome Attachment",
       "noMembershipWelcomeAttachments": "No attachments for Membership Welcome Mail.",
@@ -846,7 +847,7 @@
   "footer": {
     "legal": "Legal & Privacy",
     "hosting": "Infrastructure",
-    "hostedBy": "Hosted in Germany 🇩🇪"
+    "hostedBy": "Hosted by"
   },
   "cookies": {
     "title": "We value your privacy",
@@ -875,6 +876,10 @@
         "subscribers": "SUBSCRIBERS",
         "analytics": "ANALYTICS"
     },
+    "connectStripeTitle": "Connect your Stripe account",
+    "connectStripeDesc": "Connect your Stripe account first to manage subscriptions, collect payments, and view analytics. The \"Subscribers\" and \"Analytics\" tabs will unlock once connected.",
+    "connectStripeHint": "Stripe not connected",
+    "connectStripeNote": "Use the Configuration tab below to set up your Stripe account.",
     "activeSubscriptions": "Active Subscriptions",
     "fetchFailed": "Failed to fetch subscriptions",
     "missingAccountId": "Missing Account ID",

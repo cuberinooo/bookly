@@ -4,10 +4,12 @@ import api from '../services/api';
 import { useToast } from 'primevue/usetoast';
 import MarkdownPreview from './MarkdownPreview.vue';
 import { downloadWelcomeAttachment } from '../services/download';
+import { useSettingsStore } from '../store/useSettingsStore';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 const toast = useToast();
+const settingsStore = useSettingsStore();
 const settings = ref({
     welcomeMailMarkdown: '',
     welcomeMailAttachments: [] as { name: string, path: string }[],
@@ -100,7 +102,10 @@ async function deleteAttachment(path: string, type: 'welcome' | 'membership-welc
     }
 }
 
-onMounted(fetchSettings);
+onMounted(() => {
+    fetchSettings();
+    settingsStore.fetchSettings();
+});
 </script>
 
 <template>
@@ -223,10 +228,10 @@ onMounted(fetchSettings);
         <div class="settings-card phoenix-card">
           <div class="flex flex-col gap-1 mb-6">
             <h3 class="settings-title mb-0 border-b-0 pb-0">
-              {{ $t('admin.mail.membershipWelcomeMailTitle') }}
+              {{ settingsStore.paymentEnabled ? $t('admin.mail.membershipWelcomeMailTitle') : $t('admin.mail.membershipWelcomeMailTitle').replace(' (Subscribers)', '') }}
             </h3>
             <p class="text-sm text-slate-500">
-              {{ $t('admin.mail.membershipWelcomeMailNote') }}
+              {{ settingsStore.paymentEnabled ? $t('admin.mail.membershipWelcomeMailNote') : $t('admin.mail.membershipWelcomeMailNoteManual') }}
             </p>
           </div>
 

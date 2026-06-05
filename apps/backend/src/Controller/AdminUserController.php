@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Entity\User;
+use App\Exception\EmailAlreadyRegisteredException;
 use App\Repository\UserRepository;
 use App\Service\ApiCacheService;
 use App\Service\RegistrationService;
@@ -53,13 +54,10 @@ class AdminUserController extends AbstractController
 
         try {
             $registrationService->register($data, true);
+        } catch (EmailAlreadyRegisteredException $e) {
+            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_CONFLICT);
         } catch (\Exception $e) {
-            $statusCode = Response::HTTP_BAD_REQUEST;
-            if ('Email already registered' === $e->getMessage()) {
-                $statusCode = Response::HTTP_CONFLICT;
-            }
-
-            return new JsonResponse(['error' => $e->getMessage()], $statusCode);
+            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
         }
 
         return new JsonResponse(['status' => 'User created successfully. Temporary password sent via email.'], Response::HTTP_CREATED);
@@ -94,6 +92,11 @@ class AdminUserController extends AbstractController
     #[Route('/{id}/send-membership-welcome', name: 'admin_user_send_membership_welcome', methods: ['POST'])]
     public function sendMembershipWelcomeMail(User $user, \App\Service\EmailService $emailService, EntityManagerInterface $entityManager): JsonResponse
     {
+        $company = $user->getCompany();
+        if ($company && $company->getStripeConfig() && $company->getStripeConfig()->isPaymentEnabled()) {
+            return new JsonResponse(['error' => 'Manual welcome emails are only allowed when automatic payment is disabled.'], Response::HTTP_BAD_REQUEST);
+        }
+
         $allowedRoles = ['ROLE_TRIAL', 'ROLE_MEMBER'];
         $hasAllowedRole = false;
         foreach ($allowedRoles as $role) {

@@ -331,7 +331,8 @@
       "noAttachments": "Noch keine Anhänge hochgeladen.",
       "welcomeUpload": "Willkommens-Anhang hochladen",
       "membershipWelcomeMailTitle": "Willkommens-Mail für Mitglieder",
-      "membershipWelcomeMailNote": "Diese E-Mail wird automatisch gesendet, wenn ein Benutzer erfolgreich eine kostenpflichtige Mitgliedschaft abschließt.",
+       "membershipWelcomeMailNote": "Diese E-Mail wird automatisch gesendet, wenn ein Benutzer erfolgreich eine kostenpflichtige Mitgliedschaft abschließt.",
+      "membershipWelcomeMailNoteManual": "Diese E-Mail kann in der Mitgliederverwaltung manuell an Probetrainierende gesendet werden.",
       "membershipWelcomePreview": "Vorschau Mitglieder-Willkommens-Mail",
       "membershipWelcomeUpload": "Mitglieder-Willkommens-Anhang hochladen",
       "noMembershipWelcomeAttachments": "Keine Anhänge für Mitglieder-Willkommens-Mail.",
@@ -847,7 +848,7 @@
   "footer": {
     "legal": "Impressum & Rechtliches",
     "hosting": "Infrastruktur",
-    "hostedBy": "Gehostet in Deutschland 🇩🇪"
+    "hostedBy": "Gehostet von"
   },
   "cookies": {
     "title": "Ihre Privatsphäre ist uns wichtig",
@@ -876,6 +877,10 @@
         "subscribers": "ABONNENTEN",
         "analytics": "ANALYSE"
     },
+    "connectStripeTitle": "Stripe-Konto verbinden",
+    "connectStripeDesc": "Verbinde zunächst dein Stripe-Konto, um Abonnements zu verwalten, Zahlungen einzuziehen und Analysen einzusehen. Die Tabs \"Abonnenten\" und \"Analyse\" werden nach der Verbindung freigeschaltet.",
+    "connectStripeHint": "Stripe nicht verbunden",
+    "connectStripeNote": "Nutze den Tab Konfiguration unten, um dein Stripe-Konto einzurichten.",
     "activeSubscriptions": "Aktive Abonnements",
     "fetchFailed": "Abonnements konnten nicht geladen werden",
     "missingAccountId": "Fehlende Account-ID",
