@@ -101,6 +101,25 @@ const savePrices = async () => {
     }
 };
 
+const formatCurrency = (value: number | null) => {
+    if (value === null) return '—';
+    return new Intl.NumberFormat(t('app.language') === 'English' ? 'en-US' : 'de-DE', {
+        style: 'currency',
+        currency: 'EUR'
+    }).format(value);
+};
+
+const calcCardFee = (amount: number | null) => {
+    if (!amount) return 0;
+    return Math.round((amount * 0.014 + 0.25) * 100) / 100;
+};
+
+const calcSepaFee = (amount: number | null) => {
+    if (!amount) return 0;
+    const rawFee = amount * 0.008 + 0.25;
+    return Math.round(Math.min(rawFee, 5.00) * 100) / 100;
+};
+
 </script>
 
 <template>
@@ -283,6 +302,97 @@ const savePrices = async () => {
               </span>
             </div>
             <small class="text-slate-500 leading-snug italic">{{ t('settings.stripe.monthlyFeeNote') }}</small>
+          </div>
+        </div>
+
+        <!-- Stripe Fee Breakdown Card -->
+        <div v-if="monthlyFee || (yearlyFeeEnabled && setupFee)" class="mt-8 p-6 bg-slate-50 rounded-2xl border border-slate-200">
+          <h4 class="text-sm font-extrabold uppercase tracking-wider text-slate-700 mb-4 flex items-center gap-2">
+            <i class="pi pi-info-circle text-amber-500" />
+            {{ t('settings.stripe.feeBreakdownTitle') }}
+          </h4>
+          <p class="text-xs text-slate-500 mb-6">
+            {{ t('settings.stripe.feeExplanation') }}
+          </p>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Monthly Fee Breakdown -->
+            <div v-if="monthlyFee" class="bg-white p-5 rounded-xl border border-slate-100 shadow-sm">
+              <div class="flex items-center gap-2 mb-3">
+                <span class="w-2.5 h-2.5 rounded-full bg-amber-500" />
+                <span class="font-bold text-xs uppercase tracking-wider text-slate-600">{{ t('settings.stripe.monthlyAbo') }}</span>
+              </div>
+              <div class="space-y-2.5 text-xs text-slate-600">
+                <div class="flex justify-between">
+                  <span>{{ t('settings.stripe.grossAmount') }}</span>
+                  <span class="font-bold text-slate-900">{{ formatCurrency(monthlyFee) }}</span>
+                </div>
+                <div class="border-t border-dashed border-slate-100 pt-2 flex justify-between">
+                  <span class="flex items-center gap-1">
+                    {{ t('settings.stripe.creditCardFee') }}
+                    <small class="text-slate-400 font-mono">(1.4% + €0.25)</small>
+                  </span>
+                  <span class="text-red-500">- {{ formatCurrency(calcCardFee(monthlyFee)) }}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="flex items-center gap-1">
+                    {{ t('settings.stripe.sepaFee') }}
+                    <small class="text-slate-400 font-mono">(0.8% + €0.25)</small>
+                  </span>
+                  <span class="text-red-500">- {{ formatCurrency(calcSepaFee(monthlyFee)) }}</span>
+                </div>
+                <div class="border-t border-slate-200 pt-3 flex justify-between font-bold text-sm">
+                  <span>{{ t('settings.stripe.estPayout') }}</span>
+                  <div class="text-right">
+                    <div class="text-green-600" v-tooltip="t('settings.stripe.viaCreditCard')">
+                      {{ formatCurrency(monthlyFee - calcCardFee(monthlyFee)) }} <span class="text-[9px] text-slate-400 font-normal">CC</span>
+                    </div>
+                    <div class="text-green-600 text-xs font-normal mt-0.5" v-tooltip="t('settings.stripe.viaSepa')">
+                      {{ formatCurrency(monthlyFee - calcSepaFee(monthlyFee)) }} <span class="text-[9px] text-slate-400 font-normal">SEPA</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Yearly/Setup Fee Breakdown -->
+            <div v-if="yearlyFeeEnabled && setupFee" class="bg-white p-5 rounded-xl border border-slate-100 shadow-sm">
+              <div class="flex items-center gap-2 mb-3">
+                <span class="w-2.5 h-2.5 rounded-full bg-indigo-500" />
+                <span class="font-bold text-xs uppercase tracking-wider text-slate-600">{{ t('settings.stripe.yearlySetup') }}</span>
+              </div>
+              <div class="space-y-2.5 text-xs text-slate-600">
+                <div class="flex justify-between">
+                  <span>{{ t('settings.stripe.grossAmount') }}</span>
+                  <span class="font-bold text-slate-900">{{ formatCurrency(setupFee) }}</span>
+                </div>
+                <div class="border-t border-dashed border-slate-100 pt-2 flex justify-between">
+                  <span class="flex items-center gap-1">
+                    {{ t('settings.stripe.creditCardFee') }}
+                    <small class="text-slate-400 font-mono">(1.4% + €0.25)</small>
+                  </span>
+                  <span class="text-red-500">- {{ formatCurrency(calcCardFee(setupFee)) }}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="flex items-center gap-1">
+                    {{ t('settings.stripe.sepaFee') }}
+                    <small class="text-slate-400 font-mono">(0.8% + €0.25)</small>
+                  </span>
+                  <span class="text-red-500">- {{ formatCurrency(calcSepaFee(setupFee)) }}</span>
+                </div>
+                <div class="border-t border-slate-200 pt-3 flex justify-between font-bold text-sm">
+                  <span>{{ t('settings.stripe.estPayout') }}</span>
+                  <div class="text-right">
+                    <div class="text-green-600" v-tooltip="t('settings.stripe.viaCreditCard')">
+                      {{ formatCurrency(setupFee - calcCardFee(setupFee)) }} <span class="text-[9px] text-slate-400 font-normal">CC</span>
+                    </div>
+                    <div class="text-green-600 text-xs font-normal mt-0.5" v-tooltip="t('settings.stripe.viaSepa')">
+                      {{ formatCurrency(setupFee - calcSepaFee(setupFee)) }} <span class="text-[9px] text-slate-400 font-normal">SEPA</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>

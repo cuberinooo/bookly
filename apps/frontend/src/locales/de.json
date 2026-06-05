@@ -777,7 +777,17 @@
       "onboardFailed": "Stripe-Onboarding konnte nicht gestartet werden.",
       "priceCreated": "Preis in Stripe erstellt",
       "priceWillBeCreated": "Preis wird beim Speichern erstellt",
-      "refreshPrices": "Preise von Stripe aktualisieren"
+      "refreshPrices": "Preise von Stripe aktualisieren",
+      "feeBreakdownTitle": "Stripe-Gebühren & Auszahlungs-Rechner 📊",
+      "feeExplanation": "Stripe erhebt eine Transaktionsgebühr für jede Buchung. Unten siehst du die geschätzten Gebühren und deinen Auszahlungsbetrag basierend auf den Standardtarifen für europäische Kreditkarten (1,4% + €0,25) und SEPA-Lastschriften (0,8% + €0,25, gedeckelt auf €5,00).",
+      "monthlyAbo": "Monatliches Abonnement",
+      "yearlySetup": "Jährliche Gebühr",
+      "grossAmount": "Bruttobetrag (Mitglied zahlt)",
+      "creditCardFee": "Stripe-Gebühr Kreditkarte (EU)",
+      "sepaFee": "Stripe-Gebühr SEPA-Lastschrift",
+      "estPayout": "Geschätzte Auszahlung",
+      "viaCreditCard": "Auszahlung bei Zahlung mit Kreditkarte",
+      "viaSepa": "Auszahlung bei Zahlung per SEPA-Lastschrift"
     },
     "memberPrivacyTitle": "Privatsphäre der Mitglieder",
     "memberPrivacyNote": "Deine Privatsphäre wird von den Kurstrainern verwaltet. Du kannst deine persönlichen Profilinformationen im Bereich Profil aktualisieren.",

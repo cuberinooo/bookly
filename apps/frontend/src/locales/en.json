@@ -776,7 +776,17 @@
       "onboardFailed": "Failed to start Stripe onboarding.",
       "priceCreated": "Price created in Stripe",
       "priceWillBeCreated": "Price will be created on save",
-      "refreshPrices": "Refresh prices from Stripe"
+      "refreshPrices": "Refresh prices from Stripe",
+      "feeBreakdownTitle": "Stripe Fees & Payout Calculator 📊",
+      "feeExplanation": "Stripe charges a processing fee per transaction. Below is an estimated breakdown of the fees and your net payout based on standard Stripe rates for European credit cards (1.4% + $0.25) and SEPA Direct Debit (0.8% + $0.25, capped at $5.00).",
+      "monthlyAbo": "Monthly Subscription",
+      "yearlySetup": "Yearly Fee",
+      "grossAmount": "Gross Amount (member pays)",
+      "creditCardFee": "Stripe Credit Card Fee (EU)",
+      "sepaFee": "Stripe SEPA Direct Debit Fee",
+      "estPayout": "Estimated Net Payout",
+      "viaCreditCard": "Payout when paid via Credit Card",
+      "viaSepa": "Payout when paid via SEPA Direct Debit"
     },
     "memberPrivacyTitle": "Member Privacy",
     "memberPrivacyNote": "Your privacy is managed by the course trainers. You can update your personal profile information in the Profile section.",

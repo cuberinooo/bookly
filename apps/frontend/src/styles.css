@@ -122,7 +122,7 @@ td {
 }
 
 .p-togglebutton-checked .p-togglebutton-content {
-  background-color: var(--bg-primary-color) !important;
+  background-color: var(--text-muted) !important;
 }
 
 .p-button-link {
