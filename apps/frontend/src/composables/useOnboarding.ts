@@ -86,25 +86,21 @@ export function useOnboarding() {
   const isSkipped = computed(() => onboardingState.value.includes('skipped'));
 
   const filteredMetadata = computed(() => {
-    if (authStore.isAdmin) {
-      return {
-        [ONBOARDING_TASKS.ADMIN_SETTINGS]: TASK_METADATA[ONBOARDING_TASKS.ADMIN_SETTINGS],
-        [ONBOARDING_TASKS.ADMIN_PAYMENTS]: TASK_METADATA[ONBOARDING_TASKS.ADMIN_PAYMENTS],
-        [ONBOARDING_TASKS.ADMIN_USERS]: TASK_METADATA[ONBOARDING_TASKS.ADMIN_USERS],
-        [ONBOARDING_TASKS.ADMIN_COURSES]: TASK_METADATA[ONBOARDING_TASKS.ADMIN_COURSES],
-      };
+    const metadata = { ...TASK_METADATA };
+
+    // If NOT an admin, remove admin tasks
+    if (!authStore.isAdmin) {
+      delete metadata[ONBOARDING_TASKS.ADMIN_SETTINGS];
+      delete metadata[ONBOARDING_TASKS.ADMIN_PAYMENTS];
+      delete metadata[ONBOARDING_TASKS.ADMIN_USERS];
+      delete metadata[ONBOARDING_TASKS.ADMIN_COURSES];
     }
 
-    const metadata = {
-      [ONBOARDING_TASKS.PROFILE_UPDATE]: TASK_METADATA[ONBOARDING_TASKS.PROFILE_UPDATE],
-      [ONBOARDING_TASKS.FIRST_BOOKING]: TASK_METADATA[ONBOARDING_TASKS.FIRST_BOOKING],
-      [ONBOARDING_TASKS.EXPLORE_MEETUPS]: TASK_METADATA[ONBOARDING_TASKS.EXPLORE_MEETUPS],
-      [ONBOARDING_TASKS.PERSONAL_BESTS]: TASK_METADATA[ONBOARDING_TASKS.PERSONAL_BESTS],
-      [ONBOARDING_TASKS.LEADERBOARD]: TASK_METADATA[ONBOARDING_TASKS.LEADERBOARD],
-    };
+    // If a trial user, remove leaderboard
     if (authStore.isTrial) {
       delete metadata[ONBOARDING_TASKS.LEADERBOARD];
     }
+
     return metadata;
   });
 
@@ -185,14 +181,14 @@ export function useOnboarding() {
           } else if (newName === 'users') {
             markTaskComplete(ONBOARDING_TASKS.ADMIN_USERS);
           }
-        } else {
-          if (newName === 'meetups') {
-            markTaskComplete(ONBOARDING_TASKS.EXPLORE_MEETUPS);
-          } else if (newName === 'personal-bests') {
-            markTaskComplete(ONBOARDING_TASKS.PERSONAL_BESTS);
-          } else if (newName === 'leaderboard') {
-            markTaskComplete(ONBOARDING_TASKS.LEADERBOARD);
-          }
+        }
+        
+        if (newName === 'meetups') {
+          markTaskComplete(ONBOARDING_TASKS.EXPLORE_MEETUPS);
+        } else if (newName === 'personal-bests') {
+          markTaskComplete(ONBOARDING_TASKS.PERSONAL_BESTS);
+        } else if (newName === 'leaderboard') {
+          markTaskComplete(ONBOARDING_TASKS.LEADERBOARD);
         }
       },
       { immediate: true }
