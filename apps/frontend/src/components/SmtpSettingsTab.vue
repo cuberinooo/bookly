@@ -84,7 +84,7 @@ onMounted(fetchSettings);
           </p>
         </div>
 
-        <div class="flex items-center gap-4 mb-8 p-4 bg-amber-50 rounded-xl border border-amber-100">
+        <div class="flex items-center gap-4 mb-8 p-1 bg-amber-50 rounded-xl border border-amber-100">
           <ToggleSwitch
             v-model="settings.useCustomSmtp"
             binary
@@ -186,16 +186,6 @@ onMounted(fetchSettings);
 </template>
 
 <style lang="scss" scoped>
-.settings-card {
-    background: white;
-    padding: 2.5rem;
-    border-radius: 16px;
-    border: 1px solid var(--border-color);
-
-    @media (max-width: 640px) {
-      padding: 1.5rem;
-    }
-}
 
 .settings-title {
     @apply text-xl font-black uppercase tracking-tighter text-slate-900 mb-8 pb-4 border-b border-slate-100;

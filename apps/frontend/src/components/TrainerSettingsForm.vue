@@ -389,16 +389,6 @@ onMounted(fetchSettings);
 </template>
 
 <style lang="scss" scoped>
-.settings-card {
-    background: white;
-    padding: 2.5rem;
-    border-radius: 16px;
-    border: 1px solid var(--border-color);
-
-    @media (max-width: 640px) {
-      padding: 1rem;
-    }
-}
 
 .settings-title {
     @apply text-lg font-black uppercase tracking-tighter text-slate-900 mb-8 pb-4 border-b border-slate-100;

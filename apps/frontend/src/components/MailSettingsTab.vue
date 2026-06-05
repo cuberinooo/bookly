@@ -334,16 +334,6 @@ onMounted(() => {
 </template>
 
 <style lang="scss" scoped>
-.settings-card {
-    background: white;
-    padding: 2.5rem;
-    border-radius: 16px;
-    border: 1px solid var(--border-color);
-
-    @media (max-width: 640px) {
-      padding: 1.5rem;
-    }
-}
 
 .settings-title {
     @apply text-xl font-black uppercase tracking-tighter text-slate-900 mb-8 pb-4 border-b border-slate-100;

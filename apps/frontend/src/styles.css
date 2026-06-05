@@ -511,3 +511,14 @@ color: var(--accent-color);
 .animate-spin-slow {
   animation: spin-slow 12s linear infinite;
 }
+
+.settings-card {
+  background: white;
+  padding: 2.5rem;
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
+
+  @media (max-width: 640px) {
+    padding: 0.5rem;
+  }
+}
