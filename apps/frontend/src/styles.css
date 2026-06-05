@@ -109,6 +109,22 @@ td {
     }
 }
 
+.p-tag-secondary {
+  background-color: var(--bg-primary-color) !important;
+}
+
+.p-tag-success {
+  background-color: var(--success-color) !important;
+}
+
+.p-togglebutton {
+  background: unset !important;
+}
+
+.p-togglebutton-checked .p-togglebutton-content {
+  background-color: var(--bg-primary-color) !important;
+}
+
 .p-button-link {
   color: var(--primary-color) !important;
 }
