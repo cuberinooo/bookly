@@ -878,6 +878,7 @@
     "notificationStepError": "Please use 5-minute increments.",
     "minNotificationNote": "Min. 5 minutes",
     "saveNotification": "Save Personal Alerts",
+    "saveOperations": "Save Global Settings",
     "hours": "Hours",
     "minutes": "Minutes"
   },

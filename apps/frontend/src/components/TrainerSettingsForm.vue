@@ -142,7 +142,6 @@ onMounted(fetchSettings);
                 v-model="settings.showParticipantNames"
                 input-id="showNames"
                 :disabled="saving"
-                @change="updateGlobalSettings"
               />
             </div>
           </div>
@@ -165,7 +164,6 @@ onMounted(fetchSettings);
                 v-model="settings.isWaitlistVisible"
                 input-id="waitlistVisible"
                 :disabled="saving"
-                @change="updateGlobalSettings"
               />
             </div>
           </div>
@@ -192,7 +190,6 @@ onMounted(fetchSettings);
                 option-value="value"
                 :placeholder="$t('settings.selectWindow')"
                 class="w-64"
-                @change="updateGlobalSettings"
               />
             </div>
           </div>
@@ -217,7 +214,6 @@ onMounted(fetchSettings);
                 show-buttons
                 :min="0"
                 class="w-32"
-                @update:model-value="updateGlobalSettings"
               />
             </div>
           </div>
@@ -241,7 +237,6 @@ onMounted(fetchSettings);
                   v-model="settings.autoCancelEnabled"
                   input-id="autoCancelEnabled"
                   :disabled="saving"
-                  @change="updateGlobalSettings"
                 />
               </div>
 
@@ -265,7 +260,6 @@ onMounted(fetchSettings);
                     show-buttons
                     :min="1"
                     class="w-full"
-                    @update:model-value="updateGlobalSettings"
                   />
                 </div>
                 <div class="flex flex-col gap-2">
@@ -286,11 +280,21 @@ onMounted(fetchSettings);
                     :max="72"
                     suffix=" h"
                     class="w-full"
-                    @update:model-value="updateGlobalSettings"
                   />
                 </div>
               </div>
             </div>
+          </div>
+
+          <!-- Save Button for Global Settings -->
+          <div class="flex justify-end pt-6 border-t border-slate-100">
+            <Button
+              :label="$t('settings.saveOperations')"
+              icon="pi pi-save"
+              severity="primary"
+              :loading="saving"
+              @click="updateGlobalSettings"
+            />
           </div>
         </div>
       </section>
@@ -309,7 +313,7 @@ onMounted(fetchSettings);
           </p>
         </div>
 
-        <div class="settings-card phoenix-card">
+        <div class="settings-card phoenix-card mb-6">
           <h3 class="settings-title">
             {{ $t('settings.startNotification') }}
           </h3>
@@ -368,16 +372,16 @@ onMounted(fetchSettings);
               </div>
             </div>
           </div>
-          <div class="flex justify-end pt-4 border-t border-slate-100">
-            <Button
-              :label="$t('settings.saveNotification')"
-              icon="pi pi-check"
-              severity="primary"
-              :loading="saving"
-              :disabled="!!notificationError"
-              @click="updatePersonalSettings"
-            />
-          </div>
+        </div>
+        <div class="flex justify-end pt-6 border-t border-slate-100">
+          <Button
+            :label="$t('settings.saveNotification')"
+            icon="pi pi-check"
+            severity="primary"
+            :loading="saving"
+            :disabled="!!notificationError"
+            @click="updatePersonalSettings"
+          />
         </div>
       </section>
     </div>
