@@ -54,6 +54,15 @@ class AdminUserService
             }
         }
 
+        // Clean up sensitive data access logs where this user is viewer or target user
+        $this->entityManager->createQueryBuilder()
+            ->delete(\App\Entity\SensitiveDataAccessLog::class, 'log')
+            ->where('log.viewer = :user')
+            ->orWhere('log.targetUser = :user')
+            ->setParameter('user', $user)
+            ->getQuery()
+            ->execute();
+
         $this->entityManager->remove($user);
         $this->entityManager->flush();
 

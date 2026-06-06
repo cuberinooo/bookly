@@ -118,7 +118,11 @@ async function deleteAccount() {
     try {
         await api.delete('/user/me');
         toast.add({ severity: 'success', summary: t('app.success'), detail: t('profile.accountDeleted'), life: 5000 });
-        await authStore.logout();
+        
+        // Clear auth credentials locally since account is deleted on backend
+        authStore.token = null;
+        authStore.user = null;
+        
         router.push('/login');
     } catch (e: any) {
         const message = e.response?.data?.error || t('profile.deleteFailed');

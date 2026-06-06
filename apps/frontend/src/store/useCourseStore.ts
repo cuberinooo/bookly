@@ -67,13 +67,13 @@ export const useCourseStore = defineStore('course', {
       if (forceLoading || this.courseListOrder.length === 0) {
         this.isLoading = true;
       }
-      
+
       this.filters = { ...filters };
       try {
         const response = await api.get('/courses', { params: filters });
         const data = response.data.data as Course[];
         this.cycleInfo = response.data.cycle;
-        
+
         if (response.data.meta) {
             this.pagination = {
                 page: response.data.meta.page,
@@ -86,7 +86,7 @@ export const useCourseStore = defineStore('course', {
         // Populate new data
         this.courseListOrder = data.map(c => c.id);
         data.forEach(c => this.courses.set(c.id, c));
-        
+
         this.lastFetched = Date.now();
         if (filters.startDate) this.loadedRange.start = filters.startDate;
         if (filters.endDate) this.loadedRange.end = filters.endDate;
@@ -187,7 +187,7 @@ export const useCourseStore = defineStore('course', {
       });
 
       if (toFetch.length > 0) {
-        // For simplicity and to ensure correct list order/cycle info, 
+        // For simplicity and to ensure correct list order/cycle info,
         // we re-fetch the current range if anything changed.
         // This is still only ONE call instead of N.
         await this.fetchCourses();

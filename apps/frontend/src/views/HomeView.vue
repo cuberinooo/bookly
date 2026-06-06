@@ -303,7 +303,7 @@ onUnmounted(() => {
       </header>
 
       <div
-        v-if="authStore.isAdmin && courses.length === 0"
+        v-if="!courseStore.isLoading && authStore.isAdmin && courses.length === 0"
         class="onboarding-welcome-banner mb-6 p-6 rounded-2xl border bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border-amber-500/20 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
       >
         <div class="flex items-start gap-4">
