@@ -102,6 +102,12 @@ const router = createRouter({
       component: () => import('../views/PersonalBestsView.vue'),
       meta: { requiresAuth: true }
     },
+    {
+      path: '/monitor',
+      name: 'monitor',
+      component: () => import('../views/MonitorView.vue'),
+      meta: { requiresAuth: true, roles: ['ROLE_MONITOR'] }
+    },
   ],
 });
 

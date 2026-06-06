@@ -155,10 +155,13 @@ class AdminUserController extends AbstractController
             $allowedRoles = ['ROLE_MEMBER', 'ROLE_TRAINER', 'ROLE_ADMIN', 'ROLE_TRIAL'];
             $newRoles = array_intersect($data['roles'], $allowedRoles);
 
-            // Basic safety: Don't allow removing own ROLE_ADMIN if we implemented it,
-            // but for now we follow simple logic.
+            // Keep ROLE_MONITOR if the user already had it, as it is a hidden role
+            if (in_array('ROLE_MONITOR', $user->getRoles(), true)) {
+                $newRoles[] = 'ROLE_MONITOR';
+            }
+
             if (!empty($newRoles)) {
-                $user->setRoles(array_values($newRoles));
+                $user->setRoles(array_values(array_unique($newRoles)));
             }
         }
 

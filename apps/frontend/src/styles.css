@@ -24,6 +24,10 @@
   color: var(--primary-color);
 }
 
+.bg-primary {
+  background-color: var(--bg-primary-color) !important;
+}
+
 body {
   margin: 0;
   font-family: "Barlow Condensed", sans-serif;

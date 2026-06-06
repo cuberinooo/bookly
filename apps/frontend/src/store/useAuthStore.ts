@@ -83,6 +83,7 @@ export const useAuthStore = defineStore('auth', () => {
   const isTrainer = computed(() => user.value?.roles.includes('ROLE_TRAINER') ?? false);
   const isTrial = computed(() => user.value?.roles.includes('ROLE_TRIAL') ?? false);
   const isAdmin = computed(() => user.value?.roles.includes('ROLE_ADMIN') ?? false);
+  const isMonitor = computed(() => user.value?.roles.includes('ROLE_MONITOR') ?? false);
 
   // Initial parse if token exists
   if (token.value) {
@@ -102,6 +103,7 @@ export const useAuthStore = defineStore('auth', () => {
     isLoggedIn,
     isTrainer,
     isTrial,
-    isAdmin
+    isAdmin,
+    isMonitor
   };
 });

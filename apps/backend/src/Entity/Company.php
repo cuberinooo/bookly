@@ -40,6 +40,10 @@ class Company
     #[ORM\JoinColumn(nullable: false)]
     private ?SmtpSettings $smtpSettings = null;
 
+    #[ORM\Column(type: 'datetime_immutable', nullable: true)]
+    #[Groups(['company:read', 'admin:read'])]
+    private ?\DateTimeImmutable $createdAt = null;
+
     /**
      * @var Collection<int, User>
      */
@@ -53,12 +57,25 @@ class Company
         $this->globalSettings = new GlobalSettings();
         $this->stripeConfig = new StripeConfig();
         $this->smtpSettings = new SmtpSettings();
+        $this->createdAt = new \DateTimeImmutable();
 
         // Synchronize the inverse side
         $this->adminSettings->setCompany($this);
         $this->globalSettings->setCompany($this);
         $this->stripeConfig->setCompany($this);
         $this->smtpSettings->setCompany($this);
+    }
+
+    public function getCreatedAt(): ?\DateTimeImmutable
+    {
+        return $this->createdAt;
+    }
+
+    public function setCreatedAt(?\DateTimeImmutable $createdAt): static
+    {
+        $this->createdAt = $createdAt;
+
+        return $this;
     }
 
     public function getId(): ?int

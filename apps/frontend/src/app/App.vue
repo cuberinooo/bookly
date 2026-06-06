@@ -239,21 +239,23 @@ const canSeeLeaderboard = computed(() => {
 });
 
 const menuItems = computed(() => {
+  const personalItems = [
+    {
+      label: t('app.profile'),
+      icon: 'pi pi-user',
+      command: () => router.push('/profile'),
+    },
+  ];
+  personalItems.push({
+    label: t('app.myPersonalBests'),
+    icon: 'pi pi-trophy',
+    command: () => router.push('/personal-bests'),
+  });
+
   const items = [
     {
       label: t('app.personal'),
-      items: [
-        {
-          label: t('app.profile'),
-          icon: 'pi pi-user',
-          command: () => router.push('/profile'),
-        },
-        {
-          label: t('app.myPersonalBests'),
-          icon: 'pi pi-trophy',
-          command: () => router.push('/personal-bests'),
-        },
-      ],
+      items: personalItems,
     },
   ];
 
@@ -271,6 +273,14 @@ const menuItems = computed(() => {
       label: t('app.statistics'),
       icon: 'pi pi-chart-bar',
       command: () => router.push('/statistics'),
+    });
+  }
+
+  if (authStore.isMonitor) {
+    managementItems.push({
+      label: t('app.monitor'),
+      icon: 'pi pi-chart-line',
+      command: () => router.push('/monitor'),
     });
   }
 

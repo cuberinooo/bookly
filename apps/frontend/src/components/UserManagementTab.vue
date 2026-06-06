@@ -48,7 +48,7 @@ const emailTakenError = ref(false);
 const getSortedRoles = (roles: string[]) => {
   const roleOrder = ['ROLE_ADMIN', 'ROLE_TRAINER', 'ROLE_MEMBER', 'ROLE_TRIAL'];
   return [...roles]
-    .filter((r) => r !== 'ROLE_USER')
+    .filter((r) => r !== 'ROLE_USER' && r !== 'ROLE_MONITOR')
     .sort((a, b) => {
       const indexA = roleOrder.indexOf(a);
       const indexB = roleOrder.indexOf(b);
