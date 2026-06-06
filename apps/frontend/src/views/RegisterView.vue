@@ -21,7 +21,7 @@ const genderOptions = computed(() => [
     { label: t('auth.genderFemale'), value: 'female' },
     { label: t('auth.genderOther'), value: 'other' }
 ]);
-const companyName = ref('Bookly');
+const companyName = ref('');
 const companyNameTouched = ref(false);
 const registerMode = ref<'create' | 'join'>('create');
 const registerModeOptions = computed(() => [
