@@ -1,9 +1,12 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import api from '../services/api';
 
 const { t, locale } = useI18n();
+
+// Initialize starting date with default value June 1st, 2026 as requested
+const startDate = ref<Date>(new Date(2026, 5, 1));
 
 function formatMonthLabel(monthStr: string) {
   try {
@@ -25,7 +28,13 @@ const barOptions = ref<any>(null);
 
 async function fetchStats() {
   try {
-    const response = await api.get('/trainer/statistics');
+    // Format to YYYY-MM-DD for backend
+    const formattedDate = startDate.value ? startDate.value.toISOString().split('T')[0] : '';
+    const response = await api.get('/trainer/statistics', {
+      params: {
+        startDate: formattedDate
+      }
+    });
     stats.value = response.data;
     setupCharts();
   } catch (error) {
@@ -157,6 +166,11 @@ function setupCharts() {
   };
 }
 
+watch(startDate, () => {
+  loading.value = true;
+  fetchStats();
+});
+
 onMounted(() => {
   fetchStats();
 });
@@ -164,10 +178,26 @@ onMounted(() => {
 
 <template>
   <div class="statistics-page">
-    <div class="flex items-center gap-4 mb-8">
-      <h1 class="page-title">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+      <h1 class="page-title m-0">
         {{ t('statistics.title') }}
       </h1>
+      <div class="flex items-center gap-3 bg-white p-3 rounded-xl border border-slate-200 shadow-sm self-start sm:self-auto">
+        <label
+          for="startDateFilter"
+          class="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5 cursor-pointer"
+        >
+          <i class="pi pi-filter text-amber-500" />
+          {{ t('statistics.filterFrom') }}:
+        </label>
+        <DatePicker
+          v-model="startDate"
+          input-id="startDateFilter"
+          date-format="dd.mm.yy"
+          :show-icon="true"
+          class="w-44 select-none"
+        />
+      </div>
     </div>
 
     <div

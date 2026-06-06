@@ -9,6 +9,7 @@ use App\Repository\CourseRepository;
 use App\Service\ApiCacheService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -22,67 +23,89 @@ class TrainerStatisticsController extends AbstractController
     }
 
     #[Route('', name: 'trainer_statistics', methods: ['GET'])]
-    public function getStatistics(CourseRepository $courseRepository, BookingRepository $bookingRepository): JsonResponse
-    {
+    public function getStatistics(
+        Request $request,
+        CourseRepository $courseRepository,
+        BookingRepository $bookingRepository
+    ): JsonResponse {
         /** @var \App\Entity\User $user */
         $user = $this->getUser();
         $trainerId = $user->getId();
         $companyId = $user->getCompany()->getId();
 
+        $startDateStr = $request->query->get('startDate');
+        $startDate = null;
+        if ($startDateStr) {
+            try {
+                $startDate = new \DateTime($startDateStr);
+            } catch (\Exception) {
+                // Ignore invalid date formats
+            }
+        }
+
         $context = [
             'trainerId' => $trainerId,
+            'startDate' => $startDate?->format('Y-m-d H:i:s'),
         ];
 
-        $data = $this->apiCache->get('course', $companyId, $context, function () use ($trainerId, $companyId, $courseRepository, $bookingRepository) {
+        $data = $this->apiCache->get('course', $companyId, $context, function () use ($trainerId, $companyId, $courseRepository, $bookingRepository, $startDate) {
             $now = new \DateTime();
 
-            // 1. Total courses coached (All-time past) - TRAINER SPECIFIC
-            $totalCourses = $courseRepository->createQueryBuilder('c')
+            // 1. Total courses coached (All-time past or filtered) - TRAINER SPECIFIC
+            $totalCoursesQuery = $courseRepository->createQueryBuilder('c')
                 ->select('COUNT(c.id)')
                 ->where('c.user = :trainerId')
                 ->andWhere('c.startTime < :now')
                 ->andWhere('c.status = :status')
                 ->setParameter('trainerId', $trainerId)
                 ->setParameter('now', $now)
-                ->setParameter('status', \App\Enum\CourseStatus::ACTIVE)
-                ->getQuery()
-                ->getSingleScalarResult();
+                ->setParameter('status', \App\Enum\CourseStatus::ACTIVE);
 
-            // 2. Courses coached per month (Last 12 months) - TRAINER SPECIFIC
-            $twelveMonthsAgo = (new \DateTime())->modify('-12 months');
+            if ($startDate !== null) {
+                $totalCoursesQuery->andWhere('c.startTime >= :startDate')
+                    ->setParameter('startDate', $startDate);
+            }
+
+            $totalCourses = $totalCoursesQuery->getQuery()->getSingleScalarResult();
+
+            // 2. Courses coached per month - TRAINER SPECIFIC
+            $startLimit = $startDate ?? (new \DateTime())->modify('-12 months');
             $pastCourses = $courseRepository->createQueryBuilder('c')
                 ->where('c.user = :trainerId')
-                ->andWhere('c.startTime >= :twelveMonthsAgo')
+                ->andWhere('c.startTime >= :startLimit')
                 ->andWhere('c.startTime < :now')
                 ->andWhere('c.status = :status')
                 ->setParameter('trainerId', $trainerId)
-                ->setParameter('twelveMonthsAgo', $twelveMonthsAgo)
+                ->setParameter('startLimit', $startLimit)
                 ->setParameter('now', $now)
                 ->setParameter('status', \App\Enum\CourseStatus::ACTIVE)
                 ->orderBy('c.startTime', 'ASC')
                 ->getQuery()
                 ->getResult();
 
-            // General Company Courses (Last 12 months) - FOR GLOBAL INSIGHTS
+            // General Company Courses - FOR GLOBAL INSIGHTS
             $allPastCourses = $courseRepository->createQueryBuilder('c')
                 ->where('c.company = :companyId')
-                ->andWhere('c.startTime >= :twelveMonthsAgo')
+                ->andWhere('c.startTime >= :startLimit')
                 ->andWhere('c.startTime < :now')
                 ->andWhere('c.status = :status')
                 ->setParameter('companyId', $companyId)
-                ->setParameter('twelveMonthsAgo', $twelveMonthsAgo)
+                ->setParameter('startLimit', $startLimit)
                 ->setParameter('now', $now)
                 ->setParameter('status', \App\Enum\CourseStatus::ACTIVE)
                 ->getQuery()
                 ->getResult();
 
             $monthlyStats = [];
-            // Initialize last 12 months with 0
-            $current = clone $twelveMonthsAgo;
-            for ($i = 0; $i <= 12; ++$i) {
+            // Initialize months with 0
+            $current = clone $startLimit;
+            $limit = 36;
+            while ($current <= $now && $limit > 0) {
                 $monthlyStats[$current->format('Y-m')] = 0;
                 $current->modify('+1 month');
+                $limit--;
             }
+            $monthlyStats[$now->format('Y-m')] = 0;
 
             foreach ($pastCourses as $course) {
                 $month = $course->getStartTime()->format('Y-m');
@@ -107,16 +130,21 @@ class TrainerStatisticsController extends AbstractController
             $averageFillRate = count($fillRates) > 0 ? array_sum($fillRates) / count($fillRates) : 0;
 
             // 4. Total unique members coached (TRAINER SPECIFIC)
-            $uniqueMembers = $bookingRepository->createQueryBuilder('b')
+            $uniqueMembersQuery = $bookingRepository->createQueryBuilder('b')
                 ->select('COUNT(DISTINCT u.id)')
                 ->join('b.course', 'c')
                 ->join('b.user', 'u')
                 ->where('c.user = :trainerId')
                 ->andWhere('c.status = :status')
                 ->setParameter('trainerId', $trainerId)
-                ->setParameter('status', \App\Enum\CourseStatus::ACTIVE)
-                ->getQuery()
-                ->getSingleScalarResult();
+                ->setParameter('status', \App\Enum\CourseStatus::ACTIVE);
+
+            if ($startDate !== null) {
+                $uniqueMembersQuery->andWhere('c.startTime >= :startDate')
+                    ->setParameter('startDate', $startDate);
+            }
+
+            $uniqueMembers = $uniqueMembersQuery->getQuery()->getSingleScalarResult();
 
             // 5. Popular time slot (hour of day) (GENERAL)
             $timeSlots = [];

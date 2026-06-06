@@ -883,6 +883,7 @@
     "minutes": "Minutes"
   },
   "statistics": {
+    "filterFrom": "Statistics from",
     "title": "Trainer Statistics",
     "yourPerformance": "Your Performance",
     "performanceSubtitle": "Personal coaching metrics and volume",

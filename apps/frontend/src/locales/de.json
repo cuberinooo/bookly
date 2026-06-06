@@ -884,6 +884,7 @@
     "minutes": "Minuten"
   },
   "statistics": {
+    "filterFrom": "Statistiken ab",
     "title": "Trainer-Statistiken",
     "yourPerformance": "Deine Leistung",
     "performanceSubtitle": "Persönliche Coaching-Kennzahlen und Volumen",
