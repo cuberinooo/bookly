@@ -62,6 +62,41 @@ class RegistrationService
 
             $this->entityManager->persist($company);
             $isNewCompany = true;
+
+            $adminSettings = $company->getAdminSettings();
+            if ($adminSettings) {
+                if (isset($data['legalNoticeRepresentative'])) {
+                    $adminSettings->setLegalNoticeRepresentative($data['legalNoticeRepresentative']);
+                }
+                if (isset($data['legalNoticeStreet'])) {
+                    $adminSettings->setLegalNoticeStreet($data['legalNoticeStreet']);
+                }
+                if (isset($data['legalNoticeHouseNumber'])) {
+                    $adminSettings->setLegalNoticeHouseNumber($data['legalNoticeHouseNumber']);
+                }
+                if (isset($data['legalNoticeZipCode'])) {
+                    $adminSettings->setLegalNoticeZipCode($data['legalNoticeZipCode']);
+                }
+                if (isset($data['legalNoticeCity'])) {
+                    $adminSettings->setLegalNoticeCity($data['legalNoticeCity']);
+                }
+                if (isset($data['legalNoticeEmail'])) {
+                    $adminSettings->setLegalNoticeEmail($data['legalNoticeEmail']);
+                }
+                if (isset($data['legalNoticePhone'])) {
+                    $adminSettings->setLegalNoticePhone($data['legalNoticePhone']);
+                }
+                if (isset($data['legalNoticeTaxId'])) {
+                    $adminSettings->setLegalNoticeTaxId($data['legalNoticeTaxId']);
+                }
+                if (isset($data['legalNoticeVatId'])) {
+                    $adminSettings->setLegalNoticeVatId($data['legalNoticeVatId']);
+                }
+            }
+        } else {
+            if (isset($data['registerMode']) && $data['registerMode'] === 'create') {
+                throw new \Exception($this->translator->trans('error.company_already_exists'));
+            }
         }
 
         $user = new User();

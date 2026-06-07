@@ -86,8 +86,13 @@ class RegistrationController extends AbstractController
     }
 
     #[Route('/api/register/company-legal', name: 'api_register_company_legal', methods: ['GET'])]
-    public function getCompanyLegal(Request $request, CompanyRepository $companyRepository): JsonResponse
+    public function getCompanyLegal(Request $request, CompanyRepository $companyRepository, #[Autowire(service: 'limiter.company_check')] RateLimiterFactory $companyCheckLimiter): JsonResponse
     {
+        $limiter = $companyCheckLimiter->create($request->getClientIp());
+        if (false === $limiter->consume(1)->isAccepted()) {
+            return new JsonResponse(['error' => 'Too many requests. Please try again later.'], Response::HTTP_TOO_MANY_REQUESTS);
+        }
+
         $name = $request->query->get('name');
         if (!$name) {
             return new JsonResponse(['error' => 'Missing company name'], Response::HTTP_BAD_REQUEST);
@@ -110,8 +115,13 @@ class RegistrationController extends AbstractController
     }
 
     #[Route('/api/register/terms-and-conditions', name: 'api_register_terms', methods: ['GET'])]
-    public function getTermsAndConditions(Request $request, CompanyRepository $companyRepository): JsonResponse
+    public function getTermsAndConditions(Request $request, CompanyRepository $companyRepository, #[Autowire(service: 'limiter.company_check')] RateLimiterFactory $companyCheckLimiter): JsonResponse
     {
+        $limiter = $companyCheckLimiter->create($request->getClientIp());
+        if (false === $limiter->consume(1)->isAccepted()) {
+            return new JsonResponse(['error' => 'Too many requests. Please try again later.'], Response::HTTP_TOO_MANY_REQUESTS);
+        }
+
         $name = $request->query->get('name');
         if (!$name) {
             return new JsonResponse(['error' => 'Missing company name'], Response::HTTP_BAD_REQUEST);

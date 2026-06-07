@@ -63,6 +63,15 @@ class RegistrationServiceTest extends TestCase
             'password' => 'StrongPass123!',
             'name' => 'Test User',
             'companyName' => 'New Company',
+            'legalNoticeRepresentative' => 'CEO Max',
+            'legalNoticeStreet' => 'Main St',
+            'legalNoticeHouseNumber' => '10',
+            'legalNoticeZipCode' => '12345',
+            'legalNoticeCity' => 'Metropolis',
+            'legalNoticeEmail' => 'legal@example.com',
+            'legalNoticePhone' => '555-1234',
+            'legalNoticeTaxId' => 'TAX-777',
+            'legalNoticeVatId' => 'VAT-888',
         ];
 
         $this->userRepository->method('findOneBy')->willReturn(null);
@@ -79,6 +88,44 @@ class RegistrationServiceTest extends TestCase
         $this->assertEquals('Test User', $user->getName());
         $this->assertContains('ROLE_ADMIN', $user->getRoles());
         $this->assertTrue($user->isActive());
+
+        $company = $user->getCompany();
+        $this->assertNotNull($company);
+        $this->assertEquals('New Company', $company->getName());
+
+        $adminSettings = $company->getAdminSettings();
+        $this->assertNotNull($adminSettings);
+        $this->assertEquals('CEO Max', $adminSettings->getLegalNoticeRepresentative());
+        $this->assertEquals('Main St', $adminSettings->getLegalNoticeStreet());
+        $this->assertEquals('10', $adminSettings->getLegalNoticeHouseNumber());
+        $this->assertEquals('12345', $adminSettings->getLegalNoticeZipCode());
+        $this->assertEquals('Metropolis', $adminSettings->getLegalNoticeCity());
+        $this->assertEquals('legal@example.com', $adminSettings->getLegalNoticeEmail());
+        $this->assertEquals('555-1234', $adminSettings->getLegalNoticePhone());
+        $this->assertEquals('TAX-777', $adminSettings->getLegalNoticeTaxId());
+        $this->assertEquals('VAT-888', $adminSettings->getLegalNoticeVatId());
+    }
+
+    public function test_register_create_existing_company_throws_exception(): void
+    {
+        $data = [
+            'email' => 'test@example.com',
+            'password' => 'StrongPass123!',
+            'name' => 'Test User',
+            'companyName' => 'Existing Company',
+            'registerMode' => 'create',
+        ];
+
+        $existingCompany = new Company();
+        $existingCompany->setName('Existing Company');
+
+        $this->userRepository->method('findOneBy')->willReturn(null);
+        $this->companyRepository->method('findOneBy')->willReturn($existingCompany);
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('error.company_already_exists');
+
+        $this->service->register($data);
     }
 
     public function test_register_trial_member_success(): void

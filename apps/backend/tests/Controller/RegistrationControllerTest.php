@@ -14,6 +14,8 @@ class RegistrationControllerTest extends WebTestCase
     public function test_get_company_legal(): void
     {
         $client = static::createClient();
+        static::getContainer()->get('limiter.company_check')->create('127.0.0.1')->reset();
+        
         $entityManager = static::getContainer()->get('doctrine')->getManager();
 
         $companyName = 'Test Legal Company '.uniqid();
@@ -49,6 +51,8 @@ class RegistrationControllerTest extends WebTestCase
     public function test_get_terms_and_conditions(): void
     {
         $client = static::createClient();
+        static::getContainer()->get('limiter.company_check')->create('127.0.0.1')->reset();
+        
         $entityManager = static::getContainer()->get('doctrine')->getManager();
 
         $companyName = 'Test Terms Company '.uniqid();
@@ -76,5 +80,25 @@ class RegistrationControllerTest extends WebTestCase
         // Test missing name
         $client->request('GET', '/api/register/terms-and-conditions');
         $this->assertResponseStatusCodeSame(Response::HTTP_BAD_REQUEST);
+    }
+
+    public function test_company_check_rate_limiting(): void
+    {
+        $client = static::createClient();
+        static::getContainer()->get('limiter.company_check')->create('127.0.0.1')->reset();
+        
+        $limitReached = false;
+        // Make up to 110 requests to trigger rate limit (limit is 100)
+        for ($i = 0; $i < 110; $i++) {
+            $client->request('GET', '/api/register/company-legal?name=TestCompany');
+            $status = $client->getResponse()->getStatusCode();
+            if ($status === Response::HTTP_TOO_MANY_REQUESTS) {
+                $limitReached = true;
+                break;
+            }
+            $this->assertResponseIsSuccessful();
+        }
+        
+        $this->assertTrue($limitReached, 'Rate limit was not triggered after 110 requests');
     }
 }

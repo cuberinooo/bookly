@@ -458,7 +458,7 @@
       },
       "adminSettings": {
         "title": "Unternehmenseinstellungen konfigurieren",
-        "description": "Richte das Profil, Branding und die allgemeinen Einstellungen deines Studios ein."
+        "description": "Richte das Profil, Branding und die allgemeinen Einstellungen deines Unternehmens ein."
       },
       "adminPayments": {
         "title": "Stripe-Zahlungen einrichten",
@@ -564,6 +564,23 @@
     "registerModeLabel": "Was möchtest du tun?",
     "modeCreate": "Neues Unternehmen registrieren",
     "modeJoin": "Bestehendem Unternehmen beitreten",
+    "modeCreateDesc": "Erstelle ein neues Konto, um Kurspläne zu erstellen und Athleten zu verwalten.",
+    "modeJoinDesc": "Melde dich als Athlet oder Trainer an, um Kurse in einem bestehendem Unternehmen zu buchen.",
+    "stepAccount": "Konto",
+    "stepCompany": "Unternehmen",
+    "stepJoinCompany": "Beitreten",
+    "stepConfirm": "Abschluss",
+    "stepTracking": "Schritt {current} von {total}",
+    "joinWarningTitle": "Information zum Beitritt",
+    "joinWarningText": "Du trittst dem Unternehmen bei und kannst nach Freigabe oder als Probemitglied Kurse buchen.",
+    "repRequired": "Vertretungsberechtigte Person ist erforderlich.",
+    "streetRequired": "Straße ist erforderlich.",
+    "houseNumRequired": "Hausnummer ist erforderlich.",
+    "zipRequired": "Postleitzahl ist erforderlich.",
+    "cityRequired": "Ort ist erforderlich.",
+    "gymName": "Name deines Unternehmens",
+    "representative": "Vertreter",
+    "address": "Adresse",
     "modeLockedByLink": "Der Beitritts-Modus wurde über den Einladungs-Link vorausgewählt.",
     "companyNameCreate": "Name deines neuen Unternehmens",
     "companyNameJoin": "Name des Unternehmens, dem du beitreten möchtest",

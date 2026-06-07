@@ -14,3 +14,8 @@ framework:
             policy: 'fixed_window'
             limit: 100
             interval: '1 minute'
+
+        company_check:
+            policy: 'fixed_window'
+            limit: 100
+            interval: '1 minute'

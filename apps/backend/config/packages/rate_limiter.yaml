@@ -15,3 +15,8 @@ framework:
             policy: 'fixed_window'
             limit: 5
             interval: '15 minutes'
+
+        company_check:
+            policy: 'token_bucket'
+            limit: 5
+            rate: { amount: 5, interval: '1 minute' }

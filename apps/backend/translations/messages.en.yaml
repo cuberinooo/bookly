@@ -1,5 +1,6 @@
 error:
   email_already_registered: "Email already registered"
+  company_already_exists: "A company with this name already exists"
   invalid_token: "Invalid token"
   token_expired: "Token expired"
   cannot_book_finished: "You cannot book a course that has already finished"
