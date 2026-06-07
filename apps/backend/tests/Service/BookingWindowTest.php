@@ -108,12 +108,13 @@ class BookingWindowTest extends TestCase
 
         $courseDate = new \DateTime();
         $day = (int) $courseDate->format('w');
-        $daysToSunday = 0 === $day ? 0 : 7 - $day;
-        $courseDate->modify("+$daysToSunday days");
-        $courseDate->setTime(23, 0);
-
-        if ($courseDate <= new \DateTime()) {
-            $courseDate->modify('+1 hour');
+        if (0 === $day) {
+            // If today is Sunday, schedule the course 10 seconds in the future so it is still within the current week.
+            $courseDate->modify('+10 seconds');
+        } else {
+            $daysToSunday = 7 - $day;
+            $courseDate->modify("+$daysToSunday days");
+            $courseDate->setTime(23, 0);
         }
 
         $course = $this->createMock(Course::class);
