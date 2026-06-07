@@ -758,6 +758,11 @@
     "homepageUrlNote": "Füge einen Link zu deiner externen Website hinzu. Dieser Link wird als Globus-Symbol neben deinem Unternehmensnamen in der Kopfzeile angezeigt.",
     "homepageUrlInvalid": "Bitte gib eine gültige URL ein (muss mit http:// oder https:// beginnen)",
     "saveIdentity": "Identitätseinstellungen speichern",
+    "onboardingWarning": {
+      "header": "Wichtig: Vorgefertigte Vorlagen überprüfen",
+      "body": "Die rechtlichen Texte (Impressum, AGB) und E-Mail-Vorlagen wurden mit vorgefertigten Inhalten befüllt. Diese Texte sind für dein Unternehmen höchstwahrscheinlich rechtlich nicht bindend oder ausreichend. Bitte überprüfe und passe sie in den Tabs 'Identität', 'E-Mail Vorlagen' und 'Rechtliches' an, bevor du sie aktiv nutzt.",
+      "accept": "Einverstanden"
+    },
     "title": "Systemeinstellungen",
     "subtitle": "Konfiguriere deinen athletischen Arbeitsbereich und deine Systempräferenzen",
     "smtpSaved": "SMTP-Einstellungen erfolgreich gespeichert",

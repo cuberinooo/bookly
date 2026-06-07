@@ -1,16 +1,32 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref, onMounted } from 'vue';
 import { useAuthStore } from '../store/useAuthStore';
 import { useI18n } from 'vue-i18n';
 import TrainerSettingsForm from '../components/TrainerSettingsForm.vue';
 import LegalSettingsForm from '../components/LegalSettingsForm.vue';
 import CompanySettingsForm from '../components/CompanySettingsForm.vue';
-import UserManagementTab from '../components/UserManagementTab.vue';
 import MailSettingsTab from '../components/MailSettingsTab.vue';
 import SmtpSettingsTab from '../components/SmtpSettingsTab.vue';
 
 const { t } = useI18n();
 const authStore = useAuthStore();
+
+const showOnboardingWarning = ref(false);
+const STORAGE_KEY = 'settings_warning_dismissed';
+
+onMounted(() => {
+    if (authStore.isAdmin) {
+        const dismissed = localStorage.getItem(STORAGE_KEY);
+        if (!dismissed) {
+            showOnboardingWarning.value = true;
+        }
+    }
+});
+
+function dismissWarning() {
+    localStorage.setItem(STORAGE_KEY, 'true');
+    showOnboardingWarning.value = false;
+}
 
 const activeTabs = computed(() => {
     const tabs = [];
@@ -91,6 +107,40 @@ const activeTabs = computed(() => {
         </TabPanel>
       </TabPanels>
     </Tabs>
+
+    <Dialog
+      v-model:visible="showOnboardingWarning"
+      :header="t('settings.onboardingWarning.header')"
+      :modal="true"
+      :closable="true"
+      class="w-full max-w-lg"
+      @hide="dismissWarning"
+    >
+      <div class="flex flex-col gap-6 py-4">
+        <div class="p-4 bg-amber-50 border-l-4 border-amber-500 text-amber-900 text-sm flex gap-3 rounded">
+          <i class="pi pi-exclamation-triangle text-xl text-amber-500 flex-shrink-0 mt-0.5" />
+          <div>
+            <p class="font-bold mb-2 text-base">
+              {{ t('settings.onboardingWarning.header') }}
+            </p>
+            <p class="leading-relaxed text-slate-700">
+              {{ t('settings.onboardingWarning.body') }}
+            </p>
+          </div>
+        </div>
+      </div>
+      <template #footer>
+        <div class="flex justify-end gap-3 w-full">
+          <Button
+            :label="t('settings.onboardingWarning.accept')"
+            icon="pi pi-check"
+            severity="primary"
+            class="px-5 py-2.5 font-bold uppercase tracking-wider"
+            @click="dismissWarning"
+          />
+        </div>
+      </template>
+    </Dialog>
   </div>
 </template>
 

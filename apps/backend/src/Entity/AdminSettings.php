@@ -12,6 +12,13 @@ use Symfony\Component\Serializer\Attribute\Groups;
 #[ORM\Entity(repositoryClass: AdminSettingsRepository::class)]
 class AdminSettings
 {
+    public function __construct()
+    {
+        $this->legalNoticeMarkdown = AdminSettingsDefaults::LEGAL_NOTICE;
+        $this->termsAndConditionsMarkdown = AdminSettingsDefaults::TERMS_AND_CONDITIONS;
+        $this->welcomeMailMarkdown = AdminSettingsDefaults::WELCOME_MAIL;
+        $this->membershipWelcomeMailMarkdown = AdminSettingsDefaults::MEMBERSHIP_WELCOME_MAIL;
+    }
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]

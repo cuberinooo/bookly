@@ -757,6 +757,11 @@
     "homepageUrlNote": "Add a link to your external homepage website. This link will be displayed as a globe icon next to your company name in the navigation header.",
     "homepageUrlInvalid": "Please enter a valid URL (must start with http:// or https://)",
     "saveIdentity": "Save Identity Settings",
+    "onboardingWarning": {
+      "header": "Important: Review Pregenerated Templates",
+      "body": "The legal texts (Legal Notice, Terms & Conditions) and welcome email templates have been prefilled with generic placeholder content. These texts are likely not legally compliant for your specific business. Please review and adapt them under the 'Identity', 'Email Templates', and 'Legal' tabs before using them.",
+      "accept": "I understand"
+    },
     "title": "System Settings",
     "subtitle": "Configure your athletic workspace and system preferences",
     "smtpSaved": "SMTP settings saved successfully",
