@@ -814,7 +814,7 @@ async function register() {
               to="/login"
               class="text-amber-500 hover:text-amber-600 font-bold underline-offset-4 hover:underline transition-all"
             >
-              {{ t('auth.registerHere') }}
+              {{ t('auth.signInHere') }}
             </RouterLink>
           </p>
         </div>

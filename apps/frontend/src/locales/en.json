@@ -538,6 +538,7 @@
     "didNotGetEmail": "Didn't receive the email?",
     "resendVerification": "Resend Verification",
     "registerHere": "Register here",
+    "signInHere": "Sign in here",
     "fillFieldsError": "Please fill in all required fields.",
     "fetchCompanyError": "Could not verify company details.",
     "agreeTermsError": "You must agree to the terms and privacy policy to register.",

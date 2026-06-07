@@ -539,6 +539,7 @@
     "didNotGetEmail": "E-Mail nicht erhalten?",
     "resendVerification": "Bestätigung erneut senden",
     "registerHere": "Hier registrieren",
+    "signInHere": "Hier anmelden",
     "fillFieldsError": "Bitte fülle alle erforderlichen Felder aus.",
     "fetchCompanyError": "Unternehmensdetails konnten nicht verifiziert werden.",
     "agreeTermsError": "Du musst den AGB und der Datenschutzerklärung zustimmen, um dich zu registrieren.",
