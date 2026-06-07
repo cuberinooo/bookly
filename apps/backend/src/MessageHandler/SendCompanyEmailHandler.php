@@ -12,6 +12,7 @@ use Symfony\Component\Mailer\Mailer;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mailer\Transport;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
+use Symfony\Component\Mime\Address;
 
 #[AsMessageHandler]
 class SendCompanyEmailHandler
@@ -54,9 +55,12 @@ class SendCompanyEmailHandler
                 $transport = Transport::fromDsn($dsn);
                 $customMailer = new Mailer($transport);
 
-                // Ensure from is set to either custom SMTP user or default
-                if (!$email->getFrom()) {
-                    $email->from($company->getSmtpUser() ?: $this->noReplyMail);
+                // Force from to match the custom SMTP user, preserving the display name if present
+                $currentFrom = $email->getFrom()[0] ?? null;
+                if ($currentFrom instanceof Address && $currentFrom->getName()) {
+                    $email->from(new Address($company->getSmtpUser(), $currentFrom->getName()));
+                } else {
+                    $email->from($company->getSmtpUser());
                 }
 
                 $customMailer->send($email);

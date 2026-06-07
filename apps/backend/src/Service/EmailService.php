@@ -380,12 +380,6 @@ class EmailService
         $this->send($course->getCompany()->getId(), $email);
     }
 
-    private function send(int $companyId, TemplatedEmail $email): void
-    {
-        $this->bodyRenderer->render($email);
-        $this->bus->dispatch(new SendCompanyEmailMessage($companyId, $email));
-    }
-
     public function sendPriceChangeNotification(User $user, float $newPrice): void
     {
         $company = $user->getCompany();
@@ -403,7 +397,13 @@ class EmailService
                 'loginUrl' => $this->getLoginUrl(),
             ]);
 
-        $this->mailer->send($email);
+        $this->send($company->getId(), $email);
+    }
+
+    private function send(int $companyId, TemplatedEmail $email): void
+    {
+        $this->bodyRenderer->render($email);
+        $this->bus->dispatch(new SendCompanyEmailMessage($companyId, $email));
     }
 
     private function attachFiles(TemplatedEmail $email, array $attachments): void

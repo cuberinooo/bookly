@@ -114,4 +114,41 @@ class SendCompanyEmailHandlerTest extends TestCase
 
         ($this->handler)($message);
     }
+
+    public function testCustomSmtpForcesFromAddressToMatchSmtpUser(): void
+    {
+        $companyId = 1;
+        $company = $this->createMock(Company::class);
+        $company->method('isCustomSmtpEnabled')->willReturn(true);
+        $company->method('getSmtpHost')->willReturn('smtp.invalid');
+        $company->method('getSmtpPort')->willReturn(587);
+        $company->method('getSmtpUser')->willReturn('custom-smtp@company.com');
+        $company->method('getSmtpPassword')->willReturn('pass');
+        $company->method('getSmtpEncryption')->willReturn(null);
+        $company->method('getId')->willReturn($companyId);
+
+        $this->companyRepository->expects($this->once())
+            ->method('find')
+            ->with($companyId)
+            ->willReturn($company);
+
+        $this->logger->expects($this->once())
+            ->method('error')
+            ->with($this->stringContains('Failed to send email via custom SMTP'));
+
+        $this->defaultMailer->expects($this->once())
+            ->method('send');
+
+        $email = (new Email())
+            ->from('noreply@example.com')
+            ->to('recipient@example.com');
+
+        $message = new SendCompanyEmailMessage($companyId, $email);
+
+        ($this->handler)($message);
+
+        $this->assertCount(1, $email->getFrom());
+        $this->assertSame('custom-smtp@company.com', $email->getFrom()[0]->getAddress());
+    }
 }
+
