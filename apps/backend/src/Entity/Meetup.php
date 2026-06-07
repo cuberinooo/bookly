@@ -179,6 +179,12 @@ class Meetup implements CompanyAwareInterface
 
     public function setImageUrl(?string $imageUrl): static
     {
+        if ($imageUrl !== null) {
+            $pos = strpos($imageUrl, '/uploads/');
+            if ($pos !== false) {
+                $imageUrl = substr($imageUrl, $pos + strlen('/uploads/'));
+            }
+        }
         $this->imageUrl = $imageUrl;
 
         return $this;
