@@ -57,8 +57,7 @@ export default defineConfig(() => ({
       workbox: {
         // This is the magic: it tells workbox to cache everything Vite builds
         globPatterns: ['**/*.{js,css,html,png,svg,ico}'],
-        // Ensures that navigation (reloads) always fall back to index.html
-        navigateFallback: 'index.html'
+        navigateFallback: '/'
       }
     }),
     {

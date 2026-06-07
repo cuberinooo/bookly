@@ -50,7 +50,7 @@ class RegistrationService
         $currentUser = $this->security->getUser();
         $defaultCompanyName = ($currentUser instanceof User && $currentUser->getCompany())
             ? $currentUser->getCompany()->getName()
-            : 'Phoenix Athletics';
+            : 'Bookly';
 
         $companyName = $data['companyName'] ?? $defaultCompanyName;
         $company = $this->entityManager->getRepository(\App\Entity\Company::class)->findOneBy(['name' => $companyName]);
