@@ -526,3 +526,7 @@ color: var(--accent-color);
     padding: 0.5rem;
   }
 }
+
+.p-tooltip {
+  z-index: 10000 !important;
+}

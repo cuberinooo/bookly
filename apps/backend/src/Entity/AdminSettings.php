@@ -61,6 +61,10 @@ class AdminSettings
     #[Groups(['admin:read', 'admin:write'])]
     private ?string $privacyPolicyPdfPath = null;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['admin:read', 'admin:write'])]
+    private ?string $homepageUrl = null;
+
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     #[Groups(['admin:read', 'admin:write'])]
     private ?string $legalNoticeMarkdown = null;
@@ -219,6 +223,18 @@ class AdminSettings
     public function setPrivacyPolicyPdfPath(?string $privacyPolicyPdfPath): static
     {
         $this->privacyPolicyPdfPath = $privacyPolicyPdfPath;
+
+        return $this;
+    }
+
+    public function getHomepageUrl(): ?string
+    {
+        return $this->homepageUrl;
+    }
+
+    public function setHomepageUrl(?string $homepageUrl): static
+    {
+        $this->homepageUrl = $homepageUrl;
 
         return $this;
     }

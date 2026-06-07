@@ -16,6 +16,7 @@ export const useSettingsStore = defineStore('settings', () => {
   const billingCycleAnchorDay = ref(0);
   const yearlyFeeEnabled = ref(true);
   const paymentEnabled = ref(false);
+  const homepageUrl = ref('');
   const initialized = ref(false);
 
   async function fetchSettings() {
@@ -38,6 +39,7 @@ export const useSettingsStore = defineStore('settings', () => {
       billingCycleAnchorDay.value = adminResponse.data.billingCycleAnchorDay || 0;
       yearlyFeeEnabled.value = adminResponse.data.yearlyFeeEnabled ?? true;
       paymentEnabled.value = adminResponse.data.paymentEnabled ?? false;
+      homepageUrl.value = adminResponse.data.homepageUrl || '';
     } catch (e) {
       console.error('Failed to fetch global settings', e);
     } finally {
@@ -52,6 +54,7 @@ export const useSettingsStore = defineStore('settings', () => {
     bookingWindow.value = 'OFF';
     welcomeMailMarkdown.value = '';
     welcomeMailAttachments.value = [];
+    homepageUrl.value = '';
     initialized.value = false;
   }
 
@@ -69,6 +72,7 @@ export const useSettingsStore = defineStore('settings', () => {
     billingCycleAnchorDay,
     yearlyFeeEnabled,
     paymentEnabled,
+    homepageUrl,
     initialized,
     fetchSettings,
     reset

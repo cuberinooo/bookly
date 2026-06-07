@@ -45,6 +45,7 @@ class AdminSettingsService
             'termsAndConditionsMarkdown',
             'welcomeMailMarkdown',
             'membershipWelcomeMailMarkdown',
+            'homepageUrl',
         ];
 
 

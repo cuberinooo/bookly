@@ -3,13 +3,19 @@ import { ref, onMounted, computed } from 'vue';
 import api from '../services/api';
 import { useToast } from 'primevue/usetoast';
 import { useI18n } from 'vue-i18n';
+import { useSettingsStore } from '../store/useSettingsStore';
 
 const { t } = useI18n();
 const toast = useToast();
+const settingsStore = useSettingsStore();
+
 const settings = ref({
-    name: ''
+    name: '',
+    homepageUrl: ''
 });
 const loading = ref(true);
+const saving = ref(false);
+
 const registrationLink = computed(() => {
     const origin = window.location.origin;
     return `${origin}/register?companyName=${encodeURIComponent(settings.value.name)}`;
@@ -25,12 +31,36 @@ async function fetchSettings() {
     try {
         const response = await api.get('/admin-settings');
         settings.value = {
-            name: response.data.name || ''
+            name: response.data.name || '',
+            homepageUrl: response.data.homepageUrl || ''
         };
     } catch (e) {
         toast.add({ severity: 'error', summary: t('app.error'), detail: t('settings.loadFailed'), life: 5000 });
     } finally {
         loading.value = false;
+    }
+}
+
+async function updateSettings() {
+    if (settings.value.homepageUrl) {
+        const url = settings.value.homepageUrl.trim();
+        if (!/^https?:\/\//i.test(url)) {
+            toast.add({ severity: 'error', summary: t('app.error'), detail: t('settings.homepageUrlInvalid'), life: 5000 });
+            return;
+        }
+    }
+
+    saving.value = true;
+    try {
+        await api.patch('/admin-settings', {
+            homepageUrl: settings.value.homepageUrl ? settings.value.homepageUrl.trim() : null
+        });
+        settingsStore.homepageUrl = settings.value.homepageUrl ? settings.value.homepageUrl.trim() : '';
+        toast.add({ severity: 'success', summary: t('app.updated'), detail: t('profile.updateSuccess'), life: 5000 });
+    } catch (e) {
+        toast.add({ severity: 'error', summary: t('app.error'), detail: t('profile.updateError'), life: 5000 });
+    } finally {
+        saving.value = false;
     }
 }
 
@@ -71,6 +101,48 @@ onMounted(fetchSettings);
               class="w-full max-w-md bg-slate-50"
             />
           </div>
+          <div class="field flex flex-col gap-2 mt-2">
+            <label
+              class="font-bold uppercase text-xs"
+              for="homepageUrl"
+            >{{ $t('settings.homepageUrl') }}</label>
+            <div class="relative w-full max-w-md flex items-center">
+              <InputText
+                id="homepageUrl"
+                v-model="settings.homepageUrl"
+                :placeholder="$t('settings.homepageUrlPlaceholder')"
+                class="w-full pl-10 pr-10"
+                :class="{ 'p-invalid': settings.homepageUrl && !/^https?:\/\//i.test(settings.homepageUrl) }"
+              />
+              <span
+                v-if="settings.homepageUrl"
+                class="absolute right-3 cursor-pointer text-slate-400 hover:text-red-500 transition-colors flex items-center"
+                @click="settings.homepageUrl = ''"
+              >
+                <i class="pi pi-times-circle" />
+              </span>
+            </div>
+            <p class="text-xs text-slate-500 mt-1">
+              {{ $t('settings.homepageUrlNote') }}
+            </p>
+            <small
+              v-if="settings.homepageUrl && !/^https?:\/\//i.test(settings.homepageUrl)"
+              class="text-red-500 font-bold text-xs"
+            >
+              {{ $t('settings.homepageUrlInvalid') }}
+            </small>
+          </div>
+        </div>
+
+        <div class="mt-6 flex justify-end">
+          <Button
+            severity="primary"
+            :label="$t('settings.saveIdentity')"
+            icon="pi pi-save"
+            :loading="saving"
+            :disabled="!!settings.homepageUrl && !/^https?:\/\//i.test(settings.homepageUrl)"
+            @click="updateSettings"
+          />
         </div>
 
         <Divider class="my-8" />

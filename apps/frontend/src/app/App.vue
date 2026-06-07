@@ -390,6 +390,16 @@ onMounted(async () => {
           <RouterLink :to="authStore.isLoggedIn ? '/' : '/login'">
             {{ companyName }}
           </RouterLink>
+          <a
+            v-if="settingsStore.homepageUrl"
+            :href="settingsStore.homepageUrl"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="homepage-link"
+            v-tooltip.bottom="t('settings.homepageUrl')"
+          >
+            <i class="pi pi-globe" />
+          </a>
         </div>
         <div class="nav-links">
           <RouterLink
@@ -759,22 +769,47 @@ body,
   width: 100%;
 }
 
-.brand a {
-  font-family: 'Barlow Condensed', sans-serif;
-  font-size: 1.75rem;
-  font-weight: 900;
-  color: white;
-  text-decoration: none;
-  letter-spacing: 0.15em;
-  transition: color 0.2s;
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
 
-  &:hover {
-    color: var(--primary-color);
+  a:not(.homepage-link) {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1.75rem;
+    font-weight: 900;
+    color: white;
+    text-decoration: none;
+    letter-spacing: 0.15em;
+    transition: color 0.2s;
+
+    &:hover {
+      color: var(--primary-color);
+    }
+
+    @media (max-width: 768px) {
+      font-size: 1.25rem;
+      letter-spacing: 0.1em;
+    }
   }
 
-  @media (max-width: 768px) {
+  .homepage-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.6);
+    transition: all 0.2s ease-in-out;
     font-size: 1.25rem;
-    letter-spacing: 0.1em;
+    text-decoration: none;
+
+    &:hover {
+      color: var(--primary-color);
+      transform: scale(1.15);
+    }
+
+    @media (max-width: 768px) {
+      font-size: 1rem;
+    }
   }
 }
 
