@@ -318,7 +318,7 @@ onMounted(() => {
         </div>
       </section>
 
-      <div class="fixed-save-bar sticky bottom-6 z-10 flex justify-center">
+      <div class="fixed-save-bar sticky bottom-20 z-10 flex justify-center">
         <Button
           severity="primary"
           :label="$t('admin.mail.saveTemplates')"

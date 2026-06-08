@@ -471,6 +471,16 @@ onMounted(() => {
               </div>
               <div class="flex gap-1">
                 <Button
+                  v-if="!settingsStore.paymentEnabled && user.roles.includes('ROLE_TRIAL') && !user.membershipWelcomeMailSent"
+                  v-tooltip.top="$t('admin.users.sendMembershipWelcome')"
+                  icon="pi pi-envelope"
+                  severity="secondary"
+                  variant="text"
+                  rounded
+                  :loading="sendingMembershipWelcome"
+                  @click="sendMembershipWelcomeMail(user)"
+                />
+                <Button
                   icon="pi pi-pencil"
                   severity="secondary"
                   variant="text"
