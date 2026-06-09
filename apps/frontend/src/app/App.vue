@@ -40,12 +40,6 @@ onMounted(() => {
   }
 
   initRouteTracking();
-  if (authStore.isLoggedIn) {
-      meetupStore.fetchNotificationCounts();
-      notificationInterval = setInterval(() => {
-          meetupStore.fetchNotificationCounts();
-      }, 60000); // Check every minute
-  }
 });
 
 onUnmounted(() => {
@@ -353,9 +347,21 @@ watch(
     if (!isLoggedIn) {
       settingsStore.reset();
       mercureService.stop();
+      if (notificationInterval) {
+        clearInterval(notificationInterval);
+        notificationInterval = null;
+      }
     } else {
       settingsStore.fetchSettings();
       mercureService.init();
+      
+      // Fetch meetup unread comment counts on start/login
+      meetupStore.fetchNotificationCounts();
+      if (!notificationInterval) {
+        notificationInterval = setInterval(() => {
+            meetupStore.fetchNotificationCounts();
+        }, 60000); // Check every minute
+      }
     }
   },
 );
