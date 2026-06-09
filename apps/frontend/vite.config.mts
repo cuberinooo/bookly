@@ -32,12 +32,14 @@ export default defineConfig(() => ({
     nxViteTsPaths(),
     nxCopyAssetsPlugin(['*.md']),
     VitePWA({
-      registerType: 'autoUpdate',
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.ts',
       includeAssets: ['logo.png', 'manifest.json'], // These are in your public folder
       manifest: {
         name: 'Bookly',
-        short_name: 'Bookly',
-        description: 'Book your fitness courses at Bookly',
+        short_name: 'Bookl',
+        description: 'Book your fitness courses at BooklyFit',
         theme_color: '#0f172a',
         background_color: '#0f172a',
         display: 'standalone',
@@ -54,10 +56,9 @@ export default defineConfig(() => ({
           }
         ]
       },
-      workbox: {
+      injectManifest: {
         // This is the magic: it tells workbox to cache everything Vite builds
-        globPatterns: ['**/*.{js,css,html,png,svg,ico}'],
-        navigateFallback: '/'
+        globPatterns: ['**/*.{js,css,html,png,svg,ico}']
       }
     }),
     {

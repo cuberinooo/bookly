@@ -10,9 +10,6 @@ use App\Entity\User;
 use App\Enum\MeetupStatus;
 use App\Enum\RsvpStatus;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Bridge\Twig\Mime\TemplatedEmail;
-use Symfony\Component\Mailer\MailerInterface;
-use Symfony\Component\Mime\Address;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
@@ -21,7 +18,8 @@ class MeetupService
     public function __construct(
         private EntityManagerInterface $entityManager,
         private EmailService $emailService,
-        private TranslatorInterface $translator
+        private TranslatorInterface $translator,
+        private PushNotificationService $pushService
     ) {
     }
 
@@ -220,12 +218,23 @@ class MeetupService
         $userRepo = $this->entityManager->getRepository(User::class);
         $users = $userRepo->findBy(['company' => $meetup->getCompany(), 'isActive' => true]);
 
+        $pushUsers = [];
         foreach ($users as $user) {
             if ($user === $meetup->getCreator()) {
                 continue;
             }
 
             $this->emailService->sendNotificationEmailOnMeetup($user, $meetup);
+            $pushUsers[] = $user;
+        }
+
+        if (!empty($pushUsers)) {
+            $this->pushService->sendNotificationToUsers(
+                $pushUsers,
+                $this->translator->trans('push.meetup_created.title', ['%title%' => $meetup->getTitle()]),
+                $this->translator->trans('push.meetup_created.body', ['%location%' => $meetup->getLocation()]),
+                '/meetups'
+            );
         }
     }
 

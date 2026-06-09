@@ -1049,5 +1049,25 @@
     "deleteSuccess": "Company deleted successfully.",
     "cannotDeleteActivePayment": "Cannot delete: active Stripe payment",
     "cannotDeleteMoreUsers": "Cannot delete: more than 1 user account"
+  },
+  "pushNotifications": {
+    "title": "Push Notifications",
+    "subtitle": "Stay updated on course changes, waitlists, and community meetups.",
+    "notSupported": "Push notifications are not supported by your current browser.",
+    "iosPromptTitle": "Enable Notifications on iOS",
+    "iosPromptIntro": "To receive notifications on iOS, you must first add BooklyFit to your Home Screen:",
+    "iosPromptStep1": "Tap the Share button in Safari (at the bottom or top of the screen).",
+    "iosPromptStep2": "Scroll down the share menu and select \"Add to Home Screen\".",
+    "iosPromptStep3": "Launch BooklyFit from your Home Screen and return to this settings screen to enable notifications.",
+    "deniedTitle": "Notification Permission Denied",
+    "deniedDesc": "You have blocked notification permissions for this website. Please reset the permissions in your browser's site settings to enable notifications.",
+    "subscribed": "Subscribed",
+    "notSubscribed": "Not Subscribed",
+    "errNotSupported": "Push notifications are not supported by this browser.",
+    "errAddToHomeScreen": "Please add this app to your Home Screen to enable notifications.",
+    "errPermissionDenied": "Permission not granted for notifications",
+    "errVapidKeyMissing": "VAPID public key is missing in environment configuration",
+    "errSubscriptionFailed": "Subscription failed",
+    "errUnsubscriptionFailed": "Unsubscription failed"
   }
 }

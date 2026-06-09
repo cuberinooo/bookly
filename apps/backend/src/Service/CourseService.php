@@ -17,6 +17,7 @@ use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\DelayStamp;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
+use App\Service\PushNotificationService;
 
 class CourseService
 {
@@ -27,6 +28,7 @@ class CourseService
         private readonly BookingService $bookingService,
         private readonly TranslatorInterface $translator,
         private readonly MessageBusInterface $messageBus,
+        private readonly PushNotificationService $pushService,
         private readonly ?SerializerInterface $serializer = null,
         private readonly ?TrainingCycleService $cycleService = null,
         private readonly ?UserRepository $userRepository = null
@@ -465,6 +467,12 @@ class CourseService
             throw new \LogicException($this->translator->trans('error.course_already_cancelled'));
         }
 
+        // Collect users who have booked the course (both waitlist and confirmed)
+        $bookedUsers = [];
+        foreach ($course->getBookings() as $booking) {
+            $bookedUsers[] = $booking->getUser();
+        }
+
         $course->setStatus(\App\Enum\CourseStatus::CANCELLED);
         $course->setCancelledBy($trainer);
         $course->setAutoCancelled($trainer === null);
@@ -472,6 +480,27 @@ class CourseService
         $this->unbookAll($course);
 
         $this->entityManager->flush();
+
+        // Send push notifications to booked users
+        if (!empty($bookedUsers)) {
+            $this->pushService->sendNotificationToUsers(
+                $bookedUsers,
+                $this->translator->trans('push.course_cancelled_athlete.title', ['%title%' => $course->getTitle()]),
+                $this->translator->trans('push.course_cancelled_athlete.body', ['%time%' => $course->getStartTime()->format('H:i')]),
+                '/courses'
+            );
+        }
+
+        // Send push notification to the trainer (if auto-cancelled or cancelled by someone else)
+        $courseTrainer = $course->getUser();
+        if ($courseTrainer && (!$trainer || $courseTrainer->getId() !== $trainer->getId())) {
+            $this->pushService->sendNotification(
+                $courseTrainer,
+                $this->translator->trans('push.course_cancelled_trainer.title', ['%title%' => $course->getTitle()]),
+                $this->translator->trans('push.course_cancelled_trainer.body', ['%time%' => $course->getStartTime()->format('H:i')]),
+                '/courses'
+            );
+        }
     }
 
     public function deleteCourse(Course $course): void

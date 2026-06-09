@@ -11,8 +11,6 @@ use App\Enum\BookingWindow;
 use App\Repository\BookingRepository;
 use App\Repository\GlobalSettingsRepository;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Bridge\Twig\Mime\TemplatedEmail;
-use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 class BookingService
@@ -22,7 +20,8 @@ class BookingService
         private BookingRepository $bookingRepository,
         private GlobalSettingsRepository $settingsRepository,
         private TranslatorInterface $translator,
-        private EmailService $emailService
+        private EmailService $emailService,
+        private PushNotificationService $pushService
     ) {
     }
 
@@ -200,6 +199,18 @@ class BookingService
                 // Send both waitlist promotion and formal confirmation
                 $this->emailService->sendWaitlistPromotedEmail($nextInWaitlist);
                 $this->emailService->sendBookingConfirmationEmail($nextInWaitlist);
+
+                // Send push notification for promotion
+                $user = $nextInWaitlist->getUser();
+                $this->pushService->sendNotification(
+                    $user,
+                    $this->translator->trans('push.waitlist_promoted.title'),
+                    $this->translator->trans('push.waitlist_promoted.body', [
+                        '%title%' => $course->getTitle(),
+                        '%time%' => $course->getStartTime()->format('H:i')
+                    ]),
+                    '/courses'
+                );
 
                 // Recursively check if there's more space (e.g. if capacity was increased)
                 $this->processWaitlist($course);

@@ -37,12 +37,15 @@ class BookingServiceTest extends TestCase
         $this->translator = $this->createMock(TranslatorInterface::class);
         $this->translator->method('trans')->willReturnArgument(0);
 
+        $pushService = $this->createMock(\App\Service\PushNotificationService::class);
+
         $this->service = new BookingService(
             $this->entityManager,
             $this->bookingRepository,
             $this->settingsRepository,
             $this->translator,
-            $this->emailService
+            $this->emailService,
+            $pushService
         );
 
         $this->defaultCompany = new \App\Entity\Company();

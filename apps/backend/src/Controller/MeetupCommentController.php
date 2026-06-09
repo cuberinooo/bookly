@@ -11,6 +11,7 @@ use App\Repository\MeetupCommentRepository;
 use App\Repository\MeetupUserReadStateRepository;
 use App\Service\ApiCacheService;
 use App\Service\MercurePublisherService;
+use App\Service\PushNotificationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -38,8 +39,14 @@ class MeetupCommentController extends AbstractController
     }
 
     #[Route('', name: 'meetup_comments_new', methods: ['POST'])]
-    public function new(Request $request, Meetup $meetup, EntityManagerInterface $entityManager, SerializerInterface $serializer): JsonResponse
-    {
+    public function new(
+        Request $request,
+        Meetup $meetup,
+        EntityManagerInterface $entityManager,
+        SerializerInterface $serializer,
+        PushNotificationService $pushService,
+        \Symfony\Contracts\Translation\TranslatorInterface $translator
+    ): JsonResponse {
         $data = json_decode($request->getContent(), true);
         /** @var \App\Entity\User $user */
         $user = $this->getUser();
@@ -56,6 +63,29 @@ class MeetupCommentController extends AbstractController
 
         $entityManager->persist($comment);
         $entityManager->flush();
+
+        // Send push notifications to creator and RSVP'd participants
+        $recipients = [];
+        $creator = $meetup->getCreator();
+        if ($creator && $creator->getId() !== $user->getId()) {
+            $recipients[$creator->getId()] = $creator;
+        }
+
+        foreach ($meetup->getRsvps() as $rsvp) {
+            $rsvpUser = $rsvp->getUser();
+            if ($rsvpUser && $rsvpUser->getId() !== $user->getId()) {
+                $recipients[$rsvpUser->getId()] = $rsvpUser;
+            }
+        }
+
+        if (!empty($recipients)) {
+            $pushService->sendNotificationToUsers(
+                array_values($recipients),
+                $translator->trans('push.meetup_comment.title', ['%title%' => $meetup->getTitle()]),
+                $user->getName() . ': ' . (mb_strlen($comment->getContent()) > 50 ? mb_substr($comment->getContent(), 0, 47) . '...' : $comment->getContent()),
+                '/meetups'
+            );
+        }
 
         $this->apiCache->invalidateEntity('meetup', $user->getCompany()->getId());
 

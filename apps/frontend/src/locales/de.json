@@ -1050,5 +1050,25 @@
     "deleteSuccess": "Firma erfolgreich gelöscht.",
     "cannotDeleteActivePayment": "Löschen nicht möglich: aktive Stripe-Zahlung",
     "cannotDeleteMoreUsers": "Löschen nicht möglich: mehr als 1 Mitgliedskonto"
+  },
+  "pushNotifications": {
+    "title": "Push-Benachrichtigungen",
+    "subtitle": "Bleibe über Kursänderungen, Wartelisten und Community-Meetups auf dem Laufenden.",
+    "notSupported": "Push-Benachrichtigungen werden von Ihrem aktuellen Browser nicht unterstützt.",
+    "iosPromptTitle": "Benachrichtigungen auf iOS aktivieren",
+    "iosPromptIntro": "Um Benachrichtigungen auf iOS zu erhalten, müssen Sie BooklyFit zuerst zu Ihrem Home-Bildschirm hinzufügen:",
+    "iosPromptStep1": "Tippen Sie auf die Teilen-Schaltfläche in Safari (unten oder oben auf dem Bildschirm).",
+    "iosPromptStep2": "Scrollen Sie im Teilen-Menü nach unten und wählen Sie \"Zum Home-Bildschirm\".",
+    "iosPromptStep3": "Starten Sie BooklyFit von Ihrem Home-Bildschirm aus und kehren Sie zu dieser Einstellungsseite zurück, um Benachrichtigungen zu aktivieren.",
+    "deniedTitle": "Berechtigung verweigert",
+    "deniedDesc": "Sie haben die Benachrichtigungsberechtigung für diese Website blockiert. Bitte setzen Sie die Berechtigung in den Website-Einstellungen Ihres Browsers zurück.",
+    "subscribed": "Abonniert",
+    "notSubscribed": "Nicht abonniert",
+    "errNotSupported": "Push-Benachrichtigungen werden von diesem Browser nicht unterstützt.",
+    "errAddToHomeScreen": "Bitte fügen Sie diese App zu Ihrem Home-Bildschirm hinzu, um Benachrichtigungen zu aktivieren.",
+    "errPermissionDenied": "Berechtigung für Benachrichtigungen nicht erteilt",
+    "errVapidKeyMissing": "Der öffentliche VAPID-Schlüssel fehlt in der Konfiguration der Umgebung",
+    "errSubscriptionFailed": "Abonnement fehlgeschlagen",
+    "errUnsubscriptionFailed": "Abbestellung fehlgeschlagen"
   }
 }

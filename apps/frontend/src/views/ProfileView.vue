@@ -10,6 +10,7 @@ import { useOnboarding, ONBOARDING_TASKS } from '../composables/useOnboarding';
 import OnboardingChecklist from '../components/OnboardingChecklist.vue';
 import UserAboTab from '../components/UserAboTab.vue';
 import InactiveAccountAlert from '../components/InactiveAccountAlert.vue';
+import PushNotificationSettings from '../components/PushNotificationSettings.vue';
 import api from '../services/api';
 
 const { t } = useI18n();
@@ -308,6 +309,7 @@ onMounted(() => {
                   </span>
                 </div>
               </div>
+              <PushNotificationSettings />
             </div>
 
             <div class="md:col-span-2">

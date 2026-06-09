@@ -32,10 +32,13 @@ class MeetupServiceTest extends TestCase
         $this->translator = $this->createMock(TranslatorInterface::class);
         $this->translator->method('trans')->willReturnArgument(0);
 
+        $pushService = $this->createMock(\App\Service\PushNotificationService::class);
+
         $this->service = new MeetupService(
             $this->entityManager,
             $this->emailService,
-            $this->translator
+            $this->translator,
+            $pushService
         );
     }
 

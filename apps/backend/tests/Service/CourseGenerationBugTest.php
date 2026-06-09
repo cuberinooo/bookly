@@ -38,13 +38,16 @@ class CourseGenerationBugTest extends TestCase
         $this->translator->method('trans')->willReturnArgument(0);
         $this->messageBus = $this->createMock(MessageBusInterface::class);
 
+        $pushService = $this->createMock(\App\Service\PushNotificationService::class);
+
         $this->service = new CourseService(
             $this->courseRepository,
             $this->seriesRepository,
             $this->entityManager,
             $this->bookingService,
             $this->translator,
-            $this->messageBus
+            $this->messageBus,
+            $pushService
         );
     }
 

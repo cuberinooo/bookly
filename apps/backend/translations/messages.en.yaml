@@ -140,3 +140,23 @@ email:
     cancel_instruction: "If you can no longer attend, please make sure to cancel your booking as soon as possible to give others a chance."
     regards: "Regards,"
     team: "%siteName% Team"
+
+push:
+  meetup_created:
+    title: "New Meetup: %title%"
+    body: "A new community meetup has been scheduled at %location%."
+  meetup_comment:
+    title: "New Comment on: %title%"
+  waitlist_promoted:
+    title: "Waitlist Promotion! 🎉"
+    body: "You have been promoted to the course: %title% starting at %time%."
+  course_cancelled_athlete:
+    title: "Course Cancelled: %title%"
+    body: "The course starting at %time% has been cancelled."
+  course_cancelled_trainer:
+    title: "Course Cancelled: %title%"
+    body: "Your course starting at %time% has been cancelled."
+  course_reminder:
+    title: "Upcoming Course Reminder 🏋️"
+    body: "Your course \"%title%\" starts in 1 hour at %time%."
+

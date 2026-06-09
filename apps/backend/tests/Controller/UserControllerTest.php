@@ -43,12 +43,18 @@ class UserControllerTest extends WebTestCase
 
         // Create a dummy file
         $filePath = tempnam(sys_get_temp_dir(), 'test_img');
-        file_put_contents($filePath, 'dummy image content');
-        $uploadedFile = new UploadedFile($filePath, 'test.png', 'image/png', null, true);
+        file_put_contents($filePath, base64_decode('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'));
+        $uploadedFile = new UploadedFile($filePath, 'test.gif', 'image/gif', null, true);
 
-        $client->request('POST', '/api/user/profile-picture', [], ['file' => $uploadedFile], [
-            'HTTP_AUTHORIZATION' => 'Bearer '.$token,
-        ]);
+        try {
+            $client->request('POST', '/api/user/profile-picture', [], ['file' => $uploadedFile], [
+                'HTTP_AUTHORIZATION' => 'Bearer '.$token,
+            ]);
+        } finally {
+            if (file_exists($filePath)) {
+                @unlink($filePath);
+            }
+        }
 
         $this->assertEquals(Response::HTTP_OK, $client->getResponse()->getStatusCode());
         $data = json_decode($client->getResponse()->getContent(), true);

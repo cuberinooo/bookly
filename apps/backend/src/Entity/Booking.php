@@ -44,6 +44,9 @@ class Booking implements CompanyAwareInterface
     #[Groups(['booking:read', 'course:read'])]
     private bool $attended = true;
 
+    #[ORM\Column(options: ['default' => false])]
+    private bool $pushReminderSent = false;
+
     public function __construct()
     {
         $this->createdAt = new \DateTimeImmutable();
@@ -122,6 +125,18 @@ class Booking implements CompanyAwareInterface
     public function setAttended(bool $attended): static
     {
         $this->attended = $attended;
+
+        return $this;
+    }
+
+    public function isPushReminderSent(): bool
+    {
+        return $this->pushReminderSent;
+    }
+
+    public function setPushReminderSent(bool $pushReminderSent): static
+    {
+        $this->pushReminderSent = $pushReminderSent;
 
         return $this;
     }

@@ -39,13 +39,16 @@ class CourseServiceTest extends TestCase
         $this->translator->method('trans')->willReturnArgument(0);
         $this->messageBus = $this->createMock(MessageBusInterface::class);
 
+        $pushService = $this->createMock(\App\Service\PushNotificationService::class);
+
         $this->service = new CourseService(
             $this->courseRepository,
             $this->seriesRepository,
             $this->entityManager,
             $this->bookingService,
             $this->translator,
-            $this->messageBus
+            $this->messageBus,
+            $pushService
         );
     }
 
@@ -123,6 +126,8 @@ class CourseServiceTest extends TestCase
         $serializer = $this->createMock(\Symfony\Component\Serializer\SerializerInterface::class);
         $serializer->method('serialize')->willReturn('[]');
 
+        $pushService = $this->createMock(\App\Service\PushNotificationService::class);
+
         $service = new CourseService(
             $this->courseRepository,
             $this->seriesRepository,
@@ -130,6 +135,7 @@ class CourseServiceTest extends TestCase
             $this->bookingService,
             $this->translator,
             $this->messageBus,
+            $pushService,
             $serializer,
             $this->createMock(\App\Service\TrainingCycleService::class),
             $this->createMock(\App\Repository\UserRepository::class)
@@ -208,6 +214,8 @@ class CourseServiceTest extends TestCase
 
         $cycleService = $this->createMock(\App\Service\TrainingCycleService::class);
 
+        $pushService = $this->createMock(\App\Service\PushNotificationService::class);
+
         $service = new CourseService(
             $this->courseRepository,
             $this->seriesRepository,
@@ -215,6 +223,7 @@ class CourseServiceTest extends TestCase
             $this->bookingService,
             $this->translator,
             $this->messageBus,
+            $pushService,
             $serializer,
             $cycleService,
             $userRepo
