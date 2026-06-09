@@ -119,7 +119,9 @@ const getProfilePictureUrl = (userId: number, filename: string | null) => {
       icon="pi pi-eye-slash"
     >
       <div class="flex items-center gap-2">
-        <span v-html="t('leaderboard.privateProfileNotice')" />
+        <span>
+          {{ t('leaderboard.privateProfileNotice') }}
+        </span>
         <router-link
           to="/profile"
           class="text-amber-500 font-bold hover:underline"

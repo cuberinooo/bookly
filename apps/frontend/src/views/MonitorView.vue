@@ -141,10 +141,10 @@ const confirmDeleteCompany = async () => {
       <Button
         icon="pi pi-refresh"
         :label="t('app.refresh')"
-        @click="fetchCompanies"
         :loading="isLoading"
         severity="secondary"
         outlined
+        @click="fetchCompanies"
       />
     </div>
 
@@ -191,12 +191,12 @@ const confirmDeleteCompany = async () => {
     <!-- Main Companies Data Table -->
     <div class="card p-4 bg-white rounded-2xl shadow-sm border border-slate-100">
       <DataTable
-        v-model:expandedRows="expandedRows"
+        v-model:expanded-rows="expandedRows"
         :value="companies"
         :loading="isLoading"
         responsive-layout="scroll"
         class="p-datatable-sm"
-        dataKey="id"
+        data-key="id"
         paginator
         :rows="10"
         paginator-template="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
@@ -209,7 +209,10 @@ const confirmDeleteCompany = async () => {
         </template>
 
         <!-- Expander Column -->
-        <Column expander class="w-[3rem]" />
+        <Column
+          expander
+          class="w-[3rem]"
+        />
 
         <!-- Company Profile -->
         <Column :header="t('monitor.companyName')">
@@ -327,14 +330,14 @@ const confirmDeleteCompany = async () => {
           <Button
             :label="t('app.cancel' as any)"
             class="p-button-text"
-            @click="showDeleteDialog = false"
             :disabled="isDeletingCompany"
+            @click="showDeleteDialog = false"
           />
           <Button
             :label="t('monitor.deleteCompany')"
             severity="danger"
-            @click="confirmDeleteCompany"
             :loading="isDeletingCompany"
+            @click="confirmDeleteCompany"
           />
         </div>
       </template>
@@ -373,13 +376,19 @@ const confirmDeleteCompany = async () => {
             </div>
           </template>
 
-          <Column field="name" :header="t('monitor.name')">
+          <Column
+            field="name"
+            :header="t('monitor.name')"
+          >
             <template #body="{ data }">
               <span class="font-semibold text-slate-800">{{ data.name }}</span>
             </template>
           </Column>
 
-          <Column field="email" :header="t('monitor.email')">
+          <Column
+            field="email"
+            :header="t('monitor.email')"
+          >
             <template #body="{ data }">
               <span class="text-slate-600">{{ data.email }}</span>
             </template>

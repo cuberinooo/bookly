@@ -59,7 +59,6 @@ const getDeleteTooltip = () => {
 <template>
   <div class="p-6 border-t border-slate-100 rounded-b-2xl">
     <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
-
       <!-- Card 1: Legal / Contact info -->
       <div class="bg-primary p-5 rounded-2xl border border-slate-100 shadow-sm transition-all duration-300 hover:shadow-md hover:border-slate-200">
         <div class="flex items-center gap-2 mb-3">
@@ -71,12 +70,21 @@ const getDeleteTooltip = () => {
           </h3>
         </div>
 
-        <div v-if="company.legalNotice" class="text-sm primary-text space-y-2">
-          <div v-if="company.legalNotice.representative" class="font-semibold text-slate-800 border-b border-slate-50 pb-1 flex items-center gap-2">
+        <div
+          v-if="company.legalNotice"
+          class="text-sm primary-text space-y-2"
+        >
+          <div
+            v-if="company.legalNotice.representative"
+            class="font-semibold text-slate-800 border-b border-slate-50 pb-1 flex items-center gap-2"
+          >
             <i class="pi pi-user text-slate-400 text-xs" />
             {{ company.legalNotice.representative }}
           </div>
-          <div v-if="company.legalNotice.street" class="flex items-start gap-2">
+          <div
+            v-if="company.legalNotice.street"
+            class="flex items-start gap-2"
+          >
             <i class="pi pi-map-marker text-slate-400 text-xs mt-1" />
             <div>
               <p>{{ company.legalNotice.street }} {{ company.legalNotice.houseNumber }}</p>
@@ -84,17 +92,26 @@ const getDeleteTooltip = () => {
             </div>
           </div>
           <div class="pt-2 border-t border-slate-50 space-y-1.5 text-xs font-medium text-slate-500">
-            <div v-if="company.legalNotice.email" class="flex items-center gap-2 hover:text-indigo-600 transition-colors duration-200">
+            <div
+              v-if="company.legalNotice.email"
+              class="flex items-center gap-2 hover:text-indigo-600 transition-colors duration-200"
+            >
               <i class="pi pi-envelope text-slate-400" />
               <span class="truncate block max-w-[180px]">{{ company.legalNotice.email }}</span>
             </div>
-            <div v-if="company.legalNotice.phone" class="flex items-center gap-2 hover:text-indigo-600 transition-colors duration-200">
+            <div
+              v-if="company.legalNotice.phone"
+              class="flex items-center gap-2 hover:text-indigo-600 transition-colors duration-200"
+            >
               <i class="pi pi-phone text-slate-400" />
               <span>{{ company.legalNotice.phone }}</span>
             </div>
           </div>
         </div>
-        <div v-else class="text-sm text-slate-400 italic py-6 text-center">
+        <div
+          v-else
+          class="text-sm text-slate-400 italic py-6 text-center"
+        >
           N/A
         </div>
       </div>
@@ -185,11 +202,17 @@ const getDeleteTooltip = () => {
                 {{ company.insights.totalBookings }}
               </span>
             </div>
-            <span v-if="company.insights.upcomingBookings > 0" class="items-center mt-1 primary-text rounded font-bold">
+            <span
+              v-if="company.insights.upcomingBookings > 0"
+              class="items-center mt-1 primary-text rounded font-bold"
+            >
               <i class="pi pi-clock text-[9px]" />
               {{ company.insights.upcomingBookings }} Upcom.
             </span>
-            <span v-else class="text-[10px] text-purple-600/70 font-semibold block mt-1">
+            <span
+              v-else
+              class="text-[10px] text-purple-600/70 font-semibold block mt-1"
+            >
               0 Upcoming
             </span>
           </div>
@@ -218,7 +241,11 @@ const getDeleteTooltip = () => {
                   :severity="company.customSmtpEnabled ? 'success' : 'secondary'"
                   class="text-[10px]"
                 />
-                <span v-if="company.smtpEmail" class="text-[10px] text-slate-400 font-mono max-w-[120px] truncate" :title="company.smtpEmail">
+                <span
+                  v-if="company.smtpEmail"
+                  class="text-[10px] text-slate-400 font-mono max-w-[120px] truncate"
+                  :title="company.smtpEmail"
+                >
                   {{ company.smtpEmail }}
                 </span>
               </div>
@@ -233,7 +260,11 @@ const getDeleteTooltip = () => {
                   :severity="company.insights.isPaymentActive ? 'success' : 'secondary'"
                   class="text-[10px]"
                 />
-                <span v-if="company.insights.stripeAccountId" class="text-[10px] text-slate-400 font-mono max-w-[120px] truncate" :title="company.insights.stripeAccountId">
+                <span
+                  v-if="company.insights.stripeAccountId"
+                  class="text-[10px] text-slate-400 font-mono max-w-[120px] truncate"
+                  :title="company.insights.stripeAccountId"
+                >
                   {{ company.insights.stripeAccountId }}
                 </span>
               </div>
@@ -258,7 +289,6 @@ const getDeleteTooltip = () => {
           />
         </div>
       </div>
-
     </div>
   </div>
 </template>

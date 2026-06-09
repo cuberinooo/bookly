@@ -35,8 +35,12 @@ const handleToggle = async () => {
           <i class="pi pi-bell text-xl" />
         </div>
         <div>
-          <h3 class="text-lg font-bold text-slate-900 m-0">{{ $t('pushNotifications.title') }}</h3>
-          <p class="text-sm text-slate-500 m-0">{{ $t('pushNotifications.subtitle') }}</p>
+          <h3 class="text-lg font-bold text-slate-900 m-0">
+            {{ $t('pushNotifications.title') }}
+          </h3>
+          <p class="text-sm text-slate-500 m-0">
+            {{ $t('pushNotifications.subtitle') }}
+          </p>
         </div>
       </div>
       <div v-if="isSupported && !showAddToHomeScreenPrompt">
@@ -49,18 +53,26 @@ const handleToggle = async () => {
     </div>
 
     <!-- Push Notification Status/Hints -->
-    <div v-if="!isSupported" class="p-3 bg-amber-50 border-l-4 border-amber-500 text-amber-900 text-sm rounded">
+    <div
+      v-if="!isSupported"
+      class="p-3 bg-amber-50 border-l-4 border-amber-500 text-amber-900 text-sm rounded"
+    >
       <div class="flex items-center gap-2">
         <i class="pi pi-exclamation-triangle" />
         <span>{{ $t('pushNotifications.notSupported') }}</span>
       </div>
     </div>
 
-    <div v-else-if="showAddToHomeScreenPrompt" class="p-4 bg-blue-50 border-l-4 border-blue-500 text-blue-900 rounded">
+    <div
+      v-else-if="showAddToHomeScreenPrompt"
+      class="p-4 bg-blue-50 border-l-4 border-blue-500 text-blue-900 rounded"
+    >
       <div class="flex items-start gap-3">
         <i class="pi pi-info-circle text-lg mt-0.5" />
         <div>
-          <h4 class="font-bold text-sm mb-1">{{ $t('pushNotifications.iosPromptTitle') }}</h4>
+          <h4 class="font-bold text-sm mb-1">
+            {{ $t('pushNotifications.iosPromptTitle') }}
+          </h4>
           <p class="text-xs leading-relaxed mb-3">
             {{ $t('pushNotifications.iosPromptIntro') }}
           </p>
@@ -73,7 +85,10 @@ const handleToggle = async () => {
       </div>
     </div>
 
-    <div v-else-if="permission === 'denied'" class="p-3 bg-red-50 border-l-4 border-red-500 text-red-900 text-sm rounded">
+    <div
+      v-else-if="permission === 'denied'"
+      class="p-3 bg-red-50 border-l-4 border-red-500 text-red-900 text-sm rounded"
+    >
       <div class="flex items-start gap-2">
         <i class="pi pi-ban text-lg mt-0.5" />
         <div>
@@ -85,14 +100,23 @@ const handleToggle = async () => {
       </div>
     </div>
 
-    <div v-else class="flex items-center gap-2 mt-2">
-      <span class="inline-block w-2.5 h-2.5 rounded-full" :class="isSubscribed ? 'bg-green-500' : 'bg-slate-300'" />
+    <div
+      v-else
+      class="flex items-center gap-2 mt-2"
+    >
+      <span
+        class="inline-block w-2.5 h-2.5 rounded-full"
+        :class="isSubscribed ? 'bg-green-500' : 'bg-slate-300'"
+      />
       <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">
         {{ isSubscribed ? $t('pushNotifications.subscribed') : $t('pushNotifications.notSubscribed') }}
       </span>
     </div>
 
-    <div v-if="error" class="p-3 bg-red-50 border-l-4 border-red-500 text-red-900 text-sm rounded mt-4">
+    <div
+      v-if="error"
+      class="p-3 bg-red-50 border-l-4 border-red-500 text-red-900 text-sm rounded mt-4"
+    >
       <div class="flex items-center gap-2">
         <i class="pi pi-times-circle" />
         <span>{{ error }}</span>

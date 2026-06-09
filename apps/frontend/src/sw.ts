@@ -13,7 +13,7 @@ self.addEventListener('push', (event) => {
     }
 
     let title = 'BooklyFit';
-    let options: NotificationOptions = {
+    const options: NotificationOptions = {
         icon: '/logo.png',
         badge: '/logo.png',
         data: {

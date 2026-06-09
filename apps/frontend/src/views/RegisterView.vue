@@ -265,7 +265,7 @@ async function register() {
               <div
                 class="h-full bg-amber-400 transition-all duration-300 rounded-full"
                 :style="{ width: step === 1 ? '0%' : step === 2 ? '50%' : '100%' }"
-              ></div>
+              />
             </div>
 
             <!-- Step 1 -->
@@ -275,7 +275,10 @@ async function register() {
                 :class="step >= 1 ? 'bg-amber-400 text-slate-950 shadow-md ring-4 ring-amber-100/50' : 'bg-slate-100 text-slate-400'"
                 @click="step > 1 && (step = 1)"
               >
-                <span v-if="step > 1" class="pi pi-check text-xs font-bold"></span>
+                <span
+                  v-if="step > 1"
+                  class="pi pi-check text-xs font-bold"
+                />
                 <span v-else>1</span>
               </div>
               <span class="text-[10px] uppercase font-bold tracking-wider text-slate-600">
@@ -290,7 +293,10 @@ async function register() {
                 :class="step >= 2 ? 'bg-amber-400 text-slate-950 shadow-md ring-4 ring-amber-100/50' : 'bg-slate-100 text-slate-400'"
                 @click="step > 2 && (step = 2)"
               >
-                <span v-if="step > 2" class="pi pi-check text-xs font-bold"></span>
+                <span
+                  v-if="step > 2"
+                  class="pi pi-check text-xs font-bold"
+                />
                 <span v-else>2</span>
               </div>
               <span class="text-[10px] uppercase font-bold tracking-wider text-slate-600">
@@ -344,7 +350,10 @@ async function register() {
 
         <!-- STEP 1: Account Details + Mode Choice -->
         <div v-if="step === 1">
-          <form class="flex flex-col gap-6" @submit.prevent="goToStep2">
+          <form
+            class="flex flex-col gap-6"
+            @submit.prevent="goToStep2"
+          >
             <!-- Mode Selection Cards (No SelectButton dropdown) -->
             <div class="flex flex-col gap-2">
               <label class="form-label-base">{{ t('auth.registerModeLabel') }}</label>
@@ -366,13 +375,13 @@ async function register() {
                       class="w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-200"
                       :class="registerMode === 'create' ? 'bg-amber-400 text-slate-950' : 'bg-slate-100 text-slate-500'"
                     >
-                      <i class="pi pi-building text-xl"></i>
+                      <i class="pi pi-building text-xl" />
                     </div>
                     <div
                       v-if="registerMode === 'create'"
                       class="w-5 h-5 rounded-full bg-amber-400 text-slate-950 flex items-center justify-center"
                     >
-                      <i class="pi pi-check text-[10px] font-bold"></i>
+                      <i class="pi pi-check text-[10px] font-bold" />
                     </div>
                   </div>
                   <div>
@@ -401,13 +410,13 @@ async function register() {
                       class="w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-200"
                       :class="registerMode === 'join' ? 'bg-amber-400 text-slate-950' : 'bg-slate-100 text-slate-500'"
                     >
-                      <i class="pi pi-users text-xl"></i>
+                      <i class="pi pi-users text-xl" />
                     </div>
                     <div
                       v-if="registerMode === 'join'"
                       class="w-5 h-5 rounded-full bg-amber-400 text-slate-950 flex items-center justify-center"
                     >
-                      <i class="pi pi-check text-[10px] font-bold"></i>
+                      <i class="pi pi-check text-[10px] font-bold" />
                     </div>
                   </div>
                   <div>
@@ -420,15 +429,21 @@ async function register() {
                   </div>
                 </div>
               </div>
-              <small v-if="isModeLocked" class="text-slate-400 text-xs mt-1 flex items-center gap-1.5">
-                <i class="pi pi-lock text-[10px]"></i>
+              <small
+                v-if="isModeLocked"
+                class="text-slate-400 text-xs mt-1 flex items-center gap-1.5"
+              >
+                <i class="pi pi-lock text-[10px]" />
                 {{ t('auth.modeLockedByLink') }}
               </small>
             </div>
 
             <!-- Full Name -->
             <div class="flex flex-col">
-              <label for="name" class="form-label-base">{{ t('auth.fullName') }}</label>
+              <label
+                for="name"
+                class="form-label-base"
+              >{{ t('auth.fullName') }}</label>
               <InputText
                 id="name"
                 v-model="name"
@@ -437,14 +452,20 @@ async function register() {
                 :class="{ 'p-invalid': nameTouched && !name }"
                 @blur="nameTouched = true"
               />
-              <small v-if="nameTouched && !name" class="text-red-500 text-xs mt-1">
+              <small
+                v-if="nameTouched && !name"
+                class="text-red-500 text-xs mt-1"
+              >
                 {{ t('auth.nameRequired') }}
               </small>
             </div>
 
             <!-- Email -->
             <div class="flex flex-col">
-              <label for="email" class="form-label-base">{{ t('auth.email') }}</label>
+              <label
+                for="email"
+                class="form-label-base"
+              >{{ t('auth.email') }}</label>
               <InputText
                 id="email"
                 v-model="email"
@@ -454,10 +475,16 @@ async function register() {
                 :class="{ 'p-invalid': emailTouched && (!email || !isEmailValid) }"
                 @blur="emailTouched = true"
               />
-              <small v-if="emailTouched && !email" class="text-red-500 text-xs mt-1">
+              <small
+                v-if="emailTouched && !email"
+                class="text-red-500 text-xs mt-1"
+              >
                 {{ t('auth.emailRequired') }}
               </small>
-              <small v-else-if="emailTouched && !isEmailValid" class="text-red-500 text-xs mt-1">
+              <small
+                v-else-if="emailTouched && !isEmailValid"
+                class="text-red-500 text-xs mt-1"
+              >
                 {{ t('auth.invalidEmail') }}
               </small>
             </div>
@@ -474,14 +501,20 @@ async function register() {
                 :class="{ 'p-invalid': genderTouched && !gender }"
                 @blur="genderTouched = true"
               />
-              <small v-if="genderTouched && !gender" class="text-red-500 text-xs mt-1">
+              <small
+                v-if="genderTouched && !gender"
+                class="text-red-500 text-xs mt-1"
+              >
                 {{ t('auth.genderRequired') }}
               </small>
             </div>
 
             <!-- Password -->
             <div class="flex flex-col">
-              <label for="password" class="form-label-base">{{ t('auth.password') }}</label>
+              <label
+                for="password"
+                class="form-label-base"
+              >{{ t('auth.password') }}</label>
               <Password
                 v-model="password"
                 input-id="password"
@@ -516,14 +549,20 @@ async function register() {
                   </ul>
                 </template>
               </Password>
-              <small v-if="passwordTouched && !isPasswordValid" class="text-red-500 text-xs mt-1">
+              <small
+                v-if="passwordTouched && !isPasswordValid"
+                class="text-red-500 text-xs mt-1"
+              >
                 {{ t('auth.passwordRequirements') }}
               </small>
             </div>
 
             <!-- Confirm Password -->
             <div class="flex flex-col">
-              <label for="confirmPassword" class="form-label-base">{{ t('auth.confirmPassword') }}</label>
+              <label
+                for="confirmPassword"
+                class="form-label-base"
+              >{{ t('auth.confirmPassword') }}</label>
               <InputText
                 id="confirmPassword"
                 v-model="confirmPassword"
@@ -533,7 +572,10 @@ async function register() {
                 :class="{ 'p-invalid': confirmPasswordTouched && !passwordValidation.match }"
                 @blur="confirmPasswordTouched = true"
               />
-              <small v-if="confirmPasswordTouched && !passwordValidation.match" class="text-red-500 text-xs mt-1">
+              <small
+                v-if="confirmPasswordTouched && !passwordValidation.match"
+                class="text-red-500 text-xs mt-1"
+              >
                 {{ t('auth.passwordsMatchRequired') }}
               </small>
             </div>
@@ -549,12 +591,21 @@ async function register() {
 
         <!-- STEP 2: Company Details / Selection -->
         <div v-else-if="step === 2">
-          <form class="flex flex-col gap-6" @submit.prevent="goToStep3">
+          <form
+            class="flex flex-col gap-6"
+            @submit.prevent="goToStep3"
+          >
             <!-- CREATE MODE: Complete Legal & Address configuration -->
-            <div v-if="registerMode === 'create'" class="flex flex-col gap-6">
+            <div
+              v-if="registerMode === 'create'"
+              class="flex flex-col gap-6"
+            >
               <!-- Company Name -->
               <div class="flex flex-col">
-                <label for="companyName" class="form-label-base">{{ t('auth.companyNameCreate') }}</label>
+                <label
+                  for="companyName"
+                  class="form-label-base"
+                >{{ t('auth.companyNameCreate') }}</label>
                 <InputText
                   id="companyName"
                   v-model="companyName"
@@ -563,14 +614,20 @@ async function register() {
                   :class="{ 'p-invalid': companyNameTouched && !companyName }"
                   @blur="companyNameTouched = true"
                 />
-                <small v-if="companyNameTouched && !companyName" class="text-red-500 text-xs mt-1">
+                <small
+                  v-if="companyNameTouched && !companyName"
+                  class="text-red-500 text-xs mt-1"
+                >
                   {{ t('auth.companyRequired') }}
                 </small>
               </div>
 
               <!-- Representative (Legal Representative) -->
               <div class="flex flex-col">
-                <label for="rep" class="form-label-base">{{ t('settings.representative') }}</label>
+                <label
+                  for="rep"
+                  class="form-label-base"
+                >{{ t('settings.representative') }}</label>
                 <InputText
                   id="rep"
                   v-model="legalNoticeRepresentative"
@@ -579,7 +636,10 @@ async function register() {
                   :class="{ 'p-invalid': legalNoticeRepresentativeTouched && !legalNoticeRepresentative }"
                   @blur="legalNoticeRepresentativeTouched = true"
                 />
-                <small v-if="legalNoticeRepresentativeTouched && !legalNoticeRepresentative" class="text-red-500 text-xs mt-1">
+                <small
+                  v-if="legalNoticeRepresentativeTouched && !legalNoticeRepresentative"
+                  class="text-red-500 text-xs mt-1"
+                >
                   {{ t('auth.repRequired') }}
                 </small>
               </div>
@@ -587,7 +647,10 @@ async function register() {
               <!-- Address: Street and House Number -->
               <div class="grid grid-cols-4 gap-4">
                 <div class="flex flex-col col-span-3">
-                  <label for="street" class="form-label-base">{{ t('settings.street') }}</label>
+                  <label
+                    for="street"
+                    class="form-label-base"
+                  >{{ t('settings.street') }}</label>
                   <InputText
                     id="street"
                     v-model="legalNoticeStreet"
@@ -596,12 +659,18 @@ async function register() {
                     :class="{ 'p-invalid': legalNoticeStreetTouched && !legalNoticeStreet }"
                     @blur="legalNoticeStreetTouched = true"
                   />
-                  <small v-if="legalNoticeStreetTouched && !legalNoticeStreet" class="text-red-500 text-xs mt-1">
+                  <small
+                    v-if="legalNoticeStreetTouched && !legalNoticeStreet"
+                    class="text-red-500 text-xs mt-1"
+                  >
                     {{ t('auth.streetRequired') }}
                   </small>
                 </div>
                 <div class="flex flex-col col-span-1">
-                  <label for="houseNum" class="form-label-base">{{ t('settings.number') }}</label>
+                  <label
+                    for="houseNum"
+                    class="form-label-base"
+                  >{{ t('settings.number') }}</label>
                   <InputText
                     id="houseNum"
                     v-model="legalNoticeHouseNumber"
@@ -610,7 +679,10 @@ async function register() {
                     :class="{ 'p-invalid': legalNoticeHouseNumberTouched && !legalNoticeHouseNumber }"
                     @blur="legalNoticeHouseNumberTouched = true"
                   />
-                  <small v-if="legalNoticeHouseNumberTouched && !legalNoticeHouseNumber" class="text-red-500 text-xs mt-1">
+                  <small
+                    v-if="legalNoticeHouseNumberTouched && !legalNoticeHouseNumber"
+                    class="text-red-500 text-xs mt-1"
+                  >
                     {{ t('auth.houseNumRequired') }}
                   </small>
                 </div>
@@ -619,7 +691,10 @@ async function register() {
               <!-- Address: ZIP Code and City -->
               <div class="grid grid-cols-4 gap-4">
                 <div class="flex flex-col col-span-1">
-                  <label for="zipCode" class="form-label-base">{{ t('settings.zipCode') }}</label>
+                  <label
+                    for="zipCode"
+                    class="form-label-base"
+                  >{{ t('settings.zipCode') }}</label>
                   <InputText
                     id="zipCode"
                     v-model="legalNoticeZipCode"
@@ -628,12 +703,18 @@ async function register() {
                     :class="{ 'p-invalid': legalNoticeZipCodeTouched && !legalNoticeZipCode }"
                     @blur="legalNoticeZipCodeTouched = true"
                   />
-                  <small v-if="legalNoticeZipCodeTouched && !legalNoticeZipCode" class="text-red-500 text-xs mt-1">
+                  <small
+                    v-if="legalNoticeZipCodeTouched && !legalNoticeZipCode"
+                    class="text-red-500 text-xs mt-1"
+                  >
                     {{ t('auth.zipRequired') }}
                   </small>
                 </div>
                 <div class="flex flex-col col-span-3">
-                  <label for="city" class="form-label-base">{{ t('settings.city') }}</label>
+                  <label
+                    for="city"
+                    class="form-label-base"
+                  >{{ t('settings.city') }}</label>
                   <InputText
                     id="city"
                     v-model="legalNoticeCity"
@@ -642,7 +723,10 @@ async function register() {
                     :class="{ 'p-invalid': legalNoticeCityTouched && !legalNoticeCity }"
                     @blur="legalNoticeCityTouched = true"
                   />
-                  <small v-if="legalNoticeCityTouched && !legalNoticeCity" class="text-red-500 text-xs mt-1">
+                  <small
+                    v-if="legalNoticeCityTouched && !legalNoticeCity"
+                    class="text-red-500 text-xs mt-1"
+                  >
                     {{ t('auth.cityRequired') }}
                   </small>
                 </div>
@@ -650,9 +734,15 @@ async function register() {
             </div>
 
             <!-- JOIN MODE: Select Company with detailed info card -->
-            <div v-else class="flex flex-col gap-6">
+            <div
+              v-else
+              class="flex flex-col gap-6"
+            >
               <div class="flex flex-col">
-                <label for="companyName" class="form-label-base">{{ t('auth.companyNameJoin') }}</label>
+                <label
+                  for="companyName"
+                  class="form-label-base"
+                >{{ t('auth.companyNameJoin') }}</label>
                 <InputText
                   id="companyName"
                   v-model="companyName"
@@ -662,7 +752,10 @@ async function register() {
                   :disabled="isModeLocked"
                   @blur="companyNameTouched = true"
                 />
-                <small v-if="companyNameTouched && !companyName" class="text-red-500 text-xs mt-1">
+                <small
+                  v-if="companyNameTouched && !companyName"
+                  class="text-red-500 text-xs mt-1"
+                >
                   {{ t('auth.companyRequired') }}
                 </small>
               </div>
@@ -670,7 +763,7 @@ async function register() {
               <!-- Visual Info Card explaining Join Flow -->
               <div class="p-6 bg-slate-50 border border-slate-100 rounded-2xl flex flex-col gap-3 text-left">
                 <div class="flex items-center gap-2.5 text-amber-500">
-                  <i class="pi pi-info-circle text-lg"></i>
+                  <i class="pi pi-info-circle text-lg" />
                   <h4 class="text-sm font-bold uppercase tracking-wider text-slate-800">
                     {{ t('auth.joinWarningTitle') }}
                   </h4>
@@ -708,7 +801,10 @@ async function register() {
         <div v-else-if="step === 3">
           <div class="space-y-6">
             <!-- CREATE MODE: Optional legal fields & workspace recap -->
-            <div v-if="registerMode === 'create'" class="flex flex-col gap-6">
+            <div
+              v-if="registerMode === 'create'"
+              class="flex flex-col gap-6"
+            >
               <!-- Recap of what will be created -->
               <div class="p-6 bg-slate-50 rounded-2xl border border-slate-100 shadow-sm text-left">
                 <div class="flex items-center gap-3 text-primary mb-4">
@@ -738,7 +834,10 @@ async function register() {
             </div>
 
             <!-- JOIN MODE: Existing Company terms acceptance -->
-            <div v-else class="flex flex-col gap-4 p-6 bg-slate-50 rounded-2xl border border-slate-100 shadow-sm text-left">
+            <div
+              v-else
+              class="flex flex-col gap-4 p-6 bg-slate-50 rounded-2xl border border-slate-100 shadow-sm text-left"
+            >
               <div class="flex items-center gap-3 text-primary">
                 <i class="pi pi-users text-2xl text-amber-500" />
                 <h3 class="text-lg font-black uppercase tracking-tight text-slate-900">
@@ -820,7 +919,10 @@ async function register() {
         </div>
       </div>
 
-      <div v-else class="text-center py-8">
+      <div
+        v-else
+        class="text-center py-8"
+      >
         <div class="mb-6 flex justify-center">
           <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
             <i class="pi pi-check text-4xl text-green-600" />

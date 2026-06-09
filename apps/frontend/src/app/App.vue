@@ -392,11 +392,11 @@ onMounted(async () => {
           </RouterLink>
           <a
             v-if="settingsStore.homepageUrl"
+            v-tooltip.bottom="t('settings.homepageUrl')"
             :href="settingsStore.homepageUrl"
             target="_blank"
             rel="noopener noreferrer"
             class="homepage-link"
-            v-tooltip.bottom="t('settings.homepageUrl')"
           >
             <i class="pi pi-globe" />
           </a>

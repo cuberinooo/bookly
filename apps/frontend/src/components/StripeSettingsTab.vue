@@ -306,7 +306,10 @@ const calcSepaFee = (amount: number | null) => {
         </div>
 
         <!-- Stripe Fee Breakdown Card -->
-        <div v-if="monthlyFee || (yearlyFeeEnabled && setupFee)" class="mt-8 p-6 bg-slate-50 rounded-2xl border border-slate-200">
+        <div
+          v-if="monthlyFee || (yearlyFeeEnabled && setupFee)"
+          class="mt-8 p-6 bg-slate-50 rounded-2xl border border-slate-200"
+        >
           <h4 class="text-sm font-extrabold uppercase tracking-wider text-slate-700 mb-4 flex items-center gap-2">
             <i class="pi pi-info-circle text-amber-500" />
             {{ t('settings.stripe.feeBreakdownTitle') }}
@@ -317,7 +320,10 @@ const calcSepaFee = (amount: number | null) => {
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <!-- Monthly Fee Breakdown -->
-            <div v-if="monthlyFee" class="bg-white p-5 rounded-xl border border-slate-100 shadow-sm">
+            <div
+              v-if="monthlyFee"
+              class="bg-white p-5 rounded-xl border border-slate-100 shadow-sm"
+            >
               <div class="flex items-center gap-2 mb-3">
                 <span class="w-2.5 h-2.5 rounded-full bg-amber-500" />
                 <span class="font-bold text-xs uppercase tracking-wider text-slate-600">{{ t('settings.stripe.monthlyAbo') }}</span>
@@ -344,10 +350,16 @@ const calcSepaFee = (amount: number | null) => {
                 <div class="border-t border-slate-200 pt-3 flex justify-between font-bold text-sm">
                   <span>{{ t('settings.stripe.estPayout') }}</span>
                   <div class="text-right">
-                    <div class="text-green-600" v-tooltip="t('settings.stripe.viaCreditCard')">
+                    <div
+                      v-tooltip="t('settings.stripe.viaCreditCard')"
+                      class="text-green-600"
+                    >
                       {{ formatCurrency(monthlyFee - calcCardFee(monthlyFee)) }} <span class="text-[9px] text-slate-400 font-normal">CC</span>
                     </div>
-                    <div class="text-green-600 text-xs font-normal mt-0.5" v-tooltip="t('settings.stripe.viaSepa')">
+                    <div
+                      v-tooltip="t('settings.stripe.viaSepa')"
+                      class="text-green-600 text-xs font-normal mt-0.5"
+                    >
                       {{ formatCurrency(monthlyFee - calcSepaFee(monthlyFee)) }} <span class="text-[9px] text-slate-400 font-normal">SEPA</span>
                     </div>
                   </div>
@@ -356,7 +368,10 @@ const calcSepaFee = (amount: number | null) => {
             </div>
 
             <!-- Yearly/Setup Fee Breakdown -->
-            <div v-if="yearlyFeeEnabled && setupFee" class="bg-white p-5 rounded-xl border border-slate-100 shadow-sm">
+            <div
+              v-if="yearlyFeeEnabled && setupFee"
+              class="bg-white p-5 rounded-xl border border-slate-100 shadow-sm"
+            >
               <div class="flex items-center gap-2 mb-3">
                 <span class="w-2.5 h-2.5 rounded-full bg-indigo-500" />
                 <span class="font-bold text-xs uppercase tracking-wider text-slate-600">{{ t('settings.stripe.yearlySetup') }}</span>
@@ -383,10 +398,16 @@ const calcSepaFee = (amount: number | null) => {
                 <div class="border-t border-slate-200 pt-3 flex justify-between font-bold text-sm">
                   <span>{{ t('settings.stripe.estPayout') }}</span>
                   <div class="text-right">
-                    <div class="text-green-600" v-tooltip="t('settings.stripe.viaCreditCard')">
+                    <div
+                      v-tooltip="t('settings.stripe.viaCreditCard')"
+                      class="text-green-600"
+                    >
                       {{ formatCurrency(setupFee - calcCardFee(setupFee)) }} <span class="text-[9px] text-slate-400 font-normal">CC</span>
                     </div>
-                    <div class="text-green-600 text-xs font-normal mt-0.5" v-tooltip="t('settings.stripe.viaSepa')">
+                    <div
+                      v-tooltip="t('settings.stripe.viaSepa')"
+                      class="text-green-600 text-xs font-normal mt-0.5"
+                    >
                       {{ formatCurrency(setupFee - calcSepaFee(setupFee)) }} <span class="text-[9px] text-slate-400 font-normal">SEPA</span>
                     </div>
                   </div>
