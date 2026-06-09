@@ -4,6 +4,7 @@ import api from '../services/api';
 import { useToast } from 'primevue/usetoast';
 import { useI18n } from 'vue-i18n';
 import { useSettingsStore } from '../store/useSettingsStore';
+import { useAuthStore } from '../store/useAuthStore';
 
 const { t } = useI18n();
 const toast = useToast();
@@ -15,6 +16,21 @@ const settings = ref({
 });
 const loading = ref(true);
 const saving = ref(false);
+
+const fileInput = ref<HTMLInputElement | null>(null);
+const uploading = ref(false);
+const deleting = ref(false);
+const companyLogoPath = ref('');
+
+const companyLogoUrl = computed(() => {
+    if (companyLogoPath.value) {
+        const authStore = useAuthStore();
+        const tokenParam = authStore.token ? `&token=${encodeURIComponent(authStore.token)}` : '';
+        const apiBaseUrl = import.meta.env.VITE_API_URL.replace(/\/api$/, '');
+        return `${apiBaseUrl}/uploads/${companyLogoPath.value}?t=${encodeURIComponent(companyLogoPath.value)}${tokenParam}`;
+    }
+    return '';
+});
 
 const registrationLink = computed(() => {
     const origin = window.location.origin;
@@ -34,6 +50,7 @@ async function fetchSettings() {
             name: response.data.name || '',
             homepageUrl: response.data.homepageUrl || ''
         };
+        companyLogoPath.value = response.data.companyLogoPath || '';
     } catch (e) {
         toast.add({ severity: 'error', summary: t('app.error'), detail: t('settings.loadFailed'), life: 5000 });
     } finally {
@@ -61,6 +78,59 @@ async function updateSettings() {
         toast.add({ severity: 'error', summary: t('app.error'), detail: t('profile.updateError'), life: 5000 });
     } finally {
         saving.value = false;
+    }
+}
+
+function triggerFileUpload() {
+    fileInput.value?.click();
+}
+
+async function handleFileUpload(event: Event) {
+    const target = event.target as HTMLInputElement;
+    const file = target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+        toast.add({ severity: 'error', summary: t('app.error'), detail: t('settings.logoInvalidType'), life: 5000 });
+        return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+        toast.add({ severity: 'error', summary: t('app.error'), detail: t('settings.logoTooLarge'), life: 5000 });
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    uploading.value = true;
+    try {
+        const response = await api.post('/admin-settings/company-logo', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        });
+        companyLogoPath.value = response.data.path;
+        settingsStore.companyLogoPath = response.data.path;
+        toast.add({ severity: 'success', summary: t('app.success'), detail: t('settings.logoUploaded'), life: 5000 });
+    } catch (e) {
+        toast.add({ severity: 'error', summary: t('app.error'), detail: t('settings.logoUploadFailed'), life: 5000 });
+    } finally {
+        uploading.value = false;
+        if (target) target.value = '';
+    }
+}
+
+async function deleteLogo() {
+    deleting.value = true;
+    try {
+        await api.delete('/admin-settings/company-logo');
+        companyLogoPath.value = '';
+        settingsStore.companyLogoPath = '';
+        toast.add({ severity: 'success', summary: t('app.success'), detail: t('settings.logoDeleted'), life: 5000 });
+    } catch (e) {
+        toast.add({ severity: 'error', summary: t('app.error'), detail: t('settings.logoDeleteFailed'), life: 5000 });
+    } finally {
+        deleting.value = false;
     }
 }
 
@@ -101,6 +171,62 @@ onMounted(fetchSettings);
               class="w-full max-w-md bg-slate-50"
             />
           </div>
+
+          <div class="flex flex-col md:flex-row gap-6 items-center md:items-start my-4">
+            <div class="logo-preview-container flex flex-col items-center gap-2">
+              <span class="font-bold uppercase text-xs self-start">{{ $t('settings.companyLogo') }}</span>
+              <div class="relative w-32 h-32 border-2 border-dashed border-slate-200 rounded-xl flex items-center justify-center bg-slate-50 overflow-hidden group">
+                <img
+                  v-if="companyLogoUrl"
+                  :src="companyLogoUrl"
+                  alt="Company Logo Preview"
+                  class="w-full h-full object-contain p-2"
+                >
+                <div
+                  v-else
+                  class="flex flex-col items-center justify-center text-slate-400"
+                >
+                  <i class="pi pi-image text-3xl mb-1" />
+                  <span class="text-xs">{{ $t('settings.noLogo') }}</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="flex-1 flex flex-col gap-3 justify-center pt-6">
+              <input
+                ref="fileInput"
+                type="file"
+                accept="image/*"
+                class="hidden"
+                @change="handleFileUpload"
+              >
+              
+              <div class="flex gap-2">
+                <Button
+                  :label="companyLogoUrl ? t('settings.changeLogo') : t('settings.uploadLogo')"
+                  icon="pi pi-upload"
+                  severity="secondary"
+                  size="small"
+                  :loading="uploading"
+                  @click="triggerFileUpload"
+                />
+                <Button
+                  v-if="companyLogoUrl"
+                  :label="t('settings.deleteLogo')"
+                  icon="pi pi-trash"
+                  severity="danger"
+                  outlined
+                  size="small"
+                  :loading="deleting"
+                  @click="deleteLogo"
+                />
+              </div>
+              <p class="text-xs text-slate-500 max-w-sm">
+                {{ $t('settings.logoNote') }}
+              </p>
+            </div>
+          </div>
+
           <div class="field flex flex-col gap-2 mt-2">
             <label
               class="font-bold uppercase text-xs"

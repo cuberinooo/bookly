@@ -20,7 +20,6 @@ class AdminSettingsController extends AbstractController
     public function __construct(
         private AdminSettingsService $adminSettingsService,
         private SerializerInterface $serializer,
-        private \Doctrine\ORM\EntityManagerInterface $entityManager,
         private S3ClientInterface $s3Client,
         private string $s3Bucket,
         private string $stripeSecretKey
@@ -295,6 +294,47 @@ class AdminSettingsController extends AbstractController
 
         } catch (\Exception $e) {
             return new Response('Attachment file could not be retrieved from storage.', Response::HTTP_NOT_FOUND);
+        }
+    }
+
+    #[Route('/company-logo', name: 'admin_settings_upload_company_logo', methods: ['POST'])]
+    public function uploadCompanyLogo(Request $request): JsonResponse
+    {
+        $this->denyAccessUnlessGranted('ROLE_ADMIN');
+        $user = $this->getUser();
+        if (!$user instanceof \App\Entity\User || !$user->getCompany()) {
+            return new JsonResponse(['error' => 'Company not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        $file = $request->files->get('file');
+        if (!$file) {
+            return new JsonResponse(['error' => 'No file uploaded'], Response::HTTP_BAD_REQUEST);
+        }
+
+        try {
+            $path = $this->adminSettingsService->uploadCompanyLogo($user->getCompany(), $file);
+
+            return new JsonResponse(['path' => $path]);
+        } catch (\RuntimeException $e) {
+            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    #[Route('/company-logo', name: 'admin_settings_delete_company_logo', methods: ['DELETE'])]
+    public function deleteCompanyLogo(): JsonResponse
+    {
+        $this->denyAccessUnlessGranted('ROLE_ADMIN');
+        $user = $this->getUser();
+        if (!$user instanceof \App\Entity\User || !$user->getCompany()) {
+            return new JsonResponse(['error' => 'Company not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        try {
+            $this->adminSettingsService->deleteCompanyLogo($user->getCompany());
+
+            return new JsonResponse(['status' => 'Company logo deleted']);
+        } catch (\Exception $e) {
+            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 }

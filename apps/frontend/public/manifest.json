@@ -1,7 +1,7 @@
 {
-  "name": "Bookly",
-  "short_name": "Bookly",
-  "description": "Book your fitness courses at Bookly",
+  "name": "BooklyFit",
+  "short_name": "BooklyFit",
+  "description": "Book your fitness courses at BooklyFit",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0f172a",

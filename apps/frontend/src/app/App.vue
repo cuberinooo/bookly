@@ -394,11 +394,32 @@ onMounted(async () => {
     <header class="main-header">
       <nav class="nav-container">
         <div class="brand">
-          <RouterLink :to="authStore.isLoggedIn ? '/' : '/login'">
-            {{ companyName }}
-          </RouterLink>
           <a
-            v-if="settingsStore.homepageUrl"
+            v-if="settingsStore.companyLogoUrl && settingsStore.homepageUrl"
+            v-tooltip.bottom="t('settings.homepageUrl')"
+            :href="settingsStore.homepageUrl"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="company-logo-link"
+          >
+            <img
+              :src="settingsStore.companyLogoUrl"
+              :alt="companyName"
+              class="company-logo"
+            >
+          </a>
+          <div
+            v-else-if="settingsStore.companyLogoUrl"
+            class="company-logo-container"
+          >
+            <img
+              :src="settingsStore.companyLogoUrl"
+              :alt="companyName"
+              class="company-logo"
+            >
+          </div>
+          <a
+            v-else-if="settingsStore.homepageUrl"
             v-tooltip.bottom="t('settings.homepageUrl')"
             :href="settingsStore.homepageUrl"
             target="_blank"
@@ -407,6 +428,10 @@ onMounted(async () => {
           >
             <i class="pi pi-globe" />
           </a>
+
+          <RouterLink :to="authStore.isLoggedIn ? '/' : '/login'">
+            {{ companyName }}
+          </RouterLink>
         </div>
         <div class="nav-links">
           <RouterLink
@@ -783,7 +808,7 @@ body,
   align-items: center;
   gap: 0.75rem;
 
-  a:not(.homepage-link) {
+  a:not(.homepage-link):not(.company-logo-link) {
     font-family: 'Barlow Condensed', sans-serif;
     font-size: 1.75rem;
     font-weight: 900;
@@ -819,6 +844,32 @@ body,
     @media (max-width: 768px) {
       font-size: 1rem;
     }
+  }
+
+  .company-logo {
+    height: 2.25rem;
+    width: auto;
+    max-width: 120px;
+    object-fit: contain;
+    border-radius: 0.375rem;
+    transition: transform 0.2s ease-in-out;
+  }
+
+  .company-logo-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s ease-in-out;
+
+    &:hover {
+      transform: scale(1.05);
+    }
+  }
+
+  .company-logo-container {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
 }
 

@@ -9,6 +9,7 @@ use App\Entity\User;
 use App\Repository\UserRepository;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 class AdminSettingsControllerTest extends WebTestCase
 {
@@ -44,6 +45,33 @@ class AdminSettingsControllerTest extends WebTestCase
             $admin->setRoles(['ROLE_ADMIN']);
             $admin->setPassword('password');
             $admin->setName('Admin');
+            $admin->setIsVerified(true);
+            $admin->setIsActive(true);
+            $admin->setCompany($company);
+
+            $entityManager->persist($admin);
+            $entityManager->flush();
+        }
+
+        return $admin;
+    }
+
+    private function createAnotherAdmin(): User
+    {
+        $admin = $this->userRepository->findOneBy(['email' => 'another_admin@example.com']);
+        if (!$admin) {
+            $entityManager = static::getContainer()->get('doctrine')->getManager();
+
+            $company = new Company();
+            $company->setName('Another Company Settings');
+
+            $entityManager->persist($company);
+
+            $admin = new User();
+            $admin->setEmail('another_admin@example.com');
+            $admin->setRoles(['ROLE_ADMIN']);
+            $admin->setPassword('password');
+            $admin->setName('Another Admin');
             $admin->setIsVerified(true);
             $admin->setIsActive(true);
             $admin->setCompany($company);
@@ -127,5 +155,83 @@ class AdminSettingsControllerTest extends WebTestCase
         // Missing company name
         $this->client->request('GET', '/api/admin-settings/privacy-policy/download');
         $this->assertResponseStatusCodeSame(Response::HTTP_BAD_REQUEST);
+    }
+
+    public function test_company_logo_upload_and_delete(): void
+    {
+        $admin = $this->createAdmin();
+        $token = $this->getToken($admin);
+
+        // Create a dummy image file
+        $filePath = tempnam(sys_get_temp_dir(), 'logo_img');
+        file_put_contents($filePath, base64_decode('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'));
+        $uploadedFile = new UploadedFile($filePath, 'logo.gif', 'image/gif', null, true);
+
+        try {
+            // Test unauthorized upload
+            $this->client->request('POST', '/api/admin-settings/company-logo', [], ['file' => $uploadedFile]);
+            $this->assertResponseStatusCodeSame(Response::HTTP_UNAUTHORIZED);
+
+            // Test authorized upload
+            $this->client->request('POST', '/api/admin-settings/company-logo', [], ['file' => $uploadedFile], [
+                'HTTP_AUTHORIZATION' => 'Bearer '.$token,
+            ]);
+
+            $this->assertResponseIsSuccessful();
+            $data = json_decode($this->client->getResponse()->getContent(), true);
+            $this->assertArrayHasKey('path', $data);
+            $this->assertStringContainsString('logo/logo_', $data['path']);
+
+            // Verify settings updated in DB
+            $entityManager = static::getContainer()->get('doctrine')->getManager();
+            $entityManager->clear();
+            $company = $entityManager->getRepository(Company::class)->find($admin->getCompany()->getId());
+            $this->assertNotNull($company->getAdminSettings()->getCompanyLogoPath());
+            $this->assertEquals($data['path'], $company->getAdminSettings()->getCompanyLogoPath());
+
+            // Test serving logo via uploads WITHOUT a token (should return 401)
+            $this->client->request('GET', '/uploads/'.$data['path']);
+            $this->assertResponseStatusCodeSame(Response::HTTP_UNAUTHORIZED);
+
+            // Test serving logo via uploads WITH correct token in Authorization header (should succeed)
+            $this->client->request('GET', '/uploads/'.$data['path'], [], [], [
+                'HTTP_AUTHORIZATION' => 'Bearer '.$token,
+            ]);
+            $this->assertResponseIsSuccessful();
+            $this->assertResponseHeaderSame('Content-Type', 'image/gif');
+
+            // Test serving logo via uploads WITH correct token in query parameter (should succeed)
+            $this->client->request('GET', '/uploads/'.$data['path'].'?token='.urlencode($token));
+            $this->assertResponseIsSuccessful();
+            $this->assertResponseHeaderSame('Content-Type', 'image/gif');
+
+            // Test serving logo via uploads WITH token from a DIFFERENT company (should return 403)
+            $anotherAdmin = $this->createAnotherAdmin();
+            $anotherToken = $this->getToken($anotherAdmin);
+            $this->client->request('GET', '/uploads/'.$data['path'].'?token='.urlencode($anotherToken));
+            $this->assertResponseStatusCodeSame(Response::HTTP_FORBIDDEN);
+
+            // Test delete logo
+            $this->client->request('DELETE', '/api/admin-settings/company-logo', [], [], [
+                'HTTP_AUTHORIZATION' => 'Bearer '.$token,
+            ]);
+            $this->assertResponseIsSuccessful();
+            $deleteData = json_decode($this->client->getResponse()->getContent(), true);
+            $this->assertEquals('Company logo deleted', $deleteData['status']);
+
+            // Verify settings updated in DB after delete
+            $entityManager->clear();
+            $companyAfterDelete = $entityManager->getRepository(Company::class)->find($admin->getCompany()->getId());
+            $this->assertNull($companyAfterDelete->getAdminSettings()->getCompanyLogoPath());
+
+            // Test serving logo via uploads after deletion (should return 404)
+            $this->client->request('GET', '/uploads/'.$data['path'].'?token='.urlencode($token));
+            $this->assertResponseStatusCodeSame(Response::HTTP_NOT_FOUND);
+
+        } finally {
+            if (file_exists($filePath)) {
+                @unlink($filePath);
+            }
+        }
     }
 }

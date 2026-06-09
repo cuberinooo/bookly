@@ -46,6 +46,7 @@ class AdminSettingsService
             'welcomeMailMarkdown',
             'membershipWelcomeMailMarkdown',
             'homepageUrl',
+            'companyLogoPath',
         ];
 
 
@@ -187,5 +188,56 @@ class AdminSettingsService
         }
 
         $this->entityManager->flush();
+    }
+
+    public function uploadCompanyLogo(\App\Entity\Company $company, UploadedFile $file): string
+    {
+        $companySlug = $this->slugger->slug($company->getName())->lower();
+        $extension = $file->guessExtension() ?? 'png';
+        $filename = sprintf('logo_%s.%s', uniqid('', true), $extension);
+        $key = $companySlug.'/logo/'.$filename;
+
+        // Clean up existing logos
+        $prefix = $companySlug.'/logo/';
+        try {
+            $this->s3Client->deleteMatchingObjects($this->s3Bucket, $prefix);
+        } catch (\Exception $e) {
+            // Ignore if nothing to delete or on error
+        }
+
+        try {
+            $this->s3Client->putObject([
+                'Bucket' => $this->s3Bucket,
+                'Key'    => $key,
+                'Body'   => fopen($file->getRealPath(), 'r'),
+                'ContentType' => $file->getClientMimeType(),
+            ]);
+        } catch (\Exception $e) {
+            throw new \RuntimeException('Failed to upload company logo to S3: '.$e->getMessage());
+        }
+
+        $settings = $company->getAdminSettings();
+        $settings->setCompanyLogoPath($key);
+        $this->entityManager->flush();
+
+        return $key;
+    }
+
+    public function deleteCompanyLogo(\App\Entity\Company $company): void
+    {
+        $settings = $company->getAdminSettings();
+        $path = $settings->getCompanyLogoPath();
+        if ($path) {
+            try {
+                $this->s3Client->deleteObject([
+                    'Bucket' => $this->s3Bucket,
+                    'Key'    => $path,
+                ]);
+            } catch (\Exception $e) {
+                // Ignore
+            }
+            $settings->setCompanyLogoPath(null);
+            $this->entityManager->flush();
+        }
     }
 }

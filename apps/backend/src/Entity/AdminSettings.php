@@ -72,6 +72,10 @@ class AdminSettings
     #[Groups(['admin:read', 'admin:write'])]
     private ?string $homepageUrl = null;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['admin:read', 'admin:write'])]
+    private ?string $companyLogoPath = null;
+
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     #[Groups(['admin:read', 'admin:write'])]
     private ?string $legalNoticeMarkdown = null;
@@ -314,6 +318,18 @@ class AdminSettings
     public function setMembershipWelcomeMailAttachments(?array $membershipWelcomeMailAttachments): static
     {
         $this->membershipWelcomeMailAttachments = $membershipWelcomeMailAttachments;
+
+        return $this;
+    }
+
+    public function getCompanyLogoPath(): ?string
+    {
+        return $this->companyLogoPath;
+    }
+
+    public function setCompanyLogoPath(?string $companyLogoPath): static
+    {
+        $this->companyLogoPath = $companyLogoPath;
 
         return $this;
     }
