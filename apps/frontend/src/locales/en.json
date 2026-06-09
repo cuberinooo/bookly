@@ -326,7 +326,10 @@
       "roleMember": "Member",
       "roleTrial": "Trial",
       "sendMembershipWelcome": "Send Membership Welcome Mail",
-      "membershipWelcomeMailSuccess": "Membership welcome mail sent successfully."
+      "membershipWelcomeMailSuccess": "Membership welcome mail sent successfully.",
+      "welcomeMailInfoTitle": "Membership Welcome Email",
+      "welcomeMailInfoPaymentActive": "Automatic payment is enabled. New members will automatically receive the welcome email upon successfully subscribing to a paid membership.",
+      "welcomeMailInfoPaymentInactive": "Automatic payment is disabled. You can manually send the welcome email to trial users here (envelope icon in the 'Mail' column)."
     },
     "mail": {
       "placeholders": "Dynamic Placeholders",
@@ -340,8 +343,8 @@
       "noAttachments": "No attachments uploaded yet.",
       "welcomeUpload": "Upload Welcome Attachment",
       "membershipWelcomeMailTitle": "Membership Welcome Mail (Subscribers)",
-      "membershipWelcomeMailNote": "This email is automatically sent when a user successfully subscribes to a paid membership. Use this to provide essential onboarding information, company rules, or access details.",
-      "membershipWelcomeMailNoteManual": "This email can be manually sent to trial users in the user management view.",
+      "membershipWelcomeMailNote": "This email is automatically sent when a user successfully subscribes to a paid membership (since online payments are active). If online payments are inactive, this email can be manually sent to trial users in the user management view.",
+      "membershipWelcomeMailNoteManual": "This email can be manually sent to trial users in the user management view (since online payments are inactive). If online payments are active, this email is automatically sent when a user successfully subscribes to a paid membership.",
       "membershipWelcomePreview": "Membership Welcome Email Preview",
       "membershipWelcomeUpload": "Upload Membership Welcome Attachment",
       "noMembershipWelcomeAttachments": "No attachments for Membership Welcome Mail.",
@@ -832,7 +835,7 @@
     "legalNoticeMarkdownNote": "You can use Markdown to format your Legal Notice. This will replace the structured fields in the footer if provided.",
     "legalNoticePlaceholder": "Enter legal notice content...",
     "legalNoticePreview": "Legal Notice Preview",
-    "fallbackData": "Structured Fallback Data",
+    "fallbackData": "Structured Legacy Data",
     "saveLegalNotice": "Save Legal Notice",
     "termsTitle": "Terms & Conditions",
     "termsNote": "Define your terms of service and usage policies here.",

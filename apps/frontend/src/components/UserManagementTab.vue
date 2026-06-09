@@ -275,6 +275,20 @@ onMounted(() => {
       </div>
     </div>
 
+    <!-- Welcome Email Info Message -->
+    <Message
+      severity="primary"
+      icon="pi pi-envelope"
+      class="mb-6"
+    >
+      <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+        <span class="font-bold text-slate-800">{{ $t('admin.users.welcomeMailInfoTitle') }}:</span>
+        <span class="text-slate-600">
+          {{ settingsStore.paymentEnabled ? $t('admin.users.welcomeMailInfoPaymentActive') : $t('admin.users.welcomeMailInfoPaymentInactive') }}
+        </span>
+      </div>
+    </Message>
+
     <div class="hidden md:block">
       <DataTable
         :value="filteredUsers"

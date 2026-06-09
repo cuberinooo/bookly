@@ -327,7 +327,10 @@
       "roleMember": "Mitglied",
       "roleTrial": "Trial",
       "sendMembershipWelcome": "Willkommens-Mail senden",
-      "membershipWelcomeMailSuccess": "Willkommens-Mail erfolgreich gesendet."
+      "membershipWelcomeMailSuccess": "Willkommens-Mail erfolgreich gesendet.",
+      "welcomeMailInfoTitle": "Mitglieder-Willkommens-Mail",
+      "welcomeMailInfoPaymentActive": "Die automatische Zahlungsabwicklung ist aktiv. Neue Mitglieder erhalten die Willkommens-Mail automatisch bei Abschluss einer kostenpflichtigen Mitgliedschaft.",
+      "welcomeMailInfoPaymentInactive": "Die automatische Zahlungsabwicklung ist inaktiv. Die Willkommens-Mail kann hier manuell an Probetrainierende gesendet werden (Briefumschlag-Symbol in der Spalte 'Mail')."
     },
     "mail": {
       "placeholders": "Dynamische Platzhalter",
@@ -341,8 +344,8 @@
       "noAttachments": "Noch keine Anhänge hochgeladen.",
       "welcomeUpload": "Willkommens-Anhang hochladen",
       "membershipWelcomeMailTitle": "Willkommens-Mail für Mitglieder",
-       "membershipWelcomeMailNote": "Diese E-Mail wird automatisch gesendet, wenn ein Benutzer erfolgreich eine kostenpflichtige Mitgliedschaft abschließt.",
-      "membershipWelcomeMailNoteManual": "Diese E-Mail kann in der Mitgliederverwaltung manuell an Probetrainierende gesendet werden.",
+      "membershipWelcomeMailNote": "Diese E-Mail wird automatisch gesendet, wenn ein Benutzer erfolgreich eine kostenpflichtige Mitgliedschaft abschließt (da Online-Zahlungen aktiv sind). Wenn Online-Zahlungen inaktiv sind, kann sie manuell in der Mitgliederverwaltung an Probetrainierende gesendet werden.",
+      "membershipWelcomeMailNoteManual": "Diese E-Mail kann in der Mitgliederverwaltung manuell an Probetrainierende gesendet werden (da Online-Zahlungen inaktiv sind). Wenn Online-Zahlungen aktiv sind, wird sie automatisch bei Abschluss einer kostenpflichtigen Mitgliedschaft gesendet.",
       "membershipWelcomePreview": "Vorschau Mitglieder-Willkommens-Mail",
       "membershipWelcomeUpload": "Mitglieder-Willkommens-Anhang hochladen",
       "noMembershipWelcomeAttachments": "Keine Anhänge für Mitglieder-Willkommens-Mail.",
@@ -833,7 +836,7 @@
     "legalNoticeMarkdownNote": "Du kannst Markdown verwenden, um dein Impressum zu formatieren. Dies ersetzt die strukturierten Felder im Footer, falls angegeben.",
     "legalNoticePlaceholder": "Impressumstext eingeben...",
     "legalNoticePreview": "Vorschau Impressum",
-    "fallbackData": "Strukturierte Fallback-Daten",
+    "fallbackData": "Strukturierte Legacy-Daten",
     "saveLegalNotice": "Impressum speichern",
     "termsTitle": "AGB / Nutzungsbedingungen",
     "termsNote": "Definiere hier deine AGB und Nutzungsbedingungen.",
