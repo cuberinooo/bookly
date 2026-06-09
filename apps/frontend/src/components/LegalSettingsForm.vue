@@ -79,8 +79,9 @@ async function onUpload(event: any) {
         });
         settings.value.privacyPolicyPdfPath = response.data.path;
         toast.add({ severity: 'success', summary: t('app.uploaded'), detail: t('profile.updateSuccess'), life: 5000 });
-    } catch (e) {
-        toast.add({ severity: 'error', summary: t('app.error'), detail: t('profile.uploadFailed'), life: 5000 });
+    } catch (e: any) {
+        const message = e.response?.data?.error || t('profile.uploadFailed');
+        toast.add({ severity: 'error', summary: t('app.error'), detail: message, life: 5000 });
     } finally {
         uploading.value = false;
     }

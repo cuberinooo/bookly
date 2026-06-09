@@ -769,7 +769,7 @@
     "logoDeleted": "Company logo deleted",
     "logoDeleteFailed": "Failed to delete company logo",
     "logoInvalidType": "Please select a valid image file (PNG, JPG, SVG)",
-    "logoTooLarge": "Image size must be less than 2MB",
+    "logoTooLarge": "Image size must be less than 5MB",
     "logoNote": "Upload an image representing your company. It will be placed left of your company's name in the navigation bar.",
     "saveIdentity": "Save Identity Settings",
     "onboardingWarning": {

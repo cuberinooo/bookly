@@ -160,8 +160,9 @@ async function handleFileUpload(event: Event) {
     }
 
     markTaskComplete(ONBOARDING_TASKS.PROFILE_UPDATE);
-    toast.add({ severity: 'success', summary: t('app.success'), detail: t('profile.avatarUpdated'), life: 5000 });  } catch (e) {
-    toast.add({ severity: 'error', summary: t('app.error'), detail: t('profile.uploadFailed'), life: 5000 });
+    toast.add({ severity: 'success', summary: t('app.success'), detail: t('profile.avatarUpdated'), life: 5000 });  } catch (e: any) {
+    const message = e.response?.data?.error || t('profile.uploadFailed');
+    toast.add({ severity: 'error', summary: t('app.error'), detail: message, life: 5000 });
   } finally {
     uploading.value = false;
     if (target) target.value = ''; // Reset input

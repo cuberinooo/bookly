@@ -60,7 +60,9 @@ const dismiss = () => {
   >
     <template #header>
       <div class="flex items-center gap-3">
-        <h3 class="text-lg primary-text font-bold m-0">{{ $t('pushNotifications.promptModal.title') }}</h3>
+        <h3 class="text-lg primary-text font-bold m-0">
+          {{ $t('pushNotifications.promptModal.title') }}
+        </h3>
       </div>
     </template>
 

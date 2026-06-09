@@ -36,12 +36,19 @@ const handleToggle = async () => {
         </div>
         <div>
           <div class="flex flex-wrap items-center gap-2">
-            <h3 class="text-base font-bold text-slate-900 m-0">{{ $t('pushNotifications.title') }}</h3>
+            <h3 class="text-base font-bold text-slate-900 m-0">
+              {{ $t('pushNotifications.title') }}
+            </h3>
             <!-- Inline Status Badge -->
-            <span v-if="isSupported && !showAddToHomeScreenPrompt"
-                  class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wider uppercase border"
-                  :class="isSubscribed ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-50 text-slate-500 border-slate-200'">
-              <span class="w-1.5 h-1.5 rounded-full shrink-0" :class="isSubscribed ? 'bg-emerald-500' : 'bg-slate-400'" />
+            <span
+              v-if="isSupported && !showAddToHomeScreenPrompt"
+              class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wider uppercase border"
+              :class="isSubscribed ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-50 text-slate-500 border-slate-200'"
+            >
+              <span
+                class="w-1.5 h-1.5 rounded-full shrink-0"
+                :class="isSubscribed ? 'bg-emerald-500' : 'bg-slate-400'"
+              />
               {{ isSubscribed ? $t('pushNotifications.subscribed') : $t('pushNotifications.notSubscribed') }}
             </span>
           </div>
@@ -49,7 +56,10 @@ const handleToggle = async () => {
             {{ $t('pushNotifications.subtitle') }}
           </p>
           <!-- Toggle Switch for supported devices -->
-          <div v-if="isSupported && !showAddToHomeScreenPrompt" class="pt-1">
+          <div
+            v-if="isSupported && !showAddToHomeScreenPrompt"
+            class="pt-1"
+          >
             <ToggleSwitch
               :model-value="isSubscribed"
               :disabled="loading || permission === 'denied'"
@@ -61,7 +71,10 @@ const handleToggle = async () => {
     </div>
 
     <!-- UI/UX for unsupported browsers or iOS Safari (Shows Download Prompts) -->
-    <div v-if="!isSupported || showAddToHomeScreenPrompt" class="mt-5 pt-4 border-t border-slate-100">
+    <div
+      v-if="!isSupported || showAddToHomeScreenPrompt"
+      class="mt-5 pt-4 border-t border-slate-100"
+    >
       <div class="flex items-start gap-2 text-slate-600 mb-4 bg-slate-50 p-3.5 rounded-lg border border-slate-100">
         <i class="pi pi-info-circle text-base mt-0.5 text-indigo-500 shrink-0" />
         <span class="text-xs leading-relaxed">
@@ -70,11 +83,17 @@ const handleToggle = async () => {
         </span>
       </div>
       <div class="flex flex-wrap gap-2.5">
-        <a href="#" class="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-semibold transition-all shadow-sm hover:scale-[1.02] active:scale-[0.98]">
+        <a
+          href="#"
+          class="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-semibold transition-all shadow-sm hover:scale-[1.02] active:scale-[0.98]"
+        >
           <i class="pi pi-apple text-base" />
           <span>{{ $t('pushNotifications.appStore') }}</span>
         </a>
-        <a href="#" class="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-semibold transition-all shadow-sm hover:scale-[1.02] active:scale-[0.98]">
+        <a
+          href="#"
+          class="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-semibold transition-all shadow-sm hover:scale-[1.02] active:scale-[0.98]"
+        >
           <i class="pi pi-android text-base" />
           <span>{{ $t('pushNotifications.playStore') }}</span>
         </a>
@@ -82,7 +101,10 @@ const handleToggle = async () => {
     </div>
 
     <!-- Permission Denied Warning -->
-    <div v-else-if="permission === 'denied'" class="mt-4 p-3 bg-rose-50 border border-rose-100 text-rose-950 text-xs rounded-lg flex items-start gap-2.5">
+    <div
+      v-else-if="permission === 'denied'"
+      class="mt-4 p-3 bg-rose-50 border border-rose-100 text-rose-950 text-xs rounded-lg flex items-start gap-2.5"
+    >
       <i class="pi pi-ban text-base mt-0.5 text-rose-500 shrink-0" />
       <div>
         <span class="font-bold">{{ $t('pushNotifications.deniedTitle') }}</span>
@@ -93,7 +115,10 @@ const handleToggle = async () => {
     </div>
 
     <!-- Error message display -->
-    <div v-if="error" class="mt-4 p-3 bg-rose-50 border border-rose-100 text-rose-950 text-xs rounded-lg flex items-center gap-2">
+    <div
+      v-if="error"
+      class="mt-4 p-3 bg-rose-50 border border-rose-100 text-rose-950 text-xs rounded-lg flex items-center gap-2"
+    >
       <i class="pi pi-times-circle text-base text-rose-500 shrink-0" />
       <span>{{ error }}</span>
     </div>

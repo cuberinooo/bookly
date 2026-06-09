@@ -77,8 +77,9 @@ async function onUpload(event: any, type: 'welcome' | 'membership-welcome') {
             settings.value.membershipWelcomeMailAttachments.push(response.data);
         }
         toast.add({ severity: 'success', summary: t('app.uploaded'), detail: t('app.success'), life: 5000 });
-    } catch (e) {
-        toast.add({ severity: 'error', summary: t('app.error'), detail: t('app.error'), life: 5000 });
+    } catch (e: any) {
+        const message = e.response?.data?.error || t('app.error');
+        toast.add({ severity: 'error', summary: t('app.error'), detail: message, life: 5000 });
     } finally {
         if (type === 'welcome') uploadingWelcome.value = false;
         else uploadingMembershipWelcome.value = false;

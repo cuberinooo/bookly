@@ -10,8 +10,11 @@ import InputNumber from 'primevue/inputnumber';
 import Checkbox from 'primevue/checkbox';
 import FileUpload from 'primevue/fileupload';
 import { useI18n } from 'vue-i18n';
+import { useAuthStore } from '../store/useAuthStore';
+import { useToast } from 'primevue/usetoast';
 
 const { t } = useI18n();
+const toast = useToast();
 const props = defineProps<{
   meetup?: Meetup;
   loading?: boolean;
@@ -64,7 +67,17 @@ const removeImage = () => {
 };
 
 const displayImageUrl = computed(() => {
-  return localPreviewUrl.value || formData.value.imageUrl;
+  if (localPreviewUrl.value) return localPreviewUrl.value;
+  const url = formData.value.imageUrl;
+  if (url && url.includes('/uploads/')) {
+    const authStore = useAuthStore();
+    const tokenParam = authStore.token ? `token=${encodeURIComponent(authStore.token)}` : '';
+    if (tokenParam) {
+      const separator = url.includes('?') ? '&' : '?';
+      return `${url}${separator}${tokenParam}`;
+    }
+  }
+  return url;
 });
 
 onMounted(() => {
@@ -110,6 +123,8 @@ const handleSubmit = async () => {
     });
   } catch (e: any) {
     console.error('Upload failed', e);
+    const message = e.response?.data?.error || t('profile.uploadFailed');
+    toast.add({ severity: 'error', summary: t('app.error'), detail: message, life: 5000 });
   } finally {
     isUploading.value = false;
   }

@@ -41,6 +41,10 @@ class MeetupController extends AbstractController
             return new JsonResponse(['error' => 'No file uploaded'], Response::HTTP_BAD_REQUEST);
         }
 
+        if (!$file->isValid()) {
+            return new JsonResponse(['error' => 'Invalid file upload: '.$file->getErrorMessage()], Response::HTTP_BAD_REQUEST);
+        }
+
         /** @var \App\Entity\User $user */
         $user = $this->getUser();
         $company = $user->getCompany();

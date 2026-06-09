@@ -149,6 +149,19 @@ const openComments = () => {
     localUnreadCount.value = 0;
     meetupStore.markRead(props.meetup.id);
 };
+
+const imageUrlWithToken = computed(() => {
+  if (!props.meetup.imageUrl) return '';
+  const url = props.meetup.imageUrl;
+  if (url && url.includes('/uploads/')) {
+    const tokenParam = authStore.token ? `token=${encodeURIComponent(authStore.token)}` : '';
+    if (tokenParam) {
+      const separator = url.includes('?') ? '&' : '?';
+      return `${url}${separator}${tokenParam}`;
+    }
+  }
+  return url;
+});
 </script>
 
 <template>
@@ -157,11 +170,11 @@ const openComments = () => {
     :class="{ 'is-locked': isRsvpLocked }"
   >
     <template
-      v-if="meetup.imageUrl"
+      v-if="imageUrlWithToken"
       #header
     >
       <img
-        :src="meetup.imageUrl"
+        :src="imageUrlWithToken"
         :alt="t('meetup.bannerAlt')"
         class="meetup-banner"
       >

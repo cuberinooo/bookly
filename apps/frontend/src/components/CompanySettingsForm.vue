@@ -94,7 +94,7 @@ async function handleFileUpload(event: Event) {
         toast.add({ severity: 'error', summary: t('app.error'), detail: t('settings.logoInvalidType'), life: 5000 });
         return;
     }
-    if (file.size > 2 * 1024 * 1024) {
+    if (file.size > 5 * 1024 * 1024) {
         toast.add({ severity: 'error', summary: t('app.error'), detail: t('settings.logoTooLarge'), life: 5000 });
         return;
     }
@@ -112,8 +112,9 @@ async function handleFileUpload(event: Event) {
         companyLogoPath.value = response.data.path;
         settingsStore.companyLogoPath = response.data.path;
         toast.add({ severity: 'success', summary: t('app.success'), detail: t('settings.logoUploaded'), life: 5000 });
-    } catch (e) {
-        toast.add({ severity: 'error', summary: t('app.error'), detail: t('settings.logoUploadFailed'), life: 5000 });
+    } catch (e: any) {
+        const message = e.response?.data?.error || t('settings.logoUploadFailed');
+        toast.add({ severity: 'error', summary: t('app.error'), detail: message, life: 5000 });
     } finally {
         uploading.value = false;
         if (target) target.value = '';

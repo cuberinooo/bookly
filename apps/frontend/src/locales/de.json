@@ -770,7 +770,7 @@
     "logoDeleted": "Unternehmenslogo gelöscht",
     "logoDeleteFailed": "Fehler beim Löschen des Unternehmenslogos",
     "logoInvalidType": "Bitte wähle eine gültige Bilddatei aus (PNG, JPG, SVG)",
-    "logoTooLarge": "Bildgröße muss unter 2 MB liegen",
+    "logoTooLarge": "Bildgröße muss unter 5 MB liegen",
     "logoNote": "Lade ein Bild hoch, das dein Unternehmen repräsentiert. Es wird links neben deinem Unternehmensnamen in der Navigationsleiste angezeigt.",
     "saveIdentity": "Identitätseinstellungen speichern",
     "onboardingWarning": {

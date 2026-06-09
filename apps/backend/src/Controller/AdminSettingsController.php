@@ -311,6 +311,10 @@ class AdminSettingsController extends AbstractController
             return new JsonResponse(['error' => 'No file uploaded'], Response::HTTP_BAD_REQUEST);
         }
 
+        if (!$file->isValid()) {
+            return new JsonResponse(['error' => 'Invalid file upload: '.$file->getErrorMessage()], Response::HTTP_BAD_REQUEST);
+        }
+
         try {
             $path = $this->adminSettingsService->uploadCompanyLogo($user->getCompany(), $file);
 
