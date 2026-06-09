@@ -33,6 +33,7 @@ export default defineConfig(() => ({
     nxCopyAssetsPlugin(['*.md']),
     VitePWA({
       strategies: 'injectManifest',
+      injectRegister: 'inline',
       srcDir: 'src',
       filename: 'sw.ts',
       includeAssets: ['logo.png', 'manifest.json'], // These are in your public folder
@@ -43,6 +44,7 @@ export default defineConfig(() => ({
         theme_color: '#0f172a',
         background_color: '#0f172a',
         display: 'standalone',
+        start_url: '/',
         icons: [
           {
             src: 'logo.png',

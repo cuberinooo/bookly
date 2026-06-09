@@ -54,7 +54,14 @@ class PushNotificationService
             ],
         ];
 
-        $webPush = new WebPush($auth);
+        // Suppress E_USER_NOTICE temporarily because WebPush triggers a notice if GMP or BCMath extensions are not installed,
+        // which Symfony's error handler converts into a HTTP 500 error in development mode.
+        $oldReporting = error_reporting(error_reporting() & ~E_USER_NOTICE);
+        try {
+            $webPush = new WebPush($auth);
+        } finally {
+            error_reporting($oldReporting);
+        }
 
         $payload = json_encode([
             'title' => $title,

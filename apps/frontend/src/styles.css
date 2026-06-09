@@ -522,7 +522,7 @@ color: var(--accent-color);
 
 .settings-card {
   background: white;
-  padding: 2.5rem;
+  padding: 1rem;
   border-radius: 16px;
   border: 1px solid var(--border-color);
 

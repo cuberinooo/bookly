@@ -141,7 +141,7 @@ onMounted(fetchSettings);
 
           <div class="md:col-span-2">
             <h4 class="text-sm font-bold uppercase tracking-wider text-slate-400 mb-4">
-              {{ $t('settings.fallbackData') }}
+              {{ $t('settings.companyDetails') }}
             </h4>
           </div>
 
