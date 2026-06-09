@@ -17,6 +17,7 @@ import CookieConsent from '../components/CookieConsent.vue';
 import { useI18n } from 'vue-i18n';
 import { usePrimeVue } from 'primevue/config';
 import OverlayBadge from 'primevue/overlaybadge';
+import PushNotificationPromptModal from '../components/PushNotificationPromptModal.vue';
 
 const router = useRouter();
 const { t, locale } = useI18n();
@@ -549,6 +550,8 @@ onMounted(async () => {
     </main>
 
     <TheFooter v-if="authStore.isLoggedIn" />
+
+    <PushNotificationPromptModal v-if="authStore.isLoggedIn" />
 
     <Dialog
       v-if="authStore.user"

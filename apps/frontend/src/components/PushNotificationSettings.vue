@@ -48,16 +48,15 @@ const handleToggle = async () => {
           <p class="text-sm text-slate-500 mt-1 mb-0 leading-relaxed max-w-md">
             {{ $t('pushNotifications.subtitle') }}
           </p>
+          <!-- Toggle Switch for supported devices -->
+          <div v-if="isSupported && !showAddToHomeScreenPrompt" class="pt-1">
+            <ToggleSwitch
+              :model-value="isSubscribed"
+              :disabled="loading || permission === 'denied'"
+              @update:model-value="handleToggle"
+            />
+          </div>
         </div>
-      </div>
-
-      <!-- Toggle Switch for supported devices -->
-      <div v-if="isSupported && !showAddToHomeScreenPrompt" class="pt-1">
-        <ToggleSwitch
-          :model-value="isSubscribed"
-          :disabled="loading || permission === 'denied'"
-          @update:model-value="handleToggle"
-        />
       </div>
     </div>
 

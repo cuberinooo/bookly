@@ -1068,6 +1068,15 @@
     "errPermissionDenied": "Berechtigung für Benachrichtigungen nicht erteilt",
     "errVapidKeyMissing": "Der öffentliche VAPID-Schlüssel fehlt in der Konfiguration der Umgebung",
     "errSubscriptionFailed": "Abonnement fehlgeschlagen",
-    "errUnsubscriptionFailed": "Abbestellung fehlgeschlagen"
+    "errUnsubscriptionFailed": "Abbestellung fehlgeschlagen",
+    "promptModal": {
+      "title": "Bleibe auf dem Laufenden! 🔔",
+      "subtitle": "Aktiviere Push-Benachrichtigungen, um wichtige Updates in Echtzeit zu erhalten.",
+      "benefit1": "Sofortige Benachrichtigung bei Kursausfällen & Terminänderungen",
+      "benefit2": "Wartelisten-Aufstiege, damit du keine Trainingseinheit verpasst",
+      "benefit3": "Neue Community-Meetups und Kommentare von deiner Crew",
+      "enableBtn": "Benachrichtigungen aktivieren",
+      "laterBtn": "Später konfigurieren"
+    }
   }
 }

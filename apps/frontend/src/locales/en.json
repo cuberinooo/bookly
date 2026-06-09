@@ -1067,6 +1067,15 @@
     "errPermissionDenied": "Permission not granted for notifications",
     "errVapidKeyMissing": "VAPID public key is missing in environment configuration",
     "errSubscriptionFailed": "Subscription failed",
-    "errUnsubscriptionFailed": "Unsubscription failed"
+    "errUnsubscriptionFailed": "Unsubscription failed",
+    "promptModal": {
+      "title": "Stay in the loop! 🔔",
+      "subtitle": "Enable push notifications to get important updates in real-time.",
+      "benefit1": "Instant alerts for course cancellations & schedule changes",
+      "benefit2": "Waitlist promotions so you never miss a training slot",
+      "benefit3": "New community meetups and comments from your crew",
+      "enableBtn": "Enable Notifications",
+      "laterBtn": "Configure Later"
+    }
   }
 }
