@@ -10,3 +10,8 @@ This document outlines core mandates and workflows for the Phoenix Booking proje
 ## Tech Stack Alignment
 
 Always adhere to the tech stack context defined in the `component-architect` skill, prioritizing PrimeVue components and Tailwind utility classes for all frontend work.
+
+## Context-Aware Documentation
+
+- **Look up Context Directory**: Always check the [context/](file:///home/codingcube/dev/booking-app/context) directory for feature-specific workflows (e.g., [stripe_workflow.md](file:///home/codingcube/dev/booking-app/context/stripe_workflow.md) for Stripe-related tasks) before starting a task.
+- **Maintain Context Sync**: If logic or configurations change, immediately update the corresponding files in the [context/](file:///home/codingcube/dev/booking-app/context) directory to maintain an accurate source of truth.

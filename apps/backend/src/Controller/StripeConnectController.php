@@ -12,6 +12,7 @@ use Stripe\Stripe;
 use Stripe\Price;
 use Stripe\Product;
 use Stripe\Checkout\Session;
+use App\Service\SubscriptionService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -28,7 +29,8 @@ class StripeConnectController extends AbstractController
         private string $stripeSecretKey,
         private string $frontendUrl,
         private EmailService $emailService,
-        private LoggerInterface $logger
+        private LoggerInterface $logger,
+        private SubscriptionService $subscriptionService
     ) {
         Stripe::setApiKey($this->stripeSecretKey);
     }
@@ -324,13 +326,16 @@ class StripeConnectController extends AbstractController
             }
 
             $cancelledCount = 0;
+            $results = [];
+
             foreach ($subscriptions->data as $sub) {
                 if ($sub->status === 'canceled') continue;
 
-                // Cancel at the end of the period
-                \Stripe\Subscription::update($sub->id, [
-                    'cancel_at_period_end' => true,
-                ], $stripeAccountHeader);
+                $cancelResult = $this->subscriptionService->cancelSubscription(
+                    $sub->id,
+                    $company->getStripeConfig()->getStripeAccountId()
+                );
+                $results[] = $cancelResult;
                 $cancelledCount++;
             }
 
@@ -338,7 +343,16 @@ class StripeConnectController extends AbstractController
                 return new JsonResponse(['error' => 'No active subscription found'], 404);
             }
 
-            return new JsonResponse(['status' => 'cancelled_at_period_end']);
+            // Prioritize returning the period_end cancellation info (which represents the main monthly subscription)
+            $finalResult = $results[0];
+            foreach ($results as $res) {
+                if ($res['cancellation_type'] === 'period_end') {
+                    $finalResult = $res;
+                    break;
+                }
+            }
+
+            return new JsonResponse($finalResult);
         } catch (\Exception $e) {
             return new JsonResponse(['error' => $e->getMessage()], 500);
         }
@@ -588,9 +602,53 @@ class StripeConnectController extends AbstractController
         $successUrl = $this->frontendUrl . '/profile?tab=abo&upgrade=success';
         $cancelUrl = $this->frontendUrl . '/profile?tab=abo&upgrade=cancelled';
 
+        $customerId = $user->getStripeCustomerId();
+        $hasPaidYearlyFee = false;
+        $yearlyTrialEnd = null;
+
+        if ($customerId && $company->getStripeConfig()->isYearlyFeeEnabled()) {
+            $yearlyPriceId = $company->getStripeConfig()->getStripePriceYearlyRecurringId();
+            if ($yearlyPriceId) {
+                try {
+                    $subs = \Stripe\Subscription::all([
+                        'customer' => $customerId,
+                        'status' => 'all',
+                        'limit' => 50,
+                    ], $stripeAccountHeader);
+
+                    foreach ($subs->data as $sub) {
+                        $isYearly = false;
+                        foreach ($sub->items->data as $item) {
+                            if ($item->price->id === $yearlyPriceId) {
+                                $isYearly = true;
+                                break;
+                            }
+                        }
+
+                        if ($isYearly) {
+                            if (in_array($sub->status, ['active', 'trialing'], true)) {
+                                $hasPaidYearlyFee = true;
+                                $yearlyTrialEnd = $sub->trial_end ?: $sub->current_period_end;
+                                break;
+                            }
+
+                            $renewalDate = $sub->trial_end ?: $sub->current_period_end;
+                            if ($renewalDate > time()) {
+                                $hasPaidYearlyFee = true;
+                                $yearlyTrialEnd = $renewalDate;
+                                break;
+                            }
+                        }
+                    }
+                } catch (\Exception $e) {
+                    $this->logger->error('Failed to check yearly fee status: ' . $e->getMessage());
+                }
+            }
+        }
+
         $lineItems = [];
-        // Yearly Fee is added as a ONE-TIME line item
-        if ($company->getStripeConfig()->isYearlyFeeEnabled() && $setupFeePriceId) {
+        // Yearly Fee is added as a ONE-TIME line item ONLY if they haven't paid it yet this year
+        if ($company->getStripeConfig()->isYearlyFeeEnabled() && $setupFeePriceId && !$hasPaidYearlyFee) {
             $lineItems[] = [
                 'price' => $setupFeePriceId,
                 'quantity' => 1,
@@ -610,6 +668,7 @@ class StripeConnectController extends AbstractController
             'cancel_url' => $cancelUrl,
             'metadata' => [
                 'user_id' => $user->getId(),
+                'yearly_trial_end' => $yearlyTrialEnd ? (string)$yearlyTrialEnd : '',
             ],
             'customer_email' => $user->getEmail(),
         ];
@@ -636,5 +695,187 @@ class StripeConnectController extends AbstractController
         $session = Session::create($sessionData, $stripeAccountHeader);
 
         return new JsonResponse(['url' => $session->url]);
+    }
+
+    #[Route('/my-subscription/reactivate', name: 'stripe_my_subscription_reactivate', methods: ['POST'])]
+    public function reactivateMySubscription(): JsonResponse
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+        if (!$user) {
+            return new JsonResponse(['error' => 'Not authenticated'], 401);
+        }
+
+        $company = $user->getCompany();
+        if (!$company || !$company->getStripeConfig()->getStripeAccountId()) {
+            return new JsonResponse(['error' => 'Payments not configured'], 400);
+        }
+
+        $customerId = $user->getStripeCustomerId();
+        if (!$customerId) {
+            return new JsonResponse(['error' => 'No subscription found'], 404);
+        }
+
+        $stripeAccountHeader = ['stripe_account' => $company->getStripeConfig()->getStripeAccountId()];
+
+        try {
+            // Find all subscriptions for this customer
+            $subscriptions = \Stripe\Subscription::all([
+                'customer' => $customerId,
+                'status' => 'all',
+            ], $stripeAccountHeader);
+
+            if (empty($subscriptions->data)) {
+                return new JsonResponse(['error' => 'No active subscription found'], 404);
+            }
+
+            $monthlyPriceId = $company->getStripeConfig()->getStripePriceMembershipId();
+            $yearlyPriceId = $company->getStripeConfig()->getStripePriceYearlyRecurringId();
+
+            $reactivatedCount = 0;
+            $monthlySub = null;
+            $yearlySub = null;
+            $lastCanceledYearlySub = null;
+
+            foreach ($subscriptions->data as $sub) {
+                // Identify monthly membership subscription
+                $isMonthly = false;
+                $isYearly = false;
+                foreach ($sub->items->data as $item) {
+                    if ($item->price->id === $monthlyPriceId) {
+                        $isMonthly = true;
+                    }
+                    if ($item->price->id === $yearlyPriceId) {
+                        $isYearly = true;
+                    }
+                }
+
+                if ($isMonthly && $sub->status !== 'canceled') {
+                    $monthlySub = $sub;
+                }
+                if ($isYearly) {
+                    if (in_array($sub->status, ['active', 'trialing'], true)) {
+                        $yearlySub = $sub;
+                    } elseif ($sub->status === 'canceled') {
+                        if ($lastCanceledYearlySub === null || $sub->created > $lastCanceledYearlySub->created) {
+                            $lastCanceledYearlySub = $sub;
+                        }
+                    }
+                }
+            }
+
+            if (!$monthlySub) {
+                return new JsonResponse(['error' => 'No active membership subscription to reactivate'], 404);
+            }
+
+            // 1. Reactivate the monthly subscription (turn off cancel_at_period_end)
+            if ($monthlySub->cancel_at_period_end) {
+                \Stripe\Subscription::update($monthlySub->id, [
+                    'cancel_at_period_end' => false,
+                ], $stripeAccountHeader);
+                $reactivatedCount++;
+            }
+
+            // 2. Reactivate/Recreate the yearly subscription
+            if ($company->getStripeConfig()->isYearlyFeeEnabled() && $yearlyPriceId) {
+                if ($yearlySub) {
+                    if ($yearlySub->cancel_at_period_end) {
+                        \Stripe\Subscription::update($yearlySub->id, [
+                            'cancel_at_period_end' => false,
+                        ], $stripeAccountHeader);
+                        $reactivatedCount++;
+                    }
+                } else {
+                    // Recreate it! Use original renewal date from the previous canceled yearly sub if in future
+                    $trialEnd = null;
+                    if ($lastCanceledYearlySub) {
+                        $renewalDate = $lastCanceledYearlySub->trial_end ?: $lastCanceledYearlySub->current_period_end;
+                        if ($renewalDate > time()) {
+                            $trialEnd = $renewalDate;
+                        }
+                    }
+
+                    if ($trialEnd === null) {
+                        $trialEnd = (new \DateTime('+1 year'))->getTimestamp();
+                    }
+
+                    \Stripe\Subscription::create([
+                        'customer' => $customerId,
+                        'items' => [['price' => $yearlyPriceId]],
+                        'trial_end' => $trialEnd,
+                        'description' => 'Jährliche Verwaltungsgebühr (Folgejahre)',
+                        'metadata' => [
+                            'user_id' => $user->getId(),
+                            'auto_created' => 'true'
+                        ]
+                    ], $stripeAccountHeader);
+                    $reactivatedCount++;
+                }
+            }
+
+            return new JsonResponse(['status' => 'success', 'reactivated' => $reactivatedCount]);
+        } catch (\Exception $e) {
+            return new JsonResponse(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    #[Route('/my-invoices', name: 'stripe_my_invoices', methods: ['GET'])]
+    public function getMyInvoices(): JsonResponse
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+        if (!$user) {
+            return new JsonResponse(['error' => 'Not authenticated'], 401);
+        }
+
+        $company = $user->getCompany();
+        if (!$company || !$company->getStripeConfig()->getStripeAccountId()) {
+            return new JsonResponse(['error' => 'Payments not configured'], 400);
+        }
+
+        $customerId = $user->getStripeCustomerId();
+        if (!$customerId) {
+            return new JsonResponse([]);
+        }
+
+        $stripeAccountHeader = ['stripe_account' => $company->getStripeConfig()->getStripeAccountId()];
+
+        try {
+            // Retrieve invoices from Stripe
+            $invoices = \Stripe\Invoice::all([
+                'customer' => $customerId,
+                'limit' => 20,
+            ], $stripeAccountHeader);
+
+            $mappedInvoices = [];
+            foreach ($invoices->data as $invoice) {
+                // Determine description/title
+                $description = '';
+                if (!empty($invoice->lines->data)) {
+                    $descriptions = [];
+                    foreach ($invoice->lines->data as $line) {
+                        $descriptions[] = $line->description ?: 'Subscription Item';
+                    }
+                    $description = implode(', ', $descriptions);
+                } else {
+                    $description = $invoice->description ?: 'Invoice';
+                }
+
+                $mappedInvoices[] = [
+                    'id' => $invoice->id,
+                    'number' => $invoice->number,
+                    'amount_paid' => $invoice->amount_paid / 100,
+                    'currency' => strtoupper($invoice->currency),
+                    'status' => $invoice->status,
+                    'created' => $invoice->created,
+                    'invoice_pdf' => $invoice->invoice_pdf,
+                    'description' => $description,
+                ];
+            }
+
+            return new JsonResponse($mappedInvoices);
+        } catch (\Exception $e) {
+            return new JsonResponse(['error' => $e->getMessage()], 500);
+        }
     }
 }

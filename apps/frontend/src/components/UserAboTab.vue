@@ -11,26 +11,37 @@ const authStore = useAuthStore();
 const toast = useToast();
 const confirm = useConfirm();
 
+const isNotProd = import.meta.env.MODE !== 'production';
+
 const isLoading = ref(true);
 const isUpgrading = ref(false);
 const isCancelling = ref(false);
 const subscription = ref<any>(null);
 const prices = ref<any>(null);
+const invoices = ref<any[]>([]);
 
 const fetchAboData = async () => {
     isLoading.value = true;
     try {
-        const [subRes, priceRes] = await Promise.all([
+        const [subRes, priceRes, invoiceRes] = await Promise.all([
             api.get('/stripe/my-subscription'),
-            api.get('/stripe/prices')
+            api.get('/stripe/prices'),
+            api.get('/stripe/my-invoices')
         ]);
         subscription.value = subRes.data;
         prices.value = priceRes.data;
+        invoices.value = invoiceRes.data;
     } catch (error) {
         console.error('Failed to fetch abo data', error);
         toast.add({ severity: 'error', summary: t('app.error'), detail: t('profile.actions.loadFailed'), life: 3000 });
     } finally {
         isLoading.value = false;
+    }
+};
+
+const downloadInvoice = (url: string) => {
+    if (url) {
+        window.open(url, '_blank');
     }
 };
 
@@ -51,10 +62,31 @@ const confirmCancellation = () => {
     });
 };
 
+const isReactivating = ref(false);
+
+const reactivateSubscription = async () => {
+    isReactivating.value = true;
+    try {
+        await api.post('/stripe/my-subscription/reactivate');
+        toast.add({ severity: 'success', summary: t('app.success'), detail: t('profile.actions.reactivateSuccess'), life: 5000 });
+        await fetchAboData();
+    } catch (e: any) {
+        toast.add({ severity: 'error', summary: t('app.error'), detail: e.response?.data?.error || t('profile.actions.reactivateFailed'), life: 3000 });
+    } finally {
+        isReactivating.value = false;
+    }
+};
+
+const cancellationDetails = ref<any>(null);
+const showCancelSuccessDialog = ref(false);
+
 const cancelSubscription = async () => {
     isCancelling.value = true;
     try {
-        await api.delete('/stripe/my-subscription');
+        const response = await api.delete('/stripe/my-subscription');
+        cancellationDetails.value = response.data;
+        showCancelSuccessDialog.value = true;
+
         toast.add({ severity: 'success', summary: t('app.success'), detail: t('profile.actions.cancelSuccess'), life: 5000 });
         await fetchAboData();
     } catch (e: any) {
@@ -185,6 +217,17 @@ onMounted(fetchAboData);
               @click="confirmCancellation"
             />
             <Button
+              v-if="subscription.cancel_at_period_end"
+              :label="t('profile.subscriptionStatus.reactivateBtn')"
+              icon="pi pi-refresh"
+              severity="success"
+              text
+              size="small"
+              :loading="isReactivating"
+              @click="reactivateSubscription"
+            />
+            <Button
+              v-if="isNotProd"
               :label="t('profile.subscriptionStatus.manageStripe')"
               icon="pi pi-external-link"
               severity="secondary"
@@ -304,7 +347,107 @@ onMounted(fetchAboData);
           </div>
         </div>
       </div>
+
+      <!-- Billing History / Invoices -->
+      <div v-if="invoices && invoices.length > 0" class="phoenix-card p-6 md:p-8 space-y-6">
+        <h3 class="text-lg font-black uppercase tracking-widest text-slate-900 flex items-center gap-2">
+          <i class="pi pi-receipt text-slate-500" />
+          {{ t('profile.invoices.header') }}
+        </h3>
+
+        <DataTable
+          :value="invoices"
+          responsiveLayout="scroll"
+          class="w-full text-sm"
+          :paginator="invoices.length > 5"
+          :rows="5"
+          paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
+        >
+          <Column field="number" :header="t('profile.invoices.description')" class="font-bold text-slate-700">
+            <template #body="slotProps">
+              {{ slotProps.data.number || slotProps.data.id }}
+            </template>
+          </Column>
+
+          <Column field="description" :header="t('profile.invoices.title')" class="text-slate-800">
+            <template #body="slotProps">
+              {{ slotProps.data.description }}
+            </template>
+          </Column>
+
+          <Column field="amount_paid" :header="t('profile.invoices.price')" class="font-bold text-slate-900">
+            <template #body="slotProps">
+              {{ slotProps.data.amount_paid.toFixed(2) }}{{ slotProps.data.currency === 'EUR' ? '€' : ' ' + slotProps.data.currency }}
+            </template>
+          </Column>
+
+          <Column field="created" :header="t('profile.invoices.date')" class="text-slate-500">
+            <template #body="slotProps">
+              {{ formatDate(slotProps.data.created) }}
+            </template>
+          </Column>
+
+          <Column headerStyle="width: 5rem; text-align: center" bodyStyle="text-align: center; overflow: visible">
+            <template #body="slotProps">
+              <Button
+                v-if="slotProps.data.invoice_pdf"
+                icon="pi pi-download"
+                severity="secondary"
+                text
+                rounded
+                v-tooltip.top="t('profile.invoices.download')"
+                @click="downloadInvoice(slotProps.data.invoice_pdf)"
+              />
+            </template>
+          </Column>
+        </DataTable>
+      </div>
     </div>
+
+    <!-- Cancellation Success Dialog -->
+    <Dialog
+      v-model:visible="showCancelSuccessDialog"
+      modal
+      :header="t('profile.actions.cancelHeader')"
+      :style="{ width: '450px' }"
+    >
+      <div class="flex flex-col items-center text-center p-4">
+        <div
+          class="w-16 h-16 rounded-2xl flex items-center justify-center mb-6"
+          :class="cancellationDetails?.cancellation_type === 'period_end' ? 'bg-amber-100 text-amber-600' : 'bg-rose-100 text-rose-600'"
+        >
+          <i
+            :class="cancellationDetails?.cancellation_type === 'period_end' ? 'pi pi-exclamation-circle' : 'pi pi-times-circle'"
+            class="text-3xl"
+          />
+        </div>
+
+        <h4 class="text-xl primary-text uppercase tracking-tight mb-3">
+          {{ cancellationDetails?.cancellation_type === 'immediate'
+            ? t('profile.actions.immediateCancelTitle')
+            : t('profile.actions.periodEndCancelTitle') }}
+        </h4>
+
+        <p class="text-slate-600 text-sm leading-relaxed mb-6 font-medium">
+          <span v-if="cancellationDetails?.cancellation_type === 'immediate'">
+            {{ t('profile.actions.immediateCancelDesc') }}
+          </span>
+          <span v-else>
+            {{ t('profile.actions.periodEndCancelDesc') }}
+            <strong class="primary-text ml-1">{{ formatDate(cancellationDetails?.ends_at) }}</strong>.
+            <span class="block mt-2">{{ t('profile.actions.periodEndCancelDescEnd') }}</span>
+          </span>
+        </p>
+
+        <Button
+          :label="t('app.close')"
+          severity="secondary"
+          class="w-full py-3 font-bold uppercase tracking-wider text-xs"
+          outlined
+          @click="showCancelSuccessDialog = false"
+        />
+      </div>
+    </Dialog>
   </div>
 </template>
 

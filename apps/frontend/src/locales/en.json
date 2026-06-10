@@ -613,7 +613,8 @@
         "accessUntil": "Access until",
         "renewsOn": "Renews on",
         "cancelBtn": "Cancel Subscription",
-        "manageStripe": "Manage in Stripe"
+        "manageStripe": "Manage in Stripe",
+        "reactivateBtn": "Reactivate Subscription"
     },
     "trial": {
         "title": "You are on a Trial Period",
@@ -652,6 +653,15 @@
         "isMember": "You are a Member",
         "securePayment": "Secure payment via Stripe. No hidden costs. Cancel anytime."
     },
+    "invoices": {
+        "header": "Billing History & Invoices",
+        "description": "Invoice",
+        "title": "Description",
+        "price": "Amount",
+        "date": "Date",
+        "download": "Download",
+        "empty": "No invoices found."
+    },
     "actions": {
         "loadFailed": "Could not load subscription details",
         "cancelConfirm": "Are you sure you want to cancel your subscription? You will still have access until the end of your current billing period.",
@@ -660,7 +670,14 @@
         "cancelSuccess": "Your subscription has been cancelled and will not renew.",
         "cancelFailed": "Failed to cancel subscription.",
         "checkoutFailed": "Failed to initialize checkout.",
-        "portalFailed": "Failed to open billing portal."
+        "portalFailed": "Failed to open billing portal.",
+        "immediateCancelTitle": "Subscription Ended",
+        "periodEndCancelTitle": "Cancellation Pending",
+        "immediateCancelDesc": "Your yearly subscription has been cancelled immediately. Access to premium features is now terminated.",
+        "periodEndCancelDesc": "Your monthly subscription will remain active until the end of your current billing cycle on",
+        "periodEndCancelDescEnd": "No further charges will be made.",
+        "reactivateSuccess": "Your subscription has been reactivated successfully.",
+        "reactivateFailed": "Failed to reactivate subscription."
     },
     "onboardingGuide": "Onboarding Guide",
     "personalInfo": "Personal Information",

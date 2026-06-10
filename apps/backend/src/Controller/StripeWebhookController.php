@@ -80,12 +80,19 @@ class StripeWebhookController extends AbstractController
                     if ($company && $company->getStripeConfig()->isYearlyFeeEnabled() && $company->getStripeConfig()->getStripePriceYearlyRecurringId() && isset($session->customer)) {
                         try {
                             $stripeAccountHeader = ['stripe_account' => $company->getStripeConfig()->getStripeAccountId()];
-                            $oneYearFromNow = (new \DateTime('+1 year'))->getTimestamp();
+                            
+                            $yearlyTrialEnd = (new \DateTime('+1 year'))->getTimestamp();
+                            if (isset($session->metadata->yearly_trial_end) && !empty($session->metadata->yearly_trial_end)) {
+                                $metaTrial = (int)$session->metadata->yearly_trial_end;
+                                if ($metaTrial > time()) {
+                                    $yearlyTrialEnd = $metaTrial;
+                                }
+                            }
 
                             Subscription::create([
                                 'customer' => $session->customer,
                                 'items' => [['price' => $company->getStripeConfig()->getStripePriceYearlyRecurringId()]],
-                                'trial_end' => $oneYearFromNow,
+                                'trial_end' => $yearlyTrialEnd,
                                 'description' => 'Jährliche Verwaltungsgebühr (Folgejahre)',
                                 'metadata' => [
                                     'user_id' => $user->getId(),
@@ -114,19 +121,90 @@ class StripeWebhookController extends AbstractController
 
             $user = $this->em->getRepository(User::class)->findOneBy(['stripeCustomerId' => $customerId]);
             if ($user) {
-                // Downgrade: Remove MEMBER and TRAINER roles, set to TRIAL
-                $roles = $user->getRoles();
-                $roles = array_diff($roles, ['ROLE_MEMBER', 'ROLE_TRAINER']);
-                if (!in_array('ROLE_TRIAL', $roles)) {
-                    $roles[] = 'ROLE_TRIAL';
-                }
-                $user->setRoles(array_values($roles));
+                $company = $user->getCompany();
+                $stripeConfig = $company ? $company->getStripeConfig() : null;
+                $stripeAccountHeader = $stripeConfig ? ['stripe_account' => $stripeConfig->getStripeAccountId()] : [];
 
-                // Clear the stripe customer ID as the subscription is completely gone
-                $user->setStripeCustomerId(null);
+                // Check if the deleted subscription is the monthly membership
+                $isMembershipSub = false;
+                if ($stripeConfig) {
+                    $membershipPriceId = $stripeConfig->getStripePriceMembershipId();
+                    foreach ($subscription->items->data as $item) {
+                        if ($item->price->id === $membershipPriceId) {
+                            $isMembershipSub = true;
+                            break;
+                        }
+                    }
+                }
+
+                if ($isMembershipSub) {
+                    // Automatically cancel the yearly recurring subscription if it exists and is active
+                    if ($stripeConfig && $stripeConfig->getStripePriceYearlyRecurringId()) {
+                        $yearlyPriceId = $stripeConfig->getStripePriceYearlyRecurringId();
+
+                        try {
+                            $allSubs = Subscription::all([
+                                'customer' => $customerId,
+                                'status' => 'active',
+                            ], $stripeAccountHeader);
+
+                            foreach ($allSubs->data as $activeSub) {
+                                foreach ($activeSub->items->data as $item) {
+                                    if ($item->price->id === $yearlyPriceId) {
+                                        // Retrieve and cancel the subscription immediately
+                                        $retrievedSub = Subscription::retrieve($activeSub->id, [], $stripeAccountHeader);
+                                        $retrievedSub->cancel([], $stripeAccountHeader);
+                                        $this->logger->info(sprintf('Automatically cancelled yearly recurring subscription %s for user %s because their monthly membership expired.', $activeSub->id, $user->getEmail()));
+                                    }
+                                }
+                            }
+                        } catch (\Exception $e) {
+                            $this->logger->error('Failed to automatically cancel yearly recurring subscription: ' . $e->getMessage());
+                        }
+                    }
+
+                    // Downgrade: Remove MEMBER and TRAINER roles, set to TRIAL
+                    $roles = $user->getRoles();
+                    $roles = array_diff($roles, ['ROLE_MEMBER', 'ROLE_TRAINER']);
+                    if (!in_array('ROLE_TRIAL', $roles)) {
+                        $roles[] = 'ROLE_TRIAL';
+                    }
+                    $user->setRoles(array_values($roles));
+                    $this->logger->info(sprintf('User %s subscription ended and was downgraded to ROLE_TRIAL', $user->getEmail()));
+                } else {
+                    $this->logger->info(sprintf('Subscription %s was deleted, but it was not the main membership subscription for customer %s.', $subscription->id, $customerId));
+                }
+
+                // Query Stripe to check if the customer has any other active or trialing subscriptions
+                try {
+                    $hasActiveSubscriptions = false;
+                    if ($stripeConfig) {
+                        $remainingSubscriptions = Subscription::all([
+                            'customer' => $customerId,
+                            'status' => 'active',
+                            'limit' => 1,
+                        ], $stripeAccountHeader);
+
+                        $hasActiveSubscriptions = count($remainingSubscriptions->data) > 0;
+                        if (!$hasActiveSubscriptions) {
+                            $trialingSubscriptions = Subscription::all([
+                                'customer' => $customerId,
+                                'status' => 'trialing',
+                                'limit' => 1,
+                            ], $stripeAccountHeader);
+                            $hasActiveSubscriptions = count($trialingSubscriptions->data) > 0;
+                        }
+                    }
+
+                    if (!$hasActiveSubscriptions) {
+                        $user->setStripeCustomerId(null);
+                        $this->logger->info(sprintf('Cleared stripeCustomerId for user %s as no active or trialing subscriptions remain.', $user->getEmail()));
+                    }
+                } catch (\Exception $e) {
+                    $this->logger->error('Failed to query remaining subscriptions on webhook delete: ' . $e->getMessage());
+                }
 
                 $this->em->flush();
-                $this->logger->info(sprintf('User %s subscription ended and was downgraded to ROLE_TRIAL', $user->getEmail()));
             }
         }
 

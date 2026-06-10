@@ -614,7 +614,8 @@
         "accessUntil": "Zugriff bis",
         "renewsOn": "Verlängert sich am",
         "cancelBtn": "Mitgliedschaft kündigen",
-        "manageStripe": "In Stripe verwalten"
+        "manageStripe": "In Stripe verwalten",
+        "reactivateBtn": "Abonnement reaktivieren"
     },
     "trial": {
         "title": "Du befindest dich im Probetraining",
@@ -653,6 +654,15 @@
         "isMember": "Du bist ein Mitglied",
         "securePayment": "Sichere Zahlung via Stripe. Keine versteckten Kosten. Jederzeit kündbar."
     },
+    "invoices": {
+        "header": "Zahlungsverlauf & Rechnungen",
+        "description": "Rechnung",
+        "title": "Beschreibung",
+        "price": "Betrag",
+        "date": "Datum",
+        "download": "Herunterladen",
+        "empty": "Keine Rechnungen gefunden."
+    },
     "actions": {
         "loadFailed": "Abonnement-Details konnten nicht geladen werden",
         "cancelConfirm": "Bist du sicher, dass du deine Mitgliedschaft kündigen möchtest? Du hast weiterhin Zugriff bis zum Ende deines aktuellen Abrechnungszeitraums.",
@@ -661,7 +671,14 @@
         "cancelSuccess": "Deine Mitgliedschaft wurde gekündigt und wird nicht verlängert.",
         "cancelFailed": "Kündigung fehlgeschlagen.",
         "checkoutFailed": "Checkout konnte nicht initialisiert werden.",
-        "portalFailed": "Billing-Portal konnte nicht geöffnet werden."
+        "portalFailed": "Billing-Portal konnte nicht geöffnet werden.",
+        "immediateCancelTitle": "Mitgliedschaft beendet",
+        "periodEndCancelTitle": "Kündigung vorgemerkt",
+        "immediateCancelDesc": "Deine jährliche Verwaltungsgebühr/Mitgliedschaft wurde sofort gekündigt. Der Zugriff auf Premium-Funktionen wurde beendet.",
+        "periodEndCancelDesc": "Deine monatliche Mitgliedschaft bleibt bis zum Ende des Abrechnungszeitraums am",
+        "periodEndCancelDescEnd": "aktiv. Es fallen keine weiteren Gebühren an.",
+        "reactivateSuccess": "Dein Abonnement wurde erfolgreich reaktiviert.",
+        "reactivateFailed": "Reaktivierung des Abonnements fehlgeschlagen."
     },
     "onboardingGuide": "Onboarding-Guide",
     "personalInfo": "Persönliche Informationen",
