@@ -112,11 +112,9 @@
   "home": {
     "title": "Athletic Schedule",
     "subtitle": "Master your discipline. Book your next session.",
-    "viewStandard": "STANDARD",
-    "viewCompact": "COMPACT",
     "today": "TODAY",
     "welcomeAdminTitle": "Welcome to your new booking platform! 🚀",
-    "welcomeAdminText": "Let's schedule your first course so your athletes can start booking! You can create a course by clicking any time slot on the calendar below, or using the quick setup button.",
+    "welcomeAdminText": "Let's schedule your first course so your athletes can start booking! You can create a course by clicking the '+' icon under any day in the calendar below, or using the quick setup button.",
     "scheduleFirstCourse": "Schedule First Course"
   },
   "dashboard": {

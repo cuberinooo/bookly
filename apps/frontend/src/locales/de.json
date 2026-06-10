@@ -113,11 +113,9 @@
   "home": {
     "title": "Kursplan",
     "subtitle": "Meistere deine Disziplin. Buche deine nächste Session.",
-    "viewStandard": "STANDARD",
-    "viewCompact": "KOMPAKT",
     "today": "HEUTE",
     "welcomeAdminTitle": "Willkommen auf deiner neuen Buchungsplattform! 🚀",
-    "welcomeAdminText": "Lass uns deinen ersten Kurs planen, damit deine Athleten mit dem Buchen beginnen können! Du kannst einen Kurs erstellen, indem du auf ein beliebiges Zeitfenster im Kalender klickst oder den Schnellstart-Button verwendest.",
+    "welcomeAdminText": "Lass uns deinen ersten Kurs planen, damit deine Athleten mit dem Buchen beginnen können! Du kannst einen Kurs erstellen, indem du auf das '+'-Symbol unter dem jeweiligen Wochentag im Kalender klickst oder den Schnellstart-Button verwendest.",
     "scheduleFirstCourse": "Ersten Kurs planen"
   },
   "dashboard": {

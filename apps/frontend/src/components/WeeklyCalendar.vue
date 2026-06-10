@@ -1,18 +1,16 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
-import { formatDate, formatTime } from '../services/date-utils';
+import { formatTime } from '../services/date-utils';
 import { useAuthStore } from '../store/useAuthStore';
 import { useI18n } from 'vue-i18n';
 
 const props = withDefaults(defineProps<{
     courses: any[];
-    isCompactView?: boolean;
     userId?: number;
     baseDate?: Date;
     cycleInfo?: { name: string; currentWeek: number; totalWeeks: number; startDate: string } | null;
     loading?: boolean;
 }>(), {
-    isCompactView: true,
     userId: undefined,
     baseDate: () => new Date(),
     cycleInfo: null,
@@ -23,6 +21,7 @@ const emit = defineEmits(['course-click', 'cell-click', 'update:baseDate']);
 
 const { t, locale } = useI18n();
 const authStore = useAuthStore();
+const isTrainerMode = computed(() => authStore.isTrainer && authStore.viewMode === 'trainer');
 const internalBaseDate = ref(new Date(props.baseDate));
 
 watch(() => props.baseDate, (newVal) => {
@@ -67,7 +66,6 @@ const days = computed(() => [
     t('app.days.saturday'),
     t('app.days.sunday')
 ]);
-const hours = Array.from({ length: 16 }, (_, i) => i + 6); // 6:00 to 22:00
 
 const currentWeek = computed(() => {
     const start = new Date(internalBaseDate.value);
@@ -111,19 +109,6 @@ function getCoursesForDay(day: Date) {
         .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
 }
 
-function getGridRow(startTime: string, durationMinutes: number) {
-    const date = new Date(startTime);
-    const hour = date.getHours();
-    const minutes = date.getMinutes();
-
-    // Start row (1-based, starting from 6:00)
-    // Each hour is 2 rows (30 min each) to allow some granularity
-    const startRow = (hour - 6) * 2 + (minutes >= 30 ? 2 : 1);
-    const rowSpan = Math.ceil(durationMinutes / 30);
-
-    return `${startRow} / span ${rowSpan}`;
-}
-
 function isToday(date: Date) {
     const today = new Date();
     return date.toDateString() === today.toDateString();
@@ -148,17 +133,16 @@ function isPastCourse(course: any) {
     return new Date(course.endTime) < new Date();
 }
 
-function onSlotClick(day: Date, hour: number) {
+function onQuickAdd(day: Date) {
     const clickDate = new Date(day);
-    clickDate.setHours(hour, 0, 0, 0);
+    clickDate.setHours(9, 0, 0, 0);
     emit('cell-click', clickDate);
 }
 </script>
 
 <template>
   <div
-    class="athletic-calendar"
-    :class="{ 'compact-mode': isCompactView }"
+    class="athletic-calendar compact-mode"
   >
     <div
       v-if="cycleInfo"
@@ -210,12 +194,7 @@ function onSlotClick(day: Date, hour: number) {
       <!-- Header Grid -->
       <div class="calendar-header-grid">
         <div
-          v-if="!isCompactView"
-          class="time-corner"
-        />
-        <div
-          class="days-header-wrapper"
-          :class="{ 'grid-cols-7': true }"
+          class="days-header-wrapper grid-cols-7"
         >
           <div
             v-for="(date, idx) in currentWeek"
@@ -224,6 +203,18 @@ function onSlotClick(day: Date, hour: number) {
           >
             <span class="day-name">{{ days[idx] }}</span>
             <span class="day-date">{{ date.getDate() }}</span>
+
+            <!-- Quick Add Button for Trainer Mode -->
+            <Button
+              v-if="isTrainerMode"
+              icon="pi pi-plus"
+              severity="primary"
+              variant="outlined"
+              size="small"
+              class="mt-1.5 cursor-pointer border-amber-500/30 text-amber-500 hover:bg-amber-500/10 hover:border-amber-500 hover:text-amber-400 transition-all duration-200 rounded-full w-6 h-6 flex items-center justify-center p-0 shadow-sm text-[10px]"
+              v-tooltip.top="t('dashboard.createNewCourse')"
+              @click.stop="onQuickAdd(date)"
+            />
           </div>
         </div>
       </div>
@@ -231,44 +222,16 @@ function onSlotClick(day: Date, hour: number) {
       <!-- Body Scroll Area -->
       <div class="calendar-body-scroll">
         <div class="calendar-body-grid">
-          <!-- Time Axis -->
-          <div
-            v-if="!isCompactView"
-            class="time-axis"
-          >
-            <div
-              v-for="hour in hours"
-              :key="hour"
-              class="time-slot-label"
-            >
-              {{ hour.toString().padStart(2, '0') }}:00
-            </div>
-          </div>
-
           <!-- Days Grid -->
           <div
-            class="days-body-wrapper"
-            :class="{ 'grid-cols-7': true }"
+            class="days-body-wrapper grid-cols-7"
           >
             <div
               v-for="(date, dayIdx) in currentWeek"
               :key="dayIdx"
               class="day-column"
             >
-              <!-- Standard View: Time Grid -->
-              <template v-if="!isCompactView">
-                <div
-                  v-for="hour in hours"
-                  :key="hour"
-                  class="hour-slot-row"
-                  @click="onSlotClick(date, hour)"
-                >
-                  <div class="half-hour-slot" />
-                  <div class="half-hour-slot" />
-                </div>
-              </template>
-
-              <!-- Courses (Both views use grid positioning if not compact, or flex if compact) -->
+              <!-- Courses -->
               <template v-if="loading">
                 <div
                   v-for="i in 2"
@@ -292,10 +255,7 @@ function onSlotClick(day: Date, hour: number) {
                     'is-past': isPastCourse(course),
                     'is-cancelled': course.status === 'cancelled'
                   }"
-                  :style="[
-                    !isCompactView ? { gridRow: getGridRow(course.startTime, course.durationMinutes) } : {},
-                    course.cycleCategory ? { borderLeft: `6px solid ${course.cycleCategory.colorHex}` } : {}
-                  ]"
+                  :style="course.cycleCategory ? { borderLeft: `6px solid ${course.cycleCategory.colorHex}` } : {}"
                   @click.stop="$emit('course-click', course)"
                 >
                   <!-- Cycle Category Tag -->
@@ -341,10 +301,6 @@ function onSlotClick(day: Date, hour: number) {
                   </div>
                   <div class="course-time">
                     {{ formatTime(course.startTime) }}
-                    <span
-                      v-if="!isCompactView"
-                      class="duration-tag"
-                    >/ {{ course.durationMinutes }} {{ t('app.minutesShort').toUpperCase() }}</span>
                   </div>
                   <div class="course-title">
                     {{ course.title }}
@@ -397,13 +353,8 @@ $border-color: #e2e8f0;
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    height: 800px;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-
-    &.compact-mode {
-        height: auto;
-        min-height: 400px;
-    }
+    height: auto;
+    min-height: 400px;
 }
 
 .calendar-toolbar {
@@ -456,12 +407,6 @@ $border-color: #e2e8f0;
     position: sticky;
     top: 0;
     z-index: 20;
-
-    .time-corner {
-        width: 80px;
-        flex-shrink: 0;
-        border-right: 1px solid #334155;
-    }
 }
 
 .days-header-wrapper {
@@ -480,7 +425,9 @@ $border-color: #e2e8f0;
     text-align: center;
     display: flex;
     flex-direction: column;
+    align-items: center;
     border-left: 1px solid #334155;
+    position: relative;
 
     .day-name {
         font-family: 'Barlow Condensed', sans-serif;
@@ -502,6 +449,7 @@ $border-color: #e2e8f0;
         background: rgba($brand-amber, 0.1);
         .day-name, .day-date { color: $brand-amber; }
     }
+
 }
 
 .calendar-body-scroll {
@@ -516,66 +464,26 @@ $border-color: #e2e8f0;
     min-height: 100%;
 }
 
-.time-axis {
-    width: 80px;
-    flex-shrink: 0;
-    background: #f1f5f9;
-    border-right: 1px solid $border-color;
-}
-
-.time-slot-label {
-    height: 80px; // Each hour is 80px
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    padding-top: 0.5rem;
-    font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 700;
-    font-size: 0.75rem;
-    color: #64748b;
-}
-
 .days-body-wrapper {
     flex: 1;
-    // grid-cols-7 is handled by the class
 }
 
 .day-column {
-    display: grid;
-    grid-template-rows: repeat(32, 40px); // 16 hours * 2 slots = 32 slots of 40px each
-    border-left: 1px solid #e2e8f0;
-    position: relative;
-
-    &:first-child { border-left: none; }
-}
-
-.compact-mode .day-column {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
     padding: 0.5rem;
-    grid-template-rows: none;
+    border-left: 1px solid #e2e8f0;
+    position: relative;
     min-height: 100px;
-}
 
-.hour-slot-row {
-    grid-column: 1;
-    display: contents;
-    cursor: cell;
-
-    .half-hour-slot {
-        height: 40px;
-        border-bottom: 1px solid #f1f5f9;
-
-        &:last-child { border-bottom: 1px solid #e2e8f0; }
-
-        &:hover { background: rgba($brand-amber, 0.05); }
-    }
+    &:first-child { border-left: none; }
 }
 
 .course-card {
     grid-column: 1;
-    margin: 2px;
+    grid-row: auto;
+    margin: 0;
     background: white;
     border: 1px solid $border-color;
     border-left: 4px solid $brand-amber;
@@ -775,11 +683,6 @@ $border-color: #e2e8f0;
     }
 }
 
-.compact-mode .course-card {
-    grid-row: auto !important;
-    margin: 0;
-}
-
 /* Responsive Styles */
 @media (max-width: 1024px) {
     .calendar-body-scroll {
@@ -817,16 +720,10 @@ $border-color: #e2e8f0;
         padding: 0.5rem;
         display: flex;
         flex-direction: column;
-        grid-template-rows: none;
         height: auto;
     }
 
-    .time-corner, .time-axis, .hour-slot-row {
-        display: none !important;
-    }
-
     .course-card {
-        grid-row: auto !important;
         margin-bottom: 0.5rem;
     }
 }

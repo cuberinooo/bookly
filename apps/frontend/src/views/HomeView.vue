@@ -31,7 +31,6 @@ const selectedCourse = ref<any>(null);
 const detailVisible = ref(false);
 const formVisible = ref(false);
 const editingCourse = ref<any>(null);
-const isCompactView = ref(true);
 
 const baseDate = ref(new Date());
 
@@ -289,17 +288,6 @@ onUnmounted(() => {
             {{ t('home.subtitle') }}
           </p>
         </div>
-
-        <div class="header-right">
-          <div
-            v-if="!isMobile"
-            class="view-toggle"
-          >
-            <span :class="{ active: !isCompactView }">{{ t('home.viewStandard') }}</span>
-            <ToggleSwitch v-model="isCompactView" />
-            <span :class="{ active: isCompactView }">{{ t('home.viewCompact') }}</span>
-          </div>
-        </div>
       </header>
 
       <div
@@ -353,7 +341,6 @@ onUnmounted(() => {
           v-model:base-date="baseDate"
           :courses="courses"
           :cycle-info="cycleInfo"
-          :is-compact-view="isCompactView"
           :user-id="authStore.user?.id"
           :loading="courseStore.isLoading"
           @course-click="handleCourseClick"
@@ -460,20 +447,6 @@ onUnmounted(() => {
     flex-direction: column;
     align-items: flex-end;
     gap: 1.5rem;
-}
-
-.view-toggle {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 800;
-    font-size: 0.85rem;
-    color: var(--text-muted);
-
-    span.active {
-        color: var(--text-header);
-    }
 }
 
 .header-badge {
