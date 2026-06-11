@@ -21,6 +21,9 @@ use App\Repository\UserRepository;
 use App\Repository\CourseRepository;
 use App\Repository\CourseSeriesRepository;
 use App\Repository\BookingRepository;
+use App\Service\PlatformSettingsService;
+use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\HttpFoundation\Request;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -34,7 +37,9 @@ class MonitorController extends AbstractController
 {
     public function __construct(
         private readonly UserRepository $userRepository,
-        private readonly EntityManagerInterface $entityManager
+        private readonly EntityManagerInterface $entityManager,
+        private readonly PlatformSettingsService $platformSettingsService,
+        private readonly SerializerInterface $serializer
     ) {
     }
 
@@ -339,6 +344,43 @@ class MonitorController extends AbstractController
             if ($wasFilterEnabled) {
                 $filters->enable('company_filter');
             }
+        }
+    }
+
+    #[Route('/platform-settings', name: 'monitor_platform_settings_get', methods: ['GET'])]
+    public function getPlatformSettings(): JsonResponse
+    {
+        $settings = $this->platformSettingsService->getSettings();
+        $data = $this->serializer->serialize($settings, 'json', ['groups' => 'platform:read']);
+        return new JsonResponse($data, Response::HTTP_OK, [], true);
+    }
+
+    #[Route('/platform-settings', name: 'monitor_platform_settings_update', methods: ['PATCH'])]
+    public function updatePlatformSettings(Request $request): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+        if ($data === null) {
+            return new JsonResponse(['error' => 'Invalid JSON'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $settings = $this->platformSettingsService->updateSettings($data);
+        $serialized = $this->serializer->serialize($settings, 'json', ['groups' => 'platform:read']);
+        return new JsonResponse($serialized, Response::HTTP_OK, [], true);
+    }
+
+    #[Route('/platform-settings/privacy-policy', name: 'monitor_platform_settings_upload_privacy_policy', methods: ['POST'])]
+    public function uploadPrivacyPolicy(Request $request): JsonResponse
+    {
+        $file = $request->files->get('file');
+        if (!$file) {
+            return new JsonResponse(['error' => 'No file uploaded'], Response::HTTP_BAD_REQUEST);
+        }
+
+        try {
+            $path = $this->platformSettingsService->uploadPrivacyPolicy($file);
+            return new JsonResponse(['path' => $path]);
+        } catch (\RuntimeException $e) {
+            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 }

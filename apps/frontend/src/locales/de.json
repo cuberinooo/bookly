@@ -985,8 +985,8 @@
   },
   "footer": {
     "legal": "Impressum & Rechtliches",
-    "hosting": "Infrastruktur",
-    "hostedBy": "Gehostet von"
+    "hosting": "BooklyFit",
+    "hostedBy": "Zur Webseite"
   },
   "cookies": {
     "title": "Ihre Privatsphäre ist uns wichtig",
@@ -1076,7 +1076,11 @@
     "deleteConfirmMessage": "Bist du sicher, dass du {name} löschen möchtest? Diese Aktion ist dauerhaft und löscht alle zugehörigen Daten (Kurse, Buchungen, Mitglieder und Einstellungen).",
     "deleteSuccess": "Firma erfolgreich gelöscht.",
     "cannotDeleteActivePayment": "Löschen nicht möglich: aktive Stripe-Zahlung",
-    "cannotDeleteMoreUsers": "Löschen nicht möglich: mehr als 1 Mitgliedskonto"
+    "cannotDeleteMoreUsers": "Löschen nicht möglich: mehr als 1 Mitgliedskonto",
+    "tabs": {
+      "companies": "Unternehmen",
+      "settings": "Plattform-Einstellungen"
+    }
   },
   "pushNotifications": {
     "title": "Push-Benachrichtigungen",
@@ -1115,5 +1119,22 @@
     "wodStep3": "Zurück zum sicheren Trainingsgelände",
     "backHome": "Zurück in Sicherheit (Home)",
     "goDashboard": "Mein Dashboard"
+  },
+  "platformLegal": {
+    "title": "Impressum",
+    "legalNotice": "Impressum",
+    "privacyPolicy": "Datenschutzerklärung",
+    "support": "Support",
+    "operatorTitle": "Plattformbetreiber",
+    "operatorName": "Kubilay Anil",
+    "operatorCompany": "IT-Dienstleistungen Kubilay Anil",
+    "operatorDetails": "Entwicklung, Vertrieb und Betrieb von Software, Web- und mobilen Applikationen (SaaS), Erbringung von IT-Dienstleistungen, IT-Beratung sowie der Betrieb von Webportalen.",
+    "operatorAddress": "Kreuzstraße 19, 89160 Dornstadt",
+    "contactTitle": "Kontakt & Hilfe",
+    "phone": "Telefon: 01627895106",
+    "email": "E-Mail:",
+    "professionTitle": "Berufsbezeichnung und berufsrechtliche Regelungen",
+    "profession": "Berufsbezeichnung: Softwareentwickler",
+    "country": "Verliehen in: Deutschland"
   }
 }

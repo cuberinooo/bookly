@@ -984,8 +984,8 @@
   },
   "footer": {
     "legal": "Legal & Privacy",
-    "hosting": "Infrastructure",
-    "hostedBy": "Hosted by"
+    "hosting": "BooklyFit",
+    "hostedBy": "Visit Website"
   },
   "cookies": {
     "title": "We value your privacy",
@@ -1075,7 +1075,11 @@
     "deleteConfirmMessage": "Are you sure you want to delete {name}? This action is permanent and will delete all associated data (courses, bookings, users, and settings).",
     "deleteSuccess": "Company deleted successfully.",
     "cannotDeleteActivePayment": "Cannot delete: active Stripe payment",
-    "cannotDeleteMoreUsers": "Cannot delete: more than 1 user account"
+    "cannotDeleteMoreUsers": "Cannot delete: more than 1 user account",
+    "tabs": {
+      "companies": "Companies",
+      "settings": "Platform Settings"
+    }
   },
   "pushNotifications": {
     "title": "Push Notifications",
@@ -1114,5 +1118,22 @@
     "wodStep3": "Return to safe training grounds",
     "backHome": "Back to Safety (Home)",
     "goDashboard": "My Dashboard"
+  },
+  "platformLegal": {
+    "title": "Imprint",
+    "legalNotice": "Imprint",
+    "privacyPolicy": "Privacy Policy",
+    "support": "Support",
+    "operatorTitle": "Platform Operator",
+    "operatorName": "Kubilay Anil",
+    "operatorCompany": "IT Services Kubilay Anil",
+    "operatorDetails": "Development, distribution, and operation of software, web and mobile applications (SaaS), provision of IT services, IT consulting, and operation of web portals.",
+    "operatorAddress": "Kreuzstraße 19, 89160 Dornstadt",
+    "contactTitle": "Contact & Help",
+    "phone": "Phone: 01627895106",
+    "email": "Email:",
+    "professionTitle": "Professional Title and Professional Regulations",
+    "profession": "Professional title: Software Developer",
+    "country": "Conferred in: Germany"
   }
 }

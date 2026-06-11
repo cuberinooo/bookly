@@ -10,6 +10,9 @@ import Dialog from 'primevue/dialog';
 import Tag from 'primevue/tag';
 import InputText from 'primevue/inputtext';
 import CompanyMonitorDetails from '../components/CompanyMonitorDetails.vue';
+import PlatformSettingsTab from '../components/PlatformSettingsTab.vue';
+
+const activeTab = ref('companies');
 
 const { t } = useI18n();
 const toast = useToast();
@@ -139,6 +142,8 @@ const confirmDeleteCompany = async () => {
         </p>
       </div>
       <Button
+        v-slot:default
+        v-if="activeTab === 'companies'"
         icon="pi pi-refresh"
         :label="t('app.refresh')"
         :loading="isLoading"
@@ -148,136 +153,155 @@ const confirmDeleteCompany = async () => {
       />
     </div>
 
-    <!-- Summary Statistics Bento Grid -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-      <div class="p-6 bg-white border border-slate-100 rounded-2xl shadow-sm flex items-center justify-between transition-all duration-300 hover:shadow-md hover:border-slate-200">
-        <div>
-          <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Total Companies</span>
-          <span class="text-3xl font-black text-slate-800 mt-1 block">{{ totalCompaniesCount }}</span>
-        </div>
-        <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center">
-          <i class="pi pi-building text-xl" />
-        </div>
-      </div>
-      <div class="p-6 bg-white border border-slate-100 rounded-2xl shadow-sm flex items-center justify-between transition-all duration-300 hover:shadow-md hover:border-slate-200">
-        <div>
-          <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Total Users</span>
-          <span class="text-3xl font-black text-slate-800 mt-1 block">{{ totalUsersCount }}</span>
-        </div>
-        <div class="w-12 h-12 rounded-xl bg-green-50 text-green-500 flex items-center justify-center">
-          <i class="pi pi-users text-xl" />
-        </div>
-      </div>
-      <div class="p-6 bg-white border border-slate-100 rounded-2xl shadow-sm flex items-center justify-between transition-all duration-300 hover:shadow-md hover:border-slate-200">
-        <div>
-          <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Total Courses</span>
-          <span class="text-3xl font-black text-slate-800 mt-1 block">{{ totalCoursesCount }}</span>
-        </div>
-        <div class="w-12 h-12 rounded-xl bg-purple-50 text-purple-500 flex items-center justify-center">
-          <i class="pi pi-bookmark text-xl" />
-        </div>
-      </div>
-      <div class="p-6 bg-white border border-slate-100 rounded-2xl shadow-sm flex items-center justify-between transition-all duration-300 hover:shadow-md hover:border-slate-200">
-        <div>
-          <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Total Bookings</span>
-          <span class="text-3xl font-black text-slate-800 mt-1 block">{{ totalBookingsCount }}</span>
-        </div>
-        <div class="w-12 h-12 rounded-xl bg-orange-50 text-orange-500 flex items-center justify-center">
-          <i class="pi pi-calendar text-xl" />
-        </div>
-      </div>
-    </div>
+    <Tabs v-model:value="activeTab" class="monitor-tabs">
+      <TabList class="overflow-x-auto whitespace-nowrap scrollbar-hide mb-6">
+        <Tab value="companies" class="font-barlow font-bold text-xs md:text-sm">
+          {{ t('monitor.tabs.companies') }}
+        </Tab>
+        <Tab value="settings" class="font-barlow font-bold text-xs md:text-sm">
+          {{ t('monitor.tabs.settings') }}
+        </Tab>
+      </TabList>
 
-    <!-- Main Companies Data Table -->
-    <div class="card p-4 bg-white rounded-2xl shadow-sm border border-slate-100">
-      <DataTable
-        v-model:expanded-rows="expandedRows"
-        :value="companies"
-        :loading="isLoading"
-        responsive-layout="scroll"
-        class="p-datatable-sm"
-        data-key="id"
-        paginator
-        :rows="10"
-        paginator-template="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-        current-page-report-template="{first} to {last} of {totalRecords}"
-      >
-        <template #empty>
-          <div class="text-center py-6 text-slate-500 font-medium">
-            {{ t('monitor.noCompaniesFound') }}
+      <TabPanels>
+        <TabPanel value="companies" class="px-0">
+          <!-- Summary Statistics Bento Grid -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="p-6 bg-white border border-slate-100 rounded-2xl shadow-sm flex items-center justify-between transition-all duration-300 hover:shadow-md hover:border-slate-200">
+              <div>
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Total Companies</span>
+                <span class="text-3xl font-black text-slate-800 mt-1 block">{{ totalCompaniesCount }}</span>
+              </div>
+              <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center">
+                <i class="pi pi-building text-xl" />
+              </div>
+            </div>
+            <div class="p-6 bg-white border border-slate-100 rounded-2xl shadow-sm flex items-center justify-between transition-all duration-300 hover:shadow-md hover:border-slate-200">
+              <div>
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Total Users</span>
+                <span class="text-3xl font-black text-slate-800 mt-1 block">{{ totalUsersCount }}</span>
+              </div>
+              <div class="w-12 h-12 rounded-xl bg-green-50 text-green-500 flex items-center justify-center">
+                <i class="pi pi-users text-xl" />
+              </div>
+            </div>
+            <div class="p-6 bg-white border border-slate-100 rounded-2xl shadow-sm flex items-center justify-between transition-all duration-300 hover:shadow-md hover:border-slate-200">
+              <div>
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Total Courses</span>
+                <span class="text-3xl font-black text-slate-800 mt-1 block">{{ totalCoursesCount }}</span>
+              </div>
+              <div class="w-12 h-12 rounded-xl bg-purple-50 text-purple-500 flex items-center justify-center">
+                <i class="pi pi-bookmark text-xl" />
+              </div>
+            </div>
+            <div class="p-6 bg-white border border-slate-100 rounded-2xl shadow-sm flex items-center justify-between transition-all duration-300 hover:shadow-md hover:border-slate-200">
+              <div>
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Total Bookings</span>
+                <span class="text-3xl font-black text-slate-800 mt-1 block">{{ totalBookingsCount }}</span>
+              </div>
+              <div class="w-12 h-12 rounded-xl bg-orange-50 text-orange-500 flex items-center justify-center">
+                <i class="pi pi-calendar text-xl" />
+              </div>
+            </div>
           </div>
-        </template>
 
-        <!-- Expander Column -->
-        <Column
-          expander
-          class="w-[3rem]"
-        />
+          <!-- Main Companies Data Table -->
+          <div class="card p-4 bg-white rounded-2xl shadow-sm border border-slate-100">
+            <DataTable
+              v-model:expanded-rows="expandedRows"
+              :value="companies"
+              :loading="isLoading"
+              responsive-layout="scroll"
+              class="p-datatable-sm"
+              data-key="id"
+              paginator
+              :rows="10"
+              paginator-template="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+              current-page-report-template="{first} to {last} of {totalRecords}"
+            >
+              <template #empty>
+                <div class="text-center py-6 text-slate-500 font-medium">
+                  {{ t('monitor.noCompaniesFound') }}
+                </div>
+              </template>
 
-        <!-- Company Profile -->
-        <Column :header="t('monitor.companyName')">
-          <template #body="{ data }">
-            <div>
-              <span class="font-bold text-slate-900 block">{{ data.name }}</span>
-              <span class="text-xs text-slate-400 block mt-0.5">
-                ID: {{ data.id }} • {{ t('monitor.createdAt') }}: {{ formatDate(data.createdAt) }}
-              </span>
-            </div>
-          </template>
-        </Column>
+              <!-- Expander Column -->
+              <Column
+                expander
+                class="w-[3rem]"
+              />
 
-        <!-- SMTP Configuration Badge Only -->
-        <Column :header="t('monitor.customSmtpStatus')">
-          <template #body="{ data }">
-            <Tag
-              :value="data.customSmtpEnabled ? t('monitor.enabled') : t('monitor.disabled')"
-              :severity="data.customSmtpEnabled ? 'success' : 'secondary'"
-            />
-          </template>
-        </Column>
+              <!-- Company Profile -->
+              <Column :header="t('monitor.companyName')">
+                <template #body="{ data }">
+                  <div>
+                    <span class="font-bold text-slate-900 block">{{ data.name }}</span>
+                    <span class="text-xs text-slate-400 block mt-0.5">
+                      ID: {{ data.id }} • {{ t('monitor.createdAt') }}: {{ formatDate(data.createdAt) }}
+                    </span>
+                  </div>
+                </template>
+              </Column>
 
-        <!-- Stripe Payments Badge Only -->
-        <Column :header="t('monitor.paymentsStatus')">
-          <template #body="{ data }">
-            <Tag
-              :value="data.insights.isPaymentActive ? t('monitor.active') : t('monitor.inactive')"
-              :severity="data.insights.isPaymentActive ? 'success' : 'secondary'"
-            />
-          </template>
-        </Column>
+              <!-- SMTP Configuration Badge Only -->
+              <Column :header="t('monitor.customSmtpStatus')">
+                <template #body="{ data }">
+                  <Tag
+                    :value="data.customSmtpEnabled ? t('monitor.enabled') : t('monitor.disabled')"
+                    :severity="data.customSmtpEnabled ? 'success' : 'secondary'"
+                  />
+                </template>
+              </Column>
 
-        <!-- Quick Stats Summary -->
-        <Column header="Quick Stats">
-          <template #body="{ data }">
-            <div class="flex gap-2">
-              <span
-                class="inline-flex items-center gap-1 text-xs text-slate-500 font-semibold border border-slate-200/60 px-2 py-0.5 rounded-full"
-                title="Total Users"
-              >
-                <i class="pi pi-users text-[10px]" />
-                {{ data.insights.totalUsers }}
-              </span>
-              <span
-                class="inline-flex items-center gap-1 text-xs text-slate-500 font-semibold border border-slate-200/60 px-2 py-0.5 rounded-full"
-                title="Total Bookings"
-              >
-                <i class="pi pi-calendar text-[10px]" />
-                {{ data.insights.totalBookings }}
-              </span>
-            </div>
-          </template>
-        </Column>
+              <!-- Stripe Payments Badge Only -->
+              <Column :header="t('monitor.paymentsStatus')">
+                <template #body="{ data }">
+                  <Tag
+                    :value="data.insights.isPaymentActive ? t('monitor.active') : t('monitor.inactive')"
+                    :severity="data.insights.isPaymentActive ? 'success' : 'secondary'"
+                  />
+                </template>
+              </Column>
 
-        <!-- Row Expansion Details -->
-        <template #expansion="{ data }">
-          <CompanyMonitorDetails 
-            :company="data"
-            @show-users="handleShowUsersRequest(data)"
-            @delete-company="handleDeleteRequest(data)"
-          />
-        </template>
-      </DataTable>
-    </div>
+              <!-- Quick Stats Summary -->
+              <Column header="Quick Stats">
+                <template #body="{ data }">
+                  <div class="flex gap-2">
+                    <span
+                      class="inline-flex items-center gap-1 text-xs text-slate-500 font-semibold border border-slate-200/60 px-2 py-0.5 rounded-full"
+                      title="Total Users"
+                    >
+                      <i class="pi pi-users text-[10px]" />
+                      {{ data.insights.totalUsers }}
+                    </span>
+                    <span
+                      class="inline-flex items-center gap-1 text-xs text-slate-500 font-semibold border border-slate-200/60 px-2 py-0.5 rounded-full"
+                      title="Total Bookings"
+                    >
+                      <i class="pi pi-calendar text-[10px]" />
+                      {{ data.insights.totalBookings }}
+                    </span>
+                  </div>
+                </template>
+              </Column>
+
+              <!-- Row Expansion Details -->
+              <template #expansion="{ data }">
+                <CompanyMonitorDetails 
+                  :company="data"
+                  @show-users="handleShowUsersRequest(data)"
+                  @delete-company="handleDeleteRequest(data)"
+                />
+              </template>
+            </DataTable>
+          </div>
+        </TabPanel>
+
+        <TabPanel value="settings" class="px-0">
+          <PlatformSettingsTab />
+        </TabPanel>
+      </TabPanels>
+    </Tabs>
 
     <!-- GDPR Confirmation Dialog -->
     <Dialog

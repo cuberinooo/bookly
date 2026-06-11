@@ -100,13 +100,12 @@ onMounted(fetchSettings);
         </h4>
         <div :class="['hosting-content', { 'mobile-hidden': !expandedSections.hosting }]">
           <p class="footer-text">
-            {{ t('footer.hostedBy') }}
             <a
-              href="https://codingcube.de/"
+              href="https://booklyfit.de"
               target="_blank"
               rel="noopener"
               class="footer-link highlight"
-            >codingcube</a>
+            >{{ t('footer.hostedBy') }}</a>
           </p>
         </div>
       </div>

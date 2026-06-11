@@ -4,8 +4,9 @@ import { useRouter, useRoute } from 'vue-router';
 import api from '../services/api';
 import { useToast } from 'primevue/usetoast';
 import { useI18n } from 'vue-i18n';
-import {downloadPrivacyPolicy} from "../services/download";
+import { downloadPrivacyPolicy, downloadPlatformPrivacyPolicy } from "../services/download";
 import LegalDialog from "../components/LegalDialog.vue";
+import PlatformLegalDialog from "../components/PlatformLegalDialog.vue";
 
 const { t } = useI18n();
 const step = ref(1);
@@ -62,6 +63,7 @@ onMounted(() => {
 
 const companyLegal = ref({ found: false, companyName: '', termsAndConditionsMarkdown: '', legalNoticeMarkdown: '', privacyPolicyPdfPath: '' });
 const showTermsModal = ref(false);
+const showPlatformLegal = ref(false);
 const dialogType = ref<'terms' | 'legal'>('terms');
 
 const legalSettings = computed(() => companyLegal.value);
@@ -254,7 +256,7 @@ async function register() {
 </script>
 
 <template>
-  <div class="min-h-[85vh] flex items-center justify-center bg-slate-50/50 px-4 py-12">
+  <div class="min-h-[85vh] flex flex-col items-center justify-center bg-slate-50/50 px-4 py-12 gap-6">
     <div class="phoenix-card w-full max-w-2xl bg-white border border-slate-100 shadow-xl rounded-3xl p-8 md:p-10">
       <div v-if="!isRegistered">
         <!-- Step Wizard Header -->
@@ -945,6 +947,35 @@ async function register() {
         </div>
       </div>
     </div>
+
+    <div class="flex flex-col items-center gap-1.5 text-xs text-slate-500 text-center mt-4 pb-4">
+      <div class="flex items-center gap-4">
+        <a
+          href="javascript:void(0)"
+          class="hover:primary-text transition font-bold"
+          @click="showPlatformLegal = true"
+        >
+          {{ t('platformLegal.legalNotice') }}
+        </a>
+        <span class="text-slate-700">•</span>
+        <a
+          href="javascript:void(0)"
+          class="hover:primary-text transition font-bold"
+          @click="downloadPlatformPrivacyPolicy()"
+        >
+          {{ t('platformLegal.privacyPolicy') }}
+        </a>
+        <span class="text-slate-700">•</span>
+        <a
+          href="mailto:kubilay.anil@codingcube.de"
+          class="hover:primary-text transition font-bold"
+        >
+          {{ t('platformLegal.support') }}
+        </a>
+      </div>
+    </div>
+
+    <PlatformLegalDialog v-model:visible="showPlatformLegal" />
 
     <LegalDialog
       v-model:visible="showTermsModal"

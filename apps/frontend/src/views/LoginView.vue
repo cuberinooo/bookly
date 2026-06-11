@@ -5,6 +5,8 @@ import api from '../services/api';
 import { useAuthStore } from '../store/useAuthStore';
 import { useToast } from 'primevue/usetoast';
 import { useI18n } from 'vue-i18n';
+import PlatformLegalDialog from '../components/PlatformLegalDialog.vue';
+import { downloadPlatformPrivacyPolicy } from '../services/download';
 
 const { t } = useI18n();
 const email = ref('');
@@ -12,6 +14,7 @@ const password = ref('');
 const loading = ref(false);
 const resending = ref(false);
 const showResend = ref(false);
+const showPlatformLegal = ref(false);
 const router = useRouter();
 const toast = useToast();
 const authStore = useAuthStore();
@@ -131,19 +134,49 @@ async function resendVerification() {
         </p>
       </template>
     </Card>
+
+    <div class="flex flex-col items-center gap-1.5 text-xs text-slate-500 text-center">
+      <div class="flex items-center gap-4">
+        <a
+          href="javascript:void(0)"
+          class="hover:primary-text transition font-bold"
+          @click="showPlatformLegal = true"
+        >
+          {{ t('platformLegal.legalNotice') }}
+        </a>
+        <span class="text-slate-700">•</span>
+        <a
+          href="javascript:void(0)"
+          class="hover:primary-text transition font-bold"
+          @click="downloadPlatformPrivacyPolicy()"
+        >
+          {{ t('platformLegal.privacyPolicy') }}
+        </a>
+        <span class="text-slate-700">•</span>
+        <a
+          href="mailto:kubilay.anil@codingcube.de"
+          class="hover:primary-text transition font-bold"
+        >
+          {{ t('platformLegal.support') }}
+        </a>
+      </div>
+    </div>
+
+    <PlatformLegalDialog v-model:visible="showPlatformLegal" />
   </div>
 </template>
 
 <style scoped lang="scss">
 .auth-container {
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     min-height: calc(100vh - 160px);
+    gap: 1.5rem;
 }
 .auth-card {
     width: 100%;
     max-width: 400px;
 }
-
 </style>

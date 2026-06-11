@@ -57,3 +57,23 @@ export async function downloadWelcomeAttachment(path: string, fileName: string) 
     console.error('Download failed', e);
   }
 }
+
+export async function downloadPlatformPrivacyPolicy() {
+  try {
+    const response = await api.get('/platform-settings/privacy-policy/download', {
+      responseType: 'blob'
+    });
+
+    const blob = new Blob([response.data], { type: 'application/pdf' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'privacy-policy.pdf');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  } catch (e) {
+    console.error('Download failed', e);
+  }
+}
