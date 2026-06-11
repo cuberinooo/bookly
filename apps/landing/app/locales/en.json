@@ -77,11 +77,11 @@
     "tabMember": "For Athletes",
     "adminSteps": {
       "step1": {
-        "title": "Create Gym Profile",
+        "title": "Create Profile",
         "desc": "Set up your brand identity, contact email, and basic currency settings."
       },
       "step2": {
-        "title": "Configure Payments",
+        "title": "Configure Payments (optional)",
         "desc": "Connect your Stripe account to handle subscriptions, memberships, and trial fees safely."
       },
       "step3": {
@@ -95,8 +95,8 @@
     },
     "memberSteps": {
       "step1": {
-        "title": "Complete Health Profile",
-        "desc": "Confirm your personal info and default settings for your fitness account."
+        "title": "Create Profile",
+        "desc": "Create your account on the platform, then log in to review and verify your profile details."
       },
       "step2": {
         "title": "Book Your First Course",

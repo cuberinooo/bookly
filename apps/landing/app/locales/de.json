@@ -77,11 +77,11 @@
     "tabMember": "Für Athleten",
     "adminSteps": {
       "step1": {
-        "title": "Gym-Profil erstellen",
+        "title": "Profil erstellen",
         "desc": "Richte deine Markenidentität, Kontakt-E-Mail und Währungseinstellungen ein."
       },
       "step2": {
-        "title": "Zahlungen konfigurieren",
+        "title": "Zahlungen konfigurieren (optional)",
         "desc": "Verbinde dein Stripe-Konto, um Abos, Mitgliedschaften und Anmeldegebühren sicher abzuwickeln."
       },
       "step3": {
@@ -95,8 +95,8 @@
     },
     "memberSteps": {
       "step1": {
-        "title": "Gesundheitsprofil ausfüllen",
-        "desc": "Bestätige deine persönlichen Daten und Standardeinstellungen für dein Fitness-Konto."
+        "title": "Profil erstellen",
+        "desc": "Erstelle dein Konto auf der Plattform und melde dich an, um deine Profildaten in der App zu überprüfen und zu bestätigen."
       },
       "step2": {
         "title": "Ersten Kurs buchen",
