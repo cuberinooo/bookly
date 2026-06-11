@@ -387,6 +387,58 @@ async function captureScreenshots() {
     console.log(`[Admin Flow] Saved: ${settingsPath}`);
 
     await adminContext.close();
+
+    // ==========================================
+    // 4. ADMIN MOBILE FLOW (Payments, Users, Settings Mobile views)
+    // ==========================================
+    console.log('\n[Admin Mobile Flow] Initializing context...');
+    const adminMobileContext = await browser.newContext({
+      viewport: { width: 390, height: 844 }, // iPhone 12/13/14 Pro size
+      deviceScaleFactor: 3,
+      isMobile: true,
+      hasTouch: true,
+      colorScheme: 'dark', // Match standard app theme
+      userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1'
+    });
+    const adminMobilePage = await adminMobileContext.newPage();
+    await setupContainerRouting(adminMobilePage);
+
+    console.log('[Admin Mobile Flow] Logging in...');
+    await loginAndDismissModals(adminMobilePage, ADMIN_EMAIL, ADMIN_PASSWORD);
+    console.log('[Admin Mobile Flow] Successfully logged in.');
+
+    // Screenshot 7: Mobile Payments
+    console.log('[Admin Mobile Flow] Navigating to Payments...');
+    await navigateClientSide(adminMobilePage, '/payments');
+    await adminMobilePage.waitForSelector('h1', { timeout: 15000 });
+    await adminMobilePage.waitForTimeout(3000);
+    await cleanScreenshotPage(adminMobilePage, null);
+    const mobilePaymentsPath = path.join(OUTPUT_DIR, 'mobile_payments.png');
+    await adminMobilePage.screenshot({ path: mobilePaymentsPath, fullPage: false });
+    console.log(`[Admin Mobile Flow] Saved: ${mobilePaymentsPath}`);
+
+    // Screenshot 8: Mobile Users
+    console.log('[Admin Mobile Flow] Navigating to Users...');
+    await navigateClientSide(adminMobilePage, '/users');
+    await adminMobilePage.waitForSelector('h1', { timeout: 15000 });
+    await adminMobilePage.waitForTimeout(3000);
+    await cleanScreenshotPage(adminMobilePage, null);
+    const mobileUsersPath = path.join(OUTPUT_DIR, 'mobile_users.png');
+    await adminMobilePage.screenshot({ path: mobileUsersPath, fullPage: false });
+    console.log(`[Admin Mobile Flow] Saved: ${mobileUsersPath}`);
+
+    // Screenshot 9: Mobile Settings
+    console.log('[Admin Mobile Flow] Navigating to Settings...');
+    await navigateClientSide(adminMobilePage, '/settings');
+    await adminMobilePage.waitForSelector('h1', { timeout: 15000 });
+    await adminMobilePage.waitForTimeout(3000);
+    await cleanScreenshotPage(adminMobilePage, null);
+    const mobileSettingsPath = path.join(OUTPUT_DIR, 'mobile_settings.png');
+    await adminMobilePage.screenshot({ path: mobileSettingsPath, fullPage: false });
+    console.log(`[Admin Mobile Flow] Saved: ${mobileSettingsPath}`);
+
+    await adminMobileContext.close();
+
     console.log('\nAll screenshots captured successfully!');
 
   } catch (error) {

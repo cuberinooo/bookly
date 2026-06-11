@@ -8,6 +8,7 @@ import Button from 'primevue/button'
 const { t, locale } = useI18n()
 const showLegal = ref(false)
 const activeOnboardingTab = ref<'admin' | 'member'>('admin')
+const activeAdminTab = ref<'payments' | 'users' | 'settings'>('payments')
 
 // SEO Meta configuration
 useSeoMeta({
@@ -367,131 +368,427 @@ onUnmounted(() => {
         </p>
       </div>
 
-      <!-- Feature 1: Payments -->
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center mb-20 reveal-on-scroll">
-        <div class="lg:col-span-5 space-y-5">
-          <div class="w-12 h-12 rounded-xl bg-green-500/10 border border-green-500/20 text-green-500 flex items-center justify-center">
-            <i class="pi pi-credit-card text-xl"></i>
-          </div>
-          <h3 class="text-2xl font-black text-white">{{ t('businessDashboard.payments.title') }}</h3>
-          <p class="text-slate-400 leading-relaxed">
-            {{ t('businessDashboard.payments.desc') }}
-          </p>
-          <ul class="space-y-3 text-sm font-semibold text-slate-300">
-            <li class="flex items-center gap-2">
-              <i class="pi pi-check text-green-500 text-xs"></i> {{ t('businessDashboard.payments.b1') }}
-            </li>
-            <li class="flex items-center gap-2">
-              <i class="pi pi-check text-green-500 text-xs"></i> {{ t('businessDashboard.payments.b2') }}
-            </li>
-            <li class="flex items-center gap-2">
-              <i class="pi pi-check text-green-500 text-xs"></i> {{ t('businessDashboard.payments.b3') }}
-            </li>
-          </ul>
+      <!-- Mobile Layout: Tab Switcher + Content + Mockup (Hidden on Desktop) -->
+      <div class="block lg:hidden space-y-8">
+        <!-- Tab Buttons -->
+        <div class="flex justify-center p-1 bg-slate-900/80 border border-slate-800 rounded-xl max-w-md mx-auto">
+          <button
+            @click="activeAdminTab = 'payments'"
+            :class="[
+              'flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer',
+              activeAdminTab === 'payments' ? 'bg-amber-500 text-slate-950 shadow-md' : 'text-slate-400 hover:text-white'
+            ]"
+          >
+            <i class="pi pi-credit-card"></i>
+            <span>{{ t('businessDashboard.payments.title').split(' ')[1] || 'Payments' }}</span>
+          </button>
+          <button
+            @click="activeAdminTab = 'users'"
+            :class="[
+              'flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer',
+              activeAdminTab === 'users' ? 'bg-amber-500 text-slate-950 shadow-md' : 'text-slate-400 hover:text-white'
+            ]"
+          >
+            <i class="pi pi-users"></i>
+            <span>{{ t('businessDashboard.users.title').split(' ')[1] || 'Members' }}</span>
+          </button>
+          <button
+            @click="activeAdminTab = 'settings'"
+            :class="[
+              'flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer',
+              activeAdminTab === 'settings' ? 'bg-amber-500 text-slate-950 shadow-md' : 'text-slate-400 hover:text-white'
+            ]"
+          >
+            <i class="pi pi-cog"></i>
+            <span>{{ t('businessDashboard.settings.title').split(' ')[1] || 'Settings' }}</span>
+          </button>
         </div>
-        <div
-          class="lg:col-span-7 rounded-2xl border border-slate-800 bg-slate-900/40 p-3 shadow-2xl cursor-zoom-in hover:scale-[1.03] hover:border-amber-500/30 transition-all duration-300"
-          @click="openLightbox('/screenshots/payments.png', t('businessDashboard.payments.alt'))"
-        >
-          <div class="flex items-center gap-1.5 pb-2.5 px-2 border-b border-slate-800/80 mb-3">
-            <div class="w-3 h-3 rounded-full bg-red-500/60"></div>
-            <div class="w-3 h-3 rounded-full bg-yellow-500/60"></div>
-            <div class="w-3 h-3 rounded-full bg-green-500/60"></div>
-            <span class="text-xs text-slate-500 font-mono ml-4">admin@booklyfit.de - Payments Overview</span>
+
+        <!-- Content Area -->
+        <div class="space-y-6">
+          <!-- Active Tab Content -->
+          <div v-show="activeAdminTab === 'payments'" class="space-y-4 text-center">
+            <h3 class="text-xl font-bold text-white">{{ t('businessDashboard.payments.title') }}</h3>
+            <p class="text-sm text-slate-400 leading-relaxed max-w-lg mx-auto">
+              {{ t('businessDashboard.payments.desc') }}
+            </p>
+            <ul class="flex flex-wrap justify-center gap-4 text-xs font-semibold text-slate-300 max-w-md mx-auto">
+              <li class="flex items-center gap-1.5 bg-slate-900/40 border border-slate-800/60 px-3 py-1.5 rounded-lg">
+                <i class="pi pi-check text-green-500 text-[10px]"></i> {{ t('businessDashboard.payments.b1') }}
+              </li>
+              <li class="flex items-center gap-1.5 bg-slate-900/40 border border-slate-800/60 px-3 py-1.5 rounded-lg">
+                <i class="pi pi-check text-green-500 text-[10px]"></i> {{ t('businessDashboard.payments.b2') }}
+              </li>
+              <li class="flex items-center gap-1.5 bg-slate-900/40 border border-slate-800/60 px-3 py-1.5 rounded-lg">
+                <i class="pi pi-check text-green-500 text-[10px]"></i> {{ t('businessDashboard.payments.b3') }}
+              </li>
+            </ul>
           </div>
-          <div class="relative overflow-hidden rounded bg-slate-950 border border-slate-800">
-            <img
-              src="/screenshots/payments.png"
-              :alt="t('businessDashboard.payments.alt')"
-              class="w-full object-cover select-none"
-              @error="(e: any) => e.target.src = 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?q=80&w=800&auto=format&fit=crop'"
-            />
+
+          <div v-show="activeAdminTab === 'users'" class="space-y-4 text-center">
+            <h3 class="text-xl font-bold text-white">{{ t('businessDashboard.users.title') }}</h3>
+            <p class="text-sm text-slate-400 leading-relaxed max-w-lg mx-auto">
+              {{ t('businessDashboard.users.desc') }}
+            </p>
+            <ul class="flex flex-wrap justify-center gap-4 text-xs font-semibold text-slate-300 max-w-md mx-auto">
+              <li class="flex items-center gap-1.5 bg-slate-900/40 border border-slate-800/60 px-3 py-1.5 rounded-lg">
+                <i class="pi pi-check text-amber-500 text-[10px]"></i> {{ t('businessDashboard.users.b1') }}
+              </li>
+              <li class="flex items-center gap-1.5 bg-slate-900/40 border border-slate-800/60 px-3 py-1.5 rounded-lg">
+                <i class="pi pi-check text-amber-500 text-[10px]"></i> {{ t('businessDashboard.users.b2') }}
+              </li>
+              <li class="flex items-center gap-1.5 bg-slate-900/40 border border-slate-800/60 px-3 py-1.5 rounded-lg">
+                <i class="pi pi-check text-amber-500 text-[10px]"></i> {{ t('businessDashboard.users.b3') }}
+              </li>
+            </ul>
+          </div>
+
+          <div v-show="activeAdminTab === 'settings'" class="space-y-4 text-center">
+            <h3 class="text-xl font-bold text-white">{{ t('businessDashboard.settings.title') }}</h3>
+            <p class="text-sm text-slate-400 leading-relaxed max-w-lg mx-auto">
+              {{ t('businessDashboard.settings.desc') }}
+            </p>
+            <ul class="flex flex-wrap justify-center gap-4 text-xs font-semibold text-slate-300 max-w-md mx-auto">
+              <li class="flex items-center gap-1.5 bg-slate-900/40 border border-slate-800/60 px-3 py-1.5 rounded-lg">
+                <i class="pi pi-check text-blue-500 text-[10px]"></i> {{ t('businessDashboard.settings.b1') }}
+              </li>
+              <li class="flex items-center gap-1.5 bg-slate-900/40 border border-slate-800/60 px-3 py-1.5 rounded-lg">
+                <i class="pi pi-check text-blue-500 text-[10px]"></i> {{ t('businessDashboard.settings.b2') }}
+              </li>
+              <li class="flex items-center gap-1.5 bg-slate-900/40 border border-slate-800/60 px-3 py-1.5 rounded-lg">
+                <i class="pi pi-check text-blue-500 text-[10px]"></i> {{ t('businessDashboard.settings.b3') }}
+              </li>
+            </ul>
+          </div>
+
+          <!-- Active Mockup (Desktop Browser + Mobile Phone overlapping) -->
+          <div class="relative h-64 sm:h-72 mt-6 max-w-md mx-auto">
+            <!-- Browser Mockup -->
+            <div
+              class="absolute top-0 left-0 w-[82%] rounded-xl border border-slate-800 bg-slate-950 p-1.5 shadow-2xl cursor-zoom-in"
+              @click="openLightbox(
+                activeAdminTab === 'payments' ? '/screenshots/payments.png' : activeAdminTab === 'users' ? '/screenshots/users.png' : '/screenshots/settings.png',
+                activeAdminTab === 'payments' ? t('businessDashboard.payments.alt') : activeAdminTab === 'users' ? t('businessDashboard.users.alt') : t('businessDashboard.settings.alt')
+              )"
+            >
+              <div class="flex items-center gap-1 pb-1.5 px-1 border-b border-slate-900 mb-1.5">
+                <div class="w-1 h-1 rounded-full bg-red-500/60"></div>
+                <div class="w-1 h-1 rounded-full bg-yellow-500/60"></div>
+                <div class="w-1 h-1 rounded-full bg-green-500/60"></div>
+              </div>
+              <div class="aspect-[16/10] relative overflow-hidden rounded bg-slate-900">
+                <img
+                  :src="activeAdminTab === 'payments' ? '/screenshots/payments.png' : activeAdminTab === 'users' ? '/screenshots/users.png' : '/screenshots/settings.png'"
+                  :alt="activeAdminTab === 'payments' ? t('businessDashboard.payments.alt') : activeAdminTab === 'users' ? t('businessDashboard.users.alt') : t('businessDashboard.settings.alt')"
+                  class="w-full h-full object-cover object-top select-none"
+                  @error="(e: any) => e.target.src = 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?q=80&w=800&auto=format&fit=crop'"
+                />
+              </div>
+            </div>
+            <!-- Mobile Phone Mockup -->
+            <div
+              class="absolute bottom-0 right-2 w-[34%] rounded-2xl border-[3px] border-slate-800 bg-slate-950 p-1 shadow-2xl z-10 cursor-zoom-in"
+              @click="openLightbox(
+                activeAdminTab === 'payments' ? '/screenshots/mobile_payments.png' : activeAdminTab === 'users' ? '/screenshots/mobile_users.png' : '/screenshots/mobile_settings.png',
+                activeAdminTab === 'payments' ? t('businessDashboard.payments.alt') : activeAdminTab === 'users' ? t('businessDashboard.users.alt') : t('businessDashboard.settings.alt')
+              )"
+            >
+              <div class="w-8 h-1.5 bg-slate-800 rounded-full mx-auto mb-1"></div>
+              <div class="aspect-[9/16] relative overflow-hidden rounded-lg bg-slate-900">
+                <img
+                  :src="activeAdminTab === 'payments' ? '/screenshots/mobile_payments.png' : activeAdminTab === 'users' ? '/screenshots/mobile_users.png' : '/screenshots/mobile_settings.png'"
+                  :alt="activeAdminTab === 'payments' ? t('businessDashboard.payments.alt') : activeAdminTab === 'users' ? t('businessDashboard.users.alt') : t('businessDashboard.settings.alt')"
+                  class="w-full h-full object-cover object-top select-none"
+                  @error="(e: any) => e.target.src = 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=300&auto=format&fit=crop'"
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- Feature 2: User Management -->
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center mb-20 reveal-on-scroll">
-        <div class="lg:col-span-7 lg:order-2 space-y-5">
-          <div class="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-500 flex items-center justify-center">
-            <i class="pi pi-users text-xl"></i>
+      <!-- Desktop Layout: Interactive Hover Showcase (Hidden on Mobile) -->
+      <div class="hidden lg:grid grid-cols-12 gap-12 items-center">
+        <!-- Left Column: Interactive Feature Pickers -->
+        <div class="col-span-5 space-y-4">
+          <!-- Card 1: Payments -->
+          <div
+            @mouseenter="activeAdminTab = 'payments'"
+            @click="activeAdminTab = 'payments'"
+            :class="[
+              'p-5 rounded-2xl border transition-all duration-300 cursor-pointer',
+              activeAdminTab === 'payments'
+                ? 'bg-slate-900/60 border-amber-500/30 shadow-lg shadow-amber-500/5'
+                : 'bg-slate-950/40 border-slate-900 hover:border-slate-800 hover:bg-slate-900/20'
+            ]"
+          >
+            <div class="flex items-start gap-4">
+              <div
+                :class="[
+                  'w-10 h-10 rounded-xl flex items-center justify-center transition-colors duration-300',
+                  activeAdminTab === 'payments'
+                    ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                    : 'bg-slate-900 text-slate-400 border border-slate-800'
+                ]"
+              >
+                <i class="pi pi-credit-card text-lg"></i>
+              </div>
+              <div class="flex-1 space-y-2">
+                <h3 class="text-lg font-bold text-white transition-colors duration-200">
+                  {{ t('businessDashboard.payments.title') }}
+                </h3>
+                <p class="text-xs text-slate-400 leading-relaxed transition-all duration-350" v-show="activeAdminTab === 'payments'">
+                  {{ t('businessDashboard.payments.desc') }}
+                </p>
+                <ul class="space-y-2 text-xs font-semibold text-slate-300" v-show="activeAdminTab === 'payments'">
+                  <li class="flex items-center gap-2">
+                    <i class="pi pi-check text-green-500 text-[10px]"></i> {{ t('businessDashboard.payments.b1') }}
+                  </li>
+                  <li class="flex items-center gap-2">
+                    <i class="pi pi-check text-green-500 text-[10px]"></i> {{ t('businessDashboard.payments.b2') }}
+                  </li>
+                  <li class="flex items-center gap-2">
+                    <i class="pi pi-check text-green-500 text-[10px]"></i> {{ t('businessDashboard.payments.b3') }}
+                  </li>
+                </ul>
+              </div>
+            </div>
           </div>
-          <h3 class="text-2xl font-black text-white">{{ t('businessDashboard.users.title') }}</h3>
-          <p class="text-slate-400 leading-relaxed">
-            {{ t('businessDashboard.users.desc') }}
-          </p>
-          <ul class="space-y-3 text-sm font-semibold text-slate-300">
-            <li class="flex items-center gap-2">
-              <i class="pi pi-check text-amber-500 text-xs"></i> {{ t('businessDashboard.users.b1') }}
-            </li>
-            <li class="flex items-center gap-2">
-              <i class="pi pi-check text-amber-500 text-xs"></i> {{ t('businessDashboard.users.b2') }}
-            </li>
-            <li class="flex items-center gap-2">
-              <i class="pi pi-check text-amber-500 text-xs"></i> {{ t('businessDashboard.users.b3') }}
-            </li>
-          </ul>
-        </div>
-        <div
-          class="lg:col-span-5 lg:order-1 rounded-2xl border border-slate-800 bg-slate-900/40 p-3 shadow-2xl cursor-zoom-in hover:scale-[1.03] hover:border-amber-500/30 transition-all duration-300"
-          @click="openLightbox('/screenshots/users.png', t('businessDashboard.users.alt'))"
-        >
-          <div class="flex items-center gap-1.5 pb-2.5 px-2 border-b border-slate-800/80 mb-3">
-            <div class="w-3 h-3 rounded-full bg-red-500/60"></div>
-            <div class="w-3 h-3 rounded-full bg-yellow-500/60"></div>
-            <div class="w-3 h-3 rounded-full bg-green-500/60"></div>
-            <span class="text-xs text-slate-500 font-mono ml-4">admin@booklyfit.de - User Management</span>
-          </div>
-          <div class="relative overflow-hidden rounded bg-slate-950 border border-slate-800">
-            <img
-              src="/screenshots/users.png"
-              :alt="t('businessDashboard.users.alt')"
-              class="w-full object-cover select-none"
-              @error="(e: any) => e.target.src = 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?q=80&w=800&auto=format&fit=crop'"
-            />
-          </div>
-        </div>
-      </div>
 
-      <!-- Feature 3: Settings -->
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center reveal-on-scroll">
-        <div class="lg:col-span-5 space-y-5">
-          <div class="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-500 flex items-center justify-center">
-            <i class="pi pi-cog text-xl"></i>
+          <!-- Card 2: User Management -->
+          <div
+            @mouseenter="activeAdminTab = 'users'"
+            @click="activeAdminTab = 'users'"
+            :class="[
+              'p-5 rounded-2xl border transition-all duration-300 cursor-pointer',
+              activeAdminTab === 'users'
+                ? 'bg-slate-900/60 border-amber-500/30 shadow-lg shadow-amber-500/5'
+                : 'bg-slate-950/40 border-slate-900 hover:border-slate-800 hover:bg-slate-900/20'
+            ]"
+          >
+            <div class="flex items-start gap-4">
+              <div
+                :class="[
+                  'w-10 h-10 rounded-xl flex items-center justify-center transition-colors duration-300',
+                  activeAdminTab === 'users'
+                    ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                    : 'bg-slate-900 text-slate-400 border border-slate-800'
+                ]"
+              >
+                <i class="pi pi-users text-lg"></i>
+              </div>
+              <div class="flex-1 space-y-2">
+                <h3 class="text-lg font-bold text-white transition-colors duration-200">
+                  {{ t('businessDashboard.users.title') }}
+                </h3>
+                <p class="text-xs text-slate-400 leading-relaxed transition-all duration-350" v-show="activeAdminTab === 'users'">
+                  {{ t('businessDashboard.users.desc') }}
+                </p>
+                <ul class="space-y-2 text-xs font-semibold text-slate-300" v-show="activeAdminTab === 'users'">
+                  <li class="flex items-center gap-2">
+                    <i class="pi pi-check text-amber-500 text-[10px]"></i> {{ t('businessDashboard.users.b1') }}
+                  </li>
+                  <li class="flex items-center gap-2">
+                    <i class="pi pi-check text-amber-500 text-[10px]"></i> {{ t('businessDashboard.users.b2') }}
+                  </li>
+                  <li class="flex items-center gap-2">
+                    <i class="pi pi-check text-amber-500 text-[10px]"></i> {{ t('businessDashboard.users.b3') }}
+                  </li>
+                </ul>
+              </div>
+            </div>
           </div>
-          <h3 class="text-2xl font-black text-white">{{ t('businessDashboard.settings.title') }}</h3>
-          <p class="text-slate-400 leading-relaxed">
-            {{ t('businessDashboard.settings.desc') }}
-          </p>
-          <ul class="space-y-3 text-sm font-semibold text-slate-300">
-            <li class="flex items-center gap-2">
-              <i class="pi pi-check text-blue-500 text-xs"></i> {{ t('businessDashboard.settings.b1') }}
-            </li>
-            <li class="flex items-center gap-2">
-              <i class="pi pi-check text-blue-500 text-xs"></i> {{ t('businessDashboard.settings.b2') }}
-            </li>
-            <li class="flex items-center gap-2">
-              <i class="pi pi-check text-blue-500 text-xs"></i> {{ t('businessDashboard.settings.b3') }}
-            </li>
-          </ul>
+
+          <!-- Card 3: Settings -->
+          <div
+            @mouseenter="activeAdminTab = 'settings'"
+            @click="activeAdminTab = 'settings'"
+            :class="[
+              'p-5 rounded-2xl border transition-all duration-300 cursor-pointer',
+              activeAdminTab === 'settings'
+                ? 'bg-slate-900/60 border-amber-500/30 shadow-lg shadow-amber-500/5'
+                : 'bg-slate-950/40 border-slate-900 hover:border-slate-800 hover:bg-slate-900/20'
+            ]"
+          >
+            <div class="flex items-start gap-4">
+              <div
+                :class="[
+                  'w-10 h-10 rounded-xl flex items-center justify-center transition-colors duration-300',
+                  activeAdminTab === 'settings'
+                    ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                    : 'bg-slate-900 text-slate-400 border border-slate-800'
+                ]"
+              >
+                <i class="pi pi-cog text-lg"></i>
+              </div>
+              <div class="flex-1 space-y-2">
+                <h3 class="text-lg font-bold text-white transition-colors duration-200">
+                  {{ t('businessDashboard.settings.title') }}
+                </h3>
+                <p class="text-xs text-slate-400 leading-relaxed transition-all duration-350" v-show="activeAdminTab === 'settings'">
+                  {{ t('businessDashboard.settings.desc') }}
+                </p>
+                <ul class="space-y-2 text-xs font-semibold text-slate-300" v-show="activeAdminTab === 'settings'">
+                  <li class="flex items-center gap-2">
+                    <i class="pi pi-check text-blue-500 text-[10px]"></i> {{ t('businessDashboard.settings.b1') }}
+                  </li>
+                  <li class="flex items-center gap-2">
+                    <i class="pi pi-check text-blue-500 text-[10px]"></i> {{ t('businessDashboard.settings.b2') }}
+                  </li>
+                  <li class="flex items-center gap-2">
+                    <i class="pi pi-check text-blue-500 text-[10px]"></i> {{ t('businessDashboard.settings.b3') }}
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
         </div>
-        <div
-          class="lg:col-span-7 rounded-2xl border border-slate-800 bg-slate-900/40 p-3 shadow-2xl cursor-zoom-in hover:scale-[1.03] hover:border-amber-500/30 transition-all duration-300"
-          @click="openLightbox('/screenshots/settings.png', t('businessDashboard.settings.alt'))"
-        >
-          <div class="flex items-center gap-1.5 pb-2.5 px-2 border-b border-slate-800/80 mb-3">
-            <div class="w-3 h-3 rounded-full bg-red-500/60"></div>
-            <div class="w-3 h-3 rounded-full bg-yellow-500/60"></div>
-            <div class="w-3 h-3 rounded-full bg-green-500/60"></div>
-            <span class="text-xs text-slate-500 font-mono ml-4">admin@booklyfit.de - System Settings</span>
-          </div>
-          <div class="relative overflow-hidden rounded bg-slate-950 border border-slate-800">
-            <img
-              src="/screenshots/settings.png"
-              :alt="t('businessDashboard.settings.alt')"
-              class="w-full object-cover select-none"
-              @error="(e: any) => e.target.src = 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?q=80&w=800&auto=format&fit=crop'"
-            />
+
+        <!-- Right Column: Card Stack Mockups -->
+        <div class="col-span-7 relative h-[450px] flex items-center justify-center select-none">
+          <!-- Stack Container -->
+          <div class="relative w-full max-w-[500px] h-[340px]">
+            <!-- Stack Item 1: Payments -->
+            <div
+              @mouseenter="activeAdminTab = 'payments'"
+              :class="[
+                'absolute w-[85%] rounded-2xl border border-slate-800 bg-slate-900/40 p-2.5 shadow-2xl transition-all duration-500 ease-out cursor-pointer',
+                activeAdminTab === 'payments'
+                  ? 'z-30 scale-100 opacity-100 border-amber-500/30 translate-x-0 translate-y-0 rotate-0'
+                  : activeAdminTab === 'users'
+                  ? 'z-20 scale-[0.88] opacity-60 translate-x-[-12%] translate-y-[8%] rotate-[-2deg]'
+                  : 'z-10 scale-[0.78] opacity-30 translate-x-[-22%] translate-y-[15%] rotate-[-4deg]'
+              ]"
+            >
+              <div class="flex items-center gap-1 pb-2 px-1 border-b border-slate-850 mb-2">
+                <div class="w-2 h-2 rounded-full bg-red-500/60"></div>
+                <div class="w-2 h-2 rounded-full bg-yellow-500/60"></div>
+                <div class="w-2 h-2 rounded-full bg-green-500/60"></div>
+                <span class="text-[9px] text-slate-500 font-mono ml-3">admin@booklyfit.de - Payments & Subscriptions</span>
+              </div>
+              <div
+                class="relative overflow-hidden rounded bg-slate-950 border border-slate-800"
+                @click="openLightbox('/screenshots/payments.png', t('businessDashboard.payments.alt'))"
+              >
+                <img
+                  src="/screenshots/payments.png"
+                  :alt="t('businessDashboard.payments.alt')"
+                  class="w-full object-cover object-top aspect-[16/10] select-none"
+                  @error="(e: any) => e.target.src = 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?q=80&w=800&auto=format&fit=crop'"
+                />
+              </div>
+
+              <!-- Overlapping Phone Mockup -->
+              <div
+                class="absolute bottom-[-20px] right-[-15px] w-[32%] rounded-2xl border-[3px] border-slate-800 bg-slate-950 p-0.5 shadow-2xl z-40 transition-all duration-305 hover:scale-105 hover:border-amber-500/50 cursor-zoom-in"
+                @click.stop="openLightbox('/screenshots/mobile_payments.png', t('businessDashboard.payments.alt'))"
+              >
+                <div class="w-6 h-1 bg-slate-800 rounded-full mx-auto mb-0.5"></div>
+                <div class="aspect-[9/16] relative overflow-hidden rounded-lg bg-slate-900">
+                  <img
+                    src="/screenshots/mobile_payments.png"
+                    :alt="t('businessDashboard.payments.alt')"
+                    class="w-full h-full object-cover object-top select-none"
+                    @error="(e: any) => e.target.src = 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=300&auto=format&fit=crop'"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- Stack Item 2: Users -->
+            <div
+              @mouseenter="activeAdminTab = 'users'"
+              :class="[
+                'absolute w-[85%] rounded-2xl border border-slate-800 bg-slate-900/40 p-2.5 shadow-2xl transition-all duration-500 ease-out cursor-pointer',
+                activeAdminTab === 'users'
+                  ? 'z-30 scale-100 opacity-100 border-amber-500/30 translate-x-0 translate-y-0 rotate-0'
+                  : activeAdminTab === 'payments'
+                  ? 'z-20 scale-[0.88] opacity-60 translate-x-[12%] translate-y-[8%] rotate-[2deg]'
+                  : 'z-20 scale-[0.88] opacity-60 translate-x-[-12%] translate-y-[8%] rotate-[-2deg]'
+              ]"
+            >
+              <div class="flex items-center gap-1 pb-2 px-1 border-b border-slate-850 mb-2">
+                <div class="w-2 h-2 rounded-full bg-red-500/60"></div>
+                <div class="w-2 h-2 rounded-full bg-yellow-500/60"></div>
+                <div class="w-2 h-2 rounded-full bg-green-500/60"></div>
+                <span class="text-[9px] text-slate-500 font-mono ml-3">admin@booklyfit.de - User Management</span>
+              </div>
+              <div
+                class="relative overflow-hidden rounded bg-slate-950 border border-slate-800"
+                @click="openLightbox('/screenshots/users.png', t('businessDashboard.users.alt'))"
+              >
+                <img
+                  src="/screenshots/users.png"
+                  :alt="t('businessDashboard.users.alt')"
+                  class="w-full object-cover object-top aspect-[16/10] select-none"
+                  @error="(e: any) => e.target.src = 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?q=80&w=800&auto=format&fit=crop'"
+                />
+              </div>
+
+              <!-- Overlapping Phone Mockup -->
+              <div
+                class="absolute bottom-[-20px] right-[-15px] w-[32%] rounded-2xl border-[3px] border-slate-800 bg-slate-950 p-0.5 shadow-2xl z-40 transition-all duration-305 hover:scale-105 hover:border-amber-500/50 cursor-zoom-in"
+                @click.stop="openLightbox('/screenshots/mobile_users.png', t('businessDashboard.users.alt'))"
+              >
+                <div class="w-6 h-1 bg-slate-800 rounded-full mx-auto mb-0.5"></div>
+                <div class="aspect-[9/16] relative overflow-hidden rounded-lg bg-slate-900">
+                  <img
+                    src="/screenshots/mobile_users.png"
+                    :alt="t('businessDashboard.users.alt')"
+                    class="w-full h-full object-cover object-top select-none"
+                    @error="(e: any) => e.target.src = 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=300&auto=format&fit=crop'"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- Stack Item 3: Settings -->
+            <div
+              @mouseenter="activeAdminTab = 'settings'"
+              :class="[
+                'absolute w-[85%] rounded-2xl border border-slate-800 bg-slate-900/40 p-2.5 shadow-2xl transition-all duration-500 ease-out cursor-pointer',
+                activeAdminTab === 'settings'
+                  ? 'z-30 scale-100 opacity-100 border-amber-500/30 translate-x-0 translate-y-0 rotate-0'
+                  : activeAdminTab === 'users'
+                  ? 'z-20 scale-[0.88] opacity-60 translate-x-[12%] translate-y-[8%] rotate-[2deg]'
+                  : 'z-10 scale-[0.78] opacity-30 translate-x-[22%] translate-y-[15%] rotate-[4deg]'
+              ]"
+            >
+              <div class="flex items-center gap-1 pb-2 px-1 border-b border-slate-850 mb-2">
+                <div class="w-2 h-2 rounded-full bg-red-500/60"></div>
+                <div class="w-2 h-2 rounded-full bg-yellow-500/60"></div>
+                <div class="w-2 h-2 rounded-full bg-green-500/60"></div>
+                <span class="text-[9px] text-slate-500 font-mono ml-3">admin@booklyfit.de - Gym Operations</span>
+              </div>
+              <div
+                class="relative overflow-hidden rounded bg-slate-950 border border-slate-800"
+                @click="openLightbox('/screenshots/settings.png', t('businessDashboard.settings.alt'))"
+              >
+                <img
+                  src="/screenshots/settings.png"
+                  :alt="t('businessDashboard.settings.alt')"
+                  class="w-full object-cover object-top aspect-[16/10] select-none"
+                  @error="(e: any) => e.target.src = 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?q=80&w=800&auto=format&fit=crop'"
+                />
+              </div>
+
+              <!-- Overlapping Phone Mockup -->
+              <div
+                class="absolute bottom-[-20px] right-[-15px] w-[32%] rounded-2xl border-[3px] border-slate-800 bg-slate-950 p-0.5 shadow-2xl z-40 transition-all duration-305 hover:scale-105 hover:border-amber-500/50 cursor-zoom-in"
+                @click.stop="openLightbox('/screenshots/mobile_settings.png', t('businessDashboard.settings.alt'))"
+              >
+                <div class="w-6 h-1 bg-slate-800 rounded-full mx-auto mb-0.5"></div>
+                <div class="aspect-[9/16] relative overflow-hidden rounded-lg bg-slate-900">
+                  <img
+                    src="/screenshots/mobile_settings.png"
+                    :alt="t('businessDashboard.settings.alt')"
+                    class="w-full h-full object-cover object-top select-none"
+                    @error="(e: any) => e.target.src = 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=300&auto=format&fit=crop'"
+                  />
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>
