@@ -45,6 +45,21 @@ export default defineNuxtConfig({
   vite: {
     plugins: [nxViteTsPaths(), tailwindcss()],
   },
+  app: {
+    head: {
+      title: 'BooklyFit',
+      link: [
+        { rel: 'icon', type: 'image/png', href: '/logo.png' }
+      ],
+      meta: [
+        { name: 'description', content: 'BooklyFit - Your ultimate gym and workout booking platform.' },
+        { property: 'og:title', content: 'BooklyFit' },
+        { property: 'og:description', content: 'BooklyFit - Your ultimate gym and workout booking platform.' },
+        { property: 'og:image', content: '/logo.png' },
+        { property: 'og:type', content: 'website' }
+      ]
+    }
+  }
 });
 
 
