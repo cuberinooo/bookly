@@ -1104,5 +1104,15 @@
       "enableBtn": "Enable Notifications",
       "laterBtn": "Configure Later"
     }
+  },
+  "notFound": {
+    "title": "Rest Day / Route Cancelled",
+    "description": "It seems the workout page you are looking for has been auto-cancelled due to lack of participants (or maybe you just went out of bounds). Don't worry, you won't be charged a class credit for this!",
+    "recoveryWod": "Recommended Recovery WOD",
+    "wodStep1": "Rehydrate (Drink 500ml water)",
+    "wodStep2": "Stretch it out (5x deep breaths)",
+    "wodStep3": "Return to safe training grounds",
+    "backHome": "Back to Safety (Home)",
+    "goDashboard": "My Dashboard"
   }
 }

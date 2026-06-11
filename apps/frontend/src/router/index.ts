@@ -108,6 +108,11 @@ const router = createRouter({
       component: () => import('../views/MonitorView.vue'),
       meta: { requiresAuth: true, roles: ['ROLE_MONITOR'] }
     },
+    {
+      path: '/:pathMatch(.*)*',
+      name: 'not-found',
+      component: () => import('../views/NotFoundView.vue')
+    }
   ],
 });
 

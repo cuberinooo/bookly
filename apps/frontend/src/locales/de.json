@@ -1105,5 +1105,15 @@
       "enableBtn": "Benachrichtigungen aktivieren",
       "laterBtn": "Später konfigurieren"
     }
+  },
+  "notFound": {
+    "title": "Rest Day / Route Storniert",
+    "description": "Es scheint, als ob die gesuchte Workout-Seite wegen mangelnder Teilnehmerzahl storniert wurde (oder du hast dich einfach verlaufen). Keine Sorge, es wird dir dafür kein Kursguthaben abgezogen!",
+    "recoveryWod": "Empfohlenes Erholungs-WOD",
+    "wodStep1": "Rehydrieren (Trinke 500ml Wasser)",
+    "wodStep2": "Dehnen (5x tief durchatmen)",
+    "wodStep3": "Zurück zum sicheren Trainingsgelände",
+    "backHome": "Zurück in Sicherheit (Home)",
+    "goDashboard": "Mein Dashboard"
   }
 }
