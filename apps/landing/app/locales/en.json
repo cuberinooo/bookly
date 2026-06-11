@@ -69,6 +69,49 @@
     "desc": "Join boutique gym owners who use BooklyFit to automate their daily booking schedules and athlete attendance tracking.",
     "btn": "Get Started with BooklyFit Today"
   },
+  "onboardingSection": {
+    "badge": "Setup Guide",
+    "title": "Your Journey to Success",
+    "subtitle": "We guide you through a step-by-step setup to launch your gym platform and member community in minutes.",
+    "tabAdmin": "For Gym Owners",
+    "tabMember": "For Athletes",
+    "adminSteps": {
+      "step1": {
+        "title": "Create Gym Profile",
+        "desc": "Set up your brand identity, contact email, and basic currency settings."
+      },
+      "step2": {
+        "title": "Configure Payments",
+        "desc": "Connect your Stripe account to handle subscriptions, memberships, and trial fees safely."
+      },
+      "step3": {
+        "title": "Create Course Timetable",
+        "desc": "Create training sessions, specify coach schedules, and define spot capacities."
+      },
+      "step4": {
+        "title": "Invite Your Members",
+        "desc": "Add your athletes and trainers to the platform to start class bookings immediately."
+      }
+    },
+    "memberSteps": {
+      "step1": {
+        "title": "Complete Health Profile",
+        "desc": "Confirm your personal info and default settings for your fitness account."
+      },
+      "step2": {
+        "title": "Book Your First Course",
+        "desc": "Search the weekly timetable and reserve your spot in a training session."
+      },
+      "step3": {
+        "title": "Explore Gym Meetups",
+        "desc": "Check out community-driven fitness meetups and outdoor events in your gym."
+      },
+      "step4": {
+        "title": "Log Personal Bests",
+        "desc": "Record your strength stats, benchmarks, and track your workout progress."
+      }
+    }
+  },
   "footer": {
     "terms": "Terms of Service",
     "privacy": "Privacy Policy",

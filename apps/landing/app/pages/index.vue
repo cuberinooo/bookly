@@ -7,6 +7,7 @@ import Button from 'primevue/button'
 
 const { t, locale } = useI18n()
 const showLegal = ref(false)
+const activeOnboardingTab = ref<'admin' | 'member'>('admin')
 
 // SEO Meta configuration
 useSeoMeta({
@@ -53,12 +54,34 @@ watch(locale, (newLocale) => {
   }
 })
 
+let revealObserver: IntersectionObserver | null = null
+
 onMounted(() => {
   window.addEventListener('keydown', handleKeyDown)
+
+  // Scroll reveal setup
+  revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('reveal-visible')
+        revealObserver?.unobserve(entry.target)
+      }
+    })
+  }, {
+    threshold: 0.1,
+    rootMargin: '0px 0px -50px 0px'
+  })
+
+  document.querySelectorAll('.reveal-on-scroll').forEach((el) => {
+    revealObserver?.observe(el)
+  })
 })
 
 onUnmounted(() => {
   window.removeEventListener('keydown', handleKeyDown)
+  if (revealObserver) {
+    revealObserver.disconnect()
+  }
 })
 </script>
 
@@ -71,10 +94,10 @@ onUnmounted(() => {
 
     <!-- Navigation -->
     <header class="sticky top-0 z-50 backdrop-blur-md bg-slate-950/80 border-b border-slate-900">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <img src="/logo.png" alt="BooklyFit Logo" class="w-15 h-15 object-contain rounded-xl shadow-[0_0_20px_rgba(245,158,11,0.3)]" />
-          <span class="text-xl font-black uppercase tracking-wider text-white">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between">
+        <div class="flex items-center gap-2 sm:gap-3">
+          <img src="/logo.png" alt="BooklyFit Logo" class="w-10 h-10 sm:w-12 sm:h-12 md:w-15 md:h-15 object-contain rounded-xl shadow-[0_0_20px_rgba(245,158,11,0.3)]" />
+          <span class="text-sm min-[360px]:text-base sm:text-lg md:text-xl font-black uppercase tracking-wider text-white hidden min-[360px]:inline-block">
             Bookly<span class="text-amber-500">Fit</span>
           </span>
         </div>
@@ -84,7 +107,7 @@ onUnmounted(() => {
           <button @click="scrollTo('admin-tools')" class="hover:text-amber-500 transition cursor-pointer">{{ t('nav.features') }}</button>
         </nav>
 
-        <div class="flex items-center gap-4">
+        <div class="flex items-center gap-2 sm:gap-4">
           <div class="lang-switcher">
             <Select
               v-model="locale"
@@ -101,16 +124,16 @@ onUnmounted(() => {
           <a
             href="https://app.booklyfit.de"
             target="_blank"
-            class="inline-flex items-center justify-center px-5 py-2.5 rounded-xl bg-amber-500 text-slate-950 font-bold text-sm tracking-wide shadow-[0_0_20px_rgba(245,158,11,0.2)] hover:bg-amber-400 hover:shadow-[0_0_25px_rgba(245,158,11,0.4)] transition duration-200"
+            class="inline-flex items-center justify-center px-3 py-2 sm:px-5 sm:py-2.5 rounded-xl bg-amber-500 text-slate-950 font-bold text-xs sm:text-sm tracking-wide shadow-[0_0_20px_rgba(245,158,11,0.2)] hover:bg-amber-400 hover:shadow-[0_0_25px_rgba(245,158,11,0.4)] transition duration-200"
           >
-            {{ t('nav.goToApp') }} <i class="pi pi-arrow-up-right ml-2 text-xs"></i>
+            {{ t('nav.goToApp') }} <i class="pi pi-arrow-up-right ml-1 sm:ml-2 text-[10px] sm:text-xs"></i>
           </a>
         </div>
       </div>
     </header>
 
     <!-- Hero Section -->
-    <section class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24 md:pt-28 md:pb-32 text-center">
+    <section class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24 md:pt-28 md:pb-32 text-center reveal-on-scroll reveal-fade">
       <div class="max-w-3xl mx-auto space-y-6">
         <h1 class="text-5xl sm:text-6xl md:text-7xl font-extrabold tracking-tight text-white leading-tight">
           {{ t('hero.title1') }} <br class="hidden sm:inline" />
@@ -140,7 +163,7 @@ onUnmounted(() => {
     </section>
 
     <!-- How It Works Section (B2C / Member Journey) -->
-    <section id="how-it-works" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 border-t border-slate-900">
+    <section id="how-it-works" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 border-t border-slate-900 reveal-on-scroll">
       <div class="text-center max-w-3xl mx-auto mb-16 space-y-4">
         <h2 class="text-sm font-bold text-amber-500 uppercase tracking-widest">{{ t('memberExperience.badge') }}</h2>
         <p class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">{{ t('memberExperience.title') }}</p>
@@ -270,7 +293,7 @@ onUnmounted(() => {
     </section>
 
     <!-- Built for Gym Owners & Admins Section -->
-    <section id="admin-tools" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 border-t border-slate-900 bg-slate-950">
+    <section id="admin-tools" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 border-t border-slate-900 bg-slate-950 reveal-on-scroll">
       <div class="text-center max-w-3xl mx-auto mb-16 space-y-4">
         <h2 class="text-sm font-bold text-amber-500 uppercase tracking-widest">{{ t('businessDashboard.badge') }}</h2>
         <p class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">{{ t('businessDashboard.title') }}</p>
@@ -280,7 +303,7 @@ onUnmounted(() => {
       </div>
 
       <!-- Feature 1: Payments -->
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center mb-20">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center mb-20 reveal-on-scroll">
         <div class="lg:col-span-5 space-y-5">
           <div class="w-12 h-12 rounded-xl bg-green-500/10 border border-green-500/20 text-green-500 flex items-center justify-center">
             <i class="pi pi-credit-card text-xl"></i>
@@ -323,7 +346,7 @@ onUnmounted(() => {
       </div>
 
       <!-- Feature 2: User Management -->
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center mb-20">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center mb-20 reveal-on-scroll">
         <div class="lg:col-span-7 lg:order-2 space-y-5">
           <div class="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-500 flex items-center justify-center">
             <i class="pi pi-users text-xl"></i>
@@ -366,7 +389,7 @@ onUnmounted(() => {
       </div>
 
       <!-- Feature 3: Settings -->
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center reveal-on-scroll">
         <div class="lg:col-span-5 space-y-5">
           <div class="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-500 flex items-center justify-center">
             <i class="pi pi-cog text-xl"></i>
@@ -409,8 +432,184 @@ onUnmounted(() => {
       </div>
     </section>
 
+    <!-- Onboarding Journey Section -->
+    <section id="onboarding" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 border-t border-slate-900 bg-slate-950/40 reveal-on-scroll">
+      <div class="text-center max-w-3xl mx-auto mb-12 space-y-4">
+        <h2 class="text-sm font-bold text-amber-500 uppercase tracking-widest">{{ t('onboardingSection.badge') }}</h2>
+        <p class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">{{ t('onboardingSection.title') }}</p>
+        <p class="justify-self-center text-slate-400 max-w-xl mx-auto">
+          {{ t('onboardingSection.subtitle') }}
+        </p>
+      </div>
+
+      <!-- Tab Switcher -->
+      <div class="flex justify-center mb-12">
+        <div class="inline-flex rounded-xl bg-slate-900 p-1 border border-slate-800">
+          <button
+            @click="activeOnboardingTab = 'admin'"
+            :class="[
+              'px-6 py-2.5 rounded-lg text-sm font-bold transition duration-200 cursor-pointer',
+              activeOnboardingTab === 'admin'
+                ? 'bg-amber-500 text-slate-950 shadow-md'
+                : 'text-slate-400 hover:text-white'
+            ]"
+          >
+            {{ t('onboardingSection.tabAdmin') }}
+          </button>
+          <button
+            @click="activeOnboardingTab = 'member'"
+            :class="[
+              'px-6 py-2.5 rounded-lg text-sm font-bold transition duration-200 cursor-pointer',
+              activeOnboardingTab === 'member'
+                ? 'bg-amber-500 text-slate-950 shadow-md'
+                : 'text-slate-400 hover:text-white'
+            ]"
+          >
+            {{ t('onboardingSection.tabMember') }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Steps Content -->
+      <div class="max-w-4xl mx-auto">
+        <!-- Gym Owners Stepper -->
+        <div v-if="activeOnboardingTab === 'admin'" class="relative border-l-2 border-slate-800 ml-4 md:ml-32 space-y-12">
+          <!-- Step 1 -->
+          <div class="relative pl-8 md:pl-12 group">
+            <div class="absolute -left-4 top-0 w-8 h-8 rounded-full bg-slate-950 border-2 border-amber-500 text-amber-500 flex items-center justify-center font-black text-sm group-hover:bg-amber-500 group-hover:text-slate-950 transition duration-200">
+              1
+            </div>
+            <div class="p-6 rounded-2xl bg-slate-900/40 border border-slate-800 hover:border-amber-500/20 transition duration-200">
+              <h3 class="text-lg font-bold text-white mb-2 flex items-center gap-2">
+                <i class="pi pi-user-plus text-amber-500 text-sm"></i>
+                {{ t('onboardingSection.adminSteps.step1.title') }}
+              </h3>
+              <p class="text-slate-400 text-sm leading-relaxed">
+                {{ t('onboardingSection.adminSteps.step1.desc') }}
+              </p>
+            </div>
+          </div>
+
+          <!-- Step 2 -->
+          <div class="relative pl-8 md:pl-12 group">
+            <div class="absolute -left-4 top-0 w-8 h-8 rounded-full bg-slate-955 border-2 border-amber-500 text-amber-500 flex items-center justify-center font-black text-sm group-hover:bg-amber-500 group-hover:text-slate-950 transition duration-200">
+              2
+            </div>
+            <div class="p-6 rounded-2xl bg-slate-900/40 border border-slate-800 hover:border-amber-500/20 transition duration-200">
+              <h3 class="text-lg font-bold text-white mb-2 flex items-center gap-2">
+                <i class="pi pi-credit-card text-amber-500 text-sm"></i>
+                {{ t('onboardingSection.adminSteps.step2.title') }}
+              </h3>
+              <p class="text-slate-400 text-sm leading-relaxed">
+                {{ t('onboardingSection.adminSteps.step2.desc') }}
+              </p>
+            </div>
+          </div>
+
+          <!-- Step 3 -->
+          <div class="relative pl-8 md:pl-12 group">
+            <div class="absolute -left-4 top-0 w-8 h-8 rounded-full bg-slate-955 border-2 border-amber-500 text-amber-500 flex items-center justify-center font-black text-sm group-hover:bg-amber-500 group-hover:text-slate-950 transition duration-200">
+              3
+            </div>
+            <div class="p-6 rounded-2xl bg-slate-900/40 border border-slate-800 hover:border-amber-500/20 transition duration-200">
+              <h3 class="text-lg font-bold text-white mb-2 flex items-center gap-2">
+                <i class="pi pi-calendar text-amber-500 text-sm"></i>
+                {{ t('onboardingSection.adminSteps.step3.title') }}
+              </h3>
+              <p class="text-slate-400 text-sm leading-relaxed">
+                {{ t('onboardingSection.adminSteps.step3.desc') }}
+              </p>
+            </div>
+          </div>
+
+          <!-- Step 4 -->
+          <div class="relative pl-8 md:pl-12 group">
+            <div class="absolute -left-4 top-0 w-8 h-8 rounded-full bg-slate-955 border-2 border-amber-500 text-amber-500 flex items-center justify-center font-black text-sm group-hover:bg-amber-500 group-hover:text-slate-950 transition duration-200">
+              4
+            </div>
+            <div class="p-6 rounded-2xl bg-slate-900/40 border border-slate-800 hover:border-amber-500/20 transition duration-200">
+              <h3 class="text-lg font-bold text-white mb-2 flex items-center gap-2">
+                <i class="pi pi-users text-amber-500 text-sm"></i>
+                {{ t('onboardingSection.adminSteps.step4.title') }}
+              </h3>
+              <p class="text-slate-400 text-sm leading-relaxed">
+                {{ t('onboardingSection.adminSteps.step4.desc') }}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Athletes Stepper -->
+        <div v-else class="relative border-l-2 border-slate-800 ml-4 md:ml-32 space-y-12">
+          <!-- Step 1 -->
+          <div class="relative pl-8 md:pl-12 group">
+            <div class="absolute -left-4 top-0 w-8 h-8 rounded-full bg-slate-955 border-2 border-amber-500 text-amber-500 flex items-center justify-center font-black text-sm group-hover:bg-amber-500 group-hover:text-slate-950 transition duration-200">
+              1
+            </div>
+            <div class="p-6 rounded-2xl bg-slate-900/40 border border-slate-800 hover:border-amber-500/20 transition duration-200">
+              <h3 class="text-lg font-bold text-white mb-2 flex items-center gap-2">
+                <i class="pi pi-user-edit text-amber-500 text-sm"></i>
+                {{ t('onboardingSection.memberSteps.step1.title') }}
+              </h3>
+              <p class="text-slate-400 text-sm leading-relaxed">
+                {{ t('onboardingSection.memberSteps.step1.desc') }}
+              </p>
+            </div>
+          </div>
+
+          <!-- Step 2 -->
+          <div class="relative pl-8 md:pl-12 group">
+            <div class="absolute -left-4 top-0 w-8 h-8 rounded-full bg-slate-955 border-2 border-amber-500 text-amber-500 flex items-center justify-center font-black text-sm group-hover:bg-amber-500 group-hover:text-slate-950 transition duration-200">
+              2
+            </div>
+            <div class="p-6 rounded-2xl bg-slate-900/40 border border-slate-800 hover:border-amber-500/20 transition duration-200">
+              <h3 class="text-lg font-bold text-white mb-2 flex items-center gap-2">
+                <i class="pi pi-calendar-plus text-amber-500 text-sm"></i>
+                {{ t('onboardingSection.memberSteps.step2.title') }}
+              </h3>
+              <p class="text-slate-400 text-sm leading-relaxed">
+                {{ t('onboardingSection.memberSteps.step2.desc') }}
+              </p>
+            </div>
+          </div>
+
+          <!-- Step 3 -->
+          <div class="relative pl-8 md:pl-12 group">
+            <div class="absolute -left-4 top-0 w-8 h-8 rounded-full bg-slate-955 border-2 border-amber-500 text-amber-500 flex items-center justify-center font-black text-sm group-hover:bg-amber-500 group-hover:text-slate-950 transition duration-200">
+              3
+            </div>
+            <div class="p-6 rounded-2xl bg-slate-900/40 border border-slate-800 hover:border-amber-500/20 transition duration-200">
+              <h3 class="text-lg font-bold text-white mb-2 flex items-center gap-2">
+                <i class="pi pi-map-marker text-amber-500 text-sm"></i>
+                {{ t('onboardingSection.memberSteps.step3.title') }}
+              </h3>
+              <p class="text-slate-400 text-sm leading-relaxed">
+                {{ t('onboardingSection.memberSteps.step3.desc') }}
+              </p>
+            </div>
+          </div>
+
+          <!-- Step 4 -->
+          <div class="relative pl-8 md:pl-12 group">
+            <div class="absolute -left-4 top-0 w-8 h-8 rounded-full bg-slate-955 border-2 border-amber-500 text-amber-500 flex items-center justify-center font-black text-sm group-hover:bg-amber-500 group-hover:text-slate-950 transition duration-200">
+              4
+            </div>
+            <div class="p-6 rounded-2xl bg-slate-900/40 border border-slate-800 hover:border-amber-500/20 transition duration-200">
+              <h3 class="text-lg font-bold text-white mb-2 flex items-center gap-2">
+                <i class="pi pi-chart-line text-amber-500 text-sm"></i>
+                {{ t('onboardingSection.memberSteps.step4.title') }}
+              </h3>
+              <p class="text-slate-400 text-sm leading-relaxed">
+                {{ t('onboardingSection.memberSteps.step4.desc') }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- Call to Action Banner -->
-    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 reveal-on-scroll reveal-fade">
       <div class="rounded-3xl overflow-hidden bg-amber-500 px-4 py-12 shadow-2xl text-center">
         <h2 class="text-3xl sm:text-5xl font-black text-slate-950 relative z-10 leading-tight">
           {{ t('cta.title') }}
@@ -535,6 +734,30 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
+/* Scroll Reveal Animations */
+.reveal-on-scroll {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reveal-fade {
+  transform: scale(0.98);
+}
+
+.reveal-visible {
+  opacity: 1 !important;
+  transform: translateY(0) scale(1) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-on-scroll {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}
+
 /* Scoped fallback animations/styles if needed */
 .bg-pb-card {
   transition: transform 0.2s ease, border-color 0.2s ease;

@@ -69,6 +69,49 @@
     "desc": "Schließe dich Gym-Besitzern an, die BooklyFit nutzen, um ihre wöchentlichen Kurspläne zu automatisieren und die Anwesenheit ihrer Athleten zu tracken.",
     "btn": "Jetzt mit BooklyFit starten"
   },
+  "onboardingSection": {
+    "badge": "Einrichtung",
+    "title": "Dein Weg zum Start",
+    "subtitle": "Wir führen dich Schritt für Schritt durch die Einrichtung, um dein Gym und deine Community in wenigen Minuten zu starten.",
+    "tabAdmin": "Für Gym-Besitzer",
+    "tabMember": "Für Athleten",
+    "adminSteps": {
+      "step1": {
+        "title": "Gym-Profil erstellen",
+        "desc": "Richte deine Markenidentität, Kontakt-E-Mail und Währungseinstellungen ein."
+      },
+      "step2": {
+        "title": "Zahlungen konfigurieren",
+        "desc": "Verbinde dein Stripe-Konto, um Abos, Mitgliedschaften und Anmeldegebühren sicher abzuwickeln."
+      },
+      "step3": {
+        "title": "Kurspläne erstellen",
+        "desc": "Erstelle Trainingseinheiten, trage Trainer-Kurspläne ein und definiere Teilnehmerzahlen."
+      },
+      "step4": {
+        "title": "Mitglieder einladen",
+        "desc": "Füge deine Athleten und Trainer zur Plattform hinzu, um die Kursbuchung direkt zu starten."
+      }
+    },
+    "memberSteps": {
+      "step1": {
+        "title": "Gesundheitsprofil ausfüllen",
+        "desc": "Bestätige deine persönlichen Daten und Standardeinstellungen für dein Fitness-Konto."
+      },
+      "step2": {
+        "title": "Ersten Kurs buchen",
+        "desc": "Durchsuche den Wochenplan und reserviere deinen Platz in einer Trainingseinheit."
+      },
+      "step3": {
+        "title": "Community-Meetups entdecken",
+        "desc": "Entdecke gemeinschaftliche Fitness-Treffen und Outdoor-Events in deinem Gym."
+      },
+      "step4": {
+        "title": "Bestleistungen eintragen",
+        "desc": "Trage deine Kraftwerte und Benchmarks ein, um deine Trainingsfortschritte zu verfolgen."
+      }
+    }
+  },
   "footer": {
     "terms": "Nutzungsbedingungen",
     "privacy": "Datenschutzerklärung",
