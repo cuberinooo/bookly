@@ -60,7 +60,26 @@
       "b1": "Zahlungsanalysen in Echtzeit",
       "b2": "Individuelle Abo-Modelle",
       "b3": "Integrierter Stripe Connect-Flow",
-      "alt": "Admin Zahlungs-Dashboard"
+      "alt": "Admin Zahlungs-Dashboard",
+      "subTabs": {
+        "analytics": "Analysen",
+        "pricing": "Preiskonfiguration",
+        "member": "Mitglieder-Abo"
+      },
+      "pricing": {
+        "desc": "Konfiguriere individuelle Abonnement-Preise, definiere Abrechnungszyklen und verwalte Gym-Tarife mit direkter Stripe-Synchronisierung.",
+        "b1": "Stripe-Preistarif-Synchronisierung",
+        "b2": "Anpassbare Mitgliedschaftsstufen",
+        "b3": "Sofortige Tarifaktualisierungen",
+        "alt": "Admin Preiskonfigurationen"
+      },
+      "member": {
+        "desc": "Biete Athleten eine transparente Übersicht über ihre aktiven Abonnements, den Zahlungsverlauf und den direkten Download von PDF-Rechnungen.",
+        "b1": "Aktive Abonnementübersicht",
+        "b2": "PDF-Rechnungsdownloads",
+        "b3": "Sicheres Self-Service-Mitgliederportal",
+        "alt": "Mitglieder-Abo-Portal"
+      }
     },
     "users": {
       "title": "Mühelose Mitglieder- & Trainer-Verwaltung",

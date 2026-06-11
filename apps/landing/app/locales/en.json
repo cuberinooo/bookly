@@ -60,7 +60,26 @@
       "b1": "Real-time payment analytics",
       "b2": "Subscription plan customizer",
       "b3": "Integrated Stripe Connect flow",
-      "alt": "Admin Payments & Subscriptions"
+      "alt": "Admin Payments & Subscriptions",
+      "subTabs": {
+        "analytics": "Analytics",
+        "pricing": "Pricing Config",
+        "member": "Member Billing"
+      },
+      "pricing": {
+        "desc": "Configure custom subscription pricing tiers, define billing frequencies, and manage gym membership plans with Stripe backend integration.",
+        "b1": "Stripe pricing plan synchronizer",
+        "b2": "Customizable membership levels",
+        "b3": "Instant price updates",
+        "alt": "Admin Pricing Configurations"
+      },
+      "member": {
+        "desc": "Provide athletes with a clear breakdown of their active subscriptions, billing history, and PDF invoice downloads.",
+        "b1": "Active subscription summary",
+        "b2": "PDF billing receipt downloads",
+        "b3": "Secure self-service billing portal",
+        "alt": "Member Subscription Portal"
+      }
     },
     "users": {
       "title": "Effortless User & Member Management",

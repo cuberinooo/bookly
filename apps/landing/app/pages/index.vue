@@ -9,6 +9,7 @@ const { t, locale } = useI18n()
 const showLegal = ref(false)
 const activeOnboardingTab = ref<'admin' | 'member'>('admin')
 const activeAdminTab = ref<'payments' | 'users' | 'settings'>('payments')
+const activePaymentSubTab = ref<'analytics' | 'pricing' | 'member'>('analytics')
 
 // SEO Meta configuration
 useSeoMeta({
@@ -409,20 +410,89 @@ onUnmounted(() => {
           <!-- Active Tab Content -->
           <div v-show="activeAdminTab === 'payments'" class="space-y-4 text-center">
             <h3 class="text-xl font-bold text-white">{{ t('businessDashboard.payments.title') }}</h3>
-            <p class="text-sm text-slate-400 leading-relaxed max-w-lg mx-auto">
-              {{ t('businessDashboard.payments.desc') }}
-            </p>
-            <ul class="flex flex-wrap justify-center gap-4 text-xs font-semibold text-slate-300 max-w-md mx-auto">
-              <li class="flex items-center gap-1.5 bg-slate-900/40 border border-slate-800/60 px-3 py-1.5 rounded-lg">
-                <i class="pi pi-check text-green-500 text-[10px]"></i> {{ t('businessDashboard.payments.b1') }}
-              </li>
-              <li class="flex items-center gap-1.5 bg-slate-900/40 border border-slate-800/60 px-3 py-1.5 rounded-lg">
-                <i class="pi pi-check text-green-500 text-[10px]"></i> {{ t('businessDashboard.payments.b2') }}
-              </li>
-              <li class="flex items-center gap-1.5 bg-slate-900/40 border border-slate-800/60 px-3 py-1.5 rounded-lg">
-                <i class="pi pi-check text-green-500 text-[10px]"></i> {{ t('businessDashboard.payments.b3') }}
-              </li>
-            </ul>
+            
+            <!-- Payments Sub-tabs -->
+            <div class="flex justify-center gap-1.5 p-0.5 bg-slate-900/80 border border-slate-800 rounded-lg max-w-xs mx-auto my-3">
+              <button
+                @click="activePaymentSubTab = 'analytics'"
+                :class="[
+                  'flex-1 py-1 rounded text-[10px] font-bold transition-all duration-200 cursor-pointer',
+                  activePaymentSubTab === 'analytics' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'text-slate-400 hover:text-white'
+                ]"
+              >
+                {{ t('businessDashboard.payments.subTabs.analytics') }}
+              </button>
+              <button
+                @click="activePaymentSubTab = 'pricing'"
+                :class="[
+                  'flex-1 py-1 rounded text-[10px] font-bold transition-all duration-200 cursor-pointer',
+                  activePaymentSubTab === 'pricing' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'text-slate-400 hover:text-white'
+                ]"
+              >
+                {{ t('businessDashboard.payments.subTabs.pricing') }}
+              </button>
+              <button
+                @click="activePaymentSubTab = 'member'"
+                :class="[
+                  'flex-1 py-1 rounded text-[10px] font-bold transition-all duration-200 cursor-pointer',
+                  activePaymentSubTab === 'member' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' : 'text-slate-400 hover:text-white'
+                ]"
+              >
+                {{ t('businessDashboard.payments.subTabs.member') }}
+              </button>
+            </div>
+
+            <!-- Sub-tab descriptive content -->
+            <div v-show="activePaymentSubTab === 'analytics'">
+              <p class="text-sm text-slate-400 leading-relaxed max-w-lg mx-auto mb-4">
+                {{ t('businessDashboard.payments.desc') }}
+              </p>
+              <ul class="flex flex-wrap justify-center gap-3 text-xs font-semibold text-slate-300 max-w-md mx-auto">
+                <li class="flex items-center gap-1.5 bg-slate-905 border border-slate-800/60 px-3 py-1.5 rounded-lg">
+                  <i class="pi pi-check text-green-500 text-[10px]"></i> {{ t('businessDashboard.payments.b1') }}
+                </li>
+                <li class="flex items-center gap-1.5 bg-slate-905 border border-slate-800/60 px-3 py-1.5 rounded-lg">
+                  <i class="pi pi-check text-green-500 text-[10px]"></i> {{ t('businessDashboard.payments.b2') }}
+                </li>
+                <li class="flex items-center gap-1.5 bg-slate-905 border border-slate-800/60 px-3 py-1.5 rounded-lg">
+                  <i class="pi pi-check text-green-500 text-[10px]"></i> {{ t('businessDashboard.payments.b3') }}
+                </li>
+              </ul>
+            </div>
+
+            <div v-show="activePaymentSubTab === 'pricing'">
+              <p class="text-sm text-slate-400 leading-relaxed max-w-lg mx-auto mb-4">
+                {{ t('businessDashboard.payments.pricing.desc') }}
+              </p>
+              <ul class="flex flex-wrap justify-center gap-3 text-xs font-semibold text-slate-300 max-w-md mx-auto">
+                <li class="flex items-center gap-1.5 bg-slate-905 border border-slate-800/60 px-3 py-1.5 rounded-lg">
+                  <i class="pi pi-check text-amber-500 text-[10px]"></i> {{ t('businessDashboard.payments.pricing.b1') }}
+                </li>
+                <li class="flex items-center gap-1.5 bg-slate-905 border border-slate-800/60 px-3 py-1.5 rounded-lg">
+                  <i class="pi pi-check text-amber-500 text-[10px]"></i> {{ t('businessDashboard.payments.pricing.b2') }}
+                </li>
+                <li class="flex items-center gap-1.5 bg-slate-905 border border-slate-800/60 px-3 py-1.5 rounded-lg">
+                  <i class="pi pi-check text-amber-500 text-[10px]"></i> {{ t('businessDashboard.payments.pricing.b3') }}
+                </li>
+              </ul>
+            </div>
+
+            <div v-show="activePaymentSubTab === 'member'">
+              <p class="text-sm text-slate-400 leading-relaxed max-w-lg mx-auto mb-4">
+                {{ t('businessDashboard.payments.member.desc') }}
+              </p>
+              <ul class="flex flex-wrap justify-center gap-3 text-xs font-semibold text-slate-300 max-w-md mx-auto">
+                <li class="flex items-center gap-1.5 bg-slate-905 border border-slate-800/60 px-3 py-1.5 rounded-lg">
+                  <i class="pi pi-check text-blue-500 text-[10px]"></i> {{ t('businessDashboard.payments.member.b1') }}
+                </li>
+                <li class="flex items-center gap-1.5 bg-slate-905 border border-slate-800/60 px-3 py-1.5 rounded-lg">
+                  <i class="pi pi-check text-blue-500 text-[10px]"></i> {{ t('businessDashboard.payments.member.b2') }}
+                </li>
+                <li class="flex items-center gap-1.5 bg-slate-905 border border-slate-800/60 px-3 py-1.5 rounded-lg">
+                  <i class="pi pi-check text-blue-500 text-[10px]"></i> {{ t('businessDashboard.payments.member.b3') }}
+                </li>
+              </ul>
+            </div>
           </div>
 
           <div v-show="activeAdminTab === 'users'" class="space-y-4 text-center">
@@ -431,13 +501,13 @@ onUnmounted(() => {
               {{ t('businessDashboard.users.desc') }}
             </p>
             <ul class="flex flex-wrap justify-center gap-4 text-xs font-semibold text-slate-300 max-w-md mx-auto">
-              <li class="flex items-center gap-1.5 bg-slate-900/40 border border-slate-800/60 px-3 py-1.5 rounded-lg">
+              <li class="flex items-center gap-1.5 bg-slate-905 border border-slate-800/60 px-3 py-1.5 rounded-lg">
                 <i class="pi pi-check text-amber-500 text-[10px]"></i> {{ t('businessDashboard.users.b1') }}
               </li>
-              <li class="flex items-center gap-1.5 bg-slate-900/40 border border-slate-800/60 px-3 py-1.5 rounded-lg">
+              <li class="flex items-center gap-1.5 bg-slate-905 border border-slate-800/60 px-3 py-1.5 rounded-lg">
                 <i class="pi pi-check text-amber-500 text-[10px]"></i> {{ t('businessDashboard.users.b2') }}
               </li>
-              <li class="flex items-center gap-1.5 bg-slate-900/40 border border-slate-800/60 px-3 py-1.5 rounded-lg">
+              <li class="flex items-center gap-1.5 bg-slate-905 border border-slate-800/60 px-3 py-1.5 rounded-lg">
                 <i class="pi pi-check text-amber-500 text-[10px]"></i> {{ t('businessDashboard.users.b3') }}
               </li>
             </ul>
@@ -449,13 +519,13 @@ onUnmounted(() => {
               {{ t('businessDashboard.settings.desc') }}
             </p>
             <ul class="flex flex-wrap justify-center gap-4 text-xs font-semibold text-slate-300 max-w-md mx-auto">
-              <li class="flex items-center gap-1.5 bg-slate-900/40 border border-slate-800/60 px-3 py-1.5 rounded-lg">
+              <li class="flex items-center gap-1.5 bg-slate-905 border border-slate-800/60 px-3 py-1.5 rounded-lg">
                 <i class="pi pi-check text-blue-500 text-[10px]"></i> {{ t('businessDashboard.settings.b1') }}
               </li>
-              <li class="flex items-center gap-1.5 bg-slate-900/40 border border-slate-800/60 px-3 py-1.5 rounded-lg">
+              <li class="flex items-center gap-1.5 bg-slate-905 border border-slate-800/60 px-3 py-1.5 rounded-lg">
                 <i class="pi pi-check text-blue-500 text-[10px]"></i> {{ t('businessDashboard.settings.b2') }}
               </li>
-              <li class="flex items-center gap-1.5 bg-slate-900/40 border border-slate-800/60 px-3 py-1.5 rounded-lg">
+              <li class="flex items-center gap-1.5 bg-slate-905 border border-slate-800/60 px-3 py-1.5 rounded-lg">
                 <i class="pi pi-check text-blue-500 text-[10px]"></i> {{ t('businessDashboard.settings.b3') }}
               </li>
             </ul>
@@ -467,8 +537,12 @@ onUnmounted(() => {
             <div
               class="absolute top-0 left-0 w-[82%] rounded-xl border border-slate-800 bg-slate-950 p-1.5 shadow-2xl cursor-zoom-in"
               @click="openLightbox(
-                activeAdminTab === 'payments' ? '/screenshots/payments.png' : activeAdminTab === 'users' ? '/screenshots/users.png' : '/screenshots/settings.png',
-                activeAdminTab === 'payments' ? t('businessDashboard.payments.alt') : activeAdminTab === 'users' ? t('businessDashboard.users.alt') : t('businessDashboard.settings.alt')
+                activeAdminTab === 'payments'
+                  ? (activePaymentSubTab === 'analytics' ? '/screenshots/payments.png' : activePaymentSubTab === 'pricing' ? '/screenshots/membership_pricing_desktop.png' : '/screenshots/user_subscription_desktop.png')
+                  : (activeAdminTab === 'users' ? '/screenshots/users.png' : '/screenshots/settings.png'),
+                activeAdminTab === 'payments'
+                  ? (activePaymentSubTab === 'analytics' ? t('businessDashboard.payments.alt') : activePaymentSubTab === 'pricing' ? t('businessDashboard.payments.pricing.alt') : t('businessDashboard.payments.member.alt'))
+                  : (activeAdminTab === 'users' ? t('businessDashboard.users.alt') : t('businessDashboard.settings.alt'))
               )"
             >
               <div class="flex items-center gap-1 pb-1.5 px-1 border-b border-slate-900 mb-1.5">
@@ -478,8 +552,12 @@ onUnmounted(() => {
               </div>
               <div class="aspect-[16/10] relative overflow-hidden rounded bg-slate-900">
                 <img
-                  :src="activeAdminTab === 'payments' ? '/screenshots/payments.png' : activeAdminTab === 'users' ? '/screenshots/users.png' : '/screenshots/settings.png'"
-                  :alt="activeAdminTab === 'payments' ? t('businessDashboard.payments.alt') : activeAdminTab === 'users' ? t('businessDashboard.users.alt') : t('businessDashboard.settings.alt')"
+                  :src="activeAdminTab === 'payments'
+                    ? (activePaymentSubTab === 'analytics' ? '/screenshots/payments.png' : activePaymentSubTab === 'pricing' ? '/screenshots/membership_pricing_desktop.png' : '/screenshots/user_subscription_desktop.png')
+                    : (activeAdminTab === 'users' ? '/screenshots/users.png' : '/screenshots/settings.png')"
+                  :alt="activeAdminTab === 'payments'
+                    ? (activePaymentSubTab === 'analytics' ? t('businessDashboard.payments.alt') : activePaymentSubTab === 'pricing' ? t('businessDashboard.payments.pricing.alt') : t('businessDashboard.payments.member.alt'))
+                    : (activeAdminTab === 'users' ? t('businessDashboard.users.alt') : t('businessDashboard.settings.alt'))"
                   class="w-full h-full object-cover object-top select-none"
                   @error="(e: any) => e.target.src = 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?q=80&w=800&auto=format&fit=crop'"
                 />
@@ -487,6 +565,7 @@ onUnmounted(() => {
             </div>
             <!-- Mobile Phone Mockup -->
             <div
+              v-if="activeAdminTab === 'payments' ? activePaymentSubTab === 'analytics' : true"
               class="absolute bottom-0 right-2 w-[34%] rounded-2xl border-[3px] border-slate-800 bg-slate-950 p-1 shadow-2xl z-10 cursor-zoom-in"
               @click="openLightbox(
                 activeAdminTab === 'payments' ? '/screenshots/mobile_payments.png' : activeAdminTab === 'users' ? '/screenshots/mobile_users.png' : '/screenshots/mobile_settings.png',
@@ -537,20 +616,92 @@ onUnmounted(() => {
                 <h3 class="text-lg font-bold text-white transition-colors duration-200">
                   {{ t('businessDashboard.payments.title') }}
                 </h3>
-                <p class="text-xs text-slate-400 leading-relaxed transition-all duration-350" v-show="activeAdminTab === 'payments'">
-                  {{ t('businessDashboard.payments.desc') }}
-                </p>
-                <ul class="space-y-2 text-xs font-semibold text-slate-300" v-show="activeAdminTab === 'payments'">
-                  <li class="flex items-center gap-2">
-                    <i class="pi pi-check text-green-500 text-[10px]"></i> {{ t('businessDashboard.payments.b1') }}
-                  </li>
-                  <li class="flex items-center gap-2">
-                    <i class="pi pi-check text-green-500 text-[10px]"></i> {{ t('businessDashboard.payments.b2') }}
-                  </li>
-                  <li class="flex items-center gap-2">
-                    <i class="pi pi-check text-green-500 text-[10px]"></i> {{ t('businessDashboard.payments.b3') }}
-                  </li>
-                </ul>
+
+                <!-- Sub-tabs button group -->
+                <div class="flex gap-1.5 p-0.5 bg-slate-950/80 border border-slate-900 rounded-lg max-w-sm my-2.5" v-show="activeAdminTab === 'payments'">
+                  <button
+                    @click.stop="activePaymentSubTab = 'analytics'"
+                    :class="[
+                      'flex-1 py-1 rounded text-[10px] font-bold transition-all duration-200 cursor-pointer',
+                      activePaymentSubTab === 'analytics' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'text-slate-400 hover:text-white'
+                    ]"
+                  >
+                    {{ t('businessDashboard.payments.subTabs.analytics') }}
+                  </button>
+                  <button
+                    @click.stop="activePaymentSubTab = 'pricing'"
+                    :class="[
+                      'flex-1 py-1 rounded text-[10px] font-bold transition-all duration-200 cursor-pointer',
+                      activePaymentSubTab === 'pricing' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'text-slate-400 hover:text-white'
+                    ]"
+                  >
+                    {{ t('businessDashboard.payments.subTabs.pricing') }}
+                  </button>
+                  <button
+                    @click.stop="activePaymentSubTab = 'member'"
+                    :class="[
+                      'flex-1 py-1 rounded text-[10px] font-bold transition-all duration-200 cursor-pointer',
+                      activePaymentSubTab === 'member' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' : 'text-slate-400 hover:text-white'
+                    ]"
+                  >
+                    {{ t('businessDashboard.payments.subTabs.member') }}
+                  </button>
+                </div>
+
+                <!-- Sub-tab contents -->
+                <div v-show="activeAdminTab === 'payments'">
+                  <div v-show="activePaymentSubTab === 'analytics'" class="space-y-2.5">
+                    <p class="text-xs text-slate-400 leading-relaxed transition-all duration-350">
+                      {{ t('businessDashboard.payments.desc') }}
+                    </p>
+                    <ul class="space-y-1.5 text-xs font-semibold text-slate-300">
+                      <li class="flex items-center gap-2">
+                        <i class="pi pi-check text-green-500 text-[10px]"></i> {{ t('businessDashboard.payments.b1') }}
+                      </li>
+                      <li class="flex items-center gap-2">
+                        <i class="pi pi-check text-green-500 text-[10px]"></i> {{ t('businessDashboard.payments.b2') }}
+                      </li>
+                      <li class="flex items-center gap-2">
+                        <i class="pi pi-check text-green-500 text-[10px]"></i> {{ t('businessDashboard.payments.b3') }}
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div v-show="activePaymentSubTab === 'pricing'" class="space-y-2.5">
+                    <p class="text-xs text-slate-400 leading-relaxed transition-all duration-350">
+                      {{ t('businessDashboard.payments.pricing.desc') }}
+                    </p>
+                    <ul class="space-y-1.5 text-xs font-semibold text-slate-300">
+                      <li class="flex items-center gap-2">
+                        <i class="pi pi-check text-amber-500 text-[10px]"></i> {{ t('businessDashboard.payments.pricing.b1') }}
+                      </li>
+                      <li class="flex items-center gap-2">
+                        <i class="pi pi-check text-amber-500 text-[10px]"></i> {{ t('businessDashboard.payments.pricing.b2') }}
+                      </li>
+                      <li class="flex items-center gap-2">
+                        <i class="pi pi-check text-amber-500 text-[10px]"></i> {{ t('businessDashboard.payments.pricing.b3') }}
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div v-show="activePaymentSubTab === 'member'" class="space-y-2.5">
+                    <p class="text-xs text-slate-400 leading-relaxed transition-all duration-350">
+                      {{ t('businessDashboard.payments.member.desc') }}
+                    </p>
+                    <ul class="space-y-1.5 text-xs font-semibold text-slate-300">
+                      <li class="flex items-center gap-2">
+                        <i class="pi pi-check text-blue-500 text-[10px]"></i> {{ t('businessDashboard.payments.member.b1') }}
+                      </li>
+                      <li class="flex items-center gap-2">
+                        <i class="pi pi-check text-blue-500 text-[10px]"></i> {{ t('businessDashboard.payments.member.b2') }}
+                      </li>
+                      <li class="flex items-center gap-2">
+                        <i class="pi pi-check text-blue-500 text-[10px]"></i> {{ t('businessDashboard.payments.member.b3') }}
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+
               </div>
             </div>
           </div>
@@ -664,22 +815,34 @@ onUnmounted(() => {
                 <div class="w-2 h-2 rounded-full bg-red-500/60"></div>
                 <div class="w-2 h-2 rounded-full bg-yellow-500/60"></div>
                 <div class="w-2 h-2 rounded-full bg-green-500/60"></div>
-                <span class="text-[9px] text-slate-500 font-mono ml-3">admin@booklyfit.de - Payments & Subscriptions</span>
+                <span class="text-[9px] text-slate-500 font-mono ml-3">
+                  {{
+                    activePaymentSubTab === 'analytics'
+                      ? 'admin@booklyfit.de - Payments & Subscriptions'
+                      : activePaymentSubTab === 'pricing'
+                      ? 'admin@booklyfit.de - Membership Pricing Settings'
+                      : 'member@booklyfit.de - Subscription Invoices & Billing'
+                  }}
+                </span>
               </div>
               <div
                 class="relative overflow-hidden rounded bg-slate-950 border border-slate-800"
-                @click="openLightbox('/screenshots/payments.png', t('businessDashboard.payments.alt'))"
+                @click="openLightbox(
+                  activePaymentSubTab === 'analytics' ? '/screenshots/payments.png' : activePaymentSubTab === 'pricing' ? '/screenshots/membership_pricing_desktop.png' : '/screenshots/user_subscription_desktop.png',
+                  activePaymentSubTab === 'analytics' ? t('businessDashboard.payments.alt') : activePaymentSubTab === 'pricing' ? t('businessDashboard.payments.pricing.alt') : t('businessDashboard.payments.member.alt')
+                )"
               >
                 <img
-                  src="/screenshots/payments.png"
-                  :alt="t('businessDashboard.payments.alt')"
-                  class="w-full object-cover object-top aspect-[16/10] select-none"
+                  :src="activePaymentSubTab === 'analytics' ? '/screenshots/payments.png' : activePaymentSubTab === 'pricing' ? '/screenshots/membership_pricing_desktop.png' : '/screenshots/user_subscription_desktop.png'"
+                  :alt="activePaymentSubTab === 'analytics' ? t('businessDashboard.payments.alt') : activePaymentSubTab === 'pricing' ? t('businessDashboard.payments.pricing.alt') : t('businessDashboard.payments.member.alt')"
+                  class="w-full object-cover object-top aspect-[16/10] select-none transition-all duration-300"
                   @error="(e: any) => e.target.src = 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?q=80&w=800&auto=format&fit=crop'"
                 />
               </div>
 
-              <!-- Overlapping Phone Mockup -->
+              <!-- Overlapping Phone Mockup (Only relevant for payment analytics layout) -->
               <div
+                v-if="activePaymentSubTab === 'analytics'"
                 class="absolute bottom-[-20px] right-[-15px] w-[32%] rounded-2xl border-[3px] border-slate-800 bg-slate-950 p-0.5 shadow-2xl z-40 transition-all duration-305 hover:scale-105 hover:border-amber-500/50 cursor-zoom-in"
                 @click.stop="openLightbox('/screenshots/mobile_payments.png', t('businessDashboard.payments.alt'))"
               >
@@ -727,7 +890,7 @@ onUnmounted(() => {
 
               <!-- Overlapping Phone Mockup -->
               <div
-                class="absolute bottom-[-20px] right-[-15px] w-[32%] rounded-2xl border-[3px] border-slate-800 bg-slate-950 p-0.5 shadow-2xl z-40 transition-all duration-305 hover:scale-105 hover:border-amber-500/50 cursor-zoom-in"
+                class="absolute bottom-[-20px] right-[-15px] w-[32%] rounded-2xl border-[3px] border-slate-800 bg-slate-955 p-0.5 shadow-2xl z-40 transition-all duration-305 hover:scale-105 hover:border-amber-500/50 cursor-zoom-in"
                 @click.stop="openLightbox('/screenshots/mobile_users.png', t('businessDashboard.users.alt'))"
               >
                 <div class="w-6 h-1 bg-slate-800 rounded-full mx-auto mb-0.5"></div>
@@ -774,7 +937,7 @@ onUnmounted(() => {
 
               <!-- Overlapping Phone Mockup -->
               <div
-                class="absolute bottom-[-20px] right-[-15px] w-[32%] rounded-2xl border-[3px] border-slate-800 bg-slate-950 p-0.5 shadow-2xl z-40 transition-all duration-305 hover:scale-105 hover:border-amber-500/50 cursor-zoom-in"
+                class="absolute bottom-[-20px] right-[-15px] w-[32%] rounded-2xl border-[3px] border-slate-800 bg-slate-955 p-0.5 shadow-2xl z-40 transition-all duration-305 hover:scale-105 hover:border-amber-500/50 cursor-zoom-in"
                 @click.stop="openLightbox('/screenshots/mobile_settings.png', t('businessDashboard.settings.alt'))"
               >
                 <div class="w-6 h-1 bg-slate-800 rounded-full mx-auto mb-0.5"></div>
