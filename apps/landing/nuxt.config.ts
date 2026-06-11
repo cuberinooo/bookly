@@ -8,6 +8,11 @@ export default defineNuxtConfig({
   workspaceDir: '../../',
   devtools: { enabled: true },
   modules: ['@primevue/nuxt-module'],
+  nitro: {
+    externals: {
+      inline: ['vue', '@vue/server-renderer']
+    }
+  },
   primevue: {
     options: {
       theme: {
