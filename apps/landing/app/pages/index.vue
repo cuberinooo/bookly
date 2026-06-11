@@ -73,7 +73,7 @@ onUnmounted(() => {
     <header class="sticky top-0 z-50 backdrop-blur-md bg-slate-950/80 border-b border-slate-900">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
         <div class="flex items-center gap-3">
-          <img src="/logo.png" alt="BooklyFit Logo" class="w-10 h-10 object-contain rounded-xl shadow-[0_0_20px_rgba(245,158,11,0.3)] bg-white p-1" />
+          <img src="/logo.png" alt="BooklyFit Logo" class="w-15 h-15 object-contain rounded-xl shadow-[0_0_20px_rgba(245,158,11,0.3)]" />
           <span class="text-xl font-black uppercase tracking-wider text-white">
             Bookly<span class="text-amber-500">Fit</span>
           </span>
@@ -441,8 +441,7 @@ onUnmounted(() => {
         </div>
         <div class="flex items-center gap-8 font-semibold text-slate-400">
           <a href="javascript:void(0)" @click="showLegal = true" class="hover:text-amber-500 transition">{{ t('footer.legalNotice') }}</a>
-          <a href="#" class="hover:text-amber-500 transition">{{ t('footer.terms') }}</a>
-          <a href="#" class="hover:text-amber-500 transition">{{ t('footer.privacy') }}</a>
+          <a href="/datenschutzerklaerung.pdf" target="_blank" rel="noopener" class="hover:text-amber-500 transition">{{ t('footer.privacy') }}</a>
           <a href="mailto:kubilay.anil@codingcube.de" class="hover:text-amber-500 transition">{{ t('footer.contact') }}</a>
         </div>
         <div>
@@ -520,7 +519,7 @@ onUnmounted(() => {
           </p>
         </div>
       </div>
-      
+
       <template #footer>
         <div class="flex justify-end pt-4 border-t border-slate-800">
           <Button
