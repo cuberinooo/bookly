@@ -115,70 +115,160 @@ onMounted(fetchSettings);
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div class="field flex flex-col gap-2">
-            <label class="font-bold uppercase text-xs text-slate-500" for="operatorName">{{ t('settings.representative') }}</label>
-            <InputText id="operatorName" v-model="settings.operatorName" placeholder="Kubilay Anil" />
+            <label
+              class="font-bold uppercase text-xs text-slate-500"
+              for="operatorName"
+            >{{ t('settings.representative') }}</label>
+            <InputText
+              id="operatorName"
+              v-model="settings.operatorName"
+              placeholder="Kubilay Anil"
+            />
           </div>
 
           <div class="field flex flex-col gap-2">
-            <label class="font-bold uppercase text-xs text-slate-500" for="operatorCompany">{{ t('monitor.companyName') }}</label>
-            <InputText id="operatorCompany" v-model="settings.operatorCompany" placeholder="IT-Dienstleistungen Kubilay Anil" />
+            <label
+              class="font-bold uppercase text-xs text-slate-500"
+              for="operatorCompany"
+            >{{ t('monitor.companyName') }}</label>
+            <InputText
+              id="operatorCompany"
+              v-model="settings.operatorCompany"
+              placeholder="IT-Dienstleistungen Kubilay Anil"
+            />
           </div>
 
           <div class="field flex flex-col gap-2 md:col-span-2">
-            <label class="font-bold uppercase text-xs text-slate-500" for="operatorDetails">{{ t('settings.contentMarkdown') }} (Details / Beschreibung)</label>
-            <Textarea id="operatorDetails" v-model="settings.operatorDetails" rows="4" placeholder="Entwicklung, Vertrieb und Betrieb..." />
+            <label
+              class="font-bold uppercase text-xs text-slate-500"
+              for="operatorDetails"
+            >{{ t('settings.contentMarkdown') }} (Details / Beschreibung)</label>
+            <Textarea
+              id="operatorDetails"
+              v-model="settings.operatorDetails"
+              rows="4"
+              placeholder="Entwicklung, Vertrieb und Betrieb..."
+            />
           </div>
 
           <div class="md:col-span-2 grid grid-cols-4 gap-4">
             <div class="field flex flex-col gap-2 col-span-3">
-              <label class="font-bold uppercase text-xs text-slate-500" for="street">{{ t('settings.street') }}</label>
-              <InputText id="street" v-model="settings.operatorStreet" placeholder="Kreuzstr." />
+              <label
+                class="font-bold uppercase text-xs text-slate-500"
+                for="street"
+              >{{ t('settings.street') }}</label>
+              <InputText
+                id="street"
+                v-model="settings.operatorStreet"
+                placeholder="Kreuzstr."
+              />
             </div>
             <div class="field flex flex-col gap-2 col-span-1">
-              <label class="font-bold uppercase text-xs text-slate-500" for="houseNumber">{{ t('settings.number') }}</label>
-              <InputText id="houseNumber" v-model="settings.operatorHouseNumber" placeholder="19" />
+              <label
+                class="font-bold uppercase text-xs text-slate-500"
+                for="houseNumber"
+              >{{ t('settings.number') }}</label>
+              <InputText
+                id="houseNumber"
+                v-model="settings.operatorHouseNumber"
+                placeholder="19"
+              />
             </div>
           </div>
 
           <div class="md:col-span-2 grid grid-cols-4 gap-4">
             <div class="field flex flex-col gap-2 col-span-1">
-              <label class="font-bold uppercase text-xs text-slate-500" for="zipCode">{{ t('settings.zipCode') }}</label>
-              <InputText id="zipCode" v-model="settings.operatorZipCode" placeholder="89160" />
+              <label
+                class="font-bold uppercase text-xs text-slate-500"
+                for="zipCode"
+              >{{ t('settings.zipCode') }}</label>
+              <InputText
+                id="zipCode"
+                v-model="settings.operatorZipCode"
+                placeholder="89160"
+              />
             </div>
             <div class="field flex flex-col gap-2 col-span-3">
-              <label class="font-bold uppercase text-xs text-slate-500" for="city">{{ t('settings.city') }}</label>
-              <InputText id="city" v-model="settings.operatorCity" placeholder="Dornstadt" />
+              <label
+                class="font-bold uppercase text-xs text-slate-500"
+                for="city"
+              >{{ t('settings.city') }}</label>
+              <InputText
+                id="city"
+                v-model="settings.operatorCity"
+                placeholder="Dornstadt"
+              />
             </div>
           </div>
 
           <div class="field flex flex-col gap-2">
-            <label class="font-bold uppercase text-xs text-slate-500" for="email">{{ t('auth.email') }}</label>
-            <InputText id="email" v-model="settings.operatorEmail" placeholder="kubilay.anil@codingcube.de" />
+            <label
+              class="font-bold uppercase text-xs text-slate-500"
+              for="email"
+            >{{ t('auth.email') }}</label>
+            <InputText
+              id="email"
+              v-model="settings.operatorEmail"
+              placeholder="kubilay.anil@codingcube.de"
+            />
           </div>
 
           <div class="field flex flex-col gap-2">
-            <label class="font-bold uppercase text-xs text-slate-500" for="phone">{{ t('settings.phone') }}</label>
-            <InputText id="phone" v-model="settings.operatorPhone" placeholder="01627895106" />
+            <label
+              class="font-bold uppercase text-xs text-slate-500"
+              for="phone"
+            >{{ t('settings.phone') }}</label>
+            <InputText
+              id="phone"
+              v-model="settings.operatorPhone"
+              placeholder="01627895106"
+            />
           </div>
 
           <div class="field flex flex-col gap-2">
-            <label class="font-bold uppercase text-xs text-slate-500" for="profession">Berufsbezeichnung</label>
-            <InputText id="profession" v-model="settings.profession" placeholder="Softwareentwickler" />
+            <label
+              class="font-bold uppercase text-xs text-slate-500"
+              for="profession"
+            >Berufsbezeichnung</label>
+            <InputText
+              id="profession"
+              v-model="settings.profession"
+              placeholder="Softwareentwickler"
+            />
           </div>
 
           <div class="field flex flex-col gap-2">
-            <label class="font-bold uppercase text-xs text-slate-500" for="country">Land</label>
-            <InputText id="country" v-model="settings.country" placeholder="Deutschland" />
+            <label
+              class="font-bold uppercase text-xs text-slate-500"
+              for="country"
+            >Land</label>
+            <InputText
+              id="country"
+              v-model="settings.country"
+              placeholder="Deutschland"
+            />
           </div>
 
           <div class="field flex flex-col gap-2">
-            <label class="font-bold uppercase text-xs text-slate-500" for="taxId">{{ t('settings.taxId') }} <span class="text-xs text-slate-400 normal-case font-normal">({{ t('settings.optional') }})</span></label>
-            <InputText id="taxId" v-model="settings.taxId" />
+            <label
+              class="font-bold uppercase text-xs text-slate-500"
+              for="taxId"
+            >{{ t('settings.taxId') }} <span class="text-xs text-slate-400 normal-case font-normal">({{ t('settings.optional') }})</span></label>
+            <InputText
+              id="taxId"
+              v-model="settings.taxId"
+            />
           </div>
 
           <div class="field flex flex-col gap-2">
-            <label class="font-bold uppercase text-xs text-slate-500" for="vatId">{{ t('settings.vatId') }} <span class="text-xs text-slate-400 normal-case font-normal">({{ t('settings.optional') }})</span></label>
-            <InputText id="vatId" v-model="settings.vatId" />
+            <label
+              class="font-bold uppercase text-xs text-slate-500"
+              for="vatId"
+            >{{ t('settings.vatId') }} <span class="text-xs text-slate-400 normal-case font-normal">({{ t('settings.optional') }})</span></label>
+            <InputText
+              id="vatId"
+              v-model="settings.vatId"
+            />
           </div>
         </div>
 

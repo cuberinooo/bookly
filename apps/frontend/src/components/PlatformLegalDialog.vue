@@ -50,7 +50,10 @@ watch(() => props.visible, (newVal) => {
     :breakpoints="{'960px': '75vw', '640px': '90vw'}"
   >
     <div class="platform-legal-content text-slate-300">
-      <div v-if="loading" class="flex justify-center py-6">
+      <div
+        v-if="loading"
+        class="flex justify-center py-6"
+      >
         <i class="pi pi-spin pi-spinner text-2xl text-primary" />
       </div>
       <div v-else>
@@ -59,9 +62,9 @@ watch(() => props.visible, (newVal) => {
             {{ t('platformLegal.operatorTitle') }}
           </h3>
           <p class="leading-relaxed mb-4">
-            {{ settings?.operatorName || t('platformLegal.operatorName') }}<br />
-            {{ settings?.operatorCompany || t('platformLegal.operatorCompany') }}<br />
-            {{ settings?.operatorDetails || t('platformLegal.operatorDetails') }}<br />
+            {{ settings?.operatorName || t('platformLegal.operatorName') }}<br>
+            {{ settings?.operatorCompany || t('platformLegal.operatorCompany') }}<br>
+            {{ settings?.operatorDetails || t('platformLegal.operatorDetails') }}<br>
             <span v-if="settings?.operatorStreet">
               {{ settings.operatorStreet }} {{ settings.operatorHouseNumber }}, {{ settings.operatorZipCode }} {{ settings.operatorCity }}
             </span>
@@ -82,9 +85,12 @@ watch(() => props.visible, (newVal) => {
             <span v-else>
               {{ t('platformLegal.phone') }}
             </span>
-            <br />
+            <br>
             {{ t('platformLegal.email') }}
-            <a :href="'mailto:' + (settings?.operatorEmail || 'kubilay.anil@codingcube.de')" class="text-primary hover:underline">
+            <a
+              :href="'mailto:' + (settings?.operatorEmail || 'kubilay.anil@codingcube.de')"
+              class="text-primary hover:underline"
+            >
               {{ settings?.operatorEmail || 'kubilay.anil@codingcube.de' }}
             </a>
           </p>
@@ -95,17 +101,20 @@ watch(() => props.visible, (newVal) => {
             {{ t('platformLegal.professionTitle') }}
           </h3>
           <p class="leading-relaxed mb-4">
-            {{ settings?.profession ? 'Berufsbezeichnung: ' + settings.profession : t('platformLegal.profession') }}<br />
+            {{ settings?.profession ? 'Berufsbezeichnung: ' + settings.profession : t('platformLegal.profession') }}<br>
             {{ settings?.country ? 'Verliehen in: ' + settings.country : t('platformLegal.country') }}
           </p>
         </section>
 
-        <section v-if="settings?.taxId || settings?.vatId" class="mt-4">
+        <section
+          v-if="settings?.taxId || settings?.vatId"
+          class="mt-4"
+        >
           <h3 class="font-bold text-lg text-primary mb-2">
             {{ t('settings.steuern') }}
           </h3>
           <p class="leading-relaxed mb-4">
-            <span v-if="settings.taxId">{{ t('settings.steuernummer') }}: {{ settings.taxId }}<br /></span>
+            <span v-if="settings.taxId">{{ t('settings.steuernummer') }}: {{ settings.taxId }}<br></span>
             <span v-if="settings.vatId">{{ t('settings.vatIdNote') }}: {{ settings.vatId }}</span>
           </p>
         </section>

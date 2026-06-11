@@ -142,7 +142,6 @@ const confirmDeleteCompany = async () => {
         </p>
       </div>
       <Button
-        v-slot:default
         v-if="activeTab === 'companies'"
         icon="pi pi-refresh"
         :label="t('app.refresh')"
@@ -153,18 +152,30 @@ const confirmDeleteCompany = async () => {
       />
     </div>
 
-    <Tabs v-model:value="activeTab" class="monitor-tabs">
+    <Tabs
+      v-model:value="activeTab"
+      class="monitor-tabs"
+    >
       <TabList class="overflow-x-auto whitespace-nowrap scrollbar-hide mb-6">
-        <Tab value="companies" class="font-barlow font-bold text-xs md:text-sm">
+        <Tab
+          value="companies"
+          class="font-barlow font-bold text-xs md:text-sm"
+        >
           {{ t('monitor.tabs.companies') }}
         </Tab>
-        <Tab value="settings" class="font-barlow font-bold text-xs md:text-sm">
+        <Tab
+          value="settings"
+          class="font-barlow font-bold text-xs md:text-sm"
+        >
           {{ t('monitor.tabs.settings') }}
         </Tab>
       </TabList>
 
       <TabPanels>
-        <TabPanel value="companies" class="px-0">
+        <TabPanel
+          value="companies"
+          class="px-0"
+        >
           <!-- Summary Statistics Bento Grid -->
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <div class="p-6 bg-white border border-slate-100 rounded-2xl shadow-sm flex items-center justify-between transition-all duration-300 hover:shadow-md hover:border-slate-200">
@@ -297,7 +308,10 @@ const confirmDeleteCompany = async () => {
           </div>
         </TabPanel>
 
-        <TabPanel value="settings" class="px-0">
+        <TabPanel
+          value="settings"
+          class="px-0"
+        >
           <PlatformSettingsTab />
         </TabPanel>
       </TabPanels>

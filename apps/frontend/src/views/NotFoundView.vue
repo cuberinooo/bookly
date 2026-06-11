@@ -18,11 +18,22 @@ function goDashboard() {
   <div class="not-found-container flex flex-col items-center justify-center min-h-[70vh] px-4 text-center select-none py-12">
     <!-- Icon Container with subtle pulse animation -->
     <div class="relative mb-6">
-      <div class="absolute inset-0 bg-amber-500/10 blur-xl rounded-full scale-150 animate-pulse"></div>
+      <div class="absolute inset-0 bg-amber-500/10 blur-xl rounded-full scale-150 animate-pulse" />
       <div class="relative w-24 h-24 bg-gradient-to-b from-slate-800 to-slate-900 border border-slate-700/50 shadow-2xl rounded-2xl flex items-center justify-center text-amber-500">
         <!-- Dumbbell SVG Icon -->
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18H4a2 2 0 01-2-2v-4a2 2 0 012-2h2m12 8h2a2 2 0 002-2v-4a2 2 0 00-2-2h-2M6 12h12M9 8v8m6-8v8" />
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="w-12 h-12"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M6 18H4a2 2 0 01-2-2v-4a2 2 0 012-2h2m12 8h2a2 2 0 002-2v-4a2 2 0 00-2-2h-2M6 12h12M9 8v8m6-8v8"
+          />
         </svg>
       </div>
     </div>

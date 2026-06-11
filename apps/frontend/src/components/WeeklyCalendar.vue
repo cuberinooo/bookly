@@ -207,12 +207,12 @@ function onQuickAdd(day: Date) {
             <!-- Quick Add Button for Trainer Mode -->
             <Button
               v-if="isTrainerMode"
+              v-tooltip.top="t('dashboard.createNewCourse')"
               icon="pi pi-plus"
               severity="primary"
               variant="outlined"
               size="small"
               class="mt-1.5 cursor-pointer border-amber-500/30 text-amber-500 hover:bg-amber-500/10 hover:border-amber-500 hover:text-amber-400 transition-all duration-200 rounded-full w-6 h-6 flex items-center justify-center p-0 shadow-sm text-[10px]"
-              v-tooltip.top="t('dashboard.createNewCourse')"
               @click.stop="onQuickAdd(date)"
             />
           </div>

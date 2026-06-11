@@ -349,7 +349,10 @@ onMounted(fetchAboData);
       </div>
 
       <!-- Billing History / Invoices -->
-      <div v-if="invoices && invoices.length > 0" class="phoenix-card p-6 md:p-8 space-y-6">
+      <div
+        v-if="invoices && invoices.length > 0"
+        class="phoenix-card p-6 md:p-8 space-y-6"
+      >
         <h3 class="text-lg font-black uppercase tracking-widest text-slate-900 flex items-center gap-2">
           <i class="pi pi-receipt text-slate-500" />
           {{ t('profile.invoices.header') }}
@@ -357,45 +360,64 @@ onMounted(fetchAboData);
 
         <DataTable
           :value="invoices"
-          responsiveLayout="scroll"
+          responsive-layout="scroll"
           class="w-full text-sm"
           :paginator="invoices.length > 5"
           :rows="5"
-          paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
+          paginator-template="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
         >
-          <Column field="number" :header="t('profile.invoices.description')" class="font-bold text-slate-700">
+          <Column
+            field="number"
+            :header="t('profile.invoices.description')"
+            class="font-bold text-slate-700"
+          >
             <template #body="slotProps">
               {{ slotProps.data.number || slotProps.data.id }}
             </template>
           </Column>
 
-          <Column field="description" :header="t('profile.invoices.title')" class="text-slate-800">
+          <Column
+            field="description"
+            :header="t('profile.invoices.title')"
+            class="text-slate-800"
+          >
             <template #body="slotProps">
               {{ slotProps.data.description }}
             </template>
           </Column>
 
-          <Column field="amount_paid" :header="t('profile.invoices.price')" class="font-bold text-slate-900">
+          <Column
+            field="amount_paid"
+            :header="t('profile.invoices.price')"
+            class="font-bold text-slate-900"
+          >
             <template #body="slotProps">
               {{ slotProps.data.amount_paid.toFixed(2) }}{{ slotProps.data.currency === 'EUR' ? '€' : ' ' + slotProps.data.currency }}
             </template>
           </Column>
 
-          <Column field="created" :header="t('profile.invoices.date')" class="text-slate-500">
+          <Column
+            field="created"
+            :header="t('profile.invoices.date')"
+            class="text-slate-500"
+          >
             <template #body="slotProps">
               {{ formatDate(slotProps.data.created) }}
             </template>
           </Column>
 
-          <Column headerStyle="width: 5rem; text-align: center" bodyStyle="text-align: center; overflow: visible">
+          <Column
+            header-style="width: 5rem; text-align: center"
+            body-style="text-align: center; overflow: visible"
+          >
             <template #body="slotProps">
               <Button
                 v-if="slotProps.data.invoice_pdf"
+                v-tooltip.top="t('profile.invoices.download')"
                 icon="pi pi-download"
                 severity="secondary"
                 text
                 rounded
-                v-tooltip.top="t('profile.invoices.download')"
                 @click="downloadInvoice(slotProps.data.invoice_pdf)"
               />
             </template>
