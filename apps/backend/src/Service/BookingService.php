@@ -209,7 +209,7 @@ class BookingService
                         '%title%' => $course->getTitle(),
                         '%time%' => $course->getStartTime()->format('H:i')
                     ]),
-                    '/courses'
+                    '/dashboard'
                 );
 
                 // Recursively check if there's more space (e.g. if capacity was increased)

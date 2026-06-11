@@ -98,10 +98,10 @@ class CourseService
 
         $now = new \DateTime();
         $checkTime = (clone $course->getStartTime())->modify('-' . $settings->getAutoCancelHoursBefore() . ' hours');
-        
+
         $delaySeconds = $checkTime->getTimestamp() - $now->getTimestamp();
         $delay = max(0, $delaySeconds) * 1000;
-        
+
         $this->messageBus->dispatch(new \App\Message\CheckCourseAutoCancelMessage($course->getId()), [new DelayStamp($delay)]);
     }
 
@@ -297,11 +297,11 @@ class CourseService
         }
 
         $now = $fromTime ?? new \DateTime();
-        
+
         // 1. Instantiate future occurrences for the next 3 months to make them "real" for the update
         $threeMonthsLater = (clone $now)->modify('+3 months');
         $occurrences = $this->getVirtualOccurrences($series, $now, $threeMonthsLater);
-        
+
         foreach ($occurrences as $occ) {
             $this->instantiateVirtualCourse($series->getId(), $occ['startTime']);
         }
@@ -360,7 +360,7 @@ class CourseService
             if (isset($updates['startTime']) || isset($updates['durationMinutes']) || isset($updates['trainer'])) {
                 $this->validateSchedule($course->getStartTime(), $course->getEndTime(), $course->getId(), $course->getUser()->getId());
             }
-            
+
             if (isset($updates['startTime'])) {
                 $this->dispatchAutoCancelCheck($course);
             }
@@ -487,7 +487,7 @@ class CourseService
                 $bookedUsers,
                 $this->translator->trans('push.course_cancelled_athlete.title', ['%title%' => $course->getTitle()]),
                 $this->translator->trans('push.course_cancelled_athlete.body', ['%time%' => $course->getStartTime()->format('H:i')]),
-                '/courses'
+                '/dashboard'
             );
         }
 
@@ -498,7 +498,7 @@ class CourseService
                 $courseTrainer,
                 $this->translator->trans('push.course_cancelled_trainer.title', ['%title%' => $course->getTitle()]),
                 $this->translator->trans('push.course_cancelled_trainer.body', ['%time%' => $course->getStartTime()->format('H:i')]),
-                '/courses'
+                '/'
             );
         }
     }

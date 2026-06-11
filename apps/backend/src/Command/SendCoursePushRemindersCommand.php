@@ -65,7 +65,7 @@ class SendCoursePushRemindersCommand extends Command
                             '%title%' => $course->getTitle(),
                             '%time%' => $course->getStartTime()->format('H:i')
                         ]),
-                        '/courses'
+                        '/dashboard'
                     );
                     $booking->setPushReminderSent(true);
                     ++$sentCount;

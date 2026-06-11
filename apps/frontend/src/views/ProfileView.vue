@@ -22,30 +22,19 @@ const authStore = useAuthStore();
 const settingsStore = useSettingsStore();
 const { markTaskComplete } = useOnboarding();
 
-const isAthlete = computed(() => !authStore.isAdmin);
 const activeTab = ref('0');
 
 // Watch for tab query parameter changes
 watch(
   () => route.query.tab,
   (newTab) => {
-    if (newTab === 'abo' && isAthlete.value) {
+    if (newTab === 'abo') {
       activeTab.value = 'abo';
     } else if (!newTab || newTab === 'account') {
       activeTab.value = '0';
     }
   },
   { immediate: true }
-);
-
-// Also watch isAthlete to ensure tab switches if it was delayed by loading
-watch(
-  isAthlete,
-  (val) => {
-    if (val && route.query.tab === 'abo') {
-      activeTab.value = 'abo';
-    }
-  }
 );
 
 const user = ref({
@@ -119,11 +108,11 @@ async function deleteAccount() {
     try {
         await api.delete('/user/me');
         toast.add({ severity: 'success', summary: t('app.success'), detail: t('profile.accountDeleted'), life: 5000 });
-        
+
         // Clear auth credentials locally since account is deleted on backend
         authStore.token = null;
         authStore.user = null;
-        
+
         router.push('/login');
     } catch (e: any) {
         const message = e.response?.data?.error || t('profile.deleteFailed');
@@ -232,7 +221,7 @@ onMounted(() => {
           <span>{{ t('profile.myAccount') }}</span>
         </Tab>
         <Tab
-          v-if="isAthlete && settingsStore.paymentEnabled"
+          v-if="settingsStore.paymentEnabled"
           value="abo"
           class="flex items-center gap-2"
         >
@@ -461,7 +450,7 @@ onMounted(() => {
         </TabPanel>
 
         <TabPanel
-          v-if="isAthlete && settingsStore.paymentEnabled"
+          v-if="settingsStore.paymentEnabled"
           value="abo"
         >
           <UserAboTab />

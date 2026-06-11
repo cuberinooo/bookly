@@ -113,7 +113,7 @@ const router = createRouter({
 
 router.beforeEach(async (to) => {
   const authStore = useAuthStore();
-  
+
   // 1. Wait for authStore to be initialized
   if (!authStore.initialized) {
     await authStore.init();
@@ -130,7 +130,7 @@ router.beforeEach(async (to) => {
   if (to.meta.roles && Array.isArray(to.meta.roles)) {
     const userRoles = authStore.user?.roles || [];
     const hasRequiredRole = to.meta.roles.some(role => userRoles.includes(role));
-    
+
     if (!hasRequiredRole) {
       return { name: 'home' }; // Redirect to home if user lacks required role
     }
