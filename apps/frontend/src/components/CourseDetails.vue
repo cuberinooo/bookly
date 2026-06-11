@@ -70,11 +70,18 @@ const spotsLeft = computed(() => {
   if (registered < props.course.capacity) {
     return t('course.spotsLeft', { count: props.course.capacity - registered }).toUpperCase();
   }
+  const waitlisted = props.course.bookings.filter((b: any) => b.isWaitlist).length;
+  if (waitlisted > 0) {
+    return `${t('course.waitlistActive').toUpperCase()} (+${waitlisted})`;
+  }
   return t('course.waitlistActive').toUpperCase();
 });
 
 const registeredCount = computed(() => {
-  return props.course.bookings.filter((b: any) => !b.isWaitlist).length + ' / ' + props.course.capacity;
+  const registered = props.course.bookings.filter((b: any) => !b.isWaitlist).length;
+  const waitlisted = props.course.bookings.filter((b: any) => b.isWaitlist).length;
+  const countStr = `${registered} / ${props.course.capacity}`;
+  return waitlisted > 0 ? `${countStr} (+${waitlisted})` : countStr;
 });
 
 const isBookedByUser = computed(() => {

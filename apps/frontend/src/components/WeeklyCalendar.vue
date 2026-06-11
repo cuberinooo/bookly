@@ -326,7 +326,7 @@ function onQuickAdd(day: Date) {
                         {{ course.bookings.filter(b => !b.isWaitlist).length }} / {{ course.capacity }} <i class="pi pi-users text-[10px]" />
                       </template>
                       <template v-else>
-                        <span class="text-amber-500">{{ t('calendar.full') }}</span>
+                        <span class="text-amber-500">{{ t('calendar.full') }}<template v-if="course.bookings.filter(b => b.isWaitlist).length > 0"> (+{{ course.bookings.filter(b => b.isWaitlist).length }})</template></span>
                       </template>
                     </div>
                   </div>

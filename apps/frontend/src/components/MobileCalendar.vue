@@ -333,7 +333,7 @@ function formatDayName(date: Date) {
                         {{ course.bookings.filter(b => !b.isWaitlist).length }} / {{ course.capacity }}
                       </template>
                       <template v-else>
-                        {{ t('calendar.full').toUpperCase() }}
+                        {{ t('calendar.full').toUpperCase() }}<template v-if="course.bookings.filter(b => b.isWaitlist).length > 0"> (+{{ course.bookings.filter(b => b.isWaitlist).length }})</template>
                       </template>
                       <i class="pi pi-users" />
                     </div>
