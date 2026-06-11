@@ -133,8 +133,8 @@ onUnmounted(() => {
     </header>
 
     <!-- Hero Section -->
-    <section class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24 md:pt-28 md:pb-32 text-center reveal-on-scroll reveal-fade">
-      <div class="max-w-3xl mx-auto space-y-6">
+    <section class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24 md:pt-28 md:pb-32 text-center reveal-on-scroll reveal-fade">
+      <div class="max-w-3xl mx-auto space-y-6 mb-16">
         <h1 class="text-5xl sm:text-6xl md:text-7xl font-extrabold tracking-tight text-white leading-tight">
           {{ t('hero.title1') }} <br class="hidden sm:inline" />
           <span class="bg-clip-text text-transparent bg-gradient-to-r bg-amber-500">
@@ -158,6 +158,71 @@ onUnmounted(() => {
           >
             {{ t('hero.seeHow') }}
           </button>
+        </div>
+      </div>
+
+      <!-- App Preview Mockup Container (Overlapping Multi-Screen Collage) -->
+      <div class="relative max-w-5xl mx-auto mt-12 sm:mt-16 h-[280px] min-[400px]:h-[380px] sm:h-[480px] md:h-[580px] lg:h-[650px] reveal-on-scroll">
+        <!-- Ambient Glow Effect behind collage -->
+        <div class="absolute inset-10 rounded-3xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 blur-3xl opacity-50 -z-10"></div>
+
+        <!-- 1. Mobile Bookings Mockup (Overlapping Center Right) -->
+        <div
+          class="absolute right-[10%] bottom-30 w-[20%] min-w-[70px] max-w-[150px] rounded-2xl sm:rounded-3xl border-[2px] sm:border-[4px] border-slate-850 bg-slate-950 p-0.5 sm:p-1.5 shadow-[0_20px_45px_rgba(0,0,0,0.85)] z-20 cursor-zoom-in hover:z-30 hover:scale-[1.05] hover:border-amber-500/30 transition-all duration-300"
+          @click="openLightbox('/screenshots/hero_bookings_mobile.png', t('hero.mockups.bookings'))"
+        >
+          <!-- Phone Speaker/Camera notch -->
+          <div class="w-8 h-1.5 bg-slate-850 rounded-full mx-auto mb-0.5 sm:mb-1"></div>
+          <div class="aspect-[9/16] overflow-hidden rounded-lg sm:rounded-2xl bg-slate-900">
+            <img
+              src="/screenshots/hero_bookings_mobile.png"
+              :alt="t('hero.mockups.bookings')"
+              class="w-full h-full object-cover object-top select-none"
+              @error="(e: any) => e.target.src = 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=300&auto=format&fit=crop'"
+            />
+          </div>
+        </div>
+
+        <!-- 2. Primary Desktop Mockup (Schedule - Stacked Front on Left) -->
+        <div
+          class="absolute right-[20%] top-12 w-[65%] rounded-xl border border-slate-800 bg-slate-950 p-1 sm:p-2 shadow-[0_25px_50px_rgba(0,0,0,0.8)] cursor-zoom-in z-10 hover:z-20 hover:border-amber-500/30 hover:scale-[1.02] transition-all duration-300"
+          @click="openLightbox('/screenshots/hero_schedule_desktop.png', t('hero.mockups.schedule'))"
+        >
+          <div class="flex items-center gap-1 pb-1 px-0.5 border-b border-slate-900 mb-1 sm:mb-1.5">
+            <div class="flex items-center gap-1">
+              <div class="w-1.5 h-1.5 rounded-full bg-red-500/60"></div>
+              <div class="w-1.5 h-1.5 rounded-full bg-yellow-500/60"></div>
+              <div class="w-1.5 h-1.5 rounded-full bg-green-500/60"></div>
+            </div>
+            <div class="w-[50%] mx-auto h-4 rounded bg-slate-900/60 border border-slate-855 flex items-center justify-center text-[8px] text-slate-500 font-mono">
+              <i class="pi pi-lock text-[8px] mr-1.5 text-amber-500/60"></i> app.booklyfit.de/schedule
+            </div>
+          </div>
+          <div class="aspect-[16/10] overflow-hidden rounded bg-slate-900 border border-slate-900/40">
+            <img
+              src="/screenshots/hero_schedule_desktop.png"
+              :alt="t('hero.mockups.schedule')"
+              class="w-full h-full object-cover object-top select-none"
+              @error="(e: any) => e.target.src = 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=600&auto=format&fit=crop'"
+            />
+          </div>
+        </div>
+
+        <!-- 3. Mobile Leaderboard Mockup (Overlapping Bottom Right Foreground) -->
+        <div
+          class="absolute right-[20%] bottom-30 w-[20%] min-w-[70px] max-w-[150px] rounded-2xl sm:rounded-3xl border-[2px] sm:border-[4px] border-slate-850 bg-slate-950 p-0.5 sm:p-1.5 shadow-[0_30px_60px_rgba(0,0,0,0.95)] z-10 cursor-zoom-in hover:z-30 hover:scale-[1.05] hover:border-amber-500/40 transition-all duration-300"
+          @click="openLightbox('/screenshots/hero_leaderboard_mobile.png', t('hero.mockups.leaderboard'))"
+        >
+          <!-- Phone Speaker/Camera notch -->
+          <div class="w-8 h-1.5 bg-slate-850 rounded-full mx-auto mb-0.5 sm:mb-1"></div>
+          <div class="aspect-[9/16] overflow-hidden rounded-lg sm:rounded-2xl bg-slate-900">
+            <img
+              src="/screenshots/hero_leaderboard_mobile.png"
+              :alt="t('hero.mockups.leaderboard')"
+              class="w-full h-full object-cover object-top select-none"
+              @error="(e: any) => e.target.src = 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=300&auto=format&fit=crop'"
+            />
+          </div>
         </div>
       </div>
     </section>

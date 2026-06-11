@@ -9,7 +9,22 @@
     "title2": "Fitness Community",
     "subtitle": "The modern SaaS platform for boutique gyms, CrossFit boxes, and fitness studios. Simplify class bookings, track attendance, and manage payments effortlessly.",
     "launchApp": "Launch the App",
-    "seeHow": "See How it Works"
+    "seeHow": "See How it Works",
+    "mockups": {
+      "schedule": "BooklyFit Weekly Timetable View",
+      "bookings": "BooklyFit Member My Bookings View",
+      "leaderboard": "BooklyFit Member Leaderboard View"
+    },
+    "stats": {
+      "streaks": {
+        "label": "Active Streaks",
+        "value": "84% of athletes"
+      },
+      "bookings": {
+        "label": "Bookings Today",
+        "value": "142 Reserved"
+      }
+    }
   },
   "memberExperience": {
     "badge": "Member Experience",

@@ -9,7 +9,22 @@
     "title2": "Fitness-Community",
     "subtitle": "Die moderne All-in-One-Plattform für Boutique-Gyms, CrossFit-Boxes und Fitnessstudios. Kurspläne einsehen, Plätze buchen, Anwesenheit tracken und Abrechnungen automatisieren.",
     "launchApp": "App starten",
-    "seeHow": "Ablauf ansehen"
+    "seeHow": "Ablauf ansehen",
+    "mockups": {
+      "schedule": "BooklyFit Wochenplan-Ansicht",
+      "bookings": "BooklyFit Mitglieder-Buchungsübersicht",
+      "leaderboard": "BooklyFit Mitglieder-Leaderboard-Ansicht"
+    },
+    "stats": {
+      "streaks": {
+        "label": "Aktive Streaks",
+        "value": "84% der Athleten"
+      },
+      "bookings": {
+        "label": "Buchungen heute",
+        "value": "142 Reserviert"
+      }
+    }
   },
   "memberExperience": {
     "badge": "Mitglieder-Erfahrung",

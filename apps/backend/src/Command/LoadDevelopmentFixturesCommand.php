@@ -166,7 +166,9 @@ class LoadDevelopmentFixturesCommand extends Command
 
             // Add random bookings
             foreach ($members as $member) {
-                if (rand(0, 1)) {
+                $isAlice = $member->getEmail() === 'alice@phoenix.test';
+                // Guarantee Alice is booked on the first 3 future courses, others are random
+                if ($isAlice ? ($i <= 3) : (rand(0, 1) === 1)) {
                     $booking = new Booking();
                     $booking->setUser($member);
                     $booking->setCourse($course);

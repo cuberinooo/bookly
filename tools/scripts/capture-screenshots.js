@@ -191,6 +191,11 @@ async function captureScreenshots() {
     await memberPage.screenshot({ path: schedulePath, fullPage: false });
     console.log(`[Member Flow] Saved: ${schedulePath}`);
 
+    // Capture Hero specific copy
+    const heroScheduleDesktopPath = path.join(OUTPUT_DIR, 'hero_schedule_desktop.png');
+    await memberPage.screenshot({ path: heroScheduleDesktopPath, fullPage: false });
+    console.log(`[Member Flow] Saved: ${heroScheduleDesktopPath}`);
+
     // Reset zoom before modal opening to prevent positioning quirks, then zoom inside modal
     await memberPage.evaluate(() => { document.body.style.zoom = '1.0'; });
 
@@ -309,6 +314,26 @@ async function captureScreenshots() {
     await mobilePage.screenshot({ path: mobileSchedulePath, fullPage: false });
     console.log(`[Mobile Flow] Saved: ${mobileSchedulePath}`);
 
+    // Navigate to dashboard on mobile for "My Bookings" view
+    console.log('[Mobile Flow] Navigating to Dashboard (My Bookings)...');
+    await navigateClientSide(mobilePage, '/dashboard');
+    await mobilePage.waitForSelector('h2', { timeout: 15000 });
+    await mobilePage.waitForTimeout(3000);
+    await cleanScreenshotPage(mobilePage, null);
+    const heroBookingsMobilePath = path.join(OUTPUT_DIR, 'hero_bookings_mobile.png');
+    await mobilePage.screenshot({ path: heroBookingsMobilePath, fullPage: false });
+    console.log(`[Mobile Flow] Saved: ${heroBookingsMobilePath}`);
+
+    // Navigate to leaderboard on mobile for Hero mockup collage
+    console.log('[Mobile Flow] Navigating to Leaderboard...');
+    await navigateClientSide(mobilePage, '/leaderboard');
+    await mobilePage.waitForSelector('h1', { timeout: 15000 });
+    await mobilePage.waitForTimeout(3000);
+    await cleanScreenshotPage(mobilePage, null);
+    const heroLeaderboardMobilePath = path.join(OUTPUT_DIR, 'hero_leaderboard_mobile.png');
+    await mobilePage.screenshot({ path: heroLeaderboardMobilePath, fullPage: false });
+    console.log(`[Mobile Flow] Saved: ${heroLeaderboardMobilePath}`);
+
     await mobileContext.close();
 
     // ==========================================
@@ -335,6 +360,11 @@ async function captureScreenshots() {
     const paymentsPath = path.join(OUTPUT_DIR, 'payments.png');
     await adminPage.screenshot({ path: paymentsPath, fullPage: false });
     console.log(`[Admin Flow] Saved: ${paymentsPath}`);
+
+    // Capture Hero specific copy
+    const heroPaymentsDesktopPath = path.join(OUTPUT_DIR, 'hero_payments_desktop.png');
+    await adminPage.screenshot({ path: heroPaymentsDesktopPath, fullPage: false });
+    console.log(`[Admin Flow] Saved: ${heroPaymentsDesktopPath}`);
 
     // Screenshot 5: User Management view
     console.log('[Admin Flow] Navigating to Users...');
