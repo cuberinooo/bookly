@@ -1,0 +1,98 @@
+{
+  "nav": {
+    "howItWorks": "How It Works",
+    "features": "Features",
+    "goToApp": "Go to App"
+  },
+  "hero": {
+    "title1": "Manage Your",
+    "title2": "Fitness Community",
+    "subtitle": "The modern SaaS platform for boutique gyms, CrossFit boxes, and fitness studios. Simplify class bookings, track attendance, and manage payments effortlessly.",
+    "launchApp": "Launch the App",
+    "seeHow": "See How it Works"
+  },
+  "memberExperience": {
+    "badge": "Member Experience",
+    "title": "How It Works for Athletes",
+    "subtitle": "An intuitive, fast, and mobile-friendly interface designed to let your members book classes and log progress in seconds.",
+    "step1": {
+      "badge": "Step 1",
+      "title": "Check the Schedule",
+      "desc": "View the weekly course calendar, see session details, check capacity, and check which trainers are coaching.",
+      "desktopAlt": "Member Course Schedule Desktop View",
+      "mobileAlt": "Member Course Schedule Mobile View"
+    },
+    "step2": {
+      "badge": "Step 2",
+      "title": "Book Your Spot",
+      "desc": "Reserve a spot in your favorite class with a single tap. Handles waitlists automatically if a course is fully booked.",
+      "alt": "Class Booking Modal"
+    },
+    "step3": {
+      "badge": "Step 3",
+      "title": "Track Attendance",
+      "desc": "See class check-ins, build active attendance streaks, and participate in community leaderboard rankings.",
+      "alt": "Member Attendance Leaderboard"
+    }
+  },
+  "businessDashboard": {
+    "badge": "Business Dashboard",
+    "title": "Built for Gym Owners & Admins",
+    "subtitle": "Manage your business with enterprise-grade tools. Track revenue, handle user accounts, configure policies, and scale with ease.",
+    "payments": {
+      "title": "Streamlined Payments & Subscriptions",
+      "desc": "Monitor and manage gym memberships, custom plans, and one-off course payments. Integrated with Stripe to ensure secure transaction management and zero-friction invoicing for your community.",
+      "b1": "Real-time payment analytics",
+      "b2": "Subscription plan customizer",
+      "b3": "Integrated Stripe Connect flow",
+      "alt": "Admin Payments & Subscriptions"
+    },
+    "users": {
+      "title": "Effortless User & Member Management",
+      "desc": "Manage your coaches and athletes. View active memberships, review registration details, adjust user access roles (Admin, Trainer, Member, Trial), and search or filter profiles within seconds.",
+      "b1": "Granular role assignments",
+      "b2": "Quick member profile lookups",
+      "b3": "Verified accounts verification",
+      "alt": "Admin User & Athlete Management"
+    },
+    "settings": {
+      "title": "Customizable Gym Operations",
+      "desc": "Adapt the booking rules to match your gym. Configure booking windows (current week, two weeks, month), set default class capacities, adjust notifications, and manage SMTP details.",
+      "b1": "Dynamic booking windows",
+      "b2": "Custom SMTP configurations",
+      "b3": "Class capacity and trial parameters",
+      "alt": "Admin Gym Settings"
+    }
+  },
+  "cta": {
+    "title": "Ready to Grow Your Fitness Community?",
+    "desc": "Join boutique gym owners who use BooklyFit to automate their daily booking schedules and athlete attendance tracking.",
+    "btn": "Get Started with BooklyFit Today"
+  },
+  "footer": {
+    "terms": "Terms of Service",
+    "privacy": "Privacy Policy",
+    "legalNotice": "Legal Notice",
+    "contact": "Contact Support",
+    "rights": "All rights reserved."
+  },
+  "cookies": {
+    "title": "We value your privacy",
+    "description": "We use functional cookies to save your preferences like language and to improve your booking experience. Some cookies are essential for the site to work.",
+    "accept": "Accept All",
+    "decline": "Decline Non-Essential",
+    "manage": "Manage Preferences",
+    "preferencesTitle": "Cookie Preferences",
+    "preferencesDesc": "You can choose which types of cookies you want to allow. Essential cookies cannot be disabled as they are required for the app to function properly.",
+    "essentialTitle": "Strictly Necessary",
+    "essentialDesc": "Required for site functionality and security.",
+    "functionalTitle": "Functional",
+    "functionalDesc": "Remembering your settings and preferences.",
+    "analyticalTitle": "Analytical",
+    "analyticalDesc": "Helping us understand how the app is used.",
+    "marketingTitle": "Marketing",
+    "marketingDesc": "Used for tailored content and advertisements.",
+    "savePreferences": "Save Preferences",
+    "declineAll": "Decline All"
+  }
+}

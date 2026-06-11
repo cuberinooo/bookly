@@ -4,7 +4,7 @@ import api from '../services/api';
 import { useAuthStore } from './useAuthStore';
 
 export const useSettingsStore = defineStore('settings', () => {
-  const companyName = ref('Bookly');
+  const companyName = ref('BooklyFit');
   const showParticipantNames = ref(true);
   const isWaitlistVisible = ref(true);
   const bookingWindow = ref('OFF');
@@ -61,7 +61,7 @@ export const useSettingsStore = defineStore('settings', () => {
   }
 
   function reset() {
-    companyName.value = 'Bookly';
+    companyName.value = 'BooklyFit';
     showParticipantNames.value = true;
     isWaitlistVisible.value = true;
     bookingWindow.value = 'OFF';

@@ -38,8 +38,8 @@ export default defineConfig(() => ({
       filename: 'sw.ts',
       includeAssets: ['logo.png', 'manifest.json'], // These are in your public folder
       manifest: {
-        name: 'Bookly',
-        short_name: 'Bookl',
+        name: 'BooklyFit',
+        short_name: 'BooklyFit',
         description: 'Book your fitness courses at BooklyFit',
         theme_color: '#0f172a',
         background_color: '#0f172a',

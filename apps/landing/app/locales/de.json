@@ -1,0 +1,98 @@
+{
+  "nav": {
+    "howItWorks": "Ablauf",
+    "features": "Funktionen",
+    "goToApp": "Zur App"
+  },
+  "hero": {
+    "title1": "Verwalte Deine",
+    "title2": "Fitness-Community",
+    "subtitle": "Die moderne All-in-One-Plattform für Boutique-Gyms, CrossFit-Boxes und Fitnessstudios. Kurspläne einsehen, Plätze buchen, Anwesenheit tracken und Abrechnungen automatisieren.",
+    "launchApp": "App starten",
+    "seeHow": "Ablauf ansehen"
+  },
+  "memberExperience": {
+    "badge": "Mitglieder-Erfahrung",
+    "title": "So funktioniert es für Athleten",
+    "subtitle": "Eine intuitive, schnelle und mobiloptimierte Benutzeroberfläche, mit der Deine Mitglieder in Sekundenschnelle Kurse buchen und Erfolge eintragen können.",
+    "step1": {
+      "badge": "Schritt 1",
+      "title": "Kursplan einsehen",
+      "desc": "Sieh dir den wöchentlichen Kurskalender an, prüfe Details zu den Einheiten, checke freie Plätze und wer als Trainer coacht.",
+      "desktopAlt": "Mitglieder-Kursplan Desktop-Ansicht",
+      "mobileAlt": "Mitglieder-Kursplan Mobil-Ansicht"
+    },
+    "step2": {
+      "badge": "Schritt 2",
+      "title": "Platz buchen",
+      "desc": "Reserviere mit einem einzigen Klick einen Platz in deinem Lieblingskurs. Die Warteliste wird automatisch verwaltet, wenn ein Kurs voll besucht ist.",
+      "alt": "Kurs-Buchungs-Modal"
+    },
+    "step3": {
+      "badge": "Schritt 3",
+      "title": "Anwesenheit tracken",
+      "desc": "Sieh dir deine Check-ins an, baue aktive Anwesenheits-Streaks auf und nimm am Ranking auf dem Community-Leaderboard teil.",
+      "alt": "Mitglieder-Anwesenheits-Leaderboard"
+    }
+  },
+  "businessDashboard": {
+    "badge": "Business-Dashboard",
+    "title": "Entwickelt für Gym-Besitzer & Admins",
+    "subtitle": "Verwalte dein Unternehmen mit professionellen Tools. Tracke Umsätze, verwalte Mitgliederprofile, konfiguriere Richtlinien und skaliere dein Business mühelos.",
+    "payments": {
+      "title": "Optimierte Zahlungen & Abonnements",
+      "desc": "Überwache und verwalte Gym-Mitgliedschaften, individuelle Tarife und einmalige Kurszahlungen. Integriert mit Stripe für sichere Transaktionsabwicklung und reibungslose Rechnungsstellung für deine Community.",
+      "b1": "Zahlungsanalysen in Echtzeit",
+      "b2": "Individuelle Abo-Modelle",
+      "b3": "Integrierter Stripe Connect-Flow",
+      "alt": "Admin Zahlungs-Dashboard"
+    },
+    "users": {
+      "title": "Mühelose Mitglieder- & Trainer-Verwaltung",
+      "desc": "Verwalte deine Coaches und Athleten. Sieh aktive Mitgliedschaften ein, prüfe Registrierungen, passe Berechtigungen an (Admin, Trainer, Mitglied, Probe) und filtere Profile in Sekundenschnelle.",
+      "b1": "Feingranulare Rollenzuweisungen",
+      "b2": "Schnelle Mitgliedersuche",
+      "b3": "Verifizierte Konten und Statusprüfungen",
+      "alt": "Admin Mitglieder-Verwaltung"
+    },
+    "settings": {
+      "title": "Anpassbare Betriebsabläufe",
+      "desc": "Passe die Buchungsregeln an dein Gym an. Definiere Buchungszeitfenster (aktuelle Woche, zwei Wochen, Monat), lege Standardkapazitäten für Kurse fest, verwalte Benachrichtigungen und SMTP-Details.",
+      "b1": "Dynamische Buchungszeitfenster",
+      "b2": "Eigene SMTP-Konfigurationen",
+      "b3": "Parameter für Kurskapazitäten & Probetrainings",
+      "alt": "Admin Einstellungen-Dashboard"
+    }
+  },
+  "cta": {
+    "title": "Bereit, deine Fitness-Community wachsen zu lassen?",
+    "desc": "Schließe dich Gym-Besitzern an, die BooklyFit nutzen, um ihre wöchentlichen Kurspläne zu automatisieren und die Anwesenheit ihrer Athleten zu tracken.",
+    "btn": "Jetzt mit BooklyFit starten"
+  },
+  "footer": {
+    "terms": "Nutzungsbedingungen",
+    "privacy": "Datenschutzerklärung",
+    "legalNotice": "Impressum",
+    "contact": "Support kontaktieren",
+    "rights": "Alle Rechte vorbehalten."
+  },
+  "cookies": {
+    "title": "Ihre Privatsphäre ist uns wichtig",
+    "description": "Wir verwenden funktionale Cookies, um Ihre Einstellungen wie Sprache zu speichern und Ihr Buchungserlebnis zu verbessern. Einige Cookies sind für den Betrieb der Seite unerlässlich.",
+    "accept": "Alle akzeptieren",
+    "decline": "Nur Essenzielle",
+    "manage": "Einstellungen verwalten",
+    "preferencesTitle": "Cookie-Einstellungen",
+    "preferencesDesc": "Sie können wählen, welche Arten von Cookies Sie zulassen möchten. Essenzielle Cookies können nicht deaktiviert werden, da sie für das ordnungsgemäße Funktionieren der App erforderlich sind.",
+    "essentialTitle": "Technisch Notwendig",
+    "essentialDesc": "Erforderlich für die Funktionalität und Sicherheit der Website.",
+    "functionalTitle": "Funktional",
+    "functionalDesc": "Speichern Ihrer Einstellungen und Präferenzen.",
+    "analyticalTitle": "Analytisch",
+    "analyticalDesc": "Helfen uns zu verstehen, wie die App genutzt wird.",
+    "marketingTitle": "Marketing",
+    "marketingDesc": "Verwendet für maßgeschneiderte Inhalte und Werbung.",
+    "savePreferences": "Einstellungen speichern",
+    "declineAll": "Alle ablehnen"
+  }
+}
