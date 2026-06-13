@@ -156,13 +156,21 @@ function close() {
                   </div>
                 </div>
                 <div class="flex flex-col">
-                  <span
-                    :class="['font-bold',
-                             isAnonymized(slotProps.data.user.name) ? 'text-slate-400' : 'text-slate-900',
-                             { 'line-through !text-slate-400': !slotProps.data.attended }]"
-                  >
-                    {{ slotProps.data.user.name }}
-                  </span>
+                  <div class="flex items-center gap-2">
+                    <span
+                      :class="['font-bold',
+                               isAnonymized(slotProps.data.user.name) ? 'text-slate-400' : 'text-slate-900',
+                               { 'line-through !text-slate-400': !slotProps.data.attended }]"
+                    >
+                      {{ slotProps.data.user.name }}
+                    </span>
+                    <span
+                      v-if="slotProps.data.user.roles && slotProps.data.user.roles.includes('ROLE_TRIAL') && (isTrainerOrAdmin || !isAnonymized(slotProps.data.user.name))"
+                      class="px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wider bg-amber-600 text-amber-800 rounded-full border border-amber-200"
+                    >
+                      {{ t('participants.trial') }}
+                    </span>
+                  </div>
                   <small
                     v-if="slotProps.data.user.email"
                     :class="{'line-through !text-slate-400': !slotProps.data.attended}"
@@ -239,9 +247,17 @@ function close() {
                   </div>
                 </div>
                 <div class="flex flex-col">
-                  <span :class="['font-bold', isAnonymized(slotProps.data.user.name) ? 'text-slate-400' : 'text-slate-900']">
-                    {{ slotProps.data.user.name }}
-                  </span>
+                  <div class="flex items-center gap-2">
+                    <span :class="['font-bold', isAnonymized(slotProps.data.user.name) ? 'text-slate-400' : 'text-slate-900']">
+                      {{ slotProps.data.user.name }}
+                    </span>
+                    <span
+                      v-if="slotProps.data.user.roles && slotProps.data.user.roles.includes('ROLE_TRIAL') && (isTrainerOrAdmin || !isAnonymized(slotProps.data.user.name))"
+                      class="px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wider bg-amber-600 text-amber-800 rounded-full border border-amber-200"
+                    >
+                      {{ t('participants.trial') }}
+                    </span>
+                  </div>
                   <small
                     v-if="slotProps.data.user.email"
                   >{{ slotProps.data.user.email }}</small>

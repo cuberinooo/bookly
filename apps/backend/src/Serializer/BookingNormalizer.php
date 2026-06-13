@@ -32,7 +32,11 @@ class BookingNormalizer implements NormalizerInterface
             $currentUser = $this->security->getUser();
 
             $settings = $this->settingsRepository->find($trainer->getCompany()->getGlobalSettings()->getId());
-            $isTrainer = ($currentUser && $currentUser->getUserIdentifier() === $trainer->getUserIdentifier());
+            $isTrainer = ($currentUser && (
+                $currentUser->getUserIdentifier() === $trainer->getUserIdentifier()
+                || $this->security->isGranted('ROLE_TRAINER')
+                || $this->security->isGranted('ROLE_ADMIN')
+            ));
             $isOwnBooking = ($currentUser && $currentUser->getUserIdentifier() === $data->getUser()->getUserIdentifier());
 
             // Check if member is allowed to see this booking if it's waitlist
@@ -50,6 +54,7 @@ class BookingNormalizer implements NormalizerInterface
             if (!$shouldShowName) {
                 if (isset($normalizedData['user']) && is_array($normalizedData['user'])) {
                     $normalizedData['user']['name'] = 'Athlete #'.$data->getUser()->getId();
+                    unset($normalizedData['user']['roles']);
                 }
             }
 

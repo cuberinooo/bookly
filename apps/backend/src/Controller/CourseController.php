@@ -35,8 +35,9 @@ class CourseController extends AbstractController
         $companyId = $user->getCompany()->getId();
         $queryParams = $request->query->all();
 
-        // Context for cache includes roles and all query params
+        // Context for cache includes userId, roles and all query params
         $context = [
+            'userId' => $user->getId(),
             'roles' => $user->getRoles(),
             'query' => $queryParams,
             'viewMode' => $request->headers->get('X-View-Mode', 'member'),
@@ -110,6 +111,7 @@ class CourseController extends AbstractController
 
         $context = [
             'id' => $id,
+            'userId' => $user->getId(),
             'roles' => $user->getRoles(),
         ];
 
