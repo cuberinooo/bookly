@@ -102,6 +102,7 @@ class PlatformSettings
     public function setOperatorName(?string $operatorName): static
     {
         $this->operatorName = $operatorName;
+
         return $this;
     }
 
@@ -113,6 +114,7 @@ class PlatformSettings
     public function setOperatorCompany(?string $operatorCompany): static
     {
         $this->operatorCompany = $operatorCompany;
+
         return $this;
     }
 
@@ -124,6 +126,7 @@ class PlatformSettings
     public function setOperatorDetails(?string $operatorDetails): static
     {
         $this->operatorDetails = $operatorDetails;
+
         return $this;
     }
 
@@ -135,6 +138,7 @@ class PlatformSettings
     public function setOperatorStreet(?string $operatorStreet): static
     {
         $this->operatorStreet = $operatorStreet;
+
         return $this;
     }
 
@@ -146,6 +150,7 @@ class PlatformSettings
     public function setOperatorHouseNumber(?string $operatorHouseNumber): static
     {
         $this->operatorHouseNumber = $operatorHouseNumber;
+
         return $this;
     }
 
@@ -157,6 +162,7 @@ class PlatformSettings
     public function setOperatorZipCode(?string $operatorZipCode): static
     {
         $this->operatorZipCode = $operatorZipCode;
+
         return $this;
     }
 
@@ -168,6 +174,7 @@ class PlatformSettings
     public function setOperatorCity(?string $operatorCity): static
     {
         $this->operatorCity = $operatorCity;
+
         return $this;
     }
 
@@ -179,6 +186,7 @@ class PlatformSettings
     public function setOperatorEmail(?string $operatorEmail): static
     {
         $this->operatorEmail = $operatorEmail;
+
         return $this;
     }
 
@@ -190,6 +198,7 @@ class PlatformSettings
     public function setOperatorPhone(?string $operatorPhone): static
     {
         $this->operatorPhone = $operatorPhone;
+
         return $this;
     }
 
@@ -201,6 +210,7 @@ class PlatformSettings
     public function setProfession(?string $profession): static
     {
         $this->profession = $profession;
+
         return $this;
     }
 
@@ -212,6 +222,7 @@ class PlatformSettings
     public function setCountry(?string $country): static
     {
         $this->country = $country;
+
         return $this;
     }
 
@@ -223,6 +234,7 @@ class PlatformSettings
     public function setTaxId(?string $taxId): static
     {
         $this->taxId = $taxId;
+
         return $this;
     }
 
@@ -234,6 +246,7 @@ class PlatformSettings
     public function setVatId(?string $vatId): static
     {
         $this->vatId = $vatId;
+
         return $this;
     }
 
@@ -245,6 +258,7 @@ class PlatformSettings
     public function setPrivacyPolicyPdfPath(?string $privacyPolicyPdfPath): static
     {
         $this->privacyPolicyPdfPath = $privacyPolicyPdfPath;
+
         return $this;
     }
 }

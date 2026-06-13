@@ -18,8 +18,8 @@ class SubscriptionService
     /**
      * Cancels a subscription based on its billing interval.
      *
-     * @param string $subscriptionId
      * @param string|null $stripeAccountId The Connect Stripe account ID, if applicable
+     *
      * @return array Information about the cancellation type and end date
      */
     public function cancelSubscription(string $subscriptionId, ?string $stripeAccountId = null): array
@@ -36,7 +36,7 @@ class SubscriptionService
         }
         $interval = $item->price->recurring->interval ?? 'month';
 
-        if ($interval === 'year') {
+        if ('year' === $interval) {
             // 3a. Cancel YEARLY immediately
             $cancelledSubscription = $this->stripe->subscriptions->cancel($subscriptionId, [], $options);
 
@@ -46,18 +46,18 @@ class SubscriptionService
                 'message' => 'Your yearly subscription has been cancelled immediately.',
                 'ends_at' => $cancelledSubscription->ended_at,
             ];
-        } else {
-            // 3b. Cancel MONTHLY at the end of the current period
-            $updatedSubscription = $this->stripe->subscriptions->update($subscriptionId, [
-                'cancel_at_period_end' => true,
-            ], $options);
-
-            return [
-                'status' => 'success',
-                'cancellation_type' => 'period_end',
-                'message' => 'Your monthly subscription will end at the end of your current billing period.',
-                'ends_at' => $updatedSubscription->current_period_end,
-            ];
         }
+        // 3b. Cancel MONTHLY at the end of the current period
+        $updatedSubscription = $this->stripe->subscriptions->update($subscriptionId, [
+            'cancel_at_period_end' => true,
+        ], $options);
+
+        return [
+            'status' => 'success',
+            'cancellation_type' => 'period_end',
+            'message' => 'Your monthly subscription will end at the end of your current billing period.',
+            'ends_at' => $updatedSubscription->current_period_end,
+        ];
+
     }
 }

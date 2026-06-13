@@ -94,7 +94,7 @@ class RegistrationService
                 }
             }
         } else {
-            if (isset($data['registerMode']) && $data['registerMode'] === 'create') {
+            if (isset($data['registerMode']) && 'create' === $data['registerMode']) {
                 throw new \Exception($this->translator->trans('error.company_already_exists'));
             }
         }

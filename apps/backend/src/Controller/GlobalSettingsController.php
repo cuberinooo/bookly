@@ -44,7 +44,7 @@ class GlobalSettingsController extends AbstractController
 
         $settings = $user->getCompany()->getGlobalSettings();
         $wasAutoCancelEnabled = $settings->isAutoCancelEnabled();
-        
+
         $data = json_decode($request->getContent(), true);
 
         if (isset($data['showParticipantNames'])) {

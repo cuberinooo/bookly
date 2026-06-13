@@ -29,6 +29,7 @@ class PlatformSettingsController extends AbstractController
     {
         $settings = $this->platformSettingsService->getSettings();
         $data = $this->serializer->serialize($settings, 'json', ['groups' => 'platform:read']);
+
         return new JsonResponse($data, Response::HTTP_OK, [], true);
     }
 

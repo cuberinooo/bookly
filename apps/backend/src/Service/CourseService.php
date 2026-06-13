@@ -17,7 +17,6 @@ use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\DelayStamp;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
-use App\Service\PushNotificationService;
 
 class CourseService
 {
@@ -97,7 +96,7 @@ class CourseService
         }
 
         $now = new \DateTime();
-        $checkTime = (clone $course->getStartTime())->modify('-' . $settings->getAutoCancelHoursBefore() . ' hours');
+        $checkTime = (clone $course->getStartTime())->modify('-'.$settings->getAutoCancelHoursBefore().' hours');
 
         $delaySeconds = $checkTime->getTimestamp() - $now->getTimestamp();
         $delay = max(0, $delaySeconds) * 1000;
@@ -475,7 +474,7 @@ class CourseService
 
         $course->setStatus(\App\Enum\CourseStatus::CANCELLED);
         $course->setCancelledBy($trainer);
-        $course->setAutoCancelled($trainer === null);
+        $course->setAutoCancelled(null === $trainer);
 
         $this->unbookAll($course);
 

@@ -26,6 +26,7 @@ class PlatformSettingsRepository extends ServiceEntityRepository
             $this->getEntityManager()->persist($settings);
             $this->getEntityManager()->flush();
         }
+
         return $settings;
     }
 }

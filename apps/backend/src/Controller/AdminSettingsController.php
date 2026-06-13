@@ -63,7 +63,7 @@ class AdminSettingsController extends AbstractController
         $company = $user->getCompany();
 
         if (array_key_exists('paymentEnabled', $data)) {
-            $newValue = (bool)$data['paymentEnabled'];
+            $newValue = (bool) $data['paymentEnabled'];
             $oldValue = $company->getStripeConfig()->isPaymentEnabled();
 
             if ($oldValue && !$newValue) {

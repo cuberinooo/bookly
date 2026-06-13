@@ -207,7 +207,7 @@ class BookingService
                     $this->translator->trans('push.waitlist_promoted.title'),
                     $this->translator->trans('push.waitlist_promoted.body', [
                         '%title%' => $course->getTitle(),
-                        '%time%' => $course->getStartTime()->format('H:i')
+                        '%time%' => $course->getStartTime()->format('H:i'),
                     ]),
                     '/dashboard'
                 );
@@ -217,8 +217,6 @@ class BookingService
             }
         }
     }
-
-
 
     private function validateBookingWindow(Course $course): void
     {

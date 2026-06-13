@@ -32,8 +32,8 @@ class OnboardingController extends AbstractController
         }
 
         $data = json_decode($request->getContent(), true);
-        
-        if (isset($data['skip']) && $data['skip'] === true) {
+
+        if (isset($data['skip']) && true === $data['skip']) {
             $this->onboardingService->skipOnboarding($user);
         } elseif (isset($data['taskId']) && is_string($data['taskId'])) {
             $this->onboardingService->markTaskComplete($user, $data['taskId']);
@@ -43,6 +43,7 @@ class OnboardingController extends AbstractController
 
         // Return updated user state
         $json = $this->serializer->serialize($user, 'json', ['groups' => 'user:read']);
+
         return new JsonResponse($json, Response::HTTP_OK, [], true);
     }
 }

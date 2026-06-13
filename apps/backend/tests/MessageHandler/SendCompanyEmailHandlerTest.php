@@ -35,7 +35,7 @@ class SendCompanyEmailHandlerTest extends TestCase
         );
     }
 
-    public function testFallbackToDefaultMailerWhenCustomSmtpDisabled(): void
+    public function test_fallback_to_default_mailer_when_custom_smtp_disabled(): void
     {
         $companyId = 1;
         $company = $this->createMock(Company::class);
@@ -55,7 +55,7 @@ class SendCompanyEmailHandlerTest extends TestCase
         $this->defaultMailer->expects($this->once())
             ->method('send')
             ->with($this->callback(function (Email $sentEmail) {
-                return $sentEmail->getTo()[0]->getAddress() === 'recipient@example.com'
+                return 'recipient@example.com' === $sentEmail->getTo()[0]->getAddress()
                     && $sentEmail->getFrom()[0]->getAddress() === $this->noReplyMail;
             }));
 
@@ -63,7 +63,7 @@ class SendCompanyEmailHandlerTest extends TestCase
         ($this->handler)($message);
     }
 
-    public function testFallbackToDefaultMailerWhenSmtpSettingsInvalid(): void
+    public function test_fallback_to_default_mailer_when_smtp_settings_invalid(): void
     {
         $companyId = 1;
         $company = $this->createMock(Company::class);
@@ -85,7 +85,7 @@ class SendCompanyEmailHandlerTest extends TestCase
         ($this->handler)($message);
     }
 
-    public function testCustomSmtpFallbackOnFailure(): void
+    public function test_custom_smtp_fallback_on_failure(): void
     {
         $companyId = 1;
         $company = $this->createMock(Company::class);
@@ -115,7 +115,7 @@ class SendCompanyEmailHandlerTest extends TestCase
         ($this->handler)($message);
     }
 
-    public function testCustomSmtpForcesFromAddressToMatchSmtpUser(): void
+    public function test_custom_smtp_forces_from_address_to_match_smtp_user(): void
     {
         $companyId = 1;
         $company = $this->createMock(Company::class);
@@ -151,4 +151,3 @@ class SendCompanyEmailHandlerTest extends TestCase
         $this->assertSame('custom-smtp@company.com', $email->getFrom()[0]->getAddress());
     }
 }
-

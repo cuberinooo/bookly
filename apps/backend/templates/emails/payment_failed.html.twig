@@ -1,0 +1,17 @@
+{% extends 'emails/base.html.twig' %}
+
+{% block title %}{{ 'email.payment_failed.title'|trans }}{% endblock %}
+
+{% block body %}
+    <h2>{{ 'email.payment_failed.title'|trans }}</h2>
+    <p>{{ 'email.payment_failed.greeting'|trans({'%name%': name})|raw }}</p>
+    <p>{{ 'email.payment_failed.message'|trans({'%siteName%': siteName})|raw }}</p>
+    <p>{{ 'email.payment_failed.status_preserved'|trans|raw }}</p>
+    <p>{{ 'email.payment_failed.action_required'|trans|raw }}</p>
+    <p style="text-align: center; margin: 30px 0;">
+        <a href="{{ loginUrl }}" class="button">{{ 'email.payment_failed.button'|trans }}</a>
+    </p>
+    <p>{{ 'email.payment_failed.contact_support'|trans }}</p>
+    <p>{{ 'email.payment_failed.keep_training'|trans }}</p>
+    <p>{{ 'email.payment_failed.closing'|trans({'%siteName%': siteName})|raw }}</p>
+{% endblock %}

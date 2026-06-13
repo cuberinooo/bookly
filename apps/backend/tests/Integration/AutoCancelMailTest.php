@@ -10,8 +10,8 @@ use App\Entity\GlobalSettings;
 use App\Entity\User;
 use App\Message\CheckCourseAutoCancelMessage;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
-use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class AutoCancelMailTest extends WebTestCase
 {
@@ -51,7 +51,7 @@ class AutoCancelMailTest extends WebTestCase
         $settings->setAutoCancelMinParticipants(3);
         $settings->setAutoCancelHoursBefore(4);
         $entityManager->persist($settings);
-        
+
         $company->setGlobalSettings($settings);
 
         $trainer = new User();
@@ -82,7 +82,7 @@ class AutoCancelMailTest extends WebTestCase
 
         // Check Mailhog
         $messages = $this->getMailhogMessages();
-        
+
         // Assert we have at least 1 message
         $this->assertGreaterThanOrEqual(1, count($messages), 'Email should have been sent to Mailhog');
 
@@ -95,7 +95,7 @@ class AutoCancelMailTest extends WebTestCase
                 break;
             }
         }
-        
+
         $this->assertTrue($found, 'Auto cancel email should be found in Mailhog');
     }
 }

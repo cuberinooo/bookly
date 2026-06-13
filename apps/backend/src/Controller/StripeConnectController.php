@@ -1,18 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Controller;
 
 use App\Entity\User;
 use App\Service\EmailService;
+use App\Service\SubscriptionService;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Stripe\Account;
 use Stripe\AccountLink;
-use Stripe\Stripe;
+use Stripe\Checkout\Session;
 use Stripe\Price;
 use Stripe\Product;
-use Stripe\Checkout\Session;
-use App\Service\SubscriptionService;
+use Stripe\Stripe;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -89,14 +91,14 @@ class StripeConnectController extends AbstractController
             }
         }
 
-        return new RedirectResponse($this->frontendUrl . '/payments');
+        return new RedirectResponse($this->frontendUrl.'/payments');
     }
 
     #[Route('/onboard/refresh', name: 'stripe_onboard_refresh', methods: ['GET'])]
     public function onboardRefresh(Request $request): RedirectResponse
     {
         // Just redirect them back to the settings page, they can click "Set up Payments" again
-        return new RedirectResponse($this->frontendUrl . '/payments');
+        return new RedirectResponse($this->frontendUrl.'/payments');
     }
 
     #[Route('/portal-session', name: 'stripe_portal_session', methods: ['POST'])]
@@ -120,7 +122,7 @@ class StripeConnectController extends AbstractController
         try {
             $session = \Stripe\BillingPortal\Session::create([
                 'customer' => $customerId,
-                'return_url' => $this->frontendUrl . '/profile?tab=abo',
+                'return_url' => $this->frontendUrl.'/profile?tab=abo',
             ], $stripeAccountHeader);
 
             return new JsonResponse(['url' => $session->url]);
@@ -153,7 +155,9 @@ class StripeConnectController extends AbstractController
 
             $groupedByCustomer = [];
             foreach ($subscriptions->data as $sub) {
-                if (in_array($sub->status, ['canceled', 'incomplete_expired'])) continue;
+                if (in_array($sub->status, ['canceled', 'incomplete_expired'], true)) {
+                    continue;
+                }
 
                 /** @var \Stripe\Customer $customer */
                 $customer = $sub->customer;
@@ -184,7 +188,7 @@ class StripeConnectController extends AbstractController
 
                 // Map status: if trialing but has an anchor, it's basically active in our context
                 $displayStatus = $sub->status;
-                if ($sub->status === 'trialing' && $sub->billing_cycle_anchor > time()) {
+                if ('trialing' === $sub->status && $sub->billing_cycle_anchor > time()) {
                     $displayStatus = 'active'; // Treat pending alignment as active
                 }
 
@@ -206,11 +210,11 @@ class StripeConnectController extends AbstractController
                 $groupedByCustomer[$customerId]['subscriptions'][] = $subData;
 
                 // Update overall status (if any sub is active, customer is active)
-                if ($displayStatus === 'active') {
+                if ('active' === $displayStatus) {
                     $groupedByCustomer[$customerId]['overall_status'] = 'active';
-                } elseif ($groupedByCustomer[$customerId]['overall_status'] !== 'active' && $displayStatus === 'trialing') {
+                } elseif ('active' !== $groupedByCustomer[$customerId]['overall_status'] && 'trialing' === $displayStatus) {
                     $groupedByCustomer[$customerId]['overall_status'] = 'trialing';
-                } elseif ($groupedByCustomer[$customerId]['overall_status'] === 'inactive') {
+                } elseif ('inactive' === $groupedByCustomer[$customerId]['overall_status']) {
                     $groupedByCustomer[$customerId]['overall_status'] = $displayStatus;
                 }
 
@@ -260,14 +264,18 @@ class StripeConnectController extends AbstractController
             $overallStatus = 'inactive';
 
             foreach ($subscriptions->data as $sub) {
-                if ($sub->status === 'canceled') continue;
+                if ('canceled' === $sub->status) {
+                    continue;
+                }
 
                 $displayStatus = $sub->status;
-                if ($sub->status === 'trialing' && $sub->billing_cycle_anchor > time()) {
+                if ('trialing' === $sub->status && $sub->billing_cycle_anchor > time()) {
                     $displayStatus = 'active';
                 }
 
-                if ($displayStatus === 'active') $overallStatus = 'active';
+                if ('active' === $displayStatus) {
+                    $overallStatus = 'active';
+                }
 
                 $mappedSubs[] = [
                     'id' => $sub->id,
@@ -285,7 +293,7 @@ class StripeConnectController extends AbstractController
 
             return new JsonResponse([
                 'status' => $overallStatus,
-                'display_status' => $overallStatus === 'active' ? 'active' : ($mappedSubs[0]['display_status'] ?? $overallStatus),
+                'display_status' => 'active' === $overallStatus ? 'active' : ($mappedSubs[0]['display_status'] ?? $overallStatus),
                 'subscriptions' => $mappedSubs,
                 // For backward compatibility take the first non-canceled
                 'cancel_at_period_end' => $mappedSubs[0]['cancel_at_period_end'] ?? false,
@@ -329,24 +337,26 @@ class StripeConnectController extends AbstractController
             $results = [];
 
             foreach ($subscriptions->data as $sub) {
-                if ($sub->status === 'canceled') continue;
+                if ('canceled' === $sub->status) {
+                    continue;
+                }
 
                 $cancelResult = $this->subscriptionService->cancelSubscription(
                     $sub->id,
                     $company->getStripeConfig()->getStripeAccountId()
                 );
                 $results[] = $cancelResult;
-                $cancelledCount++;
+                ++$cancelledCount;
             }
 
-            if ($cancelledCount === 0) {
+            if (0 === $cancelledCount) {
                 return new JsonResponse(['error' => 'No active subscription found'], 404);
             }
 
             // Prioritize returning the period_end cancellation info (which represents the main monthly subscription)
             $finalResult = $results[0];
             foreach ($results as $res) {
-                if ($res['cancellation_type'] === 'period_end') {
+                if ('period_end' === $res['cancellation_type']) {
                     $finalResult = $res;
                     break;
                 }
@@ -388,22 +398,24 @@ class StripeConnectController extends AbstractController
 
         // Fallback: If local amounts are missing but we have IDs, fetch from Stripe and update local records
         $needsFlush = false;
-        if ($setupFeeId && $data['setupFee'] === null) {
+        if ($setupFeeId && null === $data['setupFee']) {
             try {
                 $price = Price::retrieve($setupFeeId, $stripeAccountHeader);
                 $stripeConfig->setSetupFeeAmount($price->unit_amount);
                 $data['setupFee'] = $price->unit_amount / 100;
                 $needsFlush = true;
-            } catch (\Exception $e) {}
+            } catch (\Exception $e) {
+            }
         }
 
-        if ($membershipId && $data['monthlyFee'] === null) {
+        if ($membershipId && null === $data['monthlyFee']) {
             try {
                 $price = Price::retrieve($membershipId, $stripeAccountHeader);
                 $stripeConfig->setMonthlyFeeAmount($price->unit_amount);
                 $data['monthlyFee'] = $price->unit_amount / 100;
                 $needsFlush = true;
-            } catch (\Exception $e) {}
+            } catch (\Exception $e) {
+            }
         }
 
         if ($needsFlush) {
@@ -427,8 +439,8 @@ class StripeConnectController extends AbstractController
         }
 
         $data = json_decode($request->getContent(), true);
-        $setupFeeAmount = isset($data['setupFee']) ? (int)round($data['setupFee'] * 100) : 0;
-        $monthlyFeeAmount = isset($data['monthlyFee']) ? (int)round($data['monthlyFee'] * 100) : 0;
+        $setupFeeAmount = isset($data['setupFee']) ? (int) round($data['setupFee'] * 100) : 0;
+        $monthlyFeeAmount = isset($data['monthlyFee']) ? (int) round($data['monthlyFee'] * 100) : 0;
 
         if ($monthlyFeeAmount <= 0) {
             return new JsonResponse(['error' => 'Invalid monthly fee amount'], 400);
@@ -438,7 +450,7 @@ class StripeConnectController extends AbstractController
 
         // 1. Handle Payment Enabled Toggle & Validation
         if (isset($data['paymentEnabled'])) {
-            $newValue = (bool)$data['paymentEnabled'];
+            $newValue = (bool) $data['paymentEnabled'];
             $oldValue = $stripeConfig->isPaymentEnabled();
 
             if ($oldValue && !$newValue) {
@@ -451,7 +463,7 @@ class StripeConnectController extends AbstractController
                 $activeCount = 0;
                 foreach ($subscriptions->data as $sub) {
                     if (!in_array($sub->status, ['canceled', 'incomplete_expired'], true)) {
-                        $activeCount++;
+                        ++$activeCount;
                     }
                 }
 
@@ -464,10 +476,10 @@ class StripeConnectController extends AbstractController
 
         // 2. Update company billing preferences
         if (isset($data['yearlyFeeEnabled'])) {
-            $stripeConfig->setYearlyFeeEnabled((bool)$data['yearlyFeeEnabled']);
+            $stripeConfig->setYearlyFeeEnabled((bool) $data['yearlyFeeEnabled']);
         }
         if (isset($data['billingCycleAnchorDay'])) {
-            $stripeConfig->setBillingCycleAnchorDay($data['billingCycleAnchorDay'] === 0 ? null : (int)$data['billingCycleAnchorDay']);
+            $stripeConfig->setBillingCycleAnchorDay(0 === $data['billingCycleAnchorDay'] ? null : (int) $data['billingCycleAnchorDay']);
         }
 
         // 3. Manage Membership Product & Price
@@ -530,7 +542,7 @@ class StripeConnectController extends AbstractController
                         }
                     }
                 } catch (\Exception $e) {
-                    $this->logger->error('Failed to update existing subscriptions after price change: ' . $e->getMessage());
+                    $this->logger->error('Failed to update existing subscriptions after price change: '.$e->getMessage());
                 }
             }
         }
@@ -560,7 +572,7 @@ class StripeConnectController extends AbstractController
                     'product' => $yearlyFeeProductId,
                     'unit_amount' => $setupFeeAmount,
                     'currency' => 'eur',
-                    'recurring' => ['interval' => 'year']
+                    'recurring' => ['interval' => 'year'],
                 ], $stripeAccountHeader);
                 $stripeConfig->setStripePriceYearlyRecurringId($pRec->id);
 
@@ -575,6 +587,7 @@ class StripeConnectController extends AbstractController
             'monthlyFeePriceId' => $stripeConfig->getStripePriceMembershipId(),
         ]);
     }
+
     #[Route('/checkout', name: 'stripe_checkout', methods: ['POST'])]
     public function createCheckoutSession(UrlGeneratorInterface $urlGenerator): JsonResponse
     {
@@ -599,8 +612,8 @@ class StripeConnectController extends AbstractController
 
         $stripeAccountHeader = ['stripe_account' => $company->getStripeConfig()->getStripeAccountId()];
 
-        $successUrl = $this->frontendUrl . '/profile?tab=abo&upgrade=success';
-        $cancelUrl = $this->frontendUrl . '/profile?tab=abo&upgrade=cancelled';
+        $successUrl = $this->frontendUrl.'/profile?tab=abo&upgrade=success';
+        $cancelUrl = $this->frontendUrl.'/profile?tab=abo&upgrade=cancelled';
 
         $customerId = $user->getStripeCustomerId();
         $hasPaidYearlyFee = false;
@@ -641,7 +654,7 @@ class StripeConnectController extends AbstractController
                         }
                     }
                 } catch (\Exception $e) {
-                    $this->logger->error('Failed to check yearly fee status: ' . $e->getMessage());
+                    $this->logger->error('Failed to check yearly fee status: '.$e->getMessage());
                 }
             }
         }
@@ -668,17 +681,17 @@ class StripeConnectController extends AbstractController
             'cancel_url' => $cancelUrl,
             'metadata' => [
                 'user_id' => $user->getId(),
-                'yearly_trial_end' => $yearlyTrialEnd ? (string)$yearlyTrialEnd : '',
+                'yearly_trial_end' => $yearlyTrialEnd ? (string) $yearlyTrialEnd : '',
             ],
             'customer_email' => $user->getEmail(),
         ];
 
         // Handle Billing Cycle Anchor if configured
         $anchorDay = $company->getStripeConfig()->getBillingCycleAnchorDay();
-        if ($anchorDay !== null) {
+        if (null !== $anchorDay) {
             $now = new \DateTime();
             $target = new \DateTime();
-            $target->setDate((int)$now->format('Y'), (int)$now->format('m'), $anchorDay);
+            $target->setDate((int) $now->format('Y'), (int) $now->format('m'), $anchorDay);
 
             if ($target <= $now) {
                 $target->modify('+1 month');
@@ -750,14 +763,14 @@ class StripeConnectController extends AbstractController
                     }
                 }
 
-                if ($isMonthly && $sub->status !== 'canceled') {
+                if ($isMonthly && 'canceled' !== $sub->status) {
                     $monthlySub = $sub;
                 }
                 if ($isYearly) {
                     if (in_array($sub->status, ['active', 'trialing'], true)) {
                         $yearlySub = $sub;
-                    } elseif ($sub->status === 'canceled') {
-                        if ($lastCanceledYearlySub === null || $sub->created > $lastCanceledYearlySub->created) {
+                    } elseif ('canceled' === $sub->status) {
+                        if (null === $lastCanceledYearlySub || $sub->created > $lastCanceledYearlySub->created) {
                             $lastCanceledYearlySub = $sub;
                         }
                     }
@@ -773,7 +786,7 @@ class StripeConnectController extends AbstractController
                 \Stripe\Subscription::update($monthlySub->id, [
                     'cancel_at_period_end' => false,
                 ], $stripeAccountHeader);
-                $reactivatedCount++;
+                ++$reactivatedCount;
             }
 
             // 2. Reactivate/Recreate the yearly subscription
@@ -783,7 +796,7 @@ class StripeConnectController extends AbstractController
                         \Stripe\Subscription::update($yearlySub->id, [
                             'cancel_at_period_end' => false,
                         ], $stripeAccountHeader);
-                        $reactivatedCount++;
+                        ++$reactivatedCount;
                     }
                 } else {
                     // Recreate it! Use original renewal date from the previous canceled yearly sub if in future
@@ -795,7 +808,7 @@ class StripeConnectController extends AbstractController
                         }
                     }
 
-                    if ($trialEnd === null) {
+                    if (null === $trialEnd) {
                         $trialEnd = (new \DateTime('+1 year'))->getTimestamp();
                     }
 
@@ -806,10 +819,10 @@ class StripeConnectController extends AbstractController
                         'description' => 'Jährliche Verwaltungsgebühr (Folgejahre)',
                         'metadata' => [
                             'user_id' => $user->getId(),
-                            'auto_created' => 'true'
-                        ]
+                            'auto_created' => 'true',
+                        ],
                     ], $stripeAccountHeader);
-                    $reactivatedCount++;
+                    ++$reactivatedCount;
                 }
             }
 

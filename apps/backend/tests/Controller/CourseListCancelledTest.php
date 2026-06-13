@@ -84,15 +84,15 @@ class CourseListCancelledTest extends WebTestCase
         $content = json_decode($client->getResponse()->getContent(), true);
         $courses = $content['data'];
 
-        $courseTitles = array_map(fn($c) => $c['title'], $courses);
+        $courseTitles = array_map(fn ($c) => $c['title'], $courses);
 
         $this->assertContains('Active Course', $courseTitles);
         $this->assertContains('Cancelled Course', $courseTitles, 'Cancelled course should be included in the list');
-        
+
         // Find the cancelled course in response
         $cancelledCourseData = null;
         foreach ($courses as $c) {
-            if ($c['title'] === 'Cancelled Course') {
+            if ('Cancelled Course' === $c['title']) {
                 $cancelledCourseData = $c;
                 break;
             }

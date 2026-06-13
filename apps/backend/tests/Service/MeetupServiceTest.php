@@ -138,7 +138,7 @@ class MeetupServiceTest extends TestCase
         $meetup->method('getStatus')->willReturn(MeetupStatus::OPEN);
         $meetup->method('getMinParticipants')->willReturn(2);
         $meetup->method('getGoingCount')->willReturn(3);
-        
+
         $rsvp = new MeetupRsvp();
         $rsvp->setStatus(RsvpStatus::GOING);
         $meetup->method('getRsvps')->willReturn(new ArrayCollection([$rsvp]));
@@ -171,7 +171,7 @@ class MeetupServiceTest extends TestCase
         $creator = new User();
         $meetup = new Meetup();
         $meetup->setCreator($creator);
-        
+
         $rsvp = new MeetupRsvp();
         $rsvp->setStatus(RsvpStatus::GOING);
         $meetup->addRsvp($rsvp);

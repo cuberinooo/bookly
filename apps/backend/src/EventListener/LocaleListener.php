@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\EventListener;
 
+use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
-use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 class LocaleListener implements EventSubscriberInterface
 {
@@ -26,13 +26,13 @@ class LocaleListener implements EventSubscriberInterface
         }
 
         $locale = $request->headers->get('Accept-Language');
-        
+
         // The frontend sends the locale directly (e.g., 'en' or 'de')
         // We only want to support these two for now.
         // We also strip potential sub-tags if they were to be added (e.g. 'en-US' -> 'en')
         $baseLocale = substr($locale, 0, 2);
 
-        if (in_array($baseLocale, ['en', 'de'])) {
+        if (in_array($baseLocale, ['en', 'de'], true)) {
             $request->setLocale($baseLocale);
         }
     }

@@ -107,6 +107,12 @@ When a subscription expires or is canceled in Stripe:
 3. **Downgrade**: Strips the `ROLE_MEMBER` and `ROLE_TRAINER` roles from the user, and re-assigns `ROLE_TRIAL` (only if the monthly membership was the deleted subscription).
 4. **Stripe Customer ID Cleanup**: Regardless of which subscription was deleted, the system queries Stripe to check if the customer has any other active or trialing subscriptions remaining. If none exist, it clears `stripeCustomerId` by setting it to `null`.
 
+### Event: `invoice.payment_failed`
+When a payment attempt fails for a subscription invoice:
+1. **Identify User**: Finds the user in the database using the Stripe Customer ID (`customer` field in the invoice).
+2. **Retain Member Status**: The user's role remains `ROLE_MEMBER` while Stripe attempts automatic retries (the subscription status becomes `past_due` in Stripe).
+3. **Notification**: Triggers `EmailService::sendPaymentFailedEmail` to send an email notification warning the customer of the failed payment and providing a link to update their billing details.
+
 ---
 
 ## 4. Subscription Management & Cancellation

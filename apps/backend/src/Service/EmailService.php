@@ -22,7 +22,8 @@ class EmailService
         private MessageBusInterface $bus,
         private BodyRendererInterface $bodyRenderer,
         private S3ClientInterface $s3Client,
-        private string $s3Bucket
+        private string $s3Bucket,
+        private \Symfony\Contracts\Translation\TranslatorInterface $translator
     ) {
     }
 
@@ -374,7 +375,7 @@ class EmailService
                 'participantCount' => $participantCount,
                 'minParticipants' => $course->getCompany()->getGlobalSettings()->getAutoCancelMinParticipants(),
                 'siteName' => $siteName,
-                'loginUrl' => $this->getLoginUrl()
+                'loginUrl' => $this->getLoginUrl(),
             ]);
 
         $this->send($course->getCompany()->getId(), $email);
@@ -393,11 +394,32 @@ class EmailService
             ->context([
                 'name' => $user->getName(),
                 'siteName' => $siteName,
-                'newPrice' => number_format($newPrice, 2, ',', '.') . ' €',
+                'newPrice' => number_format($newPrice, 2, ',', '.').' €',
                 'loginUrl' => $this->getLoginUrl(),
             ]);
 
         $this->send($company->getId(), $email);
+    }
+
+    public function sendPaymentFailedEmail(User $user): void
+    {
+        $company = $user->getCompany();
+        $siteName = $company ? $company->getName() : 'Bookly';
+
+        $email = (new TemplatedEmail())
+            ->from(new Address($_ENV['NO_REPLY_MAIL'] ?? 'noreply@example.com', $siteName))
+            ->to($user->getEmail())
+            ->subject($this->translator->trans('email.payment_failed.subject', ['%siteName%' => $siteName]))
+            ->htmlTemplate('emails/payment_failed.html.twig')
+            ->context([
+                'name' => $user->getName(),
+                'siteName' => $siteName,
+                'loginUrl' => $this->getLoginUrl(),
+            ]);
+
+        if ($company) {
+            $this->send($company->getId(), $email);
+        }
     }
 
     private function send(int $companyId, TemplatedEmail $email): void

@@ -9,13 +9,13 @@ use App\Entity\Company;
 use App\Entity\Course;
 use App\Entity\Exercise;
 use App\Entity\Meetup;
+use App\Entity\MeetupComment;
+use App\Entity\MeetupRsvp;
 use App\Entity\User;
 use App\Entity\UserWorkoutRecord;
 use App\Enum\Gender;
 use App\Enum\MeetupStatus;
 use App\Enum\RsvpStatus;
-use App\Entity\MeetupRsvp;
-use App\Entity\MeetupComment;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -166,9 +166,9 @@ class LoadDevelopmentFixturesCommand extends Command
 
             // Add random bookings
             foreach ($members as $member) {
-                $isAlice = $member->getEmail() === 'alice@phoenix.test';
+                $isAlice = 'alice@phoenix.test' === $member->getEmail();
                 // Guarantee Alice is booked on the first 3 future courses, others are random
-                if ($isAlice ? ($i <= 3) : (rand(0, 1) === 1)) {
+                if ($isAlice ? ($i <= 3) : (1 === rand(0, 1))) {
                     $booking = new Booking();
                     $booking->setUser($member);
                     $booking->setCourse($course);
@@ -238,7 +238,7 @@ Don't miss out on this legendary day. Please make sure to RSVP by the deadline s
             "I'm so excited for this! Should we bring some extra drinks?",
             "Can't wait for the team challenges! Team Alice will win!",
             "I'll bring some vegan burgers for the BBQ. Who else wants some?",
-            "Great idea Emma! I'll bring some fresh salads too."
+            "Great idea Emma! I'll bring some fresh salads too.",
         ];
 
         foreach ($commentTexts as $index => $text) {

@@ -8,8 +8,8 @@ use App\Entity\Company;
 use App\Entity\User;
 use App\Repository\UserRepository;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\HttpFoundation\Response;
 
 class AdminSettingsControllerTest extends WebTestCase
 {
@@ -164,7 +164,7 @@ class AdminSettingsControllerTest extends WebTestCase
 
         // Create a dummy image file
         $filePath = tempnam(sys_get_temp_dir(), 'logo_img');
-        file_put_contents($filePath, base64_decode('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'));
+        file_put_contents($filePath, base64_decode('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7', true));
         $uploadedFile = new UploadedFile($filePath, 'logo.gif', 'image/gif', null, true);
 
         try {

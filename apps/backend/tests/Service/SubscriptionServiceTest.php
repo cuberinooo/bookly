@@ -12,7 +12,7 @@ use Stripe\Subscription;
 
 class SubscriptionServiceTest extends TestCase
 {
-    public function testCancelYearlySubscriptionImmediately(): void
+    public function test_cancel_yearly_subscription_immediately(): void
     {
         // Construct a real Stripe Subscription object from an array
         $mockSubscription = Subscription::constructFrom([
@@ -22,11 +22,11 @@ class SubscriptionServiceTest extends TestCase
                     [
                         'price' => [
                             'recurring' => [
-                                'interval' => 'year'
-                            ]
-                        ]
-                    ]
-                ]
+                                'interval' => 'year',
+                            ],
+                        ],
+                    ],
+                ],
             ],
             'ended_at' => 1500000000,
         ]);
@@ -62,7 +62,7 @@ class SubscriptionServiceTest extends TestCase
         ], $result);
     }
 
-    public function testCancelMonthlySubscriptionAtPeriodEnd(): void
+    public function test_cancel_monthly_subscription_at_period_end(): void
     {
         // Construct a real Stripe Subscription object from an array
         $mockSubscription = Subscription::constructFrom([
@@ -72,11 +72,11 @@ class SubscriptionServiceTest extends TestCase
                     [
                         'price' => [
                             'recurring' => [
-                                'interval' => 'month'
-                            ]
-                        ]
-                    ]
-                ]
+                                'interval' => 'month',
+                            ],
+                        ],
+                    ],
+                ],
             ],
             'current_period_end' => 1600000000,
         ]);

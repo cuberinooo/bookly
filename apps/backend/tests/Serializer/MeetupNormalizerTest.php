@@ -24,7 +24,7 @@ class MeetupNormalizerTest extends TestCase
         $this->normalizer = new MeetupNormalizer($this->objectNormalizer, $this->requestStack);
     }
 
-    public function testNormalizeRelativeImageUrlWithRequest(): void
+    public function test_normalize_relative_image_url_with_request(): void
     {
         $meetup = new Meetup();
         $meetup->setImageUrl('company-slug/meetups/meetup_123.jpg');
@@ -41,7 +41,7 @@ class MeetupNormalizerTest extends TestCase
         $this->assertSame('http://myhost.local/uploads/company-slug/meetups/meetup_123.jpg', $result['imageUrl']);
     }
 
-    public function testNormalizeRelativeImageUrlWithoutRequestFallback(): void
+    public function test_normalize_relative_image_url_without_request_fallback(): void
     {
         $meetup = new Meetup();
         $meetup->setImageUrl('company-slug/meetups/meetup_123.jpg');
@@ -59,7 +59,7 @@ class MeetupNormalizerTest extends TestCase
         unset($_ENV['DEFAULT_URI']);
     }
 
-    public function testNormalizeAbsoluteImageUrlUnchanged(): void
+    public function test_normalize_absolute_image_url_unchanged(): void
     {
         $meetup = new Meetup();
         $meetup->setImageUrl('http://external-domain.com/placeholder.jpg');

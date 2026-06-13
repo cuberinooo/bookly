@@ -100,7 +100,6 @@ class AdminSettings
     #[Groups(['admin:read'])]
     private ?array $membershipWelcomeMailAttachments = null;
 
-
     public function getId(): ?int
     {
         return $this->id;

@@ -166,7 +166,7 @@ class BookingServiceTest extends TestCase
         $this->emailService->expects($this->once())->method('sendBookingCancellationEmail');
         $this->emailService->expects($this->once())->method('sendWaitlistPromotedEmail');
         $this->emailService->expects($this->once())->method('sendBookingConfirmationEmail');
-        
+
         $this->entityManager->expects($this->atLeastOnce())->method('flush');
 
         $this->service->unbook($course, $user);

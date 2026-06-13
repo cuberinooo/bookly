@@ -9,14 +9,9 @@ use App\Message\CheckCourseAutoCancelMessage;
 use App\Repository\CourseRepository;
 use App\Service\CourseService;
 use App\Service\EmailService;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\DelayStamp;
-use Symfony\Contracts\Translation\TranslatorInterface;
-use Symfony\Bridge\Twig\Mime\TemplatedEmail;
-use Symfony\Component\Mailer\MailerInterface;
-use Symfony\Component\Mime\Address;
 
 #[AsMessageHandler]
 class CheckCourseAutoCancelMessageHandler
@@ -45,7 +40,7 @@ class CheckCourseAutoCancelMessageHandler
         }
 
         $now = new \DateTime();
-        $checkTime = (clone $course->getStartTime())->modify('-' . $settings->getAutoCancelHoursBefore() . ' hours');
+        $checkTime = (clone $course->getStartTime())->modify('-'.$settings->getAutoCancelHoursBefore().' hours');
 
         // Self-healing: If we are checking too early (e.g. course was rescheduled to later)
         if ($now < $checkTime) {
@@ -53,6 +48,7 @@ class CheckCourseAutoCancelMessageHandler
             if ($delay > 0) {
                 $this->messageBus->dispatch($message, [new DelayStamp($delay)]);
             }
+
             return;
         }
 
@@ -62,7 +58,7 @@ class CheckCourseAutoCancelMessageHandler
             return;
         }
 
-        $confirmedBookings = array_filter($course->getBookings()->toArray(), fn($b) => !$b->isWaitlist());
+        $confirmedBookings = array_filter($course->getBookings()->toArray(), fn ($b) => !$b->isWaitlist());
 
         if (count($confirmedBookings) < $settings->getAutoCancelMinParticipants()) {
             // Automatically cancel the course

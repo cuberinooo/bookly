@@ -1,19 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Controller;
 
 use App\Entity\User;
+use App\Service\EmailService;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\LoggerInterface;
 use Stripe\Event;
-use Stripe\Webhook;
 use Stripe\Stripe;
 use Stripe\Subscription;
+use Stripe\Webhook;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
-use App\Service\EmailService;
-use Psr\Log\LoggerInterface;
 
 #[Route('/webhook/stripe')]
 class StripeWebhookController extends AbstractController
@@ -38,18 +40,20 @@ class StripeWebhookController extends AbstractController
 
         try {
             $event = Webhook::constructEvent(
-                $payload, $sigHeader, $this->stripeWebhookSecret
+                $payload,
+                $sigHeader,
+                $this->stripeWebhookSecret
             );
-        } catch(\UnexpectedValueException $e) {
+        } catch (\UnexpectedValueException $e) {
             // Invalid payload
             return new JsonResponse(['error' => 'Invalid payload'], 400);
-        } catch(\Stripe\Exception\SignatureVerificationException $e) {
+        } catch (\Stripe\Exception\SignatureVerificationException $e) {
             // Invalid signature
             return new JsonResponse(['error' => 'Invalid signature'], 400);
         }
 
         // Handle the checkout.session.completed event
-        if ($event->type == 'checkout.session.completed') {
+        if ('checkout.session.completed' === $event->type) {
             $session = $event->data->object;
 
             if (isset($session->metadata->user_id)) {
@@ -60,9 +64,9 @@ class StripeWebhookController extends AbstractController
                 if ($user) {
                     // Promotion: Only if the user is currently a TRIAL user
                     $roles = $user->getRoles();
-                    if (in_array('ROLE_TRIAL', $roles)) {
+                    if (in_array('ROLE_TRIAL', $roles, true)) {
                         $roles = array_diff($roles, ['ROLE_TRIAL']);
-                        if (!in_array('ROLE_MEMBER', $roles)) {
+                        if (!in_array('ROLE_MEMBER', $roles, true)) {
                             $roles[] = 'ROLE_MEMBER';
                         }
                         $user->setRoles(array_values($roles));
@@ -80,10 +84,10 @@ class StripeWebhookController extends AbstractController
                     if ($company && $company->getStripeConfig()->isYearlyFeeEnabled() && $company->getStripeConfig()->getStripePriceYearlyRecurringId() && isset($session->customer)) {
                         try {
                             $stripeAccountHeader = ['stripe_account' => $company->getStripeConfig()->getStripeAccountId()];
-                            
+
                             $yearlyTrialEnd = (new \DateTime('+1 year'))->getTimestamp();
                             if (isset($session->metadata->yearly_trial_end) && !empty($session->metadata->yearly_trial_end)) {
-                                $metaTrial = (int)$session->metadata->yearly_trial_end;
+                                $metaTrial = (int) $session->metadata->yearly_trial_end;
                                 if ($metaTrial > time()) {
                                     $yearlyTrialEnd = $metaTrial;
                                 }
@@ -96,11 +100,11 @@ class StripeWebhookController extends AbstractController
                                 'description' => 'Jährliche Verwaltungsgebühr (Folgejahre)',
                                 'metadata' => [
                                     'user_id' => $user->getId(),
-                                    'auto_created' => 'true'
-                                ]
+                                    'auto_created' => 'true',
+                                ],
                             ], $stripeAccountHeader);
                         } catch (\Exception $e) {
-                            $this->logger->error('Failed to create background yearly subscription: ' . $e->getMessage());
+                            $this->logger->error('Failed to create background yearly subscription: '.$e->getMessage());
                         }
                     }
 
@@ -108,14 +112,14 @@ class StripeWebhookController extends AbstractController
                     try {
                         $this->emailService->sendMembershipWelcomeEmail($user);
                     } catch (\Exception $e) {
-                        $this->logger->error('Failed to send membership welcome mail after stripe upgrade: ' . $e->getMessage());
+                        $this->logger->error('Failed to send membership welcome mail after stripe upgrade: '.$e->getMessage());
                     }
                 }
             }
         }
 
         // Handle Subscription Deleted (Expiration)
-        if ($event->type == 'customer.subscription.deleted') {
+        if ('customer.subscription.deleted' === $event->type) {
             $subscription = $event->data->object;
             $customerId = $subscription->customer;
 
@@ -159,14 +163,14 @@ class StripeWebhookController extends AbstractController
                                 }
                             }
                         } catch (\Exception $e) {
-                            $this->logger->error('Failed to automatically cancel yearly recurring subscription: ' . $e->getMessage());
+                            $this->logger->error('Failed to automatically cancel yearly recurring subscription: '.$e->getMessage());
                         }
                     }
 
                     // Downgrade: Remove MEMBER and TRAINER roles, set to TRIAL
                     $roles = $user->getRoles();
                     $roles = array_diff($roles, ['ROLE_MEMBER', 'ROLE_TRAINER']);
-                    if (!in_array('ROLE_TRIAL', $roles)) {
+                    if (!in_array('ROLE_TRIAL', $roles, true)) {
                         $roles[] = 'ROLE_TRIAL';
                     }
                     $user->setRoles(array_values($roles));
@@ -201,10 +205,30 @@ class StripeWebhookController extends AbstractController
                         $this->logger->info(sprintf('Cleared stripeCustomerId for user %s as no active or trialing subscriptions remain.', $user->getEmail()));
                     }
                 } catch (\Exception $e) {
-                    $this->logger->error('Failed to query remaining subscriptions on webhook delete: ' . $e->getMessage());
+                    $this->logger->error('Failed to query remaining subscriptions on webhook delete: '.$e->getMessage());
                 }
 
                 $this->em->flush();
+            }
+        }
+
+        // Handle Invoice Payment Failed
+        if ($event->type === 'invoice.payment_failed') {
+            $invoice = $event->data->object;
+            $customerId = $invoice instanceof \Stripe\Invoice ? $invoice->customer : ($invoice['customer'] ?? null);
+            $customerId = is_string($customerId) ? $customerId : null;
+
+            if ($customerId) {
+                $user = $this->em->getRepository(User::class)->findOneBy(['stripeCustomerId' => $customerId]);
+                if ($user) {
+                    $this->logger->warning(sprintf('Invoice payment failed for user %s (Customer ID: %s, Invoice ID: %s)', $user->getEmail(), $customerId, $invoice->id));
+
+                    try {
+                        $this->emailService->sendPaymentFailedEmail($user);
+                    } catch (\Exception $e) {
+                        $this->logger->error('Failed to send payment failed email: '.$e->getMessage());
+                    }
+                }
             }
         }
 

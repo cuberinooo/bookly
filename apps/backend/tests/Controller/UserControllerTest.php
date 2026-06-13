@@ -43,7 +43,7 @@ class UserControllerTest extends WebTestCase
 
         // Create a dummy file
         $filePath = tempnam(sys_get_temp_dir(), 'test_img');
-        file_put_contents($filePath, base64_decode('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'));
+        file_put_contents($filePath, base64_decode('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7', true));
         $uploadedFile = new UploadedFile($filePath, 'test.gif', 'image/gif', null, true);
 
         try {

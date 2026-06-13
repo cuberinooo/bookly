@@ -171,14 +171,14 @@ class MeetupCommentTest extends WebTestCase
         $client->request('GET', '/api/meetups?filter=active', [], [], [
             'HTTP_AUTHORIZATION' => 'Bearer '.$token,
         ]);
-        
+
         $this->assertEquals(Response::HTTP_OK, $client->getResponse()->getStatusCode());
         $meetups = json_decode($client->getResponse()->getContent(), true);
-        
+
         // Find our meetup in the list
         $found = false;
         foreach ($meetups as $m) {
-            if ($m['title'] === 'Future Ski Trip') {
+            if ('Future Ski Trip' === $m['title']) {
                 $found = true;
                 $this->assertNull($m['meetupDate']);
                 break;

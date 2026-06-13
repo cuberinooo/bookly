@@ -61,7 +61,7 @@ class TrainerStatisticsController extends AbstractController
                 ->setParameter('now', $now)
                 ->setParameter('status', \App\Enum\CourseStatus::ACTIVE);
 
-            if ($startDate !== null) {
+            if (null !== $startDate) {
                 $totalCoursesQuery->andWhere('c.startTime >= :startDate')
                     ->setParameter('startDate', $startDate);
             }
@@ -103,7 +103,7 @@ class TrainerStatisticsController extends AbstractController
             while ($current <= $now && $limit > 0) {
                 $monthlyStats[$current->format('Y-m')] = 0;
                 $current->modify('+1 month');
-                $limit--;
+                --$limit;
             }
             $monthlyStats[$now->format('Y-m')] = 0;
 
@@ -139,7 +139,7 @@ class TrainerStatisticsController extends AbstractController
                 ->setParameter('trainerId', $trainerId)
                 ->setParameter('status', \App\Enum\CourseStatus::ACTIVE);
 
-            if ($startDate !== null) {
+            if (null !== $startDate) {
                 $uniqueMembersQuery->andWhere('c.startTime >= :startDate')
                     ->setParameter('startDate', $startDate);
             }
@@ -156,18 +156,18 @@ class TrainerStatisticsController extends AbstractController
                 ++$timeSlots[$hour]['sessions'];
                 $timeSlots[$hour]['bookings'] += count($course->getBookings());
             }
-            
+
             // Sort by bookings first, then sessions
-            uasort($timeSlots, function($a, $b) {
+            uasort($timeSlots, function ($a, $b) {
                 return $b['bookings'] <=> $a['bookings'] ?: $b['sessions'] <=> $a['sessions'];
             });
-            
+
             $popularTimeSlots = [];
             foreach (array_slice($timeSlots, 0, 5, true) as $hour => $stats) {
                 $popularTimeSlots[] = [
-                    'hour' => (int) $hour.':00', 
+                    'hour' => (int) $hour.':00',
                     'count' => $stats['sessions'],
-                    'attempts' => $stats['bookings']
+                    'attempts' => $stats['bookings'],
                 ];
             }
 
@@ -181,17 +181,17 @@ class TrainerStatisticsController extends AbstractController
                 ++$courseTypes[$title]['sessions'];
                 $courseTypes[$title]['bookings'] += count($course->getBookings());
             }
-            
-            uasort($courseTypes, function($a, $b) {
+
+            uasort($courseTypes, function ($a, $b) {
                 return $b['bookings'] <=> $a['bookings'] ?: $b['sessions'] <=> $a['sessions'];
             });
-            
+
             $popularCourseTypes = [];
             foreach (array_slice($courseTypes, 0, 5, true) as $title => $stats) {
                 $popularCourseTypes[] = [
-                    'title' => $title, 
+                    'title' => $title,
                     'count' => $stats['sessions'],
-                    'attempts' => $stats['bookings']
+                    'attempts' => $stats['bookings'],
                 ];
             }
 
@@ -205,16 +205,16 @@ class TrainerStatisticsController extends AbstractController
                 ++$daysOfWeek[$day]['sessions'];
                 $daysOfWeek[$day]['bookings'] += count($course->getBookings());
             }
-            
+
             // For days of week, we keep the natural order but we want to return both stats
             $popularDaysOfWeek = [];
             $orderedDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
             foreach ($orderedDays as $day) {
                 if (isset($daysOfWeek[$day])) {
                     $popularDaysOfWeek[] = [
-                        'day' => $day, 
+                        'day' => $day,
                         'count' => $daysOfWeek[$day]['sessions'],
-                        'attempts' => $daysOfWeek[$day]['bookings']
+                        'attempts' => $daysOfWeek[$day]['bookings'],
                     ];
                 }
             }

@@ -63,7 +63,7 @@ class SendCoursePushRemindersCommand extends Command
                         $this->translator->trans('push.course_reminder.title'),
                         $this->translator->trans('push.course_reminder.body', [
                             '%title%' => $course->getTitle(),
-                            '%time%' => $course->getStartTime()->format('H:i')
+                            '%time%' => $course->getStartTime()->format('H:i'),
                         ]),
                         '/dashboard'
                     );

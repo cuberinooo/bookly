@@ -13,8 +13,8 @@ use Doctrine\Persistence\ManagerRegistry;
  *
  * @method MeetupUserReadState|null find($id, $lockMode = null, $lockVersion = null)
  * @method MeetupUserReadState|null findOneBy(array $criteria, array $orderBy = null)
- * @method MeetupUserReadState[]    findAll()
- * @method MeetupUserReadState[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
+ * @method MeetupUserReadState[] findAll()
+ * @method MeetupUserReadState[] findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  */
 class MeetupUserReadStateRepository extends ServiceEntityRepository
 {

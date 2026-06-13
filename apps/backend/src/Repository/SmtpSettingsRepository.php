@@ -13,8 +13,8 @@ use Doctrine\Persistence\ManagerRegistry;
  *
  * @method SmtpSettings|null find($id, $lockMode = null, $lockVersion = null)
  * @method SmtpSettings|null findOneBy(array $criteria, array $orderBy = null)
- * @method SmtpSettings[]    findAll()
- * @method SmtpSettings[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
+ * @method SmtpSettings[] findAll()
+ * @method SmtpSettings[] findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  */
 class SmtpSettingsRepository extends ServiceEntityRepository
 {

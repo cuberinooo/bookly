@@ -142,9 +142,9 @@ class MeetupController extends AbstractController
         // Get all active meetups (where comments can be relevant)
         $qb = $meetupRepository->createQueryBuilder('m');
         $qb->andWhere($qb->expr()->orX(
-               'm.meetupDate IS NULL',
-               'm.meetupDate >= :now'
-           ))
+            'm.meetupDate IS NULL',
+            'm.meetupDate >= :now'
+        ))
            ->andWhere('m.status != :cancelled')
            ->setParameter('now', new \DateTime())
            ->setParameter('cancelled', \App\Enum\MeetupStatus::CANCELLED);

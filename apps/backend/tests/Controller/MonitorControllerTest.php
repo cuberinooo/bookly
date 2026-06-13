@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Tests\Controller;
 
-use App\Entity\Company;
-use App\Entity\User;
-use App\Entity\SensitiveDataAccessLog;
-use App\Entity\Course;
 use App\Entity\Booking;
+use App\Entity\Company;
+use App\Entity\Course;
+use App\Entity\SensitiveDataAccessLog;
+use App\Entity\User;
 use App\Repository\UserRepository;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\HttpFoundation\Response;
@@ -41,7 +41,7 @@ class MonitorControllerTest extends WebTestCase
             $entityManager = static::getContainer()->get('doctrine')->getManager();
 
             $company = new Company();
-            $company->setName('Test Company ' . uniqid());
+            $company->setName('Test Company '.uniqid());
 
             $entityManager->persist($company);
 
@@ -150,8 +150,8 @@ class MonitorControllerTest extends WebTestCase
 
         // 1. Create a dummy company
         $company = new Company();
-        $company->setName('Deletable Test Company ' . uniqid());
-        
+        $company->setName('Deletable Test Company '.uniqid());
+
         $stripeConfig = $company->getStripeConfig();
         $stripeConfig->setPaymentEnabled(true); // Active payment initially
 
@@ -185,7 +185,7 @@ class MonitorControllerTest extends WebTestCase
         $user2->setName('Company User 2');
         $user2->setCompany($company);
         $entityManager->persist($user2);
-        
+
         $entityManager->flush();
 
         // Try to delete with 2 users -> should fail (400)

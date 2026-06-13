@@ -82,7 +82,7 @@ class MeetupCommentController extends AbstractController
             $pushService->sendNotificationToUsers(
                 array_values($recipients),
                 $translator->trans('push.meetup_comment.title', ['%title%' => $meetup->getTitle()]),
-                $user->getName() . ': ' . (mb_strlen($comment->getContent()) > 50 ? mb_substr($comment->getContent(), 0, 47) . '...' : $comment->getContent()),
+                $user->getName().': '.(mb_strlen($comment->getContent()) > 50 ? mb_substr($comment->getContent(), 0, 47).'...' : $comment->getContent()),
                 '/meetups'
             );
         }

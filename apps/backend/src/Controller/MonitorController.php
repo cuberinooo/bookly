@@ -4,32 +4,28 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Entity\Booking;
 use App\Entity\Company;
-use App\Entity\User;
 use App\Entity\Course;
 use App\Entity\CourseSeries;
-use App\Entity\Booking;
-use App\Entity\SensitiveDataAccessLog;
 use App\Entity\Meetup;
 use App\Entity\MeetupComment;
 use App\Entity\MeetupRsvp;
 use App\Entity\MeetupUserReadState;
-use App\Entity\TrainingCycle;
+use App\Entity\SensitiveDataAccessLog;
 use App\Entity\TrainingCategory;
-use App\Repository\CompanyRepository;
+use App\Entity\TrainingCycle;
+use App\Entity\User;
 use App\Repository\UserRepository;
-use App\Repository\CourseRepository;
-use App\Repository\CourseSeriesRepository;
-use App\Repository\BookingRepository;
 use App\Service\PlatformSettingsService;
-use Symfony\Component\Serializer\SerializerInterface;
-use Symfony\Component\HttpFoundation\Request;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Component\Serializer\SerializerInterface;
 
 #[Route('/api/monitor')]
 #[IsGranted('ROLE_MONITOR')]
@@ -72,7 +68,7 @@ class MonitorController extends AbstractController
             ->getResult();
         $courseCounts = [];
         foreach ($courseCountsRaw as $row) {
-            $courseCounts[(int)$row['companyId']] = (int)$row['cnt'];
+            $courseCounts[(int) $row['companyId']] = (int) $row['cnt'];
         }
 
         // 2. Fetch course series counts per company
@@ -84,7 +80,7 @@ class MonitorController extends AbstractController
             ->getResult();
         $seriesCounts = [];
         foreach ($seriesCountsRaw as $row) {
-            $seriesCounts[(int)$row['companyId']] = (int)$row['cnt'];
+            $seriesCounts[(int) $row['companyId']] = (int) $row['cnt'];
         }
 
         // 3. Fetch user counts per company (total, active, inactive)
@@ -96,10 +92,10 @@ class MonitorController extends AbstractController
             ->getResult();
         $userCounts = [];
         foreach ($userCountsRaw as $row) {
-            $userCounts[(int)$row['companyId']] = [
-                'total' => (int)$row['total'],
-                'active' => (int)$row['active'],
-                'inactive' => (int)$row['inactive'],
+            $userCounts[(int) $row['companyId']] = [
+                'total' => (int) $row['total'],
+                'active' => (int) $row['active'],
+                'inactive' => (int) $row['inactive'],
             ];
         }
 
@@ -114,9 +110,9 @@ class MonitorController extends AbstractController
             ->getResult();
         $bookingCounts = [];
         foreach ($bookingCountsRaw as $row) {
-            $bookingCounts[(int)$row['companyId']] = [
-                'total' => (int)$row['total'],
-                'upcoming' => (int)$row['upcoming'],
+            $bookingCounts[(int) $row['companyId']] = [
+                'total' => (int) $row['total'],
+                'upcoming' => (int) $row['upcoming'],
             ];
         }
 
@@ -169,7 +165,7 @@ class MonitorController extends AbstractController
                     'stripeAccountId' => $stripeConfig ? $stripeConfig->getStripeAccountId() : null,
                     'totalBookings' => $bCounts['total'],
                     'upcomingBookings' => $bCounts['upcoming'],
-                ]
+                ],
             ];
         }
 
@@ -226,19 +222,19 @@ class MonitorController extends AbstractController
             $stripeConfig = $company->getStripeConfig();
             if ($stripeConfig && $stripeConfig->isPaymentEnabled()) {
                 return new JsonResponse([
-                    'error' => 'Cannot delete company with active payment.'
+                    'error' => 'Cannot delete company with active payment.',
                 ], Response::HTTP_BAD_REQUEST);
             }
 
             $users = $this->userRepository->findBy(['company' => $company]);
             if (count($users) > 1) {
                 return new JsonResponse([
-                    'error' => 'Cannot delete company with more than 1 user account.'
+                    'error' => 'Cannot delete company with more than 1 user account.',
                 ], Response::HTTP_BAD_REQUEST);
             }
 
             $thirtyDaysAgo = new \DateTimeImmutable('-30 days');
-            
+
             $recentBookingsCount = (int) $this->entityManager->createQueryBuilder()
                 ->select('COUNT(b.id)')
                 ->from(Booking::class, 'b')
@@ -251,7 +247,7 @@ class MonitorController extends AbstractController
 
             if ($recentBookingsCount > 0) {
                 return new JsonResponse([
-                    'error' => 'Cannot delete company with activity in the last 30 days.'
+                    'error' => 'Cannot delete company with activity in the last 30 days.',
                 ], Response::HTTP_BAD_REQUEST);
             }
 
@@ -352,6 +348,7 @@ class MonitorController extends AbstractController
     {
         $settings = $this->platformSettingsService->getSettings();
         $data = $this->serializer->serialize($settings, 'json', ['groups' => 'platform:read']);
+
         return new JsonResponse($data, Response::HTTP_OK, [], true);
     }
 
@@ -359,12 +356,13 @@ class MonitorController extends AbstractController
     public function updatePlatformSettings(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
-        if ($data === null) {
+        if (null === $data) {
             return new JsonResponse(['error' => 'Invalid JSON'], Response::HTTP_BAD_REQUEST);
         }
 
         $settings = $this->platformSettingsService->updateSettings($data);
         $serialized = $this->serializer->serialize($settings, 'json', ['groups' => 'platform:read']);
+
         return new JsonResponse($serialized, Response::HTTP_OK, [], true);
     }
 
@@ -378,6 +376,7 @@ class MonitorController extends AbstractController
 
         try {
             $path = $this->platformSettingsService->uploadPrivacyPolicy($file);
+
             return new JsonResponse(['path' => $path]);
         } catch (\RuntimeException $e) {
             return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);

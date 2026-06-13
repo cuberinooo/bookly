@@ -140,6 +140,18 @@ email:
     cancel_instruction: "If you can no longer attend, please make sure to cancel your booking as soon as possible to give others a chance."
     regards: "Regards,"
     team: "%siteName% Team"
+  payment_failed:
+    subject: "Action Required: Payment Failed for %siteName%"
+    title: "Payment Failed"
+    greeting: "Hello %name%,"
+    message: "We were unable to process your payment for your monthly membership at **%siteName%**."
+    status_preserved: "Don't worry—your member status (**ROLE_MEMBER**) is currently active and has not been changed. Stripe will automatically attempt to retry the payment in the coming days."
+    action_required: "To prevent any potential interruption to your membership and bookings, please log in and verify/update your payment information as soon as possible."
+    button: "Manage Subscription"
+    contact_support: "If you have already resolved this or have any questions, please contact our support team."
+    keep_training: "Keep training hard!"
+    closing: "The %siteName% Team"
+
 
 push:
   meetup_created:

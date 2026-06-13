@@ -38,7 +38,7 @@ class PushNotificationServiceTest extends TestCase
         parent::tearDown();
     }
 
-    public function testSendNotificationWithNoSubscriptionsReturnsEarly(): void
+    public function test_send_notification_with_no_subscriptions_returns_early(): void
     {
         $user = $this->createMock(User::class);
 

@@ -9,7 +9,7 @@ use PHPUnit\Framework\TestCase;
 
 class MeetupTest extends TestCase
 {
-    public function testSetImageUrlCleansPath(): void
+    public function test_set_image_url_cleans_path(): void
     {
         $meetup = new Meetup();
 

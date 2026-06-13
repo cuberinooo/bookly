@@ -21,6 +21,7 @@ class EmailServiceTest extends TestCase
     private $bus;
     private $bodyRenderer;
     private $s3Client;
+    private $translator;
     private $service;
     private $s3Bucket = 'test-bucket';
 
@@ -29,12 +30,14 @@ class EmailServiceTest extends TestCase
         $this->bus = $this->createMock(MessageBusInterface::class);
         $this->bodyRenderer = $this->createMock(BodyRendererInterface::class);
         $this->s3Client = $this->createMock(S3Client::class);
+        $this->translator = $this->createMock(\Symfony\Contracts\Translation\TranslatorInterface::class);
 
         $this->service = new EmailService(
             $this->bus,
             $this->bodyRenderer,
             $this->s3Client,
-            $this->s3Bucket
+            $this->s3Bucket,
+            $this->translator
         );
     }
 
@@ -81,6 +84,7 @@ class EmailServiceTest extends TestCase
             ->method('dispatch')
             ->with($this->callback(function (SendCompanyEmailMessage $message) use ($companyId) {
                 $email = $message->email;
+
                 return $message->companyId === $companyId
                        && $email instanceof TemplatedEmail
                        && 'Welcome to Test Company!' === $email->getSubject()
@@ -130,6 +134,7 @@ class EmailServiceTest extends TestCase
             ->method('dispatch')
             ->with($this->callback(function (SendCompanyEmailMessage $message) use ($companyId) {
                 $email = $message->email;
+
                 return $message->companyId === $companyId
                        && $email instanceof TemplatedEmail
                        && 'Join us at Test Company!' === $email->getSubject()
@@ -139,5 +144,41 @@ class EmailServiceTest extends TestCase
             ->willReturn(new Envelope(new \stdClass()));
 
         $this->service->sendMembershipWelcomeEmail($user);
+    }
+
+    public function test_send_payment_failed_email(): void
+    {
+        $companyId = 789;
+        $companyMock = $this->createMock(Company::class);
+        $companyMock->method('getId')->willReturn($companyId);
+        $companyMock->method('getName')->willReturn('Test Gym');
+
+        $user = new User();
+        $user->setName('Bob Miller');
+        $user->setEmail('bob@example.com');
+        $user->setCompany($companyMock);
+
+        $this->translator->expects($this->once())
+            ->method('trans')
+            ->with('email.payment_failed.subject', ['%siteName%' => 'Test Gym'])
+            ->willReturn('Action Required: Payment Failed for Test Gym');
+
+        $this->bodyRenderer->expects($this->once())
+            ->method('render');
+
+        $this->bus->expects($this->once())
+            ->method('dispatch')
+            ->with($this->callback(function (SendCompanyEmailMessage $message) use ($companyId) {
+                $email = $message->email;
+
+                return $message->companyId === $companyId
+                       && $email instanceof TemplatedEmail
+                       && 'Action Required: Payment Failed for Test Gym' === $email->getSubject()
+                       && 'Bob Miller' === $email->getContext()['name']
+                       && 'Test Gym' === $email->getContext()['siteName'];
+            }))
+            ->willReturn(new Envelope(new \stdClass()));
+
+        $this->service->sendPaymentFailedEmail($user);
     }
 }

@@ -13,8 +13,8 @@ use Doctrine\Persistence\ManagerRegistry;
  *
  * @method MeetupComment|null find($id, $lockMode = null, $lockVersion = null)
  * @method MeetupComment|null findOneBy(array $criteria, array $orderBy = null)
- * @method MeetupComment[]    findAll()
- * @method MeetupComment[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
+ * @method MeetupComment[] findAll()
+ * @method MeetupComment[] findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  */
 class MeetupCommentRepository extends ServiceEntityRepository
 {

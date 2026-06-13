@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace App\Tests\Controller;
 
 use App\Entity\Company;
-use App\Entity\User;
 use App\Entity\PlatformSettings;
+use App\Entity\User;
 use App\Repository\UserRepository;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\HttpFoundation\Response;
 
 class PlatformSettingsControllerTest extends WebTestCase
 {
@@ -45,7 +45,7 @@ class PlatformSettingsControllerTest extends WebTestCase
             $entityManager = static::getContainer()->get('doctrine')->getManager();
 
             $company = new Company();
-            $company->setName('Test Company ' . uniqid());
+            $company->setName('Test Company '.uniqid());
 
             $entityManager->persist($company);
 
@@ -118,7 +118,7 @@ class PlatformSettingsControllerTest extends WebTestCase
             'profession' => 'Designer',
             'country' => 'Austria',
             'taxId' => 'TAX-123',
-            'vatId' => 'VAT-123'
+            'vatId' => 'VAT-123',
         ];
 
         $this->client->request('PATCH', '/api/monitor/platform-settings', [], [], [

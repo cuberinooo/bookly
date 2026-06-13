@@ -140,6 +140,18 @@ email:
     cancel_instruction: "Falls du nicht mehr teilnehmen kannst, stelle bitte sicher, dass du deine Buchung so schnell wie möglich stornierst, um anderen eine Chance zu geben."
     regards: "Grüße,"
     team: "%siteName% Team"
+  payment_failed:
+    subject: "Aktion erforderlich: Zahlung fehlgeschlagen für %siteName%"
+    title: "Zahlung fehlgeschlagen"
+    greeting: "Hallo %name%,"
+    message: "Wir konnten deine Zahlung für deine monatliche Mitgliedschaft bei **%siteName%** nicht verarbeiten."
+    status_preserved: "Keine Sorge – dein Mitgliederstatus (**ROLE_MEMBER**) ist derzeit aktiv und wurde nicht geändert. Stripe wird in den nächsten Tagen automatisch versuchen, die Zahlung erneut einzuziehen."
+    action_required: "Um eine mögliche Unterbrechung deiner Mitgliedschaft und Buchungen zu vermeiden, logge dich bitte ein und überprüfe/aktualisiere deine Zahlungsinformationen so schnell wie möglich."
+    button: "Mitgliedschaft verwalten"
+    contact_support: "Wenn du dies bereits gelöst hast oder Fragen hast, wende dich bitte an unser Support-Team."
+    keep_training: "Trainiere weiterhin fleißig!"
+    closing: "Das %siteName% Team"
+
 
 push:
   meetup_created:

@@ -37,7 +37,7 @@ class CheckCourseAutoCancelMessageHandlerTest extends TestCase
         $this->emailService = $this->createMock(EmailService::class);
 
         // MessageBus dispatch returns Envelope (final class)
-        $this->messageBus->method('dispatch')->willReturnCallback(function($message, $stamps = []) {
+        $this->messageBus->method('dispatch')->willReturnCallback(function ($message, $stamps = []) {
             return new Envelope($message, $stamps);
         });
 
@@ -64,7 +64,7 @@ class CheckCourseAutoCancelMessageHandlerTest extends TestCase
         $this->courseRepository->method('find')->willReturn($course);
 
         $this->courseService->expects($this->never())->method('cancelCourse');
-        
+
         ($this->handler)(new CheckCourseAutoCancelMessage(1));
     }
 
@@ -87,15 +87,15 @@ class CheckCourseAutoCancelMessageHandlerTest extends TestCase
 
         $this->messageBus->expects($this->once())
             ->method('dispatch')
-            ->with($this->isInstanceOf(CheckCourseAutoCancelMessage::class), $this->callback(function($stamps) {
+            ->with($this->isInstanceOf(CheckCourseAutoCancelMessage::class), $this->callback(function ($stamps) {
                 return $stamps[0] instanceof DelayStamp;
             }))
-            ->willReturnCallback(function($message, $stamps = []) {
+            ->willReturnCallback(function ($message, $stamps = []) {
                 return new Envelope($message, $stamps);
             });
 
         $this->courseService->expects($this->never())->method('cancelCourse');
-        
+
         ($this->handler)(new CheckCourseAutoCancelMessage(1));
     }
 
@@ -122,10 +122,12 @@ class CheckCourseAutoCancelMessageHandlerTest extends TestCase
         $course->method('getUser')->willReturn($trainer);
         // Course starts in 3 hours (inside the 4-hour window)
         $course->method('getStartTime')->willReturn(new \DateTime('+3 hours'));
-        
+
         // 1 confirmed booking, 1 waitlist
-        $b1 = new Booking(); $b1->setWaitlist(false);
-        $b2 = new Booking(); $b2->setWaitlist(true);
+        $b1 = new Booking();
+        $b1->setWaitlist(false);
+        $b2 = new Booking();
+        $b2->setWaitlist(true);
         $course->method('getBookings')->willReturn(new ArrayCollection([$b1, $b2]));
 
         $this->courseRepository->method('find')->willReturn($course);
@@ -133,9 +135,9 @@ class CheckCourseAutoCancelMessageHandlerTest extends TestCase
         $this->courseService->expects($this->once())
             ->method('cancelCourse')
             ->with($course, null);
-        
+
         $this->emailService->expects($this->once())->method('sendNotifyTrainerOnAutoCancel');
-        
+
         ($this->handler)(new CheckCourseAutoCancelMessage(1));
     }
 
@@ -153,17 +155,20 @@ class CheckCourseAutoCancelMessageHandlerTest extends TestCase
         $course->method('getStatus')->willReturn(CourseStatus::ACTIVE);
         $course->method('getCompany')->willReturn($company);
         $course->method('getStartTime')->willReturn(new \DateTime('+3 hours'));
-        
+
         // 3 confirmed bookings
-        $b1 = new Booking(); $b1->setWaitlist(false);
-        $b2 = new Booking(); $b2->setWaitlist(false);
-        $b3 = new Booking(); $b3->setWaitlist(false);
+        $b1 = new Booking();
+        $b1->setWaitlist(false);
+        $b2 = new Booking();
+        $b2->setWaitlist(false);
+        $b3 = new Booking();
+        $b3->setWaitlist(false);
         $course->method('getBookings')->willReturn(new ArrayCollection([$b1, $b2, $b3]));
 
         $this->courseRepository->method('find')->willReturn($course);
 
         $this->courseService->expects($this->never())->method('cancelCourse');
-        
+
         ($this->handler)(new CheckCourseAutoCancelMessage(1));
     }
 }
