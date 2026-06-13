@@ -213,7 +213,7 @@ class StripeWebhookController extends AbstractController
         }
 
         // Handle Invoice Payment Failed
-        if ($event->type === 'invoice.payment_failed') {
+        if ('invoice.payment_failed' === $event->type) {
             $invoice = $event->data->object;
             $customerId = $invoice instanceof \Stripe\Invoice ? $invoice->customer : ($invoice['customer'] ?? null);
             $customerId = is_string($customerId) ? $customerId : null;

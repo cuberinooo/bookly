@@ -86,7 +86,7 @@ class BookingService
             $bookings = $this->bookingRepository->findBy(['course' => $course]);
             foreach ($bookings as $b) {
                 if (in_array('ROLE_TRIAL', $b->getUser()->getRoles(), true)) {
-                    $existingTrialBookings++;
+                    ++$existingTrialBookings;
                 }
             }
 

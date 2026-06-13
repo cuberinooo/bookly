@@ -224,7 +224,7 @@ class BookingTrialTest extends WebTestCase
 
         // Create Company and Settings (Max Trial Per Class = 2)
         $company = new Company();
-        $company->setName('Class Limit Test Company ' . $suffix);
+        $company->setName('Class Limit Test Company '.$suffix);
         $entityManager->persist($company);
 
         $settings = new GlobalSettings();
@@ -235,7 +235,7 @@ class BookingTrialTest extends WebTestCase
 
         // Create Trainer
         $trainer = new User();
-        $trainer->setEmail('trainer_class_limit_' . $suffix . '@example.com');
+        $trainer->setEmail('trainer_class_limit_'.$suffix.'@example.com');
         $trainer->setName('Trainer');
         $trainer->setRoles(['ROLE_TRAINER']);
         $trainer->setPassword('password');
@@ -245,10 +245,10 @@ class BookingTrialTest extends WebTestCase
 
         // Create 3 Trial Users
         $trialUsers = [];
-        for ($i = 1; $i <= 3; $i++) {
+        for ($i = 1; $i <= 3; ++$i) {
             $user = new User();
-            $user->setEmail('trial_class_' . $i . '_' . $suffix . '@example.com');
-            $user->setName('Trial ' . $i);
+            $user->setEmail('trial_class_'.$i.'_'.$suffix.'@example.com');
+            $user->setName('Trial '.$i);
             $user->setRoles(['ROLE_TRIAL']);
             $user->setPassword($hasher->hashPassword($user, 'password'));
             $user->setIsVerified(true);
@@ -270,21 +270,21 @@ class BookingTrialTest extends WebTestCase
         $entityManager->flush();
 
         // 1. User 1 books (Should succeed)
-        $client->request('POST', '/api/courses/' . $course->getId() . '/book', [], [], [
+        $client->request('POST', '/api/courses/'.$course->getId().'/book', [], [], [
             'PHP_AUTH_USER' => $trialUsers[0]->getEmail(),
             'PHP_AUTH_PW'   => 'password',
         ]);
         $this->assertEquals(Response::HTTP_CREATED, $client->getResponse()->getStatusCode());
 
         // 2. User 2 books (Should succeed)
-        $client->request('POST', '/api/courses/' . $course->getId() . '/book', [], [], [
+        $client->request('POST', '/api/courses/'.$course->getId().'/book', [], [], [
             'PHP_AUTH_USER' => $trialUsers[1]->getEmail(),
             'PHP_AUTH_PW'   => 'password',
         ]);
         $this->assertEquals(Response::HTTP_CREATED, $client->getResponse()->getStatusCode());
 
         // 3. User 3 books (Should fail because limit of 2 is reached)
-        $client->request('POST', '/api/courses/' . $course->getId() . '/book', [], [], [
+        $client->request('POST', '/api/courses/'.$course->getId().'/book', [], [], [
             'PHP_AUTH_USER' => $trialUsers[2]->getEmail(),
             'PHP_AUTH_PW'   => 'password',
         ]);

@@ -8,6 +8,7 @@ use App\Entity\Booking;
 use App\Entity\CompanyAwareInterface;
 use App\Entity\Course;
 use App\Entity\CourseSeries;
+use App\Entity\GlobalSettings;
 use App\Entity\Meetup;
 use App\Entity\MeetupRsvp;
 use App\Entity\TrainingCategory;
@@ -57,6 +58,9 @@ class CacheInvalidationSubscriber
         } elseif ($entity instanceof User && $entity->getCompany()) {
             $companyId = $entity->getCompany()->getId();
             $this->apiCache->invalidateEntity('user', $companyId);
+        } elseif ($entity instanceof GlobalSettings && $entity->getCompany()) {
+            $companyId = $entity->getCompany()->getId();
+            $this->apiCache->invalidateCompany($companyId);
         }
     }
 
