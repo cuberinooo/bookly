@@ -921,6 +921,8 @@
     "trialMembership": "Trial Membership",
     "trialLimit": "Trial Booking Limit",
     "trialLimitNote": "Maximum number of sessions a trial member can book.",
+    "maxTrialPerClass": "Maximum Trial Members per Class",
+    "maxTrialPerClassNote": "Maximum number of trial members allowed to book the same class.",
     "autoCancel": "Automatic Class Cancellation",
     "autoCancelNote": "Automatically cancel classes with low participation a few hours before start.",
     "enableAutoCancel": "Enable Automatic Cancellation",

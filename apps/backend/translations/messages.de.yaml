@@ -23,6 +23,8 @@ error:
   password_number: "Das Passwort muss mindestens eine Zahl enthalten"
   password_special: "Das Passwort muss mindestens ein Sonderzeichen enthalten"
   schedule_conflict: 'Terminkonflikt: Die vorgeschlagene Zeit (%start% - %end%) überschneidet sich mit einem bestehenden Kurs "%title%" (%conflict_start% - %conflict_end%).'
+  class_trial_limit_reached: "Die maximale Anzahl an Probetrainings (%limit%) für diesen Kurs ist bereits erreicht."
+
 
 email:
   base:

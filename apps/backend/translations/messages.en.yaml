@@ -23,6 +23,8 @@ error:
   password_number: "Password must contain at least one number"
   password_special: "Password must contain at least one special character"
   schedule_conflict: 'Scheduling conflict: The proposed time (%start% - %end%) overlaps with an existing course "%title%" (%conflict_start% - %conflict_end%).'
+  class_trial_limit_reached: "The maximum number of trial members (%limit%) for this class has already been reached."
+
 
 email:
   base:

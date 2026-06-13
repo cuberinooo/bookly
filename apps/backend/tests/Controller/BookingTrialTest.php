@@ -213,4 +213,84 @@ class BookingTrialTest extends WebTestCase
         $response = json_decode($client->getResponse()->getContent(), true);
         $this->assertStringContainsString('not available for trial members', $response['error']);
     }
+
+    public function test_class_trial_booking_limit_enforcement(): void
+    {
+        $client = static::createClient();
+        $entityManager = static::getContainer()->get('doctrine.orm.entity_manager');
+        $hasher = static::getContainer()->get('security.password_hasher');
+
+        $suffix = uniqid();
+
+        // Create Company and Settings (Max Trial Per Class = 2)
+        $company = new Company();
+        $company->setName('Class Limit Test Company ' . $suffix);
+        $entityManager->persist($company);
+
+        $settings = new GlobalSettings();
+        $settings->setCompany($company);
+        $settings->setMaxTrialBookingsPerClass(2);
+        $entityManager->persist($settings);
+        $company->setGlobalSettings($settings);
+
+        // Create Trainer
+        $trainer = new User();
+        $trainer->setEmail('trainer_class_limit_' . $suffix . '@example.com');
+        $trainer->setName('Trainer');
+        $trainer->setRoles(['ROLE_TRAINER']);
+        $trainer->setPassword('password');
+        $trainer->setIsVerified(true);
+        $trainer->setCompany($company);
+        $entityManager->persist($trainer);
+
+        // Create 3 Trial Users
+        $trialUsers = [];
+        for ($i = 1; $i <= 3; $i++) {
+            $user = new User();
+            $user->setEmail('trial_class_' . $i . '_' . $suffix . '@example.com');
+            $user->setName('Trial ' . $i);
+            $user->setRoles(['ROLE_TRIAL']);
+            $user->setPassword($hasher->hashPassword($user, 'password'));
+            $user->setIsVerified(true);
+            $user->setCompany($company);
+            $entityManager->persist($user);
+            $trialUsers[] = $user;
+        }
+
+        // Create Course
+        $course = new Course();
+        $course->setTitle('Limited Trial Course');
+        $course->setUser($trainer);
+        $course->setCompany($company);
+        $course->setStartTime(new \DateTime('+1 day'));
+        $course->setEndTime(new \DateTime('+1 day 1 hour'));
+        $course->setCapacity(10);
+        $entityManager->persist($course);
+
+        $entityManager->flush();
+
+        // 1. User 1 books (Should succeed)
+        $client->request('POST', '/api/courses/' . $course->getId() . '/book', [], [], [
+            'PHP_AUTH_USER' => $trialUsers[0]->getEmail(),
+            'PHP_AUTH_PW'   => 'password',
+        ]);
+        $this->assertEquals(Response::HTTP_CREATED, $client->getResponse()->getStatusCode());
+
+        // 2. User 2 books (Should succeed)
+        $client->request('POST', '/api/courses/' . $course->getId() . '/book', [], [], [
+            'PHP_AUTH_USER' => $trialUsers[1]->getEmail(),
+            'PHP_AUTH_PW'   => 'password',
+        ]);
+        $this->assertEquals(Response::HTTP_CREATED, $client->getResponse()->getStatusCode());
+
+        // 3. User 3 books (Should fail because limit of 2 is reached)
+        $client->request('POST', '/api/courses/' . $course->getId() . '/book', [], [], [
+            'PHP_AUTH_USER' => $trialUsers[2]->getEmail(),
+            'PHP_AUTH_PW'   => 'password',
+        ]);
+        $this->assertEquals(Response::HTTP_BAD_REQUEST, $client->getResponse()->getStatusCode());
+
+        $response = json_decode($client->getResponse()->getContent(), true);
+        $this->assertStringContainsString('maximum number of trial members', $response['error']);
+    }
 }

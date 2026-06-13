@@ -62,6 +62,9 @@ class GlobalSettingsController extends AbstractController
         if (isset($data['trialBookingLimit'])) {
             $settings->setTrialBookingLimit((int) $data['trialBookingLimit']);
         }
+        if (isset($data['maxTrialBookingsPerClass'])) {
+            $settings->setMaxTrialBookingsPerClass((int) $data['maxTrialBookingsPerClass']);
+        }
 
         if (isset($data['autoCancelEnabled'])) {
             $settings->setAutoCancelEnabled((bool) $data['autoCancelEnabled']);

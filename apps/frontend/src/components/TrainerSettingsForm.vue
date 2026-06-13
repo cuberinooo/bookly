@@ -14,6 +14,7 @@ const settings = ref({
     isWaitlistVisible: true,
     bookingWindow: BookingWindow.OFF,
     trialBookingLimit: 0,
+    maxTrialBookingsPerClass: 2,
     autoCancelEnabled: false,
     autoCancelMinParticipants: 3,
     autoCancelHoursBefore: 4,
@@ -48,6 +49,7 @@ async function fetchSettings() {
             isWaitlistVisible: response.data.isWaitlistVisible ?? true,
             bookingWindow: response.data.bookingWindow ?? BookingWindow.OFF,
             trialBookingLimit: response.data.trialBookingLimit ?? 0,
+            maxTrialBookingsPerClass: response.data.maxTrialBookingsPerClass ?? 2,
             autoCancelEnabled: response.data.autoCancelEnabled ?? false,
             autoCancelMinParticipants: response.data.autoCancelMinParticipants ?? 3,
             autoCancelHoursBefore: response.data.autoCancelHoursBefore ?? 4,
@@ -69,6 +71,7 @@ async function updateGlobalSettings() {
             isWaitlistVisible: settings.value.isWaitlistVisible,
             bookingWindow: settings.value.bookingWindow,
             trialBookingLimit: settings.value.trialBookingLimit,
+            maxTrialBookingsPerClass: settings.value.maxTrialBookingsPerClass,
             autoCancelEnabled: settings.value.autoCancelEnabled,
             autoCancelMinParticipants: settings.value.autoCancelMinParticipants,
             autoCancelHoursBefore: settings.value.autoCancelHoursBefore
@@ -198,23 +201,44 @@ onMounted(fetchSettings);
             <h3 class="settings-title">
               {{ $t('settings.trialMembership') }}
             </h3>
-            <div class="setting-row">
-              <div class="setting-info">
-                <label
-                  for="trialLimit"
-                  class="form-label"
-                >{{ $t('settings.trialLimit') }}</label>
-                <p class="text-xs text-slate-500">
-                  {{ $t('settings.trialLimitNote') }}
-                </p>
+            <div class="flex flex-col gap-8">
+              <div class="setting-row">
+                <div class="setting-info">
+                  <label
+                    for="trialLimit"
+                    class="form-label"
+                  >{{ $t('settings.trialLimit') }}</label>
+                  <p class="text-xs text-slate-500">
+                    {{ $t('settings.trialLimitNote') }}
+                  </p>
+                </div>
+                <InputNumber
+                  v-model="settings.trialBookingLimit"
+                  input-id="trialLimit"
+                  show-buttons
+                  :min="0"
+                  class="w-32"
+                />
               </div>
-              <InputNumber
-                v-model="settings.trialBookingLimit"
-                input-id="trialLimit"
-                show-buttons
-                :min="0"
-                class="w-32"
-              />
+
+              <div class="setting-row pt-6 border-t border-slate-50">
+                <div class="setting-info">
+                  <label
+                    for="maxTrialPerClass"
+                    class="form-label"
+                  >{{ $t('settings.maxTrialPerClass') }}</label>
+                  <p class="text-xs text-slate-500">
+                    {{ $t('settings.maxTrialPerClassNote') }}
+                  </p>
+                </div>
+                <InputNumber
+                  v-model="settings.maxTrialBookingsPerClass"
+                  input-id="maxTrialPerClass"
+                  show-buttons
+                  :min="0"
+                  class="w-32"
+                />
+              </div>
             </div>
           </div>
 

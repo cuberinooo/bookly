@@ -46,6 +46,10 @@ class GlobalSettings
     #[Groups(['settings:read', 'settings:write'])]
     private int $autoCancelHoursBefore = 4;
 
+    #[ORM\Column(type: 'integer', options: ['default' => 2])]
+    #[Groups(['settings:read', 'settings:write'])]
+    private int $maxTrialBookingsPerClass = 2;
+
     #[ORM\OneToOne(mappedBy: 'globalSettings', targetEntity: Company::class)]
     private ?Company $company = null;
 
@@ -134,6 +138,18 @@ class GlobalSettings
     public function setAutoCancelHoursBefore(int $autoCancelHoursBefore): static
     {
         $this->autoCancelHoursBefore = $autoCancelHoursBefore;
+
+        return $this;
+    }
+
+    public function getMaxTrialBookingsPerClass(): int
+    {
+        return $this->maxTrialBookingsPerClass;
+    }
+
+    public function setMaxTrialBookingsPerClass(int $maxTrialBookingsPerClass): static
+    {
+        $this->maxTrialBookingsPerClass = $maxTrialBookingsPerClass;
 
         return $this;
     }

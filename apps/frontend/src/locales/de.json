@@ -922,6 +922,8 @@
     "trialMembership": "Probetraining",
     "trialLimit": "Buchungslimit für Probetrainings",
     "trialLimitNote": "Maximale Anzahl an Einheiten, die ein Probetraining-Mitglied buchen kann.",
+    "maxTrialPerClass": "Maximale Probetrainings pro Kurs",
+    "maxTrialPerClassNote": "Maximale Anzahl von Probetraining-Mitgliedern, die denselben Kurs buchen dürfen.",
     "autoCancel": "Automatische Kurs-Absage",
     "autoCancelNote": "Kurse mit zu wenigen Teilnehmern automatisch einige Stunden vor Beginn absagen.",
     "enableAutoCancel": "Automatische Absage aktivieren",

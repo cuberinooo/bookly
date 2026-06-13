@@ -76,6 +76,25 @@ class BookingService
             }
         }
 
+        // Class-level trial limit check
+        if (in_array('ROLE_TRIAL', $user->getRoles(), true)) {
+            $globalSettings = $user->getCompany()->getGlobalSettings();
+            $maxTrialPerClass = $globalSettings ? $globalSettings->getMaxTrialBookingsPerClass() : 2;
+
+            // Count existing trial bookings for this course
+            $existingTrialBookings = 0;
+            $bookings = $this->bookingRepository->findBy(['course' => $course]);
+            foreach ($bookings as $b) {
+                if (in_array('ROLE_TRIAL', $b->getUser()->getRoles(), true)) {
+                    $existingTrialBookings++;
+                }
+            }
+
+            if ($existingTrialBookings >= $maxTrialPerClass) {
+                throw new \Exception($this->translator->trans('error.class_trial_limit_reached', ['%limit%' => $maxTrialPerClass]));
+            }
+        }
+
         // Waitlist logic: if count of confirmed bookings >= capacity, it's a waitlist booking
         $confirmedBookingsCount = $this->bookingRepository->count(['course' => $course, 'isWaitlist' => false]);
         $isWaitlist = $confirmedBookingsCount >= $course->getCapacity();
