@@ -43,8 +43,6 @@ class StripeConnectController extends AbstractController
         $user = $this->getUser();
         $company = $user->getCompany();
 
-        return new JsonResponse(['error' => 'Payment is currently not allowed.'], 400);
-
         if (!$company) {
             return new JsonResponse(['error' => 'No company associated'], 400);
         }
