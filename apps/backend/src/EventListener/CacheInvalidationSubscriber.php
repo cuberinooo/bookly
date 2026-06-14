@@ -50,6 +50,9 @@ class CacheInvalidationSubscriber
 
         if ($entity instanceof CompanyAwareInterface && $entity->getCompany()) {
             $companyId = $entity->getCompany()->getId();
+            if ($companyId === null) {
+                return;
+            }
 
             $typesToInvalidate = $this->getInvalidationTypes($entity);
             foreach ($typesToInvalidate as $type) {
@@ -57,9 +60,15 @@ class CacheInvalidationSubscriber
             }
         } elseif ($entity instanceof User && $entity->getCompany()) {
             $companyId = $entity->getCompany()->getId();
+            if ($companyId === null) {
+                return;
+            }
             $this->apiCache->invalidateEntity('user', $companyId);
         } elseif ($entity instanceof GlobalSettings && $entity->getCompany()) {
             $companyId = $entity->getCompany()->getId();
+            if ($companyId === null) {
+                return;
+            }
             $this->apiCache->invalidateCompany($companyId);
         }
     }

@@ -77,7 +77,8 @@ class AdminSettingsService
     public function uploadPrivacyPolicy(\App\Entity\Company $company, UploadedFile $file): string
     {
         $companySlug = $this->slugger->slug($company->getName())->lower();
-        $key = $companySlug.'/legal/'.$this->slugger->slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME)).'-'.uniqid('legal', true).'.'.$file->guessExtension();
+        $extension = $file->getClientOriginalExtension() ?: ($file->guessExtension() ?? 'pdf');
+        $key = $companySlug.'/legal/'.$this->slugger->slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME)).'-'.uniqid('legal', true).'.'.$extension;
 
         try {
             $this->s3Client->putObject([
@@ -109,7 +110,8 @@ class AdminSettingsService
     private function uploadAttachment(\App\Entity\Company $company, UploadedFile $file, string $type): array
     {
         $companySlug = $this->slugger->slug($company->getName())->lower();
-        $key = $companySlug.'/company_assets/'.$this->slugger->slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME)).'-'.uniqid('asset', true).'.'.$file->guessExtension();
+        $extension = $file->getClientOriginalExtension() ?: ($file->guessExtension() ?? 'bin');
+        $key = $companySlug.'/company_assets/'.$this->slugger->slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME)).'-'.uniqid('asset', true).'.'.$extension;
 
         try {
             $this->s3Client->putObject([
@@ -193,7 +195,7 @@ class AdminSettingsService
     public function uploadCompanyLogo(\App\Entity\Company $company, UploadedFile $file): string
     {
         $companySlug = $this->slugger->slug($company->getName())->lower();
-        $extension = $file->guessExtension() ?? 'png';
+        $extension = $file->getClientOriginalExtension() ?: ($file->guessExtension() ?? 'png');
         $filename = sprintf('logo_%s.%s', uniqid('', true), $extension);
         $key = $companySlug.'/logo/'.$filename;
 

@@ -50,7 +50,7 @@ class MeetupController extends AbstractController
         $company = $user->getCompany();
         $companySlug = $this->slugger->slug($company->getName())->lower();
 
-        $extension = $file->guessExtension() ?? 'jpg';
+        $extension = $file->getClientOriginalExtension() ?: ($file->guessExtension() ?? 'jpg');
         $filename = sprintf('meetup_%s.%s', uniqid('', true), $extension);
         $key = $companySlug.'/meetups/'.$filename;
 

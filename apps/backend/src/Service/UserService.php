@@ -34,7 +34,7 @@ class UserService
         }
 
         $companySlug = $this->slugger->slug($company->getName())->lower();
-        $extension = $file->guessExtension() ?? 'jpg';
+        $extension = $file->getClientOriginalExtension() ?: ($file->guessExtension() ?? 'jpg');
         $filename = sprintf('profile_%s.%s', uniqid('', true), $extension);
         $key = $companySlug.'/'.$user->getId().'/'.$filename;
 

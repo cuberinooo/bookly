@@ -100,6 +100,7 @@ class AdminSettingsServiceTest extends TestCase
 
         $file = $this->createMock(UploadedFile::class);
         $file->method('getClientOriginalName')->willReturn('test.pdf');
+        $file->method('getClientOriginalExtension')->willReturn('pdf');
         $file->method('guessExtension')->willReturn('pdf');
         $file->method('getRealPath')->willReturn($tmpFile);
 

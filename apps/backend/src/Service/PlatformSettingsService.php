@@ -61,7 +61,8 @@ class PlatformSettingsService
 
     public function uploadPrivacyPolicy(UploadedFile $file): string
     {
-        $key = 'platform/legal/'.$this->slugger->slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME)).'-'.uniqid('legal', true).'.'.$file->guessExtension();
+        $extension = $file->getClientOriginalExtension() ?: ($file->guessExtension() ?? 'pdf');
+        $key = 'platform/legal/'.$this->slugger->slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME)).'-'.uniqid('legal', true).'.'.$extension;
 
         try {
             $this->s3Client->putObject([
