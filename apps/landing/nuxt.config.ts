@@ -57,6 +57,13 @@ export default defineNuxtConfig({
         { property: 'og:description', content: 'BooklyFit - Your ultimate gym and workout booking platform.' },
         { property: 'og:image', content: '/logo.png' },
         { property: 'og:type', content: 'website' }
+      ],
+      script: [
+        {
+          src: '//gc.zgo.at/count.js',
+          async: true,
+          'data-goatcounter': 'https://codigncube.goatcounter.com/count'
+        }
       ]
     }
   }

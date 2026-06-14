@@ -1,5 +1,15 @@
 <script setup lang="ts">
 import CookieConsent from './components/CookieConsent.vue';
+
+const route = useRoute();
+useHead({
+  link: [
+    {
+      rel: 'canonical',
+      href: `https://booklyfit.de${route.path === '/' ? '' : route.path}`,
+    }
+  ]
+});
 </script>
 
 <template>
